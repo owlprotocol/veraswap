@@ -1,0 +1,64 @@
+{
+    "$schema": "https://turborepo.org/schema.json",
+    "globalEnv": [
+        "DOTENV_KEY"
+    ],
+    "globalDependencies": [
+        ".env.vault"
+    ],
+    "pipeline": {
+        "build": {
+            "dependsOn": [
+                "^build"
+            ],
+            "outputs": [
+                "build/**",
+                "dist/**",
+                "lib/**"
+            ]
+        },
+        "depcheck": {
+            "cache": false,
+            "outputs": []
+        },
+        "syncpack": {
+            "cache": false,
+            "outputs": []
+        },
+        "madge": {
+            "cache": false,
+            "outputs": []
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "clean": {
+            "cache": false
+        },
+        "start": {
+            "cache": false,
+            "persistent": true
+        },
+        "test": {
+            "dependsOn": [
+                "build",
+                "^test"
+            ],
+            "outputs": []
+        },
+        "lint": {
+            "outputs": []
+        },
+        "lint:fix": {
+            "dependsOn": [
+                "^lint:fix"
+            ],
+            "outputs": []
+        },
+        "lint:staged": {
+            "cache": false,
+            "outputs": []
+        }
+    }
+}

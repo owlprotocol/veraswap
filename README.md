@@ -1,0 +1,3 @@
+# Starter Workspace
+
+Starter monorepo designed to work with pnpm and turbo repo.

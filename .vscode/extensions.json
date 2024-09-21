@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint", //ESLint
+    //"rvest.vs-code-prettier-eslint", //Prettier (conflicts with ESLint?)
+    "editorconfig.editorconfig", //editorconfig
+    "dotenv.dotenv-vscode", //dotenv
+    "eamodio.gitlens", //Git Lens
+    "ecmel.vscode-html-css", //HTML/CSS
+    "jock.svg", //SVG Support
+    "wix.glean", //React Refactoring
+    "shd101wyy.markdown-preview-enhanced", //Markdown Preview
+    "ms-vsliveshare.vsliveshare", //Liveshare
+    "JuanBlanco.solidity", //Solidity
+    "wayou.vscode-todo-highlight", //Highlight TODOs
+    "vscodevim.vim", //Vim Emulation
+    "antfu.vite", //Vite extension
+    "redhat.vscode-yaml", //Yaml support
+    "ChFlick.firecode", //Firestore security rules
+    "stivo.tailwind-fold", //Tailwind fold
+    "bradlc.vscode-tailwindcss", //Tailwind syntax
+    "mattpocock.ts-error-translator", //Typescript error translator
+  ]
+}
