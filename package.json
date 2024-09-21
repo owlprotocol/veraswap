@@ -1,5 +1,5 @@
 {
-  "name": "@owlprotocol/starter-workspace",
+  "name": "@owlprotocol/starter-monorepo",
   "version": "2.0.1",
   "private": true,
   "description": "Owl Protocol Starter Monorepo",
