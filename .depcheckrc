@@ -14,5 +14,6 @@ ignores: [
     "eslint-plugin-react-refresh",
     "glob",
     "dotenv",
-    "npm-run-all"
+    "npm-run-all",
+    "husky"
 ]
