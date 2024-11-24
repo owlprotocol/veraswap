@@ -19,7 +19,6 @@
     "clean:node_modules": "rimraf node_modules ./**/node_modules",
     "test": "turbo run test",
     "test:force": "turbo run test --force",
-    "test-integration": "turbo run test-integration",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "depcheck": "depcheck && turbo run depcheck",
