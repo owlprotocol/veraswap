@@ -32,8 +32,7 @@
     "turbo:link": "turbo link",
     "changeset:add": "changeset add",
     "ci:version": "changeset version",
-    "ci:publish": "pnpm publish -r",
-    "husky:init": "husky init"
+    "ci:publish": "pnpm publish -r"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
