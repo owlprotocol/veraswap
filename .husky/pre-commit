@@ -1,1 +1,2 @@
-pnpm run lint:staged
+# Run lint-staged on each package sequentially to avoid git issues
+pnpm run -r --sequential --if-present lint:staged

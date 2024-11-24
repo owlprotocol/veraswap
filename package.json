@@ -22,7 +22,6 @@
     "test-integration": "turbo run test-integration",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "lint:staged": "turbo run lint:staged",
     "depcheck": "depcheck && turbo run depcheck",
     "madge": "turbo run madge",
     "syncpack": "syncpack list-mismatches",
