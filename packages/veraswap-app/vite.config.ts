@@ -4,10 +4,7 @@ import ReactPlugin from "@vitejs/plugin-react-swc";
 import CheckerPlugin from "vite-plugin-checker";
 import SVGRPlugin from "vite-plugin-svgr";
 import DTSPlugin from "vite-plugin-dts";
-import { dotenvConfig } from "@owlprotocol/envvars";
 import path from "path";
-
-dotenvConfig();
 
 // https://vitejs.dev/config/
 export default defineConfig({

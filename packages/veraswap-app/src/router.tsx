@@ -1,9 +1,4 @@
 import { ErrorComponent, createRouter } from "@tanstack/react-router";
-import {
-    LoadingDialog,
-    queryClient,
-    trpcClient,
-} from "@owlprotocol/ui-components";
 import { routeTree } from "./routeTree.gen.js";
 
 // Create a new router instance
@@ -24,16 +19,10 @@ export const router = createRouter({
     },
     */
     defaultPendingComponent: () => (
-        <LoadingDialog isOpen={true}>Loading...</LoadingDialog>
+        <>Hello</>
     ),
     defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
     defaultNotFoundComponent: ({ data }) => <p>Not Found! ({`${data}`})</p>,
-    context: {
-        userId: undefined,
-        signedIn: false,
-        queryClient,
-        trpcClient,
-    },
     //https://tanstack.com/router/v1/docs/framework/react/guide/preloading
     defaultPreload: "intent",
     defaultPreloadDelay: 50,
