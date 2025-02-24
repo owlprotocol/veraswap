@@ -23,20 +23,22 @@
     "LICENSE",
     "README.md"
   ],
-  "main": "./lib/cjs/index.cjs",
-  "module": "./lib/esm/index.mjs",
-  "types": "./lib/types/index.d.ts",
+  "main": "./_cjs/lib/index.cjs",
+  "module": "./_esm/lib/index.mjs",
+  "types": "./_types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/types/index.d.ts",
-      "require": "./lib/cjs/index.js",
-      "import": "./lib/esm/index.js"
+      "types": "./_types/index.d.ts",
+      "require": "./_cjs/lib/index.js",
+      "import": "./_esm/lib/index.js"
     }
   },
   "scripts": {
-    "build": "npm-run-all -p tsc esbuild",
+    "build": "npm-run-all -p build:forge build:artifacts tsc esbuild",
+    "build:artifacts": "tsx src/codegen/runHardhatArtifactsExport.ts",
+    "build:forge": "forge build",
     "build:watch": "npm-run-all -p tsc:watch esbuild:watch",
-    "clean": "rimraf lib dist",
+    "clean": "rimraf _esm _cjs _types",
     "depcheck": "depcheck",
     "esbuild": "node esbuild.config.mjs",
     "esbuild:watch": "ESBUILD_WATCH=true node esbuild.config.mjs",
@@ -59,7 +61,7 @@
     "@uniswap/sdk-core": "^7.5.0",
     "@uniswap/v4-core": "1.0.1",
     "@uniswap/v4-periphery": "1.0.1",
-    "@uniswap/v4-sdk": "^1.19.4",
+    "@uniswap/v4-sdk": "^1.19.4"
   },
   "devDependencies": {
     "@owlprotocol/esbuild-config": "latest",
@@ -68,9 +70,11 @@
     "@owlprotocol/tsconfig": "latest",
     "@types/node": "^20.11.10",
     "@typescript/analyze-trace": "^0.10.1",
+    "core-js": "^3.37.1",
     "lint-staged": "^11.2.6",
     "madge": "^5.0.2",
     "npm-run-all": "^4.1.5",
+    "prool": "^0.0.15",
     "rimraf": "^3.0.2",
     "typescript": "5.4.5",
     "vite": "^5.1.6",

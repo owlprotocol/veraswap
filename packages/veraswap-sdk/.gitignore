@@ -4,6 +4,9 @@ cache/
 
 # forge
 !lib
+_esm
+_cjs
+_types
 
 # dependencies
 node_modules
