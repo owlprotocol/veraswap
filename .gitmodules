@@ -41,3 +41,5 @@
 [submodule "packages/veraswap-sdk/lib/uniswap-hooks"]
 	path = packages/veraswap-sdk/lib/uniswap-hooks
 	url = https://github.com/openzeppelin/uniswap-hooks
+[submodule "lib/uniswap-hooks"]
+	branch = master
