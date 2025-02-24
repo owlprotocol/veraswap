@@ -2,6 +2,22 @@
 
 Typescript starter project.
 
+## Forge install
+
+```bash
+forge install \
+    foundry-rs/forge-std@master \
+    openzeppelin/openzeppelin-contracts@master \
+    uniswap/permit2@main \
+    uniswap/v2-core@master \
+    uniswap/v3-core@main \
+    uniswap/v3-periphery@main \
+    uniswap/v4-core@main \
+    uniswap/v4-periphery@main \
+    openzeppelin/uniswap-hooks@main \
+    uniswap/universal-router@main
+```
+
 ## package.json
 Exports are defined as below
 ```json
