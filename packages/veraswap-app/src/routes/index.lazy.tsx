@@ -1,14 +1,180 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { SwapInterface } from "../components/SwapInterface.js";
+import { ArrowDown } from "lucide-react";
+import { useState } from "react";
+import { useAccount } from "wagmi";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { tokens, networks, Network, Token } from "@/types";
+import { NetworkSelect } from "@/components/NetworkSelect";
+import { TokenSelect } from "@/components/TokenSelect";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
 
 function Index() {
+  const { isConnected, address } = useAccount();
+  const [sellNetwork, setSellNetwork] = useState(networks[0]);
+  const [buyNetwork, setBuyNetwork] = useState<Network | null>(null);
+  const [sellToken, setSellToken] = useState(tokens[sellNetwork.id][0]);
+  const [buyToken, setBuyToken] = useState<Token | null>(null);
+  const [sellAmount, setSellAmount] = useState("");
+  const [buyAmount, setBuyAmount] = useState("");
+
+  const isNotConnected = !isConnected || !address;
+
+  const getExchangeRate = () => {
+    if (!sellToken || !buyToken) return "-";
+    const mockRates: Record<string, Record<string, string>> = {
+      ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
+      USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
+      MATIC: { USDC: "0.67", ETH: "0.00033" },
+      ARB: { USDC: "0.5", ETH: "0.00025" },
+    };
+    return `1 ${sellToken.symbol} = ${
+      mockRates[sellToken.symbol]?.[buyToken.symbol] || "-"
+    } ${buyToken.symbol}`;
+  };
+
+  const handleSwap = () => {
+    const tempNetwork = sellNetwork;
+    const tempToken = sellToken;
+    setSellNetwork(buyNetwork!);
+    setSellToken(buyToken!);
+    setBuyNetwork(tempNetwork);
+    setBuyToken(tempToken);
+  };
+
+  const getButtonText = () => {
+    if (isNotConnected) return "Connect Wallet";
+    if (!buyNetwork) return "Select Buy Network";
+    if (!buyToken) return "Select Buy Token";
+    return "Review Swap";
+  };
+
   return (
-    <div className="p-2">
-      <SwapInterface />
-    </div>
+    <>
+      <div className="fixed inset-0 overflow-hidden">
+        <div className="absolute left-1/4 top-1/4 h-32 w-32 rounded-full bg-purple-200 dark:bg-purple-900 blur-3xl opacity-20" />
+        <div className="absolute right-1/4 top-1/2 h-32 w-32 rounded-full bg-blue-200 dark:bg-blue-900 blur-3xl opacity-20" />
+        <div className="absolute bottom-1/4 left-1/2 h-32 w-32 rounded-full bg-indigo-200 dark:bg-indigo-900 blur-3xl opacity-20" />
+      </div>
+      <div className="relative mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center p-4">
+        <h1 className="mb-8 text-center text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          VeraSwap
+        </h1>
+        <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                <div className="mb-2 flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Sell
+                  </span>
+                  <NetworkSelect
+                    value={sellNetwork}
+                    onChange={setSellNetwork}
+                    networks={networks}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={sellAmount}
+                    onChange={(e) => setSellAmount(e.target.value)}
+                    type="number"
+                    placeholder="0.0"
+                    className="border-0 bg-transparent text-4xl font-semibold"
+                  />
+                  <TokenSelect
+                    value={sellToken}
+                    onChange={setSellToken}
+                    tokens={sellNetwork ? tokens[sellNetwork.id] : []}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <span>$0.00</span>
+                  <div className="space-x-2">
+                    <span>Balance: 1.234</span>
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-sm"
+                      onClick={() => setSellAmount("1.234")}
+                    >
+                      Max
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center -my-2 relative z-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
+                  onClick={handleSwap}
+                >
+                  <ArrowDown className="h-6 w-6" />
+                </Button>
+              </div>
+
+              <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                <div className="mb-2 flex justify-between items-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Buy
+                  </span>
+                  <NetworkSelect
+                    value={buyNetwork}
+                    onChange={setBuyNetwork}
+                    networks={networks}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={buyAmount}
+                    onChange={(e) => setBuyAmount(e.target.value)}
+                    type="number"
+                    placeholder="0.0"
+                    className="border-0 bg-transparent text-4xl font-semibold"
+                  />
+                  <TokenSelect
+                    value={buyToken}
+                    onChange={setBuyToken}
+                    tokens={buyNetwork ? tokens[buyNetwork.id] : []}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <span>$0.00</span>
+                  <div className="space-x-2">
+                    <span>Balance: 0.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex justify-between">
+                  <span>Price</span>
+                  <span>
+                    {sellToken && buyToken
+                      ? getExchangeRate()
+                      : "Select both tokens"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Price Impact</span>
+                </div>
+              </div>
+
+              <Button
+                disabled={isNotConnected || !buyNetwork || !buyToken}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-full shadow-lg transition-all"
+              >
+                {getButtonText()}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
