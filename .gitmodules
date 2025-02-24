@@ -45,3 +45,6 @@
 	url = https://github.com/uniswap/universal-router
 [submodule "lib/universal-router"]
 	branch = main
+[submodule "packages/veraswap-sdk/lib/v3-periphery"]
+	path = packages/veraswap-sdk/lib/v3-periphery
+	url = https://github.com/leovigna/v3-periphery
