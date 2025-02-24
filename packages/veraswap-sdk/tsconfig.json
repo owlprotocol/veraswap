@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "outDir": "lib/types",
+  },
+  "include": [
+    "src"
+  ],
+  "extends": "@owlprotocol/tsconfig"
+}
