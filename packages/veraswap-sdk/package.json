@@ -4,10 +4,10 @@
   "keywords": [],
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/owlprotocol/workspace-public",
+  "homepage": "https://github.com/owlprotocol/veraswap",
   "repository": {
     "type": "git",
-    "url": "https://github.com/owlprotocol/workspace-public.git"
+    "url": "https://github.com/owlprotocol/veraswap.git"
   },
   "copyright": "Copyright 2024 Owl Protocol",
   "license": "MIT",
@@ -52,10 +52,10 @@
     "tsc:watch": "tsc -w"
   },
   "devDependencies": {
-    "@owlprotocol/esbuild-config": "^3.0.0",
-    "@owlprotocol/eslint-config": "^3.0.0",
-    "@owlprotocol/prettier-config": "^3.0.0",
-    "@owlprotocol/tsconfig": "^3.0.0",
+    "@owlprotocol/esbuild-config": "latest",
+    "@owlprotocol/eslint-config": "latest",
+    "@owlprotocol/prettier-config": "latest",
+    "@owlprotocol/tsconfig": "latest",
     "@types/node": "^20.11.10",
     "@typescript/analyze-trace": "^0.10.1",
     "lint-staged": "^11.2.6",
@@ -68,7 +68,7 @@
     "depcheck": "^1.4.7"
   },
   "bugs": {
-    "url": "https://github.com/owlprotocol/workspace-public/issues",
+    "url": "https://github.com/owlprotocol/veraswap/issues",
     "email": "leo@owlprotocol.xyz"
   },
   "funding": "https://owlprotocol.xyz",
