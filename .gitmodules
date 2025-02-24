@@ -38,3 +38,6 @@
 	url = https://github.com/uniswap/v4-periphery
 [submodule "lib/v4-periphery"]
 	branch = main
+[submodule "packages/veraswap-sdk/lib/uniswap-hooks"]
+	path = packages/veraswap-sdk/lib/uniswap-hooks
+	url = https://github.com/openzeppelin/uniswap-hooks

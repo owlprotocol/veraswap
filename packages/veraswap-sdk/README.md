@@ -14,7 +14,7 @@ forge install \
     uniswap/v3-periphery@main \
     uniswap/v4-core@main \
     uniswap/v4-periphery@main \
-    openzeppelin/uniswap-hooks@main \
+    openzeppelin/uniswap-hooks@master \
     uniswap/universal-router@main
 ```
 
