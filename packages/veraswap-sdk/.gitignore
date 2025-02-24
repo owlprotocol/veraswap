@@ -2,6 +2,9 @@
 
 cache/
 
+# forge
+!lib
+
 # dependencies
 node_modules
 .pnp
@@ -18,7 +21,6 @@ build
 .esbuild
 dist
 dist-ssr
-lib
 .serverless
 
 # local deployments
