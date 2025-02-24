@@ -33,3 +33,8 @@
 	url = https://github.com/uniswap/v4-core
 [submodule "lib/v4-core"]
 	branch = main
+[submodule "packages/veraswap-sdk/lib/v4-periphery"]
+	path = packages/veraswap-sdk/lib/v4-periphery
+	url = https://github.com/uniswap/v4-periphery
+[submodule "lib/v4-periphery"]
+	branch = main
