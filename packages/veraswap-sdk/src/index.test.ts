@@ -24,9 +24,9 @@ import {
 import { localhost } from "viem/chains";
 import {
     getOrDeployDeterministicContract,
-    getLocalAccount,
     getDeployDeterministicAddress,
-} from "@owlprotocol/viem-utils";
+} from "@owlprotocol/create-deterministic";
+import { getAnvilAccount } from "@owlprotocol/anvil-account"
 import { Actions, Pool, Position, V4Planner, V4PositionPlanner, priceToClosestTick } from "@uniswap/v4-sdk";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
@@ -34,6 +34,7 @@ import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 import { encodeFunctionData } from "viem";
 import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
+
 import { port } from "./test/constants.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { IPositionManager } from "./artifacts/IPositionManager.js";
@@ -87,7 +88,7 @@ describe("index.test.ts", function () {
             transport,
         });
         walletClient = createWalletClient({
-            account: getLocalAccount(0, { nonceManager }),
+            account: getAnvilAccount(0, { nonceManager }),
             chain: localhost,
             transport,
         });

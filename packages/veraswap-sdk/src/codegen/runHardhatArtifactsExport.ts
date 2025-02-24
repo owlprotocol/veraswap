@@ -1,4 +1,4 @@
-import { hardhatArtifactsExport } from "@owlprotocol/viem-utils/codegen";
+import { hardhatArtifactsExport } from "@owlprotocol/artifacts-export";
 
 hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IMulticall_v4.sol/*.json",
