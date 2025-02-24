@@ -43,3 +43,8 @@
 	url = https://github.com/openzeppelin/uniswap-hooks
 [submodule "lib/uniswap-hooks"]
 	branch = master
+[submodule "packages/veraswap-sdk/lib/universal-router"]
+	path = packages/veraswap-sdk/lib/universal-router
+	url = https://github.com/uniswap/universal-router
+[submodule "lib/universal-router"]
+	branch = main
