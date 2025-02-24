@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "_types",
+    "jsx": "react-jsx",
   },
   "include": [
     "src"
