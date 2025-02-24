@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { tokens, networks, Network, Token } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -25,7 +26,7 @@ function Index() {
   const isNotConnected = !isConnected || !address;
 
   const getExchangeRate = () => {
-    if (!token0 || !setToken1) return "-";
+    if (!token0 || !token1) return "-";
     const mockRates: Record<string, Record<string, string>> = {
       ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
       USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
@@ -40,8 +41,8 @@ function Index() {
   const handleSwap = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
-    setFromChain(toChain);
-    setToken0(token1);
+    setFromChain(toChain!);
+    setToken0(token1!);
     setToChain(tempNetwork);
     setToken1(tempToken);
   };
@@ -54,99 +55,109 @@ function Index() {
   };
 
   return (
-    <>
-      <div className="fixed inset-0 overflow-hidden">
-        <div className="absolute left-1/4 top-1/4 h-32 w-32 rounded-full bg-purple-200 dark:bg-purple-900 blur-3xl opacity-20" />
-        <div className="absolute right-1/4 top-1/2 h-32 w-32 rounded-full bg-blue-200 dark:bg-blue-900 blur-3xl opacity-20" />
-        <div className="absolute bottom-1/4 left-1/2 h-32 w-32 rounded-full bg-indigo-200 dark:bg-indigo-900 blur-3xl opacity-20" />
-      </div>
-      <div className="relative mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center p-4">
-        <h1 className="mb-8 text-center text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          VeraSwap
-        </h1>
-        <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
-                <div className="mb-2 flex justify-between items-center">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Sell
-                  </span>
-                  <NetworkSelect
-                    value={fromChain}
-                    onChange={setFromChain}
-                    networks={networks}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
-                    type="number"
-                    placeholder="0.0"
-                    className="border-0 bg-transparent text-4xl font-semibold"
-                  />
-                  <TokenSelect
-                    value={token0}
-                    onChange={setToken0}
-                    tokens={fromChain ? tokens[fromChain.id] : []}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <span>$0.00</span>
-                  <div className="space-x-2">
-                    <span>Balance: 1.234</span>
-                    <Button
-                      variant="link"
-                      className="h-auto p-0 text-sm"
-                      onClick={() => setSellAmount("1.234")}
-                    >
-                      Max
-                    </Button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm bg-white/5 border-b border-white/10">
+        <nav className="mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex-1" />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            VeraSwap
+          </h1>
+          <div className="flex-1 flex justify-end">
+            <ConnectButton
+              showBalance={false}
+              accountStatus="address"
+              chainStatus="icon"
+            />
+          </div>
+        </nav>
+      </header>
+
+      <main className="pt-24 pb-8">
+        <div className="max-w-xl mx-auto px-4">
+          <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
+            <CardContent className="p-4 space-y-6">
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                  <div className="mb-2 flex justify-between items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      From
+                    </span>
+                    <NetworkSelect
+                      value={fromChain}
+                      onChange={setFromChain}
+                      networks={networks}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={sellAmount}
+                      onChange={(e) => setSellAmount(e.target.value)}
+                      type="number"
+                      placeholder="0.0"
+                      className="border-0 bg-transparent text-3xl font-semibold"
+                    />
+                    <TokenSelect
+                      value={token0}
+                      onChange={setToken0}
+                      tokens={fromChain ? tokens[fromChain.id] : []}
+                    />
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>$0.00</span>
+                    <div className="space-x-2">
+                      <span>Balance: 1.234</span>
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-sm"
+                        onClick={() => setSellAmount("1.234")}
+                      >
+                        Max
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-center -my-2 relative z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
-                  onClick={handleSwap}
-                >
-                  <ArrowDown className="h-6 w-6" />
-                </Button>
-              </div>
+                <div className="flex justify-center -my-2 relative z-10">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
+                    onClick={handleSwap}
+                  >
+                    <ArrowDown className="h-6 w-6" />
+                  </Button>
+                </div>
 
-              <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
-                <div className="mb-2 flex justify-between items-center">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Buy
-                  </span>
-                  <NetworkSelect
-                    value={toChain}
-                    onChange={setToChain}
-                    networks={networks}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={buyAmount}
-                    onChange={(e) => setBuyAmount(e.target.value)}
-                    type="number"
-                    placeholder="0.0"
-                    className="border-0 bg-transparent text-4xl font-semibold"
-                  />
-                  <TokenSelect
-                    value={token1}
-                    onChange={setToken1}
-                    tokens={toChain ? tokens[toChain.id] : []}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                  <span>$0.00</span>
-                  <div className="space-x-2">
-                    <span>Balance: 0.00</span>
+                <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                  <div className="mb-2 flex justify-between items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      To
+                    </span>
+                    <NetworkSelect
+                      value={toChain}
+                      onChange={setToChain}
+                      networks={networks}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={buyAmount}
+                      onChange={(e) => setBuyAmount(e.target.value)}
+                      type="number"
+                      placeholder="0.0"
+                      className="border-0 bg-transparent text-3xl font-semibold"
+                    />
+                    <TokenSelect
+                      value={token1}
+                      onChange={setToken1}
+                      tokens={toChain ? tokens[toChain.id] : []}
+                    />
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>$0.00</span>
+                    <div className="space-x-2">
+                      <span>Balance: 0.00</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -162,19 +173,20 @@ function Index() {
                 </div>
                 <div className="flex justify-between">
                   <span>Price Impact</span>
+                  <span>0.5%</span>
                 </div>
               </div>
 
               <Button
-                disabled={isNotConnected || !toChain || !token0 || !token1}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-full shadow-lg transition-all"
+                disabled={isNotConnected || !toChain || !token1}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
               >
                 {getButtonText()}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
   );
 }
