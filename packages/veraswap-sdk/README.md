@@ -11,7 +11,7 @@ forge install \
     uniswap/permit2@main \
     uniswap/v2-core@master \
     uniswap/v3-core@main \
-    uniswap/v3-periphery@main \
+    leovigna/v3-periphery@main \
     uniswap/v4-core@main \
     uniswap/v4-periphery@main \
     openzeppelin/uniswap-hooks@master \
