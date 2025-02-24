@@ -4,7 +4,7 @@ import { Instance } from "prool";
 import { anvil } from "prool/instances";
 import { createWalletClient, http } from "viem";
 import { localhost } from "viem/chains";
-import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
+// import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 
@@ -70,6 +70,7 @@ export async function setup() {
     const stateView = stdout.match(/stateView: (0x.*?)\n/)?.[1];
     console.log({ poolManager, positionManager, universalRouter, quoter, stateView });
 
+    /*
     const mailboxContracts = await setupTestMailboxContracts(walletClient);
     const mailboxAddress = mailboxContracts.mailbox.address;
 
@@ -77,6 +78,7 @@ export async function setup() {
     const mailboxAddress2 = mailboxContracts2.mailbox.address;
 
     console.log({ mailboxAddress, mailboxAddress2 });
+    */
 }
 
 /**

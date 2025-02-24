@@ -3,6 +3,7 @@ import { hardhatArtifactsExport } from "@owlprotocol/artifacts-export";
 hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IMulticall_v4.sol/*.json",
     "out/MockERC20.sol/*.json",
+    "out/IERC20.sol/*.json",
     "out/IAllowanceTransfer.sol/*.json",
     "out/ISignatureTransfer.sol/*.json",
     "out/IPositionManager.sol/*.json",

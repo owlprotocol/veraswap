@@ -33,10 +33,10 @@ import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 
 import { encodeFunctionData } from "viem";
 import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
-import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 
 import { port } from "./test/constants.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
+import { IERC20 } from "./artifacts/IERC20.js"
 import { IPositionManager } from "./artifacts/IPositionManager.js";
 import { IAllowanceTransfer } from "./artifacts/IAllowanceTransfer.js";
 import { IMulticall_v4 as IMulticall } from "./artifacts/IMulticall_v4.js";
