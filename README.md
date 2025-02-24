@@ -1,3 +1,3 @@
-# Starter Monorepo
+# Veraswap Monrepo
 
-Starter monorepo designed to work with pnpm and turbo repo.
+TODO: Add info on packages and setup.
