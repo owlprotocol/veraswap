@@ -15,41 +15,41 @@ export const Route = createLazyFileRoute("/")({
 
 function Index() {
   const { isConnected, address } = useAccount();
-  const [sellNetwork, setSellNetwork] = useState(networks[0]);
-  const [buyNetwork, setBuyNetwork] = useState<Network | null>(null);
-  const [sellToken, setSellToken] = useState(tokens[sellNetwork.id][0]);
-  const [buyToken, setBuyToken] = useState<Token | null>(null);
+  const [fromChain, setFromChain] = useState(networks[0]);
+  const [toChain, setToChain] = useState<Network | null>(null);
+  const [token0, setToken0] = useState(tokens[fromChain.id][0]);
+  const [token1, setToken1] = useState<Token | null>(null);
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
 
   const isNotConnected = !isConnected || !address;
 
   const getExchangeRate = () => {
-    if (!sellToken || !buyToken) return "-";
+    if (!token0 || !setToken1) return "-";
     const mockRates: Record<string, Record<string, string>> = {
       ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
       USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
       MATIC: { USDC: "0.67", ETH: "0.00033" },
       ARB: { USDC: "0.5", ETH: "0.00025" },
     };
-    return `1 ${sellToken.symbol} = ${
-      mockRates[sellToken.symbol]?.[buyToken.symbol] || "-"
-    } ${buyToken.symbol}`;
+    return `1 ${token0.symbol} = ${
+      mockRates[token0.symbol]?.[token1.symbol] || "-"
+    } ${token1.symbol}`;
   };
 
   const handleSwap = () => {
-    const tempNetwork = sellNetwork;
-    const tempToken = sellToken;
-    setSellNetwork(buyNetwork!);
-    setSellToken(buyToken!);
-    setBuyNetwork(tempNetwork);
-    setBuyToken(tempToken);
+    const tempNetwork = fromChain;
+    const tempToken = token0;
+    setFromChain(toChain);
+    setToken0(token1);
+    setToChain(tempNetwork);
+    setToken1(tempToken);
   };
 
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
-    if (!buyNetwork) return "Select Buy Network";
-    if (!buyToken) return "Select Buy Token";
+    if (!toChain) return "Select A Network";
+    if (!token1) return "Select Buy Token";
     return "Review Swap";
   };
 
@@ -73,8 +73,8 @@ function Index() {
                     Sell
                   </span>
                   <NetworkSelect
-                    value={sellNetwork}
-                    onChange={setSellNetwork}
+                    value={fromChain}
+                    onChange={setFromChain}
                     networks={networks}
                   />
                 </div>
@@ -87,9 +87,9 @@ function Index() {
                     className="border-0 bg-transparent text-4xl font-semibold"
                   />
                   <TokenSelect
-                    value={sellToken}
-                    onChange={setSellToken}
-                    tokens={sellNetwork ? tokens[sellNetwork.id] : []}
+                    value={token0}
+                    onChange={setToken0}
+                    tokens={fromChain ? tokens[fromChain.id] : []}
                   />
                 </div>
                 <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -124,8 +124,8 @@ function Index() {
                     Buy
                   </span>
                   <NetworkSelect
-                    value={buyNetwork}
-                    onChange={setBuyNetwork}
+                    value={toChain}
+                    onChange={setToChain}
                     networks={networks}
                   />
                 </div>
@@ -138,9 +138,9 @@ function Index() {
                     className="border-0 bg-transparent text-4xl font-semibold"
                   />
                   <TokenSelect
-                    value={buyToken}
-                    onChange={setBuyToken}
-                    tokens={buyNetwork ? tokens[buyNetwork.id] : []}
+                    value={token1}
+                    onChange={setToken1}
+                    tokens={toChain ? tokens[toChain.id] : []}
                   />
                 </div>
                 <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -155,7 +155,7 @@ function Index() {
                 <div className="flex justify-between">
                   <span>Price</span>
                   <span>
-                    {sellToken && buyToken
+                    {token0 && token1
                       ? getExchangeRate()
                       : "Select both tokens"}
                   </span>
@@ -166,7 +166,7 @@ function Index() {
               </div>
 
               <Button
-                disabled={isNotConnected || !buyNetwork || !buyToken}
+                disabled={isNotConnected || !toChain || !token0 || !token1}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-full shadow-lg transition-all"
               >
                 {getButtonText()}
