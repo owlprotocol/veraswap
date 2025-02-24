@@ -1,8 +1,63 @@
-# Typescript Starter
+# Veraswap SDK
 
-Typescript starter project.
+Veraswap contracts and utils.
 
-## Forge install
+## Contracts
+
+Contracts are compiled and deployed using Forge.
+
+### Check Forge Installation
+
+*Ensure that you have correctly installed Foundry (Forge) Stable. You can update Foundry by running:*
+
+```bash
+foundryup
+```
+
+> *v4-template* appears to be *incompatible* with Foundry Nightly. See [foundry announcements](https://book.getfoundry.sh/announcements) to revert back to the stable build
+
+### Set up
+
+*requires [foundry](https://book.getfoundry.sh)*
+
+```bash
+forge install
+forge build
+forge test
+```
+
+### Script Simulation
+
+Scripts can be run in the forge simulation
+
+```bash
+forge script script/DeployAnvil.s.sol \
+    --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+    --code-size-limit 393216
+```
+
+### Local Development (Anvil)
+
+Other than writing unit tests (recommended!), you can only deploy & test hooks on [anvil](https://book.getfoundry.sh/anvil/)
+
+```bash
+# start anvil, a local EVM chain
+anvil --disable-code-size-limit
+
+# in a new terminal
+#10x code size limit, some contracts seem to have to be fine tuned
+forge script script/DeployAnvil.s.sol \
+    --rpc-url http://localhost:8545 \
+    --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+    --broadcast \
+    --code-size-limit 393216
+```
+
+See [script/](script/) for hook deployment, pool creation, liquidity provision, and swapping.
+
+### Manual installation
+
+For custom projects that want to just copy over our forge setup, you can copy the [remappings.tsx](./remappings.txt) and install the dependencies at latest branches. Note we use a custom v3-periphery fork to make it work with latest openzeppelin contracts.
 
 ```bash
 forge install \
@@ -17,25 +72,3 @@ forge install \
     openzeppelin/uniswap-hooks@master \
     uniswap/universal-router@main
 ```
-
-## package.json
-Exports are defined as below
-```json
-{
-  "type": "module",
-  "main": "./lib/cjs/index.cjs",
-  "module": "./lib/esm/index.mjs",
-  "types": "./lib/types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./lib/types/index.d.ts",
-      "require": "./lib/cjs/index.js",
-      "import": "./lib/esm/index.js"
-    }
-}
-```
-* `type: "module"`: By default we use ESM Modules
-* `lib/esm`: ESM built output
-* `lib/cjs`: CJS build output
-* `lib/types`: Typescript types
-* No minified bundles are provided as these are left to frameworks to bundle.
