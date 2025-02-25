@@ -15,7 +15,7 @@ export const Route = createLazyFileRoute("/")({
 
 function Index() {
   const { isConnected, address } = useAccount();
-  const [fromChain, setFromChain] = useState(networks[0]);
+  const [fromChain, setFromChain] = useState<Network | null>(networks[0]);
   const [toChain, setToChain] = useState<Network | null>(null);
   const [token0, setToken0] = useState(tokens[fromChain.id][0]);
   const [token1, setToken1] = useState<Token | null>(null);
@@ -40,10 +40,13 @@ function Index() {
   const handleSwap = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
+    const tempAmount = sellAmount;
     setFromChain(toChain!);
     setToken0(token1!);
+    setSellAmount(buyAmount);
     setToChain(tempNetwork);
     setToken1(tempToken);
+    setBuyAmount(tempAmount);
   };
 
   const getButtonText = () => {
@@ -104,6 +107,7 @@ function Index() {
                 size="icon"
                 className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
                 onClick={handleSwap}
+                disabled={!toChain || !token1}
               >
                 <ArrowUpDown className="h-6 w-6" />
               </Button>

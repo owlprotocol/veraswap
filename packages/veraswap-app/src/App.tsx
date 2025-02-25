@@ -5,9 +5,8 @@ import { Analytics } from "./components/analytics.js";
 import { router } from "./router.js";
 import { Toaster } from "@/components/ui/toaster.jsx";
 import { http, WagmiProvider, createStorage } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
+import { localhost } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { createClient } from "viem";
 import {
   getDefaultConfig,
   lightTheme,
@@ -15,21 +14,12 @@ import {
 } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 
-// export const config = createConfig({
-//   chains: [mainnet, sepolia],
-//   client({ chain }) {
-//     return createClient({ chain, transport: http() });
-//   },
-//   storage: createStorage({ storage: window.localStorage }),
-// });
-
 const config = getDefaultConfig({
   appName: "Veraswap",
   projectId: "veraswap",
-  chains: [mainnet, sepolia],
+  chains: [localhost],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [localhost.id]: http(),
   },
   storage: createStorage({ storage: window.localStorage }),
 });
