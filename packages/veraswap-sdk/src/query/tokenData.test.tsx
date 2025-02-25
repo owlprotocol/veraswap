@@ -1,15 +1,11 @@
 import { test, expect, describe } from "vitest";
 import { renderHook } from "@testing-library/react-hooks";
-import {
-    QueryClient,
-    QueryClientProvider,
-    useQuery,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
-import { tokenDataQueryOptions } from "./tokenData.js";
 import { ReactNode } from "react";
+import { tokenDataQueryOptions } from "./tokenData.js";
 import { MOCK_TOKENS } from "../constants.js";
 
 describe("tokenData.test.tsx", () => {
@@ -28,9 +24,7 @@ describe("tokenData.test.tsx", () => {
 
         const wrapper = ({ children }: { children: ReactNode }) => (
             <WagmiProvider config={config}>
-                <QueryClientProvider client={queryClient}>
-                    {children}
-                </QueryClientProvider>
+                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
             </WagmiProvider>
         );
 
@@ -40,13 +34,13 @@ describe("tokenData.test.tsx", () => {
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
                         address: MOCK_TOKENS[chainId].MOCK_A,
-                    })
+                    }),
                 ),
-            { wrapper }
+            { wrapper },
         );
 
         expect(result.current.isLoading).toBe(true);
-        await waitForNextUpdate()
+        await waitForNextUpdate();
 
         expect(result.current.data?.name).toBe("MockA");
         expect(result.current.data?.symbol).toBe("A");
@@ -62,9 +56,7 @@ describe("tokenData.test.tsx", () => {
 
         const wrapper = ({ children }: { children: ReactNode }) => (
             <WagmiProvider config={config}>
-                <QueryClientProvider client={queryClient}>
-                    {children}
-                </QueryClientProvider>
+                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
             </WagmiProvider>
         );
 
@@ -74,17 +66,17 @@ describe("tokenData.test.tsx", () => {
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
                         address: "0x0000000000000000000000000000000000000001",
-                    })
+                    }),
                 ),
-            { wrapper }
+            { wrapper },
         );
 
         expect(result.current.isLoading).toBe(true);
-        await waitForNextUpdate()
+        await waitForNextUpdate();
 
         expect(result.current.data?.name).toBeUndefined();
         expect(result.current.data?.symbol).toBeUndefined();
-        expect(result.current.data?.decimals).toBeUndefined()
+        expect(result.current.data?.decimals).toBeUndefined();
         expect(result.current.data?.nameError).toBeDefined();
         expect(result.current.data?.symbolError).toBeDefined();
         expect(result.current.data?.decimalsError).toBeDefined();

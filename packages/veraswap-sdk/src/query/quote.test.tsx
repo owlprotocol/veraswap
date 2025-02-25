@@ -6,10 +6,12 @@ import { createPublicClient } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import { beforeEach, describe, expect, test } from "vitest";
 import { quoteQueryOptions } from "./quote.js";
-import { quoteExactInputSingle as quoteExactInputSingleAbi, quoteExactOutputSingle as quoteExactOutputSingleAbi } from "../artifacts/IV4Quoter.js";
+import {
+    quoteExactInputSingle as quoteExactInputSingleAbi,
+    quoteExactOutputSingle as quoteExactOutputSingleAbi,
+} from "../artifacts/IV4Quoter.js";
 import { MOCK_POOLS, MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
 import { port } from "../test/constants.js";
-
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
@@ -32,11 +34,10 @@ describe("quote.test.tsx", () => {
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;
 
-    const poolKey = MOCK_POOLS[chainId]
+    const poolKey = MOCK_POOLS[chainId];
 
     const currency0Amount = CurrencyAmount.fromFractionalAmount(currency0, 1, 1);
     const currency1Amount = CurrencyAmount.fromFractionalAmount(currency1, 1, 1);
-
 
     let queryClient: QueryClient;
 
@@ -53,19 +54,26 @@ describe("quote.test.tsx", () => {
 
         const { result, waitForNextUpdate } = renderHook(
             () =>
-                useQuery(quoteQueryOptions(config, {
-                    chainId,
-                    poolKey,
-                    exactCurrencyAmount: currency0Amount,
-                    quoteType: "quoteExactInputSingle",
-                    quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
-                })),
+                useQuery(
+                    quoteQueryOptions(config, {
+                        chainId,
+                        poolKey,
+                        exactCurrencyAmount: currency0Amount,
+                        quoteType: "quoteExactInputSingle",
+                        quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
+                    }),
+                ),
             { wrapper },
         );
         expect(result.current.isLoading).toBe(true);
         await waitForNextUpdate({ timeout: 5000 });
 
-        const quoteExactInputSingleParams = { poolKey, zeroForOne: true, exactAmount: BigInt(currency0Amount.decimalScale.toString()), hookData: "0x" };
+        const quoteExactInputSingleParams = {
+            poolKey,
+            zeroForOne: true,
+            exactAmount: BigInt(currency0Amount.decimalScale.toString()),
+            hookData: "0x",
+        };
         const [amountOutQuoted, gasEstimateQuoted] = (await publicClient.readContract({
             abi: [quoteExactInputSingleAbi],
             address: UNISWAP_CONTRACTS[chainId].QUOTER,
@@ -88,19 +96,26 @@ describe("quote.test.tsx", () => {
 
         const { result, waitForNextUpdate } = renderHook(
             () =>
-                useQuery(quoteQueryOptions(config, {
-                    chainId,
-                    poolKey,
-                    exactCurrencyAmount: currency1Amount,
-                    quoteType: "quoteExactOutputSingle",
-                    quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
-                })),
+                useQuery(
+                    quoteQueryOptions(config, {
+                        chainId,
+                        poolKey,
+                        exactCurrencyAmount: currency1Amount,
+                        quoteType: "quoteExactOutputSingle",
+                        quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
+                    }),
+                ),
             { wrapper },
         );
         expect(result.current.isLoading).toBe(true);
         await waitForNextUpdate({ timeout: 5000 });
 
-        const quoteExactOutputSingleParams = { poolKey, zeroForOne: true, exactAmount: BigInt(currency1Amount.decimalScale.toString()), hookData: "0x" };
+        const quoteExactOutputSingleParams = {
+            poolKey,
+            zeroForOne: true,
+            exactAmount: BigInt(currency1Amount.decimalScale.toString()),
+            hookData: "0x",
+        };
         const [amountInQuoted, gasEstimatedQuoted] = (await publicClient.readContract({
             abi: [quoteExactOutputSingleAbi],
             address: UNISWAP_CONTRACTS[chainId].QUOTER,
