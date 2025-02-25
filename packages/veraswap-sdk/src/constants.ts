@@ -18,4 +18,4 @@ export const MOCK_TOKENS = {
         MOCK_A: "0xd6199fDD3306DedE314e48a5260B2Cd64287DB21",
         MOCK_B: "0x09A7017c761cf31157B0045BEd72f76933b869f1"
     }
-}
+} as const
