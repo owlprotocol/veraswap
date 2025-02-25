@@ -8,11 +8,11 @@ import {
 import { WagmiProvider } from "wagmi";
 import { http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
-import { fetchCurrencyQueryOptions } from "./useCurrency.js";
+import { tokenDataQueryOptions } from "./tokenData.js";
 import { ReactNode } from "react";
 import { MOCK_TOKENS } from "../constants.js";
 
-describe("useCurrency.test.tsx", () => {
+describe("tokenData.test.tsx", () => {
     // Wagmi Config
     const chain = localhost;
     const chainId = chain.id;
@@ -37,7 +37,7 @@ describe("useCurrency.test.tsx", () => {
         const { result, waitForNextUpdate } = renderHook(
             () =>
                 useQuery(
-                    fetchCurrencyQueryOptions(config, {
+                    tokenDataQueryOptions(config, {
                         chainId: chainId,
                         address: MOCK_TOKENS[chainId].MOCK_A,
                     })
@@ -71,7 +71,7 @@ describe("useCurrency.test.tsx", () => {
         const { result, waitForNextUpdate } = renderHook(
             () =>
                 useQuery(
-                    fetchCurrencyQueryOptions(config, {
+                    tokenDataQueryOptions(config, {
                         chainId: chainId,
                         address: "0x0000000000000000000000000000000000000001",
                     })

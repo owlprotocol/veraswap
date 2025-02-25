@@ -31,6 +31,16 @@
       "types": "./_types/index.d.ts",
       "require": "./_cjs/lib/index.js",
       "import": "./_esm/lib/index.js"
+    },
+     "./artifacts": {
+      "types": "./lib/types/artifacts/index.d.ts",
+      "require": "./lib/cjs/artifacts/index.js",
+      "import": "./lib/esm/artifacts/index.js"
+    },
+    "./artifacts/*": {
+      "types": "./lib/types/artifacts/*.d.ts",
+      "require": "./lib/cjs/artifacts/*.js",
+      "import": "./lib/esm/artifacts/*.js"
     }
   },
   "scripts": {
@@ -61,6 +71,7 @@
     "@uniswap/v4-core": "1.0.1",
     "@uniswap/v4-periphery": "1.0.1",
     "@uniswap/v4-sdk": "^1.19.4",
+    "@wagmi/core": "^2.9.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "viem": "2.21.19",
