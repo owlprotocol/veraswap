@@ -265,7 +265,7 @@ function Index() {
                     "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   )}
                   placeholder={
-                    quoterError
+                    !!quoterError
                       ? "Insufficient Liquidity"
                       : isQuoterLoading
                         ? "Fetching quote..."
@@ -292,7 +292,7 @@ function Index() {
             </div>
           </div>
           <Button
-            disabled={isNotConnected || !toChain || !token1}
+            disabled={isNotConnected || !toChain || !token1 || !!quoterError}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
           >
             {getButtonText()}
