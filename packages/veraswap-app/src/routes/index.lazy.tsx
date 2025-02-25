@@ -6,6 +6,7 @@ import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
   MOCK_POOLS,
   MOCK_TOKENS,
+  PERMIT2_ADDRESS,
   quoteQueryOptions,
   tokenDataQueryOptions,
   UNISWAP_CONTRACTS,
@@ -81,7 +82,7 @@ function Index() {
   });
 
   const token0BalanceFromatted =
-    token0Balance && token0
+    token0Balance != undefined && token0
       ? `
      ${formatUnits(token0Balance, token0.decimals ?? 18)} ${token0.symbol}`
       : "-";
@@ -96,7 +97,7 @@ function Index() {
   });
 
   const token1BalanceFormatted =
-    token1Balance && token1
+    token1Balance != undefined && token1
       ? `
      ${formatUnits(token1Balance, token1.decimals ?? 18)} ${token1.symbol}`
       : "-";
@@ -133,6 +134,14 @@ function Index() {
     }
   }, [quoterData, quoterError]);
 
+  const { data: token0Permit2Allowance } = useReadContract({
+    abi: IERC20.abi,
+    address: token0?.address,
+    functionName: "allowance",
+    args: [walletAddress ?? zeroAddress, PERMIT2_ADDRESS],
+    query: { enabled: !!token0 && !!walletAddress },
+  });
+
   const handleInvert = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
@@ -145,10 +154,16 @@ function Index() {
     setAmountOut(tempAmount);
   };
 
+  console.log({ token0Balance, amountIn });
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
     if (!toChain) return "Select A Network";
-    if (!token1) return "Select Buy Token";
+    if (!token1) return "Select Input Token";
+    if (!amountIn) return "Enter Amount";
+    if (token0Balance != undefined && amountIn && token0Balance < amountIn)
+      return "Insufficient Balance";
+    if (token0Permit2Allowance && amountIn && token0Permit2Allowance < amountIn)
+      return "Approve Token";
     if (!!quoterError) return "Insufficient Liquidity";
     return "Review Swap";
   };
@@ -292,7 +307,16 @@ function Index() {
             </div>
           </div>
           <Button
-            disabled={isNotConnected || !toChain || !token1 || !!quoterError}
+            disabled={
+              isNotConnected ||
+              !toChain ||
+              !token1 ||
+              !amountIn ||
+              (token0Balance != undefined &&
+                amountIn &&
+                token0Balance < amountIn) ||
+              !!quoterError
+            }
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
           >
             {getButtonText()}

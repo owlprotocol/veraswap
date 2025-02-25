@@ -5,6 +5,8 @@ export const MAX_UINT_160 = 2n ** 160n - 1n;
 export const MAX_UINT_48 = 2 ** 48 - 1;
 export const V4_SWAP = 0x10;
 
+export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+
 export const UNISWAP_CONTRACTS = {
     [1337]: {
         POOL_MANAGER: "0xd92D506b10d59661bFdC3C3fbc681848c6FE82aF",
