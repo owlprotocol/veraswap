@@ -4,7 +4,6 @@ import {
     QueryClient,
     QueryClientProvider,
     useQuery,
-    useSuspenseQuery,
 } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { http, createConfig } from "wagmi";
