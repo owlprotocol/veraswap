@@ -17,7 +17,7 @@ export const Route = createLazyFileRoute("/")({
 });
 
 function Index() {
-  const { isConnected, address } = useAccount();
+  const { isConnected, address: walletAddress } = useAccount();
   const [fromChain, setFromChain] = useState<Network | null>(networks[0]);
   const [toChain, setToChain] = useState<Network | null>(null);
   const [token0, setToken0] = useState<Token | null>(null);
@@ -25,7 +25,7 @@ function Index() {
   const [sellAmount, setSellAmount] = useState<number | undefined>(undefined);
   const [buyAmount, setBuyAmount] = useState<number | undefined>(undefined);
 
-  const isNotConnected = !isConnected || !address;
+  const isNotConnected = !isConnected || !walletAddress;
 
   let tokens: Record<string, Token[]> = {};
 
@@ -46,8 +46,8 @@ function Index() {
     chainId: 1337,
     address: token0?.address,
     functionName: "balanceOf",
-    args: [address!],
-    query: { enabled: !!token0 && !!address },
+    args: [walletAddress!],
+    query: { enabled: !!token0 && !!walletAddress },
   });
 
   const token0BalanceFromatted =
@@ -65,8 +65,8 @@ function Index() {
     chainId: 1337,
     address: token1?.address,
     functionName: "balanceOf",
-    args: [address!],
-    query: { enabled: !!token1 && !!address },
+    args: [walletAddress!],
+    query: { enabled: !!token1 && !!walletAddress },
   });
 
   const token1BalanceFormatted =
