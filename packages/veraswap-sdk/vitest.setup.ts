@@ -68,7 +68,9 @@ export async function setup() {
     const universalRouter = stdout.match(/router: (0x.*?)\n/)?.[1];
     const quoter = stdout.match(/v4Quoter: (0x.*?)\n/)?.[1];
     const stateView = stdout.match(/stateView: (0x.*?)\n/)?.[1];
-    console.log({ poolManager, positionManager, universalRouter, quoter, stateView });
+    const mockA = stdout.match(/MockA: (0x.*?)\n/)?.[1]
+    const mockB = stdout.match(/MockB: (0x.*?)\n/)?.[1]
+    console.log({ poolManager, positionManager, universalRouter, quoter, stateView, mockA, mockB });
 
     /*
     const mailboxContracts = await setupTestMailboxContracts(walletClient);
