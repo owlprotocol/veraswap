@@ -47,8 +47,6 @@ export function useQuote({ poolKey, exactCurrencyAmount, quoteType, quoterAddres
         hooks: getAddress(poolKey.hooks),
     };
 
-    console.log("formattedPoolKey", formattedPoolKey);
-
     // TODO: only works for erc20 (type Token)
     const zeroForOne =
         quoteType === "quoteExactInputSingle"
