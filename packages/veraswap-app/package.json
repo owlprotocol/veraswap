@@ -82,7 +82,7 @@
     "zod": "3.22.4"
   },
   "devDependencies": {
-    "@owlprotocol/eslint-config": "latest",
+    "@owlprotocol/eslint-config": "3.2.1",
     "@owlprotocol/tsconfig": "latest",
     "@tanstack/router-vite-plugin": "^1.30.0",
     "@types/lodash-es": "4.17.12",
