@@ -133,7 +133,7 @@ function Index() {
     }
   }, [quoterData, quoterError]);
 
-  const handleSwap = () => {
+  const handleInvert = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
     const tempAmount = amountIn;
@@ -225,7 +225,7 @@ function Index() {
                 variant="outline"
                 size="icon"
                 className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
-                onClick={handleSwap}
+                onClick={handleInvert}
                 disabled={!toChain || !token1}
               >
                 <ArrowUpDown className="h-6 w-6" />
