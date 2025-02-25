@@ -22,6 +22,11 @@ import {
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
 import { useQuery } from "@tanstack/react-query";
+import {
+  IAllowanceTransfer,
+  IERC20,
+} from "@owlprotocol/veraswap-sdk/artifacts";
+import { set } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,12 +34,7 @@ import { networks, Network, Token as TokenCustom } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
-import {
-  IAllowanceTransfer,
-  IERC20,
-} from "@owlprotocol/veraswap-sdk/artifacts";
 import { useToast } from "@/components/ui/use-toast";
-import { set } from "react-hook-form";
 
 enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
@@ -103,7 +103,7 @@ function Index() {
             Number(fromChain.id),
             token0.address,
             token0Data.decimals ?? 18,
-            token0Data.symbol
+            token0Data.symbol,
           )
       : undefined;
 
@@ -115,7 +115,7 @@ function Index() {
             Number(toChain.id),
             token1.address,
             token1Data.decimals ?? 18,
-            token1Data.symbol
+            token1Data.symbol,
           )
       : undefined;
 
@@ -275,7 +275,7 @@ function Index() {
           zeroForOne: token0!.address < token1!.address,
           amountIn: amountIn!,
           amountOutMinimum: amountOut!,
-        })
+        }),
       );
     }
   };
@@ -362,14 +362,14 @@ function Index() {
                     setAmountIn(
                       value === ""
                         ? undefined
-                        : parseUnits(value, token0?.decimals ?? 18)
+                        : parseUnits(value, token0?.decimals ?? 18),
                     );
                   }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                   )}
                   placeholder="0.0"
                   disabled={!fromChain || !token0}
@@ -435,14 +435,14 @@ function Index() {
                     setAmountOut(
                       value === ""
                         ? undefined
-                        : parseUnits(value, token1?.decimals ?? 18)
+                        : parseUnits(value, token1?.decimals ?? 18),
                     );
                   }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                   )}
                   placeholder={
                     !!quoterError

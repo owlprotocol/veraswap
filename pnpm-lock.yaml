@@ -214,8 +214,8 @@ importers:
         version: 3.22.4
     devDependencies:
       '@owlprotocol/eslint-config':
-        specifier: latest
-        version: 3.1.2
+        specifier: 3.2.1
+        version: 3.2.1
       '@owlprotocol/tsconfig':
         specifier: latest
         version: 3.1.2
@@ -335,8 +335,8 @@ importers:
         specifier: latest
         version: 3.1.2
       '@owlprotocol/eslint-config':
-        specifier: latest
-        version: 3.1.2
+        specifier: 3.2.1
+        version: 3.2.1
       '@owlprotocol/prettier-config':
         specifier: latest
         version: 3.1.2
@@ -1748,8 +1748,8 @@ packages:
     resolution: {integrity: sha512-72Br6wuLUMFj7xvZQNCIkqDKuv1MdhmimLdgUqy//x4UL7Qp9qlZ+knK4DJStQPGZhGtRp9hsptNoQt12aJyFA==}
     engines: {node: ^18.0.0}
 
-  '@owlprotocol/eslint-config@3.1.2':
-    resolution: {integrity: sha512-TH5wO8gb/Tg9Fxz8VT8wFKH+1SZizPJA587YCTX60zvaL4bOZYIumwPZOhLbTpiVI3dbsExzajp/pxVynq0FXQ==}
+  '@owlprotocol/eslint-config@3.2.1':
+    resolution: {integrity: sha512-l5CGnG7MtJtDo+PLppB+hN/NtbTs4ZoAT5Iij8N8bi8t9TxMbZ3/ZDXJLmqCnmmN7lWe4cXTYvCWsuIS2V9Wug==}
     engines: {node: ^18.0.0}
 
   '@owlprotocol/prettier-config@3.1.2':
@@ -9590,7 +9590,7 @@ snapshots:
 
   '@owlprotocol/esbuild-config@3.1.2': {}
 
-  '@owlprotocol/eslint-config@3.1.2': {}
+  '@owlprotocol/eslint-config@3.2.1': {}
 
   '@owlprotocol/prettier-config@3.1.2': {}
 

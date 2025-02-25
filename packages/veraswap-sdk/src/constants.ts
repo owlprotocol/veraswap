@@ -1,6 +1,14 @@
 import { zeroAddress, zeroHash, encodeDeployData } from "viem";
-import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic"
-import { UnsupportedProtocol, PoolManager, PositionManager, UniversalRouter, V4Quoter, StateView, MockERC20} from "./artifacts/index.js"
+import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
+import {
+    UnsupportedProtocol,
+    PoolManager,
+    PositionManager,
+    UniversalRouter,
+    V4Quoter,
+    StateView,
+    MockERC20,
+} from "./artifacts/index.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -8,74 +16,78 @@ export const MAX_UINT_48 = 2 ** 48 - 1;
 export const V4_SWAP = 0x10;
 
 export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({ bytecode: UnsupportedProtocol.bytecode, salt: zeroHash})
+export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
+    bytecode: UnsupportedProtocol.bytecode,
+    salt: zeroHash,
+});
 export const POOL_MANAGER = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: PoolManager.bytecode,
         abi: PoolManager.abi,
-        args: [zeroAddress]
+        args: [zeroAddress],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const POSITION_MANAGER = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: PositionManager.bytecode,
         abi: PositionManager.abi,
-        args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress]
+        args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: UniversalRouter.bytecode,
         abi: UniversalRouter.abi,
-        args: [{
-            permit2: PERMIT2_ADDRESS,
-            weth9: zeroAddress,
-            v2Factory: zeroAddress,
-            v3Factory: zeroAddress,
-            pairInitCodeHash: zeroHash,
-            poolInitCodeHash: zeroHash,
-            v4PoolManager: POOL_MANAGER,
-            v3NFTPositionManager: zeroAddress,
-            v4PositionManager: POSITION_MANAGER
-        }]
+        args: [
+            {
+                permit2: PERMIT2_ADDRESS,
+                weth9: zeroAddress,
+                v2Factory: zeroAddress,
+                v3Factory: zeroAddress,
+                pairInitCodeHash: zeroHash,
+                poolInitCodeHash: zeroHash,
+                v4PoolManager: POOL_MANAGER,
+                v3NFTPositionManager: zeroAddress,
+                v4PositionManager: POSITION_MANAGER,
+            },
+        ],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const QUOTER = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: V4Quoter.bytecode,
         abi: V4Quoter.abi,
-        args: [POOL_MANAGER]
+        args: [POOL_MANAGER],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const STATE_VIEW = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: StateView.bytecode,
         abi: StateView.abi,
-        args: [POOL_MANAGER]
+        args: [POOL_MANAGER],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const MOCK_A = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: MockERC20.bytecode,
         abi: MockERC20.abi,
-        args: ["MockA", "A", 18]
+        args: ["MockA", "A", 18],
     }),
-    salt: zeroHash
-})
+    salt: zeroHash,
+});
 export const MOCK_B = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: MockERC20.bytecode,
         abi: MockERC20.abi,
-        args: ["MockB", "B", 18]
+        args: ["MockB", "B", 18],
     }),
-    salt: zeroHash
-})
-
+    salt: zeroHash,
+});
 
 export const UNISWAP_CONTRACTS = {
     [1337]: {
@@ -128,5 +140,5 @@ export const MOCK_POOLS = {
     },
 };
 
-console.debug(UNISWAP_CONTRACTS)
-console.debug(MOCK_TOKENS)
+console.debug(UNISWAP_CONTRACTS);
+console.debug(MOCK_TOKENS);
