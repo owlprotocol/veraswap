@@ -167,10 +167,10 @@ function Index() {
     data: hash,
     isPending: transactionIsPending,
   } = useSendTransaction();
-  const { data: receipt, error: receiptError } = useWaitForTransactionReceipt({
-    hash,
-  });
-  console.log({ receipt, receiptError });
+  const { data: receipt, isLoading: receiptIsLoading } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
 
   const handleInvert = () => {
     const tempNetwork = fromChain;
@@ -186,68 +186,45 @@ function Index() {
 
   const handleSwapSteps = () => {
     // TODO: skip "Swap" button step
-    if (
-      !swapStep &&
-      token0Permit2Allowance &&
-      amountIn &&
-      token0Permit2Allowance < amountIn
-    ) {
-      setSwapStep(SwapStep.APPROVE_PERMIT2);
+    if (!swapStep && token0Permit2Allowance != undefined && amountIn) {
+      if (token0Permit2Allowance < amountIn) {
+        setSwapStep(SwapStep.APPROVE_PERMIT2);
+      } else {
+        setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
+      }
       return;
     }
 
-    if (!swapStep || swapStep === SwapStep.APPROVE_PERMIT2) {
-      console.log("Approve Permit2 transaction");
-      sendTransaction(
-        {
-          to: token0?.address,
-          data: encodeFunctionData({
-            abi: IERC20.abi,
-            functionName: "approve",
-            args: [PERMIT2_ADDRESS, amountIn!],
-          }),
-        },
-        {
-          onError: (error) => console.log(error),
-          onSuccess: (data) => console.log("success", data),
-        }
-      );
+    if (swapStep === SwapStep.APPROVE_PERMIT2) {
+      sendTransaction({
+        to: token0!.address,
+        data: encodeFunctionData({
+          abi: IERC20.abi,
+          functionName: "approve",
+          args: [PERMIT2_ADDRESS, amountIn!],
+        }),
+      });
       setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
       return;
     }
 
     if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER) {
-      console.log("Approve universal router transaction");
-      sendTransaction(
-        {
-          to: PERMIT2_ADDRESS,
-          data: encodeFunctionData({
-            abi: IAllowanceTransfer.abi,
-            functionName: "approve",
-            args: [
-              token0!.address,
-              UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
-              MAX_UINT_160,
-              MAX_UINT_48,
-            ],
-          }),
-        },
-        {
-          onError: (error) => console.log(error),
-          onSuccess: (data) => console.log("success", data),
-        }
-      );
+      sendTransaction({
+        to: PERMIT2_ADDRESS,
+        data: encodeFunctionData({
+          abi: IAllowanceTransfer.abi,
+          functionName: "approve",
+          args: [
+            token0!.address,
+            UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
+            MAX_UINT_160,
+            MAX_UINT_48,
+          ],
+        }),
+      });
       setSwapStep(SwapStep.EXECUTE);
     }
     if (swapStep === SwapStep.EXECUTE) {
-      console.log("Approve execute swap transaction");
-      console.log({
-        token0Address: token0?.address,
-        token1Address: token1?.address,
-        amountIn,
-        amountOut,
-        fromChainId: fromChain?.id,
-      });
       sendTransaction(
         getSwapExactInExecuteData({
           universalRouter: UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
@@ -257,15 +234,17 @@ function Index() {
           zeroForOne: token0!.address < token1!.address,
           amountIn: amountIn!,
           amountOutMinimum: 0n,
-        }),
-
-        {
-          onError: (error) => console.log(error),
-          onSuccess: (data) => console.log("success", data),
-        }
+        })
       );
     }
   };
+
+  useEffect(() => {
+    if (!(swapStep === SwapStep.EXECUTE && receipt)) return;
+
+    setSwapStep(undefined);
+    console.log("Swap complete");
+  }, [swapStep, receipt]);
 
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
@@ -277,6 +256,7 @@ function Index() {
     if (token0Permit2Allowance && amountIn && token0Permit2Allowance < amountIn)
       return "Approve Token";
     if (!!quoterError) return "Insufficient Liquidity";
+    if (transactionIsPending) return "Transaction Pending...";
     if (swapStep) return swapStep;
     return "Swap";
   };
@@ -429,7 +409,8 @@ function Index() {
                 amountIn &&
                 token0Balance < amountIn) ||
               !!quoterError ||
-              !!transactionIsPending
+              !!transactionIsPending ||
+              !!receiptIsLoading
             }
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
             onClick={() => handleSwapSteps()}
