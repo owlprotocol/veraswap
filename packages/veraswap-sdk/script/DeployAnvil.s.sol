@@ -227,7 +227,13 @@ contract DeployUniswapV4 is Script, Test, DeployPermit2 {
         IPoolManager v4PoolManager = IPoolManager(address(new PoolManager{salt: BYTES32_ZERO}(address(0))));
 
         IPositionManager v4PositionManager = IPositionManager(
-            new PositionManager(v4PoolManager, permit2, 300_000, IPositionDescriptor(address(0)), IWETH9(address(0)))
+            new PositionManager{salt: BYTES32_ZERO}(
+                v4PoolManager,
+                permit2,
+                300_000,
+                IPositionDescriptor(address(0)),
+                IWETH9(address(0))
+            )
         );
 
         RouterParameters memory routerParams = RouterParameters({
