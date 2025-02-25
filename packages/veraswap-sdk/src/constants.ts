@@ -1,5 +1,7 @@
 import { zeroAddress, zeroHash, encodeDeployData } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
+import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
+
 import {
     UnsupportedProtocol,
     PoolManager,
@@ -9,6 +11,7 @@ import {
     StateView,
     MockERC20,
 } from "./artifacts/index.js";
+import { HyperlaneRegistry } from "./types/index.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -142,3 +145,25 @@ export const MOCK_POOLS = {
 
 console.debug(UNISWAP_CONTRACTS);
 console.debug(MOCK_TOKENS);
+
+// TODO: Fix values
+export const testHyperlaneRegistry: HyperlaneRegistry = {
+    metadata: {
+        "localhost-1337": {
+            chainId: 1337,
+            name: "localhost-1337",
+        } as ChainMetadata,
+        "localhost-1338": {
+            chainId: 1338,
+            name: "localhost-1338",
+        } as ChainMetadata,
+    } as ChainMap<ChainMetadata>,
+    addresses: {
+        "localhost-1337": {
+            mailbox: "0x8794e76f46289f1F8C433cCe4259C455335346aa",
+        },
+        "localhost-1338": {
+            mailbox: "0x1e8fC27Af09d117Df6B931433e29fCF6463f3a95",
+        },
+    },
+};
