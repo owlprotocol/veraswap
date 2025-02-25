@@ -2,14 +2,14 @@ import { Config } from "wagmi";
 import { Address } from "viem";
 
 import { Currency, CurrencyAmount } from "@uniswap/sdk-core";
-import { readContractQueryKey } from "wagmi/query"
+import { readContractQueryKey } from "wagmi/query";
+import { readContract } from "@wagmi/core";
+import { queryOptions } from "@tanstack/react-query";
 import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { PoolKey } from "../types/PoolKey.js";
-import { readContract } from "@wagmi/core";
-import { queryOptions } from "@tanstack/react-query";
 
 export type QuoteType = "quoteExactInputSingle" | "quoteExactOutputSingle";
 
@@ -30,7 +30,7 @@ export interface QuoteResult {
 }
 
 export function quoteQueryOptions(config: Config, params: QuoteParams) {
-    return queryOptions({ queryKey: quoteQueryKey(params), queryFn: () => quote(config, params) })
+    return queryOptions({ queryKey: quoteQueryKey(params), queryFn: () => quote(config, params) });
 }
 
 export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams) {
@@ -50,12 +50,15 @@ export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exac
                 zeroForOne,
                 exactAmount: exactCurrencyAmount.decimalScale.toString(),
                 hookData: "0x",
-            }
-        ]
-    })
+            },
+        ],
+    });
 }
 
-export function quote(config: Config, { chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams) {
+export function quote(
+    config: Config,
+    { chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams,
+) {
     const zeroForOne =
         quoteType === "quoteExactInputSingle"
             ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
@@ -72,7 +75,7 @@ export function quote(config: Config, { chainId, quoterAddress, poolKey, quoteTy
                 zeroForOne,
                 exactAmount: BigInt(exactCurrencyAmount.decimalScale.toString()),
                 hookData: "0x",
-            }
-        ]
-    }) as Promise<[bigint, bigint]>
+            },
+        ],
+    }) as Promise<[bigint, bigint]>;
 }

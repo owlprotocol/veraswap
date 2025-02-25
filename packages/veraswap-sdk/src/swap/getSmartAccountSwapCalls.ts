@@ -1,8 +1,8 @@
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 import { Address, encodeFunctionData, Hex } from "viem";
 import { PoolKey } from "@uniswap/v4-sdk";
-import { IERC20 } from "../artifacts/IERC20.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
+import { IERC20 } from "../artifacts/IERC20.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { MAX_UINT_256, MAX_UINT_160, MAX_UINT_48 } from "../constants.js";
 import { PermitTransferFromData } from "../types/PermitTransferFromData.js";

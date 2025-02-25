@@ -2,8 +2,8 @@ import { Config, readContract } from "@wagmi/core";
 import { Address, Chain, zeroAddress } from "viem";
 import * as chains from "viem/chains";
 
-import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
 import { tokenRegistryData } from "./tokenRegistryData.js";
+import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
 
 //TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {
@@ -18,48 +18,53 @@ export const getChainById = (chainId: number) => {
     return Object.values(chains).find((chain) => chain.id === chainId) as Chain;
 };
 
-
-export function tokenDataQueryOptions(config: Config, {
-    chainId,
-    address,
-    symbol,
-    decimals,
-}: {
-    chainId: number;
-    address: Address;
-    name?: string;
-    symbol?: string;
-    decimals?: number;
-}) {
-  return {
-    queryKey: tokenDataQueryKey({ chainId, address }),
-    queryFn: () =>
-        tokenData(config, {
-            address,
-            chainId,
-            symbol,
-            decimals,
-        }),
-    }
+export function tokenDataQueryOptions(
+    config: Config,
+    {
+        chainId,
+        address,
+        symbol,
+        decimals,
+    }: {
+        chainId: number;
+        address: Address;
+        name?: string;
+        symbol?: string;
+        decimals?: number;
+    },
+) {
+    return {
+        queryKey: tokenDataQueryKey({ chainId, address }),
+        queryFn: () =>
+            tokenData(config, {
+                address,
+                chainId,
+                symbol,
+                decimals,
+            }),
+    };
 }
 
-export function tokenDataQueryKey({ chainId, address }: {chainId: number, address: Address}) {
-    return ["tokenData", chainId, address]
+export function tokenDataQueryKey({ chainId, address }: { chainId: number; address: Address }) {
+    return ["tokenData", chainId, address];
 }
 
-export async function tokenData(config: Config, {
-    chainId,
-    address,
-    name,
-    symbol,
-    decimals,
-}: {
-    chainId: number;
-    address: Address,
-    name?: string;
-    symbol?: string;
-    decimals?: number;
-}) {
+export async function tokenData(
+    config: Config,
+    {
+        chainId,
+        address,
+        name,
+        symbol,
+        decimals,
+    }: {
+        chainId: number;
+        address: Address;
+        name?: string;
+        symbol?: string;
+        decimals?: number;
+    },
+) {
     const blockchain = chainIdToBlockchain[chainId];
 
     if (address == zeroAddress) {
@@ -95,7 +100,7 @@ export async function tokenData(config: Config, {
             abi: [decimalsAbi],
             functionName: "decimals",
         }),
-        tokenRegistryData({blockchain, address}),
+        tokenRegistryData({ blockchain, address }),
     ]);
 
     const [nameResult, symbolResult, decimalsResult, registryResult] = results;
@@ -119,4 +124,4 @@ export async function tokenData(config: Config, {
         decimalsError: decimalsResult.status === "rejected" ? decimalsResult.reason.message : undefined,
         registryError: registryResult.status === "rejected" ? registryResult.reason.message : undefined,
     };
-};
+}

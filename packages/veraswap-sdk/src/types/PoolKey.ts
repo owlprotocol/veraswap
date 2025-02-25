@@ -21,5 +21,5 @@ export const PoolKeyAbi = {
 } as const;
 
 export function getPoolId(poolKey: PoolKey) {
-        return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
+    return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 }

@@ -12,19 +12,19 @@ export function useGetBalances(poolKey?: PoolKey, walletAddress?: Address) {
         () =>
             isValid
                 ? [
-                    {
-                        address: poolKey.currency0,
-                        abi: MockERC20.abi,
-                        functionName: "balanceOf",
-                        args: [walletAddress],
-                    },
-                    {
-                        address: poolKey.currency1,
-                        abi: MockERC20.abi,
-                        functionName: "balanceOf",
-                        args: [walletAddress],
-                    },
-                ]
+                      {
+                          address: poolKey.currency0,
+                          abi: MockERC20.abi,
+                          functionName: "balanceOf",
+                          args: [walletAddress],
+                      },
+                      {
+                          address: poolKey.currency1,
+                          abi: MockERC20.abi,
+                          functionName: "balanceOf",
+                          args: [walletAddress],
+                      },
+                  ]
                 : [],
         [isValid, poolKey, walletAddress],
     );
