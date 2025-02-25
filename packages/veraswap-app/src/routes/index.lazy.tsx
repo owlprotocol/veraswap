@@ -19,7 +19,7 @@ import { networks, Network, Token as TokenCustom } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
-import { MockERC20 } from "@/artifacts/MockERC20";
+import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 
 const emptyToken = new Token(1, zeroAddress, 1);
 const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
@@ -72,7 +72,7 @@ function Index() {
       : undefined;
 
   const { data: token0Balance } = useReadContract({
-    abi: MockERC20.abi,
+    abi: IERC20.abi,
     chainId: 1337,
     address: token0?.address,
     functionName: "balanceOf",
@@ -87,7 +87,7 @@ function Index() {
       : "-";
 
   const { data: token1Balance } = useReadContract({
-    abi: MockERC20.abi,
+    abi: IERC20.abi,
     chainId: 1337,
     address: token1?.address,
     functionName: "balanceOf",
