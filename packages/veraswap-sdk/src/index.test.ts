@@ -1,10 +1,5 @@
 import { describe, test, expect, beforeAll, beforeEach } from "vitest";
 import {
-    Account,
-    Chain,
-    Transport,
-    PublicClient,
-    WalletClient,
     createPublicClient,
     createWalletClient,
     http,
@@ -22,11 +17,8 @@ import {
     padHex,
 } from "viem";
 import { localhost } from "viem/chains";
-import {
-    getOrDeployDeterministicContract,
-    getDeployDeterministicAddress,
-} from "@owlprotocol/create-deterministic";
-import { getAnvilAccount } from "@owlprotocol/anvil-account"
+import { getOrDeployDeterministicContract, getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
+import { getAnvilAccount } from "@owlprotocol/anvil-account";
 import { Actions, Pool, Position, V4Planner, V4PositionPlanner, priceToClosestTick } from "@uniswap/v4-sdk";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
@@ -36,7 +28,7 @@ import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-acco
 
 import { port } from "./test/constants.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
-import { IERC20 } from "./artifacts/IERC20.js"
+import { IERC20 } from "./artifacts/IERC20.js";
 import { IPositionManager } from "./artifacts/IPositionManager.js";
 import { IAllowanceTransfer } from "./artifacts/IAllowanceTransfer.js";
 import { IMulticall_v4 as IMulticall } from "./artifacts/IMulticall_v4.js";
@@ -52,12 +44,12 @@ import { PoolKeyAbi } from "./abis/index.js";
 
 describe("index.test.ts", function () {
     const chain = localhost;
-    const chainId = chain.id;;
+    const chainId = chain.id;
     const transport = http(`http://127.0.0.1:${port}`);
     const publicClient = createPublicClient({
-            chain,
-            transport,
-        });
+        chain,
+        transport,
+    });
 
     const walletClient = createWalletClient({
         account: getAnvilAccount(0, { nonceManager }),
