@@ -11,12 +11,12 @@ import {
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { MOCK_POOLS, MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
-import { port } from "../test/constants.js";
+import { anvilPort0 } from "../test/constants.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
     const chainId = chain.id;
-    const transport = http(`http://127.0.0.1:${port}`);
+    const transport = http(`http://127.0.0.1:${anvilPort0}`);
     const publicClient = createPublicClient({
         chain,
         transport,

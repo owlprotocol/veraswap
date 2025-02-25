@@ -26,7 +26,7 @@ import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 import { encodeFunctionData } from "viem";
 import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
 
-import { port } from "./test/constants.js";
+import { anvilPort0 } from "./test/constants.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { IERC20 } from "./artifacts/IERC20.js";
 import { IPositionManager } from "./artifacts/IPositionManager.js";
@@ -44,7 +44,7 @@ import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 describe("index.test.ts", function () {
     const chain = localhost;
     const chainId = chain.id;
-    const transport = http(`http://127.0.0.1:${port}`);
+    const transport = http(`http://127.0.0.1:${anvilPort0}`);
     const publicClient = createPublicClient({
         chain,
         transport,

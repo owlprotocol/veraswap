@@ -1,54 +1,70 @@
 //polyfill Promise.withResolvers
 import "core-js/actual/promise";
 import { Instance } from "prool";
-import { anvil } from "prool/instances";
-import { createWalletClient, http } from "viem";
+import { anvil, alto } from "prool/instances";
+import { createWalletClient, http, nonceManager } from "viem";
 import { localhost } from "viem/chains";
+import { entryPoint07Address } from "viem/account-abstraction"
 // import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 
 import { getAnvilAccount } from "@owlprotocol/anvil-account"
+import { setupERC4337Contracts } from "@owlprotocol/contracts-account-abstraction"
 
-import { chainId2, localhost2, port, port2 } from "./src/test/constants.js";
+import { chainId2, localhost2, anvilPort0, anvilPort1, altoPort0 } from "./src/test/constants.js";
 
 const execPromise = promisify(exec);
 
-let instance: Instance;
-let instance2: Instance;
+let anvil0: Instance;
+let alto0: Instance;
+let anvil1: Instance;
 
 /**
  * Run once on `vitest` command. NOT on test re-runs
  */
 export async function setup() {
     const host = "127.0.0.1";
+    const rpc0 = `http://${host}:${anvilPort0}`
+    const rpc1 = `http://${host}:${anvilPort1}`
+
     const codeSizeLimit = 393216; //10x normal size
-    instance = anvil({
+    anvil0 = anvil({
         host,
-        port,
+        port: anvilPort0,
         chainId: localhost.id,
         codeSizeLimit,
     });
-
-    instance2 = anvil({
+    anvil1 = anvil({
         host,
-        port: port2,
+        port: anvilPort1,
         chainId: chainId2,
         codeSizeLimit,
     });
 
-    await instance.start();
-    await instance2.start();
+    await anvil0.start();
+    await anvil1.start();
 
-    const transport = http(`http://${host}:${port}`);
-    const transport2 = http(`http://${host}:${port2}`);
+    const transport = http(rpc0);
+    const transport2 = http(rpc1);
 
-    // Deploy Deterministic Deployer
     const walletClient = createWalletClient({
-        account: getAnvilAccount(0),
+        account: getAnvilAccount(0, { nonceManager }),
         chain: localhost,
         transport,
     });
+    // Deploy core ERC4337 contracts (no paymaster)
+    await setupERC4337Contracts(walletClient);
+
+    alto0 = alto({
+      port: altoPort0,
+      entrypoints: [entryPoint07Address],
+      rpcUrl: rpc0,
+      executorPrivateKeys: ["0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"],
+      utilityPrivateKey: "0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97",
+      safeMode: false,
+    });
+    await alto0.start()
 
     const walletClient2 = createWalletClient({
         account: getAnvilAccount(0),
@@ -58,9 +74,9 @@ export async function setup() {
 
     // Forge scripts
     const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // anvil 0
-    const templateCommand = `forge script ./script/DeployAnvil.s.sol --rpc-url http://${host}:${port} --private-key ${privateKey} --broadcast --via-ir --code-size-limit ${codeSizeLimit}`;
+    const templateCommand = `forge script ./script/DeployAnvil.s.sol --rpc-url http://${host}:${anvilPort0} --private-key ${privateKey} --broadcast --via-ir --code-size-limit ${codeSizeLimit}`;
     const { stdout } = await execPromise(templateCommand);
-    const templateCommand2 = `forge script ./script/DeployAnvil.s.sol --rpc-url http://${host}:${port2} --private-key ${privateKey} --broadcast --via-ir --code-size-limit ${codeSizeLimit}`;
+    const templateCommand2 = `forge script ./script/DeployAnvil.s.sol --rpc-url http://${host}:${anvilPort1} --private-key ${privateKey} --broadcast --via-ir --code-size-limit ${codeSizeLimit}`;
     await execPromise(templateCommand2);
 
     const poolManager = stdout.match(/v4PoolManager: (0x.*?)\n/)?.[1];
@@ -87,6 +103,7 @@ export async function setup() {
  * Run once `vitest` process has exited. NOT on test re-runs
  */
 export async function teardown() {
-    await instance.stop();
-    await instance2.stop();
+    await alto0.stop()
+    await anvil0.stop();
+    await anvil1.stop();
 }
