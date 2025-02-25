@@ -52,6 +52,7 @@ export function getEOASwapCalls({
         poolKey,
         currencyIn,
         currencyOut,
+        zeroForOne,
         amountIn,
         amountOutMinimum,
     });

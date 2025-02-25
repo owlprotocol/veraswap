@@ -11,6 +11,7 @@ export function getSwapExactInExecuteData({
     poolKey,
     currencyIn,
     currencyOut,
+    zeroForOne,
     amountIn,
     amountOutMinimum,
 }: {
@@ -18,6 +19,7 @@ export function getSwapExactInExecuteData({
     poolKey: PoolKey;
     currencyIn: Address;
     currencyOut: Address;
+    zeroForOne: boolean;
     amountIn: bigint;
     amountOutMinimum: bigint;
 }): { to: Address; data: Hex; value: bigint } {
@@ -25,7 +27,7 @@ export function getSwapExactInExecuteData({
     // Unfortunately, there are no type checks, and tuples expect key-value inputs.
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [
-        { poolKey, zeroForOne: true, amountIn, amountOutMinimum: amountOutMinimum, hookData: "0x" },
+        { poolKey, zeroForOne, amountIn, amountOutMinimum: amountOutMinimum, hookData: "0x" },
     ]);
     tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, amountIn]);
     tradePlan.addAction(Actions.TAKE_ALL, [currencyOut, amountOutMinimum]);

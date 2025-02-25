@@ -1,9 +1,18 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAccount, useConfig, useReadContract } from "wagmi";
+import {
+  useAccount,
+  useConfig,
+  useReadContract,
+  useSendTransaction,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
+  getSwapExactInExecuteData,
+  MAX_UINT_160,
+  MAX_UINT_48,
   MOCK_POOLS,
   MOCK_TOKENS,
   PERMIT2_ADDRESS,
@@ -11,7 +20,7 @@ import {
   tokenDataQueryOptions,
   UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { formatUnits, parseUnits, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +29,16 @@ import { networks, Network, Token as TokenCustom } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
-import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
+import {
+  IAllowanceTransfer,
+  IERC20,
+} from "@owlprotocol/veraswap-sdk/artifacts";
+
+enum SwapStep {
+  APPROVE_PERMIT2 = "Approve Permit2",
+  APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
+  EXECUTE = "Execute Swap",
+}
 
 const emptyToken = new Token(1, zeroAddress, 1);
 const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
@@ -37,6 +55,7 @@ function Index() {
   const [token1, setToken1] = useState<TokenCustom | null>(null);
   const [amountIn, setAmountIn] = useState<bigint | undefined>(undefined);
   const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
+  const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
 
   const isNotConnected = !isConnected || !walletAddress;
 
@@ -142,6 +161,17 @@ function Index() {
     query: { enabled: !!token0 && !!walletAddress },
   });
 
+  // TODO: handle permit2 allowance step
+  const {
+    sendTransaction,
+    data: hash,
+    isPending: transactionIsPending,
+  } = useSendTransaction();
+  const { data: receipt, error: receiptError } = useWaitForTransactionReceipt({
+    hash,
+  });
+  console.log({ receipt, receiptError });
+
   const handleInvert = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
@@ -154,7 +184,89 @@ function Index() {
     setAmountOut(tempAmount);
   };
 
-  console.log({ token0Balance, amountIn });
+  const handleSwapSteps = () => {
+    // TODO: skip "Swap" button step
+    if (
+      !swapStep &&
+      token0Permit2Allowance &&
+      amountIn &&
+      token0Permit2Allowance < amountIn
+    ) {
+      setSwapStep(SwapStep.APPROVE_PERMIT2);
+      return;
+    }
+
+    if (!swapStep || swapStep === SwapStep.APPROVE_PERMIT2) {
+      console.log("Approve Permit2 transaction");
+      sendTransaction(
+        {
+          to: token0?.address,
+          data: encodeFunctionData({
+            abi: IERC20.abi,
+            functionName: "approve",
+            args: [PERMIT2_ADDRESS, amountIn!],
+          }),
+        },
+        {
+          onError: (error) => console.log(error),
+          onSuccess: (data) => console.log("success", data),
+        }
+      );
+      setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
+      return;
+    }
+
+    if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER) {
+      console.log("Approve universal router transaction");
+      sendTransaction(
+        {
+          to: PERMIT2_ADDRESS,
+          data: encodeFunctionData({
+            abi: IAllowanceTransfer.abi,
+            functionName: "approve",
+            args: [
+              token0!.address,
+              UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
+              MAX_UINT_160,
+              MAX_UINT_48,
+            ],
+          }),
+        },
+        {
+          onError: (error) => console.log(error),
+          onSuccess: (data) => console.log("success", data),
+        }
+      );
+      setSwapStep(SwapStep.EXECUTE);
+    }
+    if (swapStep === SwapStep.EXECUTE) {
+      console.log("Approve execute swap transaction");
+      console.log({
+        token0Address: token0?.address,
+        token1Address: token1?.address,
+        amountIn,
+        amountOut,
+        fromChainId: fromChain?.id,
+      });
+      sendTransaction(
+        getSwapExactInExecuteData({
+          universalRouter: UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
+          poolKey: MOCK_POOLS[fromChain!.id],
+          currencyIn: token0!.address,
+          currencyOut: token1!.address,
+          zeroForOne: token0!.address < token1!.address,
+          amountIn: amountIn!,
+          amountOutMinimum: 0n,
+        }),
+
+        {
+          onError: (error) => console.log(error),
+          onSuccess: (data) => console.log("success", data),
+        }
+      );
+    }
+  };
+
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
     if (!toChain) return "Select A Network";
@@ -165,7 +277,8 @@ function Index() {
     if (token0Permit2Allowance && amountIn && token0Permit2Allowance < amountIn)
       return "Approve Token";
     if (!!quoterError) return "Insufficient Liquidity";
-    return "Review Swap";
+    if (swapStep) return swapStep;
+    return "Swap";
   };
 
   return (
@@ -315,9 +428,11 @@ function Index() {
               (token0Balance != undefined &&
                 amountIn &&
                 token0Balance < amountIn) ||
-              !!quoterError
+              !!quoterError ||
+              !!transactionIsPending
             }
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
+            onClick={() => handleSwapSteps()}
           >
             {getButtonText()}
           </Button>

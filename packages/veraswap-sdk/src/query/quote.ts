@@ -39,8 +39,6 @@ export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exac
             ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
             : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
 
-    console.log({ exactCurrencyAmount, decimalScale: exactCurrencyAmount.quotient.toString() });
-
     return readContractQueryKey({
         chainId,
         address: quoterAddress,
@@ -65,8 +63,6 @@ export function quote(
         quoteType === "quoteExactInputSingle"
             ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
             : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
-
-    console.log({ quotient: exactCurrencyAmount.quotient.toString() });
 
     return readContract(config, {
         chainId,
