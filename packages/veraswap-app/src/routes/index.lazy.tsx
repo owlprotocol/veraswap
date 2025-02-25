@@ -34,6 +34,7 @@ import {
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useToast } from "@/components/ui/use-toast";
+import { set } from "react-hook-form";
 
 enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
@@ -196,6 +197,20 @@ function Index() {
     query: { enabled: !!token0 && !!walletAddress },
   });
 
+  const { data: transferAllowance } = useReadContract({
+    abi: IAllowanceTransfer.abi,
+    address: PERMIT2_ADDRESS,
+    functionName: "allowance",
+    args: [
+      walletAddress ?? zeroAddress,
+      token0?.address ?? zeroAddress,
+      !!fromChain
+        ? UNISWAP_CONTRACTS[fromChain?.id].UNIVERSAL_ROUTER
+        : zeroAddress,
+    ],
+    query: { enabled: !!token0 && !!walletAddress && !!fromChain },
+  });
+
   const {
     sendTransaction,
     data: hash,
@@ -219,17 +234,7 @@ function Index() {
   };
 
   const handleSwapSteps = () => {
-    // TODO: skip "Swap" button step
-    if (!swapStep && token0Permit2Allowance != undefined && amountIn) {
-      if (token0Permit2Allowance < amountIn) {
-        setSwapStep(SwapStep.APPROVE_PERMIT2);
-      } else {
-        // TODO: check approval IApprovalTrasnfer
-        setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
-      }
-      return;
-    }
-
+    if (!swapStep || transactionIsPending) return;
     if (swapStep === SwapStep.APPROVE_PERMIT2) {
       sendTransaction({
         to: token0!.address,
@@ -272,24 +277,44 @@ function Index() {
           amountOutMinimum: amountOut!,
         })
       );
-      setSwapStep(undefined);
     }
   };
 
   useEffect(() => {
-    if (!(!swapStep && receipt)) return;
-    refetchBalance0();
-    refetchToken1();
-    setAmountIn(undefined);
-    setAmountOut(undefined);
+    if (receipt) {
+      refetchBalance0();
+      refetchToken1();
 
-    toast({
-      title: "Swap Complete",
-      description: "Your swap has been completed successfully",
-      variant: "default",
-    });
-    console.log("Swap complete");
-  }, [swapStep, receipt]);
+      setAmountIn(undefined);
+      setAmountOut(undefined);
+      setSwapStep(undefined);
+
+      toast({
+        title: "Swap Complete",
+        description: "Your swap has been completed successfully",
+        variant: "default",
+      });
+    }
+  }, [receipt, refetchBalance0, refetchToken1]);
+
+  useEffect(() => {
+    if (
+      !swapStep &&
+      token0Permit2Allowance !== undefined &&
+      transferAllowance !== undefined &&
+      amountIn
+    ) {
+      const transferAllowanceAmount = transferAllowance?.[0] ?? 0n;
+
+      if (token0Permit2Allowance < amountIn) {
+        setSwapStep(SwapStep.APPROVE_PERMIT2);
+      } else if (transferAllowanceAmount < amountIn) {
+        setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
+      } else {
+        setSwapStep(SwapStep.EXECUTE);
+      }
+    }
+  }, [token0Permit2Allowance, transferAllowance, amountIn]);
 
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
@@ -299,6 +324,8 @@ function Index() {
     if (token0Balance != undefined && amountIn && token0Balance < amountIn)
       return "Insufficient Balance";
     if (token0Permit2Allowance && amountIn && token0Permit2Allowance < amountIn)
+      return "Approve Token";
+    if (transferAllowance && amountIn && transferAllowance[0] < amountIn)
       return "Approve Token";
     if (!!quoterError) return "Insufficient Liquidity";
     if (transactionIsPending) return "Transaction Pending...";
