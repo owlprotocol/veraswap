@@ -1,4 +1,3 @@
-import { Network } from "@/types";
 import { ChevronDown, Search, Check } from "lucide-react";
 import { useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
+import { Network } from "@/types";
 import { cn } from "@/lib/utils";
 
 export function NetworkSelect({
@@ -26,7 +26,7 @@ export function NetworkSelect({
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
   ) => {
     e.currentTarget.src = "/placeholder.jpg";
   };
@@ -34,7 +34,7 @@ export function NetworkSelect({
   const filteredNetworks = networks.filter(
     (network) =>
       network.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      network.id.toString().includes(searchQuery)
+      network.id.toString().includes(searchQuery),
   );
 
   return (
@@ -47,7 +47,7 @@ export function NetworkSelect({
             "hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors",
             "rounded-xl border-2 border-gray-100 dark:border-gray-700",
             "hover:border-gray-200 dark:hover:border-gray-600",
-            "shadow-sm hover:shadow-md transition-all"
+            "shadow-sm hover:shadow-md transition-all",
           )}
         >
           {value ? (
@@ -101,7 +101,7 @@ export function NetworkSelect({
                   "group h-14 w-full justify-between px-4 py-3",
                   "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
                   "active:scale-[0.98]",
-                  value?.id === network.id && "bg-gray-100 dark:bg-gray-700"
+                  value?.id === network.id && "bg-gray-100 dark:bg-gray-700",
                 )}
                 onClick={() => {
                   onChange(network);
