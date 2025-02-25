@@ -1,3 +1,5 @@
+import { zeroAddress } from "viem";
+
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
 export const MAX_UINT_48 = 2 ** 48 - 1;
@@ -10,6 +12,13 @@ export const UNISWAP_CONTRACTS = {
         UNIVERSAL_ROUTER : "0x66bF296645d8d15F72329167770D2DeC004a3007",
         QUOTER: "0xC58a1453cC52b1DFcD582209F0e84F05B6917a83",
         STATE_VIEW: "0x50e1BB055c88f65CCe4B9eD29efBA7f83777712F",
+    },
+    [1338]: {
+        POOL_MANAGER : "0x2c63d2fbFe33b23C40d0e227881484Cf3E0f6a7d",
+        POSITION_MANAGER : "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+        UNIVERSAL_ROUTER : "0x66bF296645d8d15F72329167770D2DeC004a3007",
+        QUOTER: "0xC58a1453cC52b1DFcD582209F0e84F05B6917a83",
+        STATE_VIEW: "0x50e1BB055c88f65CCe4B9eD29efBA7f83777712F",
     }
 } as const
 
@@ -17,5 +26,26 @@ export const MOCK_TOKENS = {
     [1337]: {
         MOCK_A: "0xd6199fDD3306DedE314e48a5260B2Cd64287DB21",
         MOCK_B: "0x09A7017c761cf31157B0045BEd72f76933b869f1"
+    },
+    [1338]: {
+        MOCK_A: "0xd6199fDD3306DedE314e48a5260B2Cd64287DB21",
+        MOCK_B: "0x09A7017c761cf31157B0045BEd72f76933b869f1"
+    }
+} as const
+
+export const MOCK_POOLS = {
+    [1337]: {
+        currency0: MOCK_TOKENS[1337].MOCK_A < MOCK_TOKENS[1337].MOCK_B ? MOCK_TOKENS[1337].MOCK_A : MOCK_TOKENS[1337].MOCK_B,
+        currency1: MOCK_TOKENS[1337].MOCK_A < MOCK_TOKENS[1337].MOCK_B ? MOCK_TOKENS[1337].MOCK_B : MOCK_TOKENS[1337].MOCK_A,
+        fee: 3000,
+        tickSpacing: 60,
+        hooks: zeroAddress,
+    },
+    [1338]: {
+        currency0: MOCK_TOKENS[1338].MOCK_A < MOCK_TOKENS[1338].MOCK_B ? MOCK_TOKENS[1338].MOCK_A : MOCK_TOKENS[1338].MOCK_B,
+        currency1: MOCK_TOKENS[1338].MOCK_A < MOCK_TOKENS[1338].MOCK_B ? MOCK_TOKENS[1338].MOCK_B : MOCK_TOKENS[1338].MOCK_A,
+        fee: 3000,
+        tickSpacing: 60,
+        hooks: zeroAddress,
     }
 }

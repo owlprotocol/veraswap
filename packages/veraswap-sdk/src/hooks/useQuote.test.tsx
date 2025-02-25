@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useQuote } from "./useQuote.js";
 import { quoteExactInputSingle as quoteExactInputSingleAbi, quoteExactOutputSingle as quoteExactOutputSingleAbi } from "../artifacts/IV4Quoter.js";
 import { PoolKey } from "../types/PoolKey.js";
-import { MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
+import { MOCK_POOLS, MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
 import { port } from "../test/constants.js";
 
 
@@ -33,13 +33,7 @@ describe("useQuote.test.tsx", () => {
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;
 
-    const poolKey = {
-        currency0: currency0.address as Address,
-        currency1: currency1.address as Address,
-        fee: 3000,
-        tickSpacing: 60,
-        hooks: zeroAddress,
-    } as PoolKey;
+    const poolKey = MOCK_POOLS[chainId]
 
     const currency0Amount = CurrencyAmount.fromFractionalAmount(currency0, 1, 1);
     const currency1Amount = CurrencyAmount.fromFractionalAmount(currency1, 1, 1);
