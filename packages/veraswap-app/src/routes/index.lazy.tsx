@@ -11,6 +11,7 @@ import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { MOCK_TOKENS } from "@owlprotocol/veraswap-sdk";
 import { MockERC20 } from "@/artifacts/MockERC20";
+import { formatUnits, parseUnits } from "viem";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -22,8 +23,8 @@ function Index() {
   const [toChain, setToChain] = useState<Network | null>(null);
   const [token0, setToken0] = useState<Token | null>(null);
   const [token1, setToken1] = useState<Token | null>(null);
-  const [sellAmount, setSellAmount] = useState<number | undefined>(undefined);
-  const [buyAmount, setBuyAmount] = useState<number | undefined>(undefined);
+  const [sellAmount, setSellAmount] = useState<bigint | undefined>(undefined);
+  const [buyAmount, setBuyAmount] = useState<bigint | undefined>(undefined);
 
   const isNotConnected = !isConnected || !walletAddress;
 
@@ -34,14 +35,11 @@ function Index() {
       address: MOCK_TOKENS[chainId][token],
       name: token,
       symbol: token,
+      decimals: 18,
     }));
   });
 
-  const {
-    data: token0Balance,
-    isLoading: token0IsLoading,
-    error: token0Error,
-  } = useReadContract({
+  const { data: token0Balance } = useReadContract({
     abi: MockERC20.abi,
     chainId: 1337,
     address: token0?.address,
@@ -53,14 +51,10 @@ function Index() {
   const token0BalanceFromatted =
     token0Balance && token0
       ? `
-     ${token0Balance.toString()} ${token0.symbol}`
+     ${formatUnits(token0Balance, token0.decimals ?? 18)} ${token0.symbol}`
       : "-";
 
-  const {
-    data: token1Balance,
-    isLoading: token1IsLoading,
-    error: token1Error,
-  } = useReadContract({
+  const { data: token1Balance } = useReadContract({
     abi: MockERC20.abi,
     chainId: 1337,
     address: token1?.address,
@@ -72,7 +66,7 @@ function Index() {
   const token1BalanceFormatted =
     token1Balance && token1
       ? `
-     ${token1Balance.toString()} ${token1.symbol}`
+     ${formatUnits(token1Balance, token1.decimals ?? 18)} ${token1.symbol}`
       : "-";
 
   const handleSwap = () => {
@@ -112,10 +106,19 @@ function Index() {
               </div>
               <div className="flex items-center gap-2">
                 <Input
-                  value={sellAmount ?? ""}
+                  value={
+                    sellAmount
+                      ? formatUnits(sellAmount, token0?.decimals ?? 18)
+                      : ""
+                  }
                   onChange={(e) => {
                     const value = e.target.value;
-                    setSellAmount(value === "" ? undefined : parseFloat(value));
+                    // TODO: get sell quote value
+                    setSellAmount(
+                      value === ""
+                        ? undefined
+                        : parseUnits(value, token0?.decimals ?? 18)
+                    );
                   }}
                   type="number"
                   className={cn(
@@ -136,14 +139,17 @@ function Index() {
                   }
                 />
               </div>
-              <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span>
+              <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
+                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                <span>$0.00</span> */}
                 <div className="space-x-2">
                   <span>Balance: {token0BalanceFromatted}</span>
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
-                    onClick={() => setSellAmount(1.234)}
+                    onClick={() =>
+                      token0Balance && setSellAmount(token0Balance)
+                    }
                   >
                     Max
                   </Button>
@@ -176,10 +182,18 @@ function Index() {
               </div>
               <div className="flex items-center gap-2">
                 <Input
-                  value={buyAmount ?? ""}
+                  value={
+                    buyAmount
+                      ? formatUnits(buyAmount, token1?.decimals ?? 18)
+                      : ""
+                  }
                   onChange={(e) => {
                     const value = e.target.value;
-                    setBuyAmount(value === "" ? undefined : parseFloat(value));
+                    setBuyAmount(
+                      value === ""
+                        ? undefined
+                        : parseUnits(value, token1?.decimals ?? 18)
+                    );
                   }}
                   type="number"
                   className={cn(
@@ -199,9 +213,10 @@ function Index() {
                   }
                 />
               </div>
-              <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span>
-                <div className="space-x-2">
+              <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
+                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                <span>$0.00</span> */}
+                <div className="space-x-2 align-right">
                   <span>Balance: {token1BalanceFormatted}</span>
                 </div>
               </div>
