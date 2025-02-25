@@ -53,3 +53,5 @@ temp.*
 # local
 *.local
 
+!packages/veraswap-app/src/lib
+
