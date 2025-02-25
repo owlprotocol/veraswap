@@ -1,21 +1,23 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { tokens, networks, Network, Token } from "@/types";
+import { networks, Network, Token } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
+import { MOCK_TOKENS } from "@owlprotocol/veraswap-sdk";
+import { MockERC20 } from "@/artifacts/MockERC20";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
 
 function Index() {
-  const { isConnected, address } = useAccount();
+  const { isConnected, address: walletAddress } = useAccount();
   const [fromChain, setFromChain] = useState<Network | null>(networks[0]);
   const [toChain, setToChain] = useState<Network | null>(null);
   const [token0, setToken0] = useState<Token | null>(null);
@@ -23,20 +25,55 @@ function Index() {
   const [sellAmount, setSellAmount] = useState<number | undefined>(undefined);
   const [buyAmount, setBuyAmount] = useState<number | undefined>(undefined);
 
-  const isNotConnected = !isConnected || !address;
+  const isNotConnected = !isConnected || !walletAddress;
 
-  const getExchangeRate = () => {
-    if (!token0 || !token1) return "-";
-    const mockRates: Record<string, Record<string, string>> = {
-      ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
-      USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
-      MATIC: { USDC: "0.67", ETH: "0.00033" },
-      ARB: { USDC: "0.5", ETH: "0.00025" },
-    };
-    return `1 ${token0.symbol} = ${
-      mockRates[token0.symbol]?.[token1.symbol] || "-"
-    } ${token1.symbol}`;
-  };
+  let tokens: Record<string, Token[]> = {};
+
+  Object.keys(MOCK_TOKENS).forEach((chainId) => {
+    tokens[chainId] = Object.keys(MOCK_TOKENS[chainId]).map((token) => ({
+      address: MOCK_TOKENS[chainId][token],
+      name: token,
+      symbol: token,
+    }));
+  });
+
+  const {
+    data: token0Balance,
+    isLoading: token0IsLoading,
+    error: token0Error,
+  } = useReadContract({
+    abi: MockERC20.abi,
+    chainId: 1337,
+    address: token0?.address,
+    functionName: "balanceOf",
+    args: [walletAddress!],
+    query: { enabled: !!token0 && !!walletAddress },
+  });
+
+  const token0BalanceFromatted =
+    token0Balance && token0
+      ? `
+     ${token0Balance.toString()} ${token0.symbol}`
+      : "-";
+
+  const {
+    data: token1Balance,
+    isLoading: token1IsLoading,
+    error: token1Error,
+  } = useReadContract({
+    abi: MockERC20.abi,
+    chainId: 1337,
+    address: token1?.address,
+    functionName: "balanceOf",
+    args: [walletAddress!],
+    query: { enabled: !!token1 && !!walletAddress },
+  });
+
+  const token1BalanceFormatted =
+    token1Balance && token1
+      ? `
+     ${token1Balance.toString()} ${token1.symbol}`
+      : "-";
 
   const handleSwap = () => {
     const tempNetwork = fromChain;
@@ -92,13 +129,17 @@ function Index() {
                 <TokenSelect
                   value={token0}
                   onChange={setToken0}
-                  tokens={fromChain ? tokens[fromChain.id] : []}
+                  tokens={
+                    fromChain && tokens[fromChain.id]
+                      ? tokens[fromChain.id]
+                      : []
+                  }
                 />
               </div>
               <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>$0.00</span>
                 <div className="space-x-2">
-                  <span>Balance: 1.234</span>
+                  <span>Balance: {token0BalanceFromatted}</span>
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
@@ -149,34 +190,23 @@ function Index() {
                   placeholder="0.0"
                   disabled={!toChain || !token1}
                 />
+
                 <TokenSelect
                   value={token1}
                   onChange={setToken1}
-                  tokens={toChain ? tokens[toChain.id] : []}
+                  tokens={
+                    toChain && tokens[toChain.id] ? tokens[toChain.id] : []
+                  }
                 />
               </div>
               <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>$0.00</span>
                 <div className="space-x-2">
-                  <span>Balance: 0.00</span>
+                  <span>Balance: {token1BalanceFormatted}</span>
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex justify-between">
-              <span>Price</span>
-              <span>
-                {token0 && token1 ? getExchangeRate() : "Select both tokens"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Price Impact</span>
-              <span>0.5%</span>
-            </div>
-          </div>
-
           <Button
             disabled={isNotConnected || !toChain || !token1}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"

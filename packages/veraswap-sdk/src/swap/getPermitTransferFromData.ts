@@ -1,6 +1,5 @@
 import { SignatureTransfer, PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 import { Account, Address, bytesToBigInt, Chain, encodeFunctionData, Transport, WalletClient } from "viem";
-import { getRandomValues } from "crypto";
 import { permitTransferFrom as permitTransferFromAbi } from "../artifacts/ISignatureTransfer.js";
 
 export async function getPermitTransferFromData(
@@ -17,7 +16,7 @@ export async function getPermitTransferFromData(
         amountIn: bigint;
     },
 ) {
-    const permitTransferFromNonce = bytesToBigInt(getRandomValues(new Uint8Array(32)));
+    const permitTransferFromNonce = bytesToBigInt(crypto.getRandomValues(new Uint8Array(32)));
     const permitTransferFrom = {
         permitted: {
             token: currencyInAddress,
