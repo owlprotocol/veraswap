@@ -67,7 +67,7 @@ function Index() {
           Number(fromChain.id),
           token0.address,
           token0Data.decimals ?? 18,
-          token0Data.symbol,
+          token0Data.symbol
         )
       : undefined;
 
@@ -149,6 +149,7 @@ function Index() {
     if (isNotConnected) return "Connect Wallet";
     if (!toChain) return "Select A Network";
     if (!token1) return "Select Buy Token";
+    if (!!quoterError) return "Insufficient Liquidity";
     return "Review Swap";
   };
 
@@ -181,14 +182,14 @@ function Index() {
                     setAmountIn(
                       value === ""
                         ? undefined
-                        : parseUnits(value, token0?.decimals ?? 18),
+                        : parseUnits(value, token0?.decimals ?? 18)
                     );
                   }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   )}
                   placeholder="0.0"
                   disabled={!fromChain || !token0}
@@ -254,18 +255,18 @@ function Index() {
                     setAmountOut(
                       value === ""
                         ? undefined
-                        : parseUnits(value, token1?.decimals ?? 18),
+                        : parseUnits(value, token1?.decimals ?? 18)
                     );
                   }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   )}
                   placeholder={
                     quoterError
-                      ? "Error getting quote"
+                      ? "Insufficient Liquidity"
                       : isQuoterLoading
                         ? "Fetching quote..."
                         : "0.0"

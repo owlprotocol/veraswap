@@ -10,7 +10,6 @@ import {
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { PoolKey } from "../types/PoolKey.js";
-import { UnexpectedRevertBytes } from "../artifacts/V4Quoter.js";
 
 export type QuoteType = "quoteExactInputSingle" | "quoteExactOutputSingle";
 
@@ -72,7 +71,7 @@ export function quote(
     return readContract(config, {
         chainId,
         address: quoterAddress,
-        abi: [quoteExactInputSingleAbi, quoteExactOutputSingleAbi, UnexpectedRevertBytes],
+        abi: [quoteExactInputSingleAbi, quoteExactOutputSingleAbi],
         functionName: quoteType,
         args: [
             {
