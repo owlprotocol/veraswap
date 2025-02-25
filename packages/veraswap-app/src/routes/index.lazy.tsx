@@ -36,6 +36,8 @@ import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
+import { useAtom, useAtomValue } from "jotai";
+import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenOutAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
 
 enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
@@ -60,20 +62,24 @@ function Index() {
   const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
   const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
 
+  const chains = useAtomValue(chainsAtom)
+  const [chainIn, setChainIn] = useAtom(chainInAtom)
+  const [chainOut, setChainOut] = useAtom(chainOutAtom);
+  const tokensIn = useAtomValue(tokensInAtom)
+  const tokensOut = useAtomValue(tokensOutAtom)
+  const [tokenIn, setTokenIn] = useAtom(tokenInAtom)
+  const [tokenOut, setTokenOut] = useAtom(tokenOutAtom)
+  const quote = useAtomValue(quoteAtom);
+
+  const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom)
+  const tokenInAmount = useAtomValue(tokenInAmountAtom)
+  // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
+
+  console.debug({ chainIn, tokensIn, tokenIn, tokenInAmountInput, tokenInAmount, quote })
+
   const { toast } = useToast();
 
   const isNotConnected = !isConnected || !walletAddress;
-
-  const tokens: Record<string, TokenCustom[]> = {};
-
-  Object.keys(MOCK_TOKENS).forEach((chainId) => {
-    tokens[chainId] = Object.keys(MOCK_TOKENS[chainId]).map((token) => ({
-      address: MOCK_TOKENS[chainId][token],
-      name: token,
-      symbol: token,
-      decimals: 18,
-    }));
-  });
 
   const config = useConfig();
 
@@ -107,11 +113,11 @@ function Index() {
       ? token0.address === zeroAddress
         ? Ether.onChain(Number(fromChain.id))
         : new Token(
-            Number(fromChain.id),
-            token0.address,
-            token0Data.decimals ?? 18,
-            token0Data.symbol,
-          )
+          Number(fromChain.id),
+          token0.address,
+          token0Data.decimals ?? 18,
+          token0Data.symbol,
+        )
       : undefined;
 
   const token1Uniswap: Currency | undefined =
@@ -119,11 +125,11 @@ function Index() {
       ? token1.address === zeroAddress
         ? Ether.onChain(Number(toChain.id))
         : new Token(
-            Number(toChain.id),
-            token1.address,
-            token1Data.decimals ?? 18,
-            token1Data.symbol,
-          )
+          Number(toChain.id),
+          token1.address,
+          token1Data.decimals ?? 18,
+          token1Data.symbol,
+        )
       : undefined;
 
   const { data: token0Balance, refetch: refetchBalance0 } = useReadContract({
@@ -349,27 +355,15 @@ function Index() {
                   From
                 </span>
                 <NetworkSelect
-                  value={fromChain}
-                  onChange={setFromChain}
-                  networks={networks}
+                  value={chainIn}
+                  onChange={setChainIn}
+                  networks={chains}
                 />
               </div>
               <div className="flex items-center gap-2">
                 <Input
-                  value={
-                    amountIn
-                      ? formatUnits(amountIn, token0?.decimals ?? 18)
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // TODO: get sell quote value
-                    setAmountIn(
-                      value === ""
-                        ? undefined
-                        : parseUnits(value, token0?.decimals ?? 18),
-                    );
-                  }}
+                  value={tokenInAmountInput}
+                  onChange={(e) => setTokenInAmountInput(e.target.value)}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
@@ -377,16 +371,12 @@ function Index() {
                     "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                   )}
                   placeholder="0.0"
-                  disabled={!fromChain || !token0}
+                  disabled={!tokenIn}
                 />
                 <TokenSelect
-                  value={token0}
-                  onChange={setToken0}
-                  tokens={
-                    fromChain && tokens[fromChain.id]
-                      ? tokens[fromChain.id]
-                      : []
-                  }
+                  value={tokenIn}
+                  onChange={setTokenIn}
+                  tokens={tokensIn}
                 />
               </div>
               <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
@@ -423,9 +413,9 @@ function Index() {
                   To
                 </span>
                 <NetworkSelect
-                  value={toChain}
-                  onChange={setToChain}
-                  networks={networks}
+                  value={chainOut}
+                  onChange={setChainOut}
+                  networks={chains}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -460,11 +450,9 @@ function Index() {
                 />
 
                 <TokenSelect
-                  value={token1}
-                  onChange={setToken1}
-                  tokens={
-                    toChain && tokens[toChain.id] ? tokens[toChain.id] : []
-                  }
+                  value={tokenOut}
+                  onChange={setTokenOut}
+                  tokens={tokensOut}
                 />
               </div>
               <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">

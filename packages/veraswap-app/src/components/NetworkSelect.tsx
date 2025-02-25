@@ -12,15 +12,16 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
 import { Network } from "@/types";
 import { cn } from "@/lib/utils";
+import { Chain } from "viem";
 
 export function NetworkSelect({
   value,
   onChange,
   networks,
 }: {
-  value: Network | null;
-  onChange: (network: Network) => void;
-  networks: Network[];
+  value: Chain | null;
+  onChange: (network: Chain) => void;
+  networks: Chain[];
 }) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,7 +54,7 @@ export function NetworkSelect({
           {value ? (
             <>
               <img
-                src={value.logo}
+                // src={value.logo}
                 alt={value.name}
                 className="h-5 w-5 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
                 onError={handleImageError}
@@ -110,7 +111,7 @@ export function NetworkSelect({
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={network.logo}
+                    // src={network.logo}
                     alt={network.name}
                     className="h-8 w-8 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
                     onError={handleImageError}
