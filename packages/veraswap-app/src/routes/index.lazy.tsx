@@ -8,7 +8,7 @@ import {
   useSendTransaction,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { CurrencyAmount, Token } from "@uniswap/sdk-core";
+import { Currency, CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
 import {
   getSwapExactInExecuteData,
   MAX_UINT_160,
@@ -33,6 +33,7 @@ import {
   IAllowanceTransfer,
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { useToast } from "@/components/ui/use-toast";
 
 enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
@@ -57,6 +58,8 @@ function Index() {
   const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
   const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
 
+  const { toast } = useToast();
+
   const isNotConnected = !isConnected || !walletAddress;
 
   const tokens: Record<string, TokenCustom[]> = {};
@@ -79,25 +82,54 @@ function Index() {
       chainId: Number(fromChain?.id ?? 0),
       ...token0,
     }),
-    enabled: !!token0,
+    enabled: !!token0 && !!fromChain,
   });
-  const token0Uniswap: Token | undefined =
+
+  const { data: token1Data } = useQuery({
+    ...tokenDataQueryOptions(config, {
+      address: token1?.address ?? zeroAddress,
+      chainId: Number(toChain?.id ?? 0),
+      ...token1,
+    }),
+    enabled: !!token1 && !!toChain,
+  });
+
+  const token0Uniswap: Currency | undefined =
     fromChain && token0 && token0Data
-      ? new Token(
-          Number(fromChain.id),
-          token0.address,
-          token0Data.decimals ?? 18,
-          token0Data.symbol
-        )
+      ? token0.address === zeroAddress
+        ? Ether.onChain(Number(fromChain.id))
+        : new Token(
+            Number(fromChain.id),
+            token0.address,
+            token0Data.decimals ?? 18,
+            token0Data.symbol
+          )
       : undefined;
 
-  const { data: token0Balance } = useReadContract({
+  const token1Uniswap: Currency | undefined =
+    toChain && token1 && token1Data
+      ? token1.address === zeroAddress
+        ? Ether.onChain(Number(toChain.id))
+        : new Token(
+            Number(toChain.id),
+            token1.address,
+            token1Data.decimals ?? 18,
+            token1Data.symbol
+          )
+      : undefined;
+
+  console.log(token0Uniswap, token1Uniswap);
+
+  const { data: token0Balance, refetch: refetchBalance0 } = useReadContract({
     abi: IERC20.abi,
-    chainId: 1337,
+    chainId: Number(fromChain?.id ?? 0),
     address: token0?.address,
     functionName: "balanceOf",
     args: [walletAddress!],
-    query: { enabled: !!token0 && !!walletAddress },
+    query: {
+      enabled: !!token0 && !!walletAddress && !!fromChain,
+      refetchInterval: 2000,
+    },
   });
 
   const token0BalanceFromatted =
@@ -106,13 +138,16 @@ function Index() {
      ${formatUnits(token0Balance, token0.decimals ?? 18)} ${token0.symbol}`
       : "-";
 
-  const { data: token1Balance } = useReadContract({
+  const { data: token1Balance, refetch: refetchToken1 } = useReadContract({
     abi: IERC20.abi,
-    chainId: 1337,
+    chainId: Number(toChain?.id ?? 0),
     address: token1?.address,
     functionName: "balanceOf",
     args: [walletAddress!],
-    query: { enabled: !!token1 && !!walletAddress },
+    query: {
+      enabled: !!token1 && !!walletAddress && !!toChain,
+      refetchInterval: 2000,
+    },
   });
 
   const token1BalanceFormatted =
@@ -161,7 +196,6 @@ function Index() {
     query: { enabled: !!token0 && !!walletAddress },
   });
 
-  // TODO: handle permit2 allowance step
   const {
     sendTransaction,
     data: hash,
@@ -190,6 +224,7 @@ function Index() {
       if (token0Permit2Allowance < amountIn) {
         setSwapStep(SwapStep.APPROVE_PERMIT2);
       } else {
+        // TODO: check approval IApprovalTrasnfer
         setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
       }
       return;
@@ -223,6 +258,7 @@ function Index() {
         }),
       });
       setSwapStep(SwapStep.EXECUTE);
+      return;
     }
     if (swapStep === SwapStep.EXECUTE) {
       sendTransaction(
@@ -233,16 +269,22 @@ function Index() {
           currencyOut: token1!.address,
           zeroForOne: token0!.address < token1!.address,
           amountIn: amountIn!,
-          amountOutMinimum: 0n,
+          amountOutMinimum: amountOut!,
         })
       );
+      setSwapStep(undefined);
     }
   };
 
   useEffect(() => {
-    if (!(swapStep === SwapStep.EXECUTE && receipt)) return;
-
-    setSwapStep(undefined);
+    if (!(!swapStep && receipt)) return;
+    refetchBalance0();
+    refetchToken1();
+    toast({
+      title: "Swap Complete",
+      description: "Your swap has been completed successfully",
+      variant: "default",
+    });
     console.log("Swap complete");
   }, [swapStep, receipt]);
 
