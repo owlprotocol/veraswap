@@ -18,10 +18,10 @@ function Index() {
   const { isConnected, address } = useAccount();
   const [fromChain, setFromChain] = useState<Network | null>(networks[0]);
   const [toChain, setToChain] = useState<Network | null>(null);
-  const [token0, setToken0] = useState(tokens[fromChain.id][0]);
+  const [token0, setToken0] = useState<Token | null>(null);
   const [token1, setToken1] = useState<Token | null>(null);
-  const [sellAmount, setSellAmount] = useState("");
-  const [buyAmount, setBuyAmount] = useState("");
+  const [sellAmount, setSellAmount] = useState<number | undefined>(undefined);
+  const [buyAmount, setBuyAmount] = useState<number | undefined>(undefined);
 
   const isNotConnected = !isConnected || !address;
 
@@ -75,8 +75,11 @@ function Index() {
               </div>
               <div className="flex items-center gap-2">
                 <Input
-                  value={sellAmount}
-                  onChange={(e) => setSellAmount(e.target.value)}
+                  value={sellAmount ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSellAmount(value === "" ? undefined : parseFloat(value));
+                  }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
@@ -84,6 +87,7 @@ function Index() {
                     "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   )}
                   placeholder="0.0"
+                  disabled={!fromChain || !token0}
                 />
                 <TokenSelect
                   value={token0}
@@ -98,7 +102,7 @@ function Index() {
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
-                    onClick={() => setSellAmount("1.234")}
+                    onClick={() => setSellAmount(1.234)}
                   >
                     Max
                   </Button>
@@ -131,15 +135,19 @@ function Index() {
               </div>
               <div className="flex items-center gap-2">
                 <Input
-                  value={buyAmount}
-                  onChange={(e) => setBuyAmount(e.target.value)}
+                  value={buyAmount ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setBuyAmount(value === "" ? undefined : parseFloat(value));
+                  }}
                   type="number"
-                  placeholder="0.0"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
                     "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   )}
+                  placeholder="0.0"
+                  disabled={!toChain || !token1}
                 />
                 <TokenSelect
                   value={token1}
