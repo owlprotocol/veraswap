@@ -71,7 +71,10 @@ export function TokenSelect({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-xs rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg">
+      <DialogContent
+        className="max-w-xs rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg"
+        aria-describedby={undefined}
+      >
         <DialogHeader className="px-2">
           <DialogTitle className="text-left text-lg font-semibold">
             Select a token
