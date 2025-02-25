@@ -21,12 +21,12 @@ import {
   UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
   IAllowanceTransfer,
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
-import { set } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 
 enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
@@ -75,6 +76,12 @@ function Index() {
   });
 
   const config = useConfig();
+
+  const { data: hyperlaneRegistry } = useSuspenseQuery(
+    hyperlaneRegistryOptions(),
+  );
+
+  console.log("Hyperlane Registry Data", hyperlaneRegistry);
 
   // const token0Uniswap: Token = {address: token0?.address, decimals: token0?.decimals, symbol: token0?.symbol, name: token0?.name}
   const { data: token0Data } = useQuery({
@@ -118,8 +125,6 @@ function Index() {
             token1Data.symbol,
           )
       : undefined;
-
-  console.log(token0Uniswap, token1Uniswap);
 
   const { data: token0Balance, refetch: refetchBalance0 } = useReadContract({
     abi: IERC20.abi,
