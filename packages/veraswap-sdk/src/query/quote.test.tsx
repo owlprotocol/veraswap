@@ -1,18 +1,17 @@
 import { renderHook } from "@testing-library/react-hooks";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { WagmiProvider, http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
-import { Address, createPublicClient, zeroAddress } from "viem";
+import { createPublicClient } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import { beforeEach, describe, expect, test } from "vitest";
-import { useQuote } from "./useQuote.js";
+import { quoteQueryOptions } from "./quote.js";
 import { quoteExactInputSingle as quoteExactInputSingleAbi, quoteExactOutputSingle as quoteExactOutputSingleAbi } from "../artifacts/IV4Quoter.js";
-import { PoolKey } from "../types/PoolKey.js";
 import { MOCK_POOLS, MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
 import { port } from "../test/constants.js";
 
 
-describe("useQuote.test.tsx", () => {
+describe("quote.test.tsx", () => {
     const chain = localhost;
     const chainId = chain.id;
     const transport = http(`http://127.0.0.1:${port}`);
@@ -54,12 +53,13 @@ describe("useQuote.test.tsx", () => {
 
         const { result, waitForNextUpdate } = renderHook(
             () =>
-                useQuote({
+                useQuery(quoteQueryOptions(config, {
+                    chainId,
                     poolKey,
                     exactCurrencyAmount: currency0Amount,
                     quoteType: "quoteExactInputSingle",
                     quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
-                }),
+                })),
             { wrapper },
         );
         expect(result.current.isLoading).toBe(true);
@@ -75,8 +75,8 @@ describe("useQuote.test.tsx", () => {
 
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBeNull();
-        expect(result.current.quote).toBe(amountOutQuoted);
-        expect(result.current.gasEstimate).toBe(gasEstimateQuoted);
+        expect(result.current.data![0]).toBe(amountOutQuoted);
+        expect(result.current.data![1]).toBe(gasEstimateQuoted);
     });
 
     test("wagmi - quoteExactOutputSingle", async () => {
@@ -88,12 +88,13 @@ describe("useQuote.test.tsx", () => {
 
         const { result, waitForNextUpdate } = renderHook(
             () =>
-                useQuote({
+                useQuery(quoteQueryOptions(config, {
+                    chainId,
                     poolKey,
                     exactCurrencyAmount: currency1Amount,
                     quoteType: "quoteExactOutputSingle",
                     quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
-                }),
+                })),
             { wrapper },
         );
         expect(result.current.isLoading).toBe(true);
@@ -109,7 +110,7 @@ describe("useQuote.test.tsx", () => {
 
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBeNull();
-        expect(result.current.quote).toBe(amountInQuoted);
-        expect(result.current.gasEstimate).toBe(gasEstimatedQuoted);
+        expect(result.current.data![0]).toBe(amountInQuoted);
+        expect(result.current.data![1]).toBe(gasEstimatedQuoted);
     });
 });

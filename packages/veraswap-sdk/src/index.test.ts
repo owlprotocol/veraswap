@@ -39,8 +39,7 @@ import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
 import { MAX_UINT_256, MAX_UINT_160, MAX_UINT_48, V4_SWAP, UNISWAP_CONTRACTS } from "./constants.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
-import { PoolKey } from "./types/PoolKey.js";
-import { PoolKeyAbi } from "./abis/index.js";
+import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 
 describe("index.test.ts", function () {
     const chain = localhost;

@@ -3,7 +3,7 @@ import { Address, Chain, zeroAddress } from "viem";
 import * as chains from "viem/chains";
 
 import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
-import { fetchTokenRegistryData } from "../fetchTokenRegistryData.js";
+import { tokenRegistryData } from "./tokenRegistryData.js";
 
 //TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {
@@ -19,7 +19,7 @@ export const getChainById = (chainId: number) => {
 };
 
 
-export function fetchCurrencyQueryOptions(config: Config, {
+export function tokenDataQueryOptions(config: Config, {
     chainId,
     address,
     symbol,
@@ -31,26 +31,31 @@ export function fetchCurrencyQueryOptions(config: Config, {
     symbol?: string;
     decimals?: number;
 }) {
-  return {  queryKey: ["currency-data", chainId, address],
+  return {
+    queryKey: tokenDataQueryKey({ chainId, address }),
     queryFn: () =>
-        fetchCurrencyData(config, {
+        tokenData(config, {
             address,
             chainId,
             symbol,
             decimals,
         }),
-}
+    }
 }
 
-export async function fetchCurrencyData(config: Config, {
-    address,
+export function tokenDataQueryKey({ chainId, address }: {chainId: number, address: Address}) {
+    return ["tokenData", chainId, address]
+}
+
+export async function tokenData(config: Config, {
     chainId,
+    address,
     name,
     symbol,
     decimals,
 }: {
-    address: Address;
     chainId: number;
+    address: Address,
     name?: string;
     symbol?: string;
     decimals?: number;
@@ -73,24 +78,24 @@ export async function fetchCurrencyData(config: Config, {
 
     const results = await Promise.allSettled([
         readContract(config, {
+            chainId,
             address,
             abi: [nameAbi],
             functionName: "name",
-            chainId,
         }),
         readContract(config, {
+            chainId,
             address,
             abi: [symbolAbi],
             functionName: "symbol",
-            chainId,
         }),
         readContract(config, {
+            chainId,
             address,
             abi: [decimalsAbi],
             functionName: "decimals",
-            chainId,
         }),
-        fetchTokenRegistryData({blockchain, address}),
+        tokenRegistryData({blockchain, address}),
     ]);
 
     const [nameResult, symbolResult, decimalsResult, registryResult] = results;
