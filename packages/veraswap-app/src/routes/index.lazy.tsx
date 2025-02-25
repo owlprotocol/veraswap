@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { tokens, networks, Network, Token } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
+import { cn } from "@/lib/utils";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -77,8 +78,12 @@ function Index() {
                   value={sellAmount}
                   onChange={(e) => setSellAmount(e.target.value)}
                   type="number"
+                  className={cn(
+                    "border-0 bg-transparent text-3xl font-semibold p-0",
+                    "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  )}
                   placeholder="0.0"
-                  className="border-0 bg-transparent text-3xl font-semibold"
                 />
                 <TokenSelect
                   value={token0}
@@ -130,7 +135,11 @@ function Index() {
                   onChange={(e) => setBuyAmount(e.target.value)}
                   type="number"
                   placeholder="0.0"
-                  className="border-0 bg-transparent text-3xl font-semibold"
+                  className={cn(
+                    "border-0 bg-transparent text-3xl font-semibold p-0",
+                    "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                  )}
                 />
                 <TokenSelect
                   value={token1}
