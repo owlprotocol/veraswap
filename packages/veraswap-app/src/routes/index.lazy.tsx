@@ -280,6 +280,9 @@ function Index() {
     if (!(!swapStep && receipt)) return;
     refetchBalance0();
     refetchToken1();
+    setAmountIn(undefined);
+    setAmountOut(undefined);
+
     toast({
       title: "Swap Complete",
       description: "Your swap has been completed successfully",
