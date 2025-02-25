@@ -23,8 +23,8 @@ function Index() {
   const [toChain, setToChain] = useState<Network | null>(null);
   const [token0, setToken0] = useState<Token | null>(null);
   const [token1, setToken1] = useState<Token | null>(null);
-  const [sellAmount, setSellAmount] = useState<bigint | undefined>(undefined);
-  const [buyAmount, setBuyAmount] = useState<bigint | undefined>(undefined);
+  const [amountIn, setAmountIn] = useState<bigint | undefined>(undefined);
+  const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
 
   const isNotConnected = !isConnected || !walletAddress;
 
@@ -72,13 +72,13 @@ function Index() {
   const handleSwap = () => {
     const tempNetwork = fromChain;
     const tempToken = token0;
-    const tempAmount = sellAmount;
+    const tempAmount = amountIn;
     setFromChain(toChain!);
     setToken0(token1!);
-    setSellAmount(buyAmount);
+    setAmountIn(amountOut);
     setToChain(tempNetwork);
     setToken1(tempToken);
-    setBuyAmount(tempAmount);
+    setAmountOut(tempAmount);
   };
 
   const getButtonText = () => {
@@ -107,14 +107,14 @@ function Index() {
               <div className="flex items-center gap-2">
                 <Input
                   value={
-                    sellAmount
-                      ? formatUnits(sellAmount, token0?.decimals ?? 18)
+                    amountIn
+                      ? formatUnits(amountIn, token0?.decimals ?? 18)
                       : ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
                     // TODO: get sell quote value
-                    setSellAmount(
+                    setAmountIn(
                       value === ""
                         ? undefined
                         : parseUnits(value, token0?.decimals ?? 18)
@@ -147,9 +147,7 @@ function Index() {
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
-                    onClick={() =>
-                      token0Balance && setSellAmount(token0Balance)
-                    }
+                    onClick={() => token0Balance && setAmountIn(token0Balance)}
                   >
                     Max
                   </Button>
@@ -183,13 +181,13 @@ function Index() {
               <div className="flex items-center gap-2">
                 <Input
                   value={
-                    buyAmount
-                      ? formatUnits(buyAmount, token1?.decimals ?? 18)
+                    amountOut
+                      ? formatUnits(amountOut, token1?.decimals ?? 18)
                       : ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
-                    setBuyAmount(
+                    setAmountOut(
                       value === ""
                         ? undefined
                         : parseUnits(value, token1?.decimals ?? 18)
