@@ -10,6 +10,7 @@ import {
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { PoolKey } from "../types/PoolKey.js";
+import { UnexpectedRevertBytes } from "../artifacts/V4Quoter.js";
 
 export type QuoteType = "quoteExactInputSingle" | "quoteExactOutputSingle";
 
@@ -39,6 +40,8 @@ export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exac
             ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
             : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
 
+    console.log({ exactCurrencyAmount, decimalScale: exactCurrencyAmount.quotient.toString() });
+
     return readContractQueryKey({
         chainId,
         address: quoterAddress,
@@ -48,7 +51,7 @@ export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exac
             {
                 poolKey,
                 zeroForOne,
-                exactAmount: exactCurrencyAmount.decimalScale.toString(),
+                exactAmount: exactCurrencyAmount.quotient.toString(),
                 hookData: "0x",
             },
         ],
@@ -64,16 +67,18 @@ export function quote(
             ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
             : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
 
+    console.log({ quotient: exactCurrencyAmount.quotient.toString() });
+
     return readContract(config, {
         chainId,
         address: quoterAddress,
-        abi: [quoteExactInputSingleAbi, quoteExactOutputSingleAbi],
+        abi: [quoteExactInputSingleAbi, quoteExactOutputSingleAbi, UnexpectedRevertBytes],
         functionName: quoteType,
         args: [
             {
                 poolKey,
                 zeroForOne,
-                exactAmount: BigInt(exactCurrencyAmount.decimalScale.toString()),
+                exactAmount: exactCurrencyAmount.quotient.toString(),
                 hookData: "0x",
             },
         ],
