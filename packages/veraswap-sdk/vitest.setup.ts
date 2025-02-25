@@ -4,11 +4,11 @@ import { Instance } from "prool";
 import { anvil } from "prool/instances";
 import { createWalletClient, http } from "viem";
 import { localhost } from "viem/chains";
-import { getOrDeployDeterministicDeployer, getLocalAccount } from "@owlprotocol/viem-utils";
-import { waitForTransactionReceipt } from "viem/actions";
-import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
+// import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
+
+import { getAnvilAccount } from "@owlprotocol/anvil-account"
 
 import { chainId2, localhost2, port, port2 } from "./src/test/constants.js";
 
@@ -45,24 +45,16 @@ export async function setup() {
 
     // Deploy Deterministic Deployer
     const walletClient = createWalletClient({
-        account: getLocalAccount(0),
+        account: getAnvilAccount(0),
         chain: localhost,
         transport,
     });
-    const { hash } = await getOrDeployDeterministicDeployer(walletClient);
-    if (hash) {
-        await waitForTransactionReceipt(walletClient, { hash });
-    }
 
     const walletClient2 = createWalletClient({
-        account: getLocalAccount(0),
+        account: getAnvilAccount(0),
         chain: localhost2,
         transport: transport2,
     });
-    const { hash: hash2 } = await getOrDeployDeterministicDeployer(walletClient2);
-    if (hash2) {
-        await waitForTransactionReceipt(walletClient2, { hash: hash2 });
-    }
 
     // Forge scripts
     const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // anvil 0
@@ -76,8 +68,11 @@ export async function setup() {
     const universalRouter = stdout.match(/router: (0x.*?)\n/)?.[1];
     const quoter = stdout.match(/v4Quoter: (0x.*?)\n/)?.[1];
     const stateView = stdout.match(/stateView: (0x.*?)\n/)?.[1];
-    console.log({ poolManager, positionManager, universalRouter, quoter, stateView });
+    const mockA = stdout.match(/MockA: (0x.*?)\n/)?.[1]
+    const mockB = stdout.match(/MockB: (0x.*?)\n/)?.[1]
+    console.log({ poolManager, positionManager, universalRouter, quoter, stateView, mockA, mockB });
 
+    /*
     const mailboxContracts = await setupTestMailboxContracts(walletClient);
     const mailboxAddress = mailboxContracts.mailbox.address;
 
@@ -85,6 +80,7 @@ export async function setup() {
     const mailboxAddress2 = mailboxContracts2.mailbox.address;
 
     console.log({ mailboxAddress, mailboxAddress2 });
+    */
 }
 
 /**

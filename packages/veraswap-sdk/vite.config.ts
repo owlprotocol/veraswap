@@ -11,7 +11,7 @@ export default defineConfig({
         testTimeout: 60000,
         hookTimeout: 60000,
         watch: true,
-        include: ["src/**/*.test.ts"],
+        include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
         poolOptions: {
             threads: {
                 singleThread: true,

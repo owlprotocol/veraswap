@@ -54,7 +54,7 @@ struct UniswapContracts {
 
 /// @notice Forge script for deploying v4 & hooks to **anvil**
 /// @dev This script only works on an anvil RPC because v4 exceeds bytecode limits
-contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
+contract DeployUniswapV4 is Script, Test, DeployPermit2 {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     bytes constant ZERO_BYTES = new bytes(0);
 
@@ -70,10 +70,7 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
         // console2.log("v3Factory:", params.v3Factory);
         console2.log("v4PoolManager:", address(contracts.v4PoolManager));
         // console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
-        console2.log(
-            "v4PositionManager:",
-            address(contracts.v4PositionManager)
-        );
+        console2.log("v4PositionManager:", address(contracts.v4PositionManager));
         console2.log("router:", address(contracts.router));
         console2.log("v4Quoter:", address(contracts.v4Quoter));
         console2.log("stateView:", address(contracts.stateView));
@@ -85,8 +82,11 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
 
     function testLifeCycle(UniswapContracts memory contracts) public {
         // Deploy Tokens
-        MockERC20 tokenA = new MockERC20("MockA", "A", 18);
-        MockERC20 tokenB = new MockERC20("MockB", "B", 18);
+        MockERC20 tokenA = new MockERC20{salt: BYTES32_ZERO}("MockA", "A", 18);
+        MockERC20 tokenB = new MockERC20{salt: BYTES32_ZERO}("MockB", "B", 18);
+        console2.log("MockA:", address(tokenA));
+        console2.log("MockB:", address(tokenB));
+
         MockERC20 token0;
         MockERC20 token1;
         if (uint160(address(tokenA)) < uint160(address(tokenB))) {
@@ -103,31 +103,11 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
         token0.approve(address(permit2), type(uint256).max);
         token1.approve(address(permit2), type(uint256).max);
         // Approve PositionManager using Permit2
-        permit2.approve(
-            address(token0),
-            address(contracts.v4PositionManager),
-            type(uint160).max,
-            type(uint48).max
-        );
-        permit2.approve(
-            address(token1),
-            address(contracts.v4PositionManager),
-            type(uint160).max,
-            type(uint48).max
-        );
+        permit2.approve(address(token0), address(contracts.v4PositionManager), type(uint160).max, type(uint48).max);
+        permit2.approve(address(token1), address(contracts.v4PositionManager), type(uint160).max, type(uint48).max);
         // Approve UnversalRouter using Permit2
-        permit2.approve(
-            address(token0),
-            address(contracts.router),
-            type(uint160).max,
-            type(uint48).max
-        );
-        permit2.approve(
-            address(token1),
-            address(contracts.router),
-            type(uint160).max,
-            type(uint48).max
-        );
+        permit2.approve(address(token0), address(contracts.router), type(uint160).max, type(uint48).max);
+        permit2.approve(address(token1), address(contracts.router), type(uint160).max, type(uint48).max);
 
         // Initialize Pool & Mint Liquidity
         // See https://docs.uniswap.org/contracts/v4/quickstart/create-pool
@@ -150,17 +130,10 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
             startingPrice
         );
         // 4. Initialize the mint-liquidity parameters
-        bytes memory mintActions = abi.encodePacked(
-            uint8(Actions.MINT_POSITION),
-            uint8(Actions.SETTLE_PAIR)
-        );
+        bytes memory mintActions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
         // 5. Encode the MINT_POSITION parameters
-        int24 tickLower = (TickMath.getTickAtSqrtPrice(
-            Constants.SQRT_PRICE_1_2
-        ) / tickSpacing) * tickSpacing;
-        int24 tickUpper = (TickMath.getTickAtSqrtPrice(
-            Constants.SQRT_PRICE_2_1
-        ) / tickSpacing) * tickSpacing;
+        int24 tickLower = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_1_2) / tickSpacing) * tickSpacing;
+        int24 tickUpper = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_2_1) / tickSpacing) * tickSpacing;
         uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
             startingPrice,
             TickMath.getSqrtPriceAtTick(tickLower),
@@ -192,9 +165,7 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
         // Done Above
         // 9. Execute the multicall
         contracts.v4PositionManager.multicall(multicallParams);
-        uint256 currentLiquidity = contracts.stateView.getLiquidity(
-            PoolIdLibrary.toId(poolKey)
-        );
+        uint256 currentLiquidity = contracts.stateView.getLiquidity(PoolIdLibrary.toId(poolKey));
         assertGt(currentLiquidity, 0);
 
         console2.log("liquidity:", currentLiquidity);
@@ -240,11 +211,7 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
         // Combine actions and params into inputs
         routerInputs[0] = abi.encode(swapActions, swapParams);
         // Execute the swap
-        contracts.router.execute(
-            routerCommands,
-            routerInputs,
-            block.timestamp + 60
-        );
+        contracts.router.execute(routerCommands, routerInputs, block.timestamp + 60);
 
         // 3.6: (Optional) Verifying the Swap Output
         console2.log("tokenA:", tokenA.balanceOf(msg.sender));
@@ -255,22 +222,12 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
         // deployCreate2Deployer();
         IAllowanceTransfer permit2 = deployPermit2();
 
-        UnsupportedProtocol unsupported = new UnsupportedProtocol{
-            salt: BYTES32_ZERO
-        }();
+        UnsupportedProtocol unsupported = new UnsupportedProtocol{salt: BYTES32_ZERO}();
 
-        IPoolManager v4PoolManager = IPoolManager(
-            address(new PoolManager{salt: BYTES32_ZERO}(address(0)))
-        );
+        IPoolManager v4PoolManager = IPoolManager(address(new PoolManager{salt: BYTES32_ZERO}(address(0))));
 
         IPositionManager v4PositionManager = IPositionManager(
-            new PositionManager(
-                v4PoolManager,
-                permit2,
-                300_000,
-                IPositionDescriptor(address(0)),
-                IWETH9(address(0))
-            )
+            new PositionManager(v4PoolManager, permit2, 300_000, IPositionDescriptor(address(0)), IWETH9(address(0)))
         );
 
         RouterParameters memory routerParams = RouterParameters({
@@ -285,16 +242,10 @@ contract DeployUniswapV4 is Script, Test, DeployCreate2Deployer, DeployPermit2 {
             v4PositionManager: address(v4PositionManager)
         });
 
-        UniversalRouter router = new UniversalRouter{salt: BYTES32_ZERO}(
-            routerParams
-        );
+        UniversalRouter router = new UniversalRouter{salt: BYTES32_ZERO}(routerParams);
 
-        IV4Quoter v4Quoter = IV4Quoter(
-            address(new V4Quoter{salt: BYTES32_ZERO}(v4PoolManager))
-        );
-        IStateView stateView = IStateView(
-            address(new StateView{salt: BYTES32_ZERO}(v4PoolManager))
-        );
+        IV4Quoter v4Quoter = IV4Quoter(address(new V4Quoter{salt: BYTES32_ZERO}(v4PoolManager)));
+        IStateView stateView = IStateView(address(new StateView{salt: BYTES32_ZERO}(v4PoolManager)));
 
         return
             UniswapContracts({
