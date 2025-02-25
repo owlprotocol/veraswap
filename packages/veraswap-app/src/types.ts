@@ -1,8 +1,11 @@
+import { Address } from "viem";
 
 export interface Token {
-    symbol: string;
-    name: string;
-    logo: string;
+  address: Address;
+  name: string;
+  symbol: string;
+  decimals?: number;
+  logo?: string;
   }
   
   export interface Network {
@@ -13,62 +16,14 @@ export interface Token {
   
   export const networks: Network[] = [
     {
-      id: "ethereum",
-      name: "Ethereum",
+      id:"1337",
+      name: "Localhost",
       logo: "/placeholder.svg",
     },
     {
-      id: "polygon",
-      name: "Polygon",
+      id: "1338",
+      name: "Localhost 2",
       logo: "/placeholder.svg",
-    },
-    {
-      id: "arbitrum",
-      name: "Arbitrum",
-      logo: "/placeholder.svg",
-    },
+    }
   ];
   
-  export const tokens: { [networkId: string]: Token[] } = {
-    ethereum: [
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        logo: "/placeholder.svg",
-      },
-      {
-        symbol: "USDC",
-        name: "USD Coin",
-        logo: "/placeholder.svg",
-      },
-      {
-        symbol: "USDT",
-        name: "Tether",
-        logo: "/placeholder.svg",
-      },
-    ],
-    polygon: [
-      {
-        symbol: "MATIC",
-        name: "Polygon",
-        logo: "/placeholder.svg",
-      },
-      {
-        symbol: "USDC",
-        name: "USD Coin (Polygon)",
-        logo: "/placeholder.svg",
-      },
-    ],
-    arbitrum: [
-      {
-        symbol: "ARB",
-        name: "Arbitrum",
-        logo: "/placeholder.svg",
-      },
-      {
-        symbol: "USDC",
-        name: "USD Coin (Arbitrum)",
-        logo: "/placeholder.svg",
-      },
-    ],
-  };

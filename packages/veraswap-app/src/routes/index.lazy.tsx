@@ -5,10 +5,11 @@ import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { tokens, networks, Network, Token } from "@/types";
+import { networks, Network, Token } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
+import { MOCK_TOKENS, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -25,18 +26,28 @@ function Index() {
 
   const isNotConnected = !isConnected || !address;
 
-  const getExchangeRate = () => {
-    if (!token0 || !token1) return "-";
-    const mockRates: Record<string, Record<string, string>> = {
-      ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
-      USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
-      MATIC: { USDC: "0.67", ETH: "0.00033" },
-      ARB: { USDC: "0.5", ETH: "0.00025" },
-    };
-    return `1 ${token0.symbol} = ${
-      mockRates[token0.symbol]?.[token1.symbol] || "-"
-    } ${token1.symbol}`;
-  };
+  let tokens: Record<string, Token[]> = {};
+
+  Object.keys(MOCK_TOKENS).forEach((chainId) => {
+    tokens[chainId] = Object.keys(MOCK_TOKENS[chainId]).map((token) => ({
+      address: MOCK_TOKENS[chainId][token],
+      name: token,
+      symbol: token,
+    }));
+  });
+
+  // const getExchangeRate = () => {
+  //   if (!token0 || !token1) return "-";
+  //   const mockRates: Record<string, Record<string, string>> = {
+  //     ETH: { USDC: "2000", USDT: "1995", MATIC: "3000" },
+  //     USDC: { ETH: "0.0005", MATIC: "1.5", ARB: "2.0" },
+  //     MATIC: { USDC: "0.67", ETH: "0.00033" },
+  //     ARB: { USDC: "0.5", ETH: "0.00025" },
+  //   };
+  //   return `1 ${token0.symbol} = ${
+  //     mockRates[token0.symbol]?.[token1.symbol] || "-"
+  //   } ${token1.symbol}`;
+  // };
 
   const handleSwap = () => {
     const tempNetwork = fromChain;
@@ -92,7 +103,11 @@ function Index() {
                 <TokenSelect
                   value={token0}
                   onChange={setToken0}
-                  tokens={fromChain ? tokens[fromChain.id] : []}
+                  tokens={
+                    fromChain && tokens[fromChain.id]
+                      ? tokens[fromChain.id]
+                      : []
+                  }
                 />
               </div>
               <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -149,10 +164,13 @@ function Index() {
                   placeholder="0.0"
                   disabled={!toChain || !token1}
                 />
+
                 <TokenSelect
                   value={token1}
                   onChange={setToken1}
-                  tokens={toChain ? tokens[toChain.id] : []}
+                  tokens={
+                    toChain && tokens[toChain.id] ? tokens[toChain.id] : []
+                  }
                 />
               </div>
               <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -167,9 +185,9 @@ function Index() {
           <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex justify-between">
               <span>Price</span>
-              <span>
+              {/* <span>
                 {token0 && token1 ? getExchangeRate() : "Select both tokens"}
-              </span>
+              </span> */}
             </div>
             <div className="flex justify-between">
               <span>Price Impact</span>

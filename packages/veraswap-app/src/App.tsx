@@ -4,23 +4,34 @@ import { ThemeProvider } from "./components/theme-provider.js";
 import { Analytics } from "./components/analytics.js";
 import { router } from "./router.js";
 import { Toaster } from "@/components/ui/toaster.jsx";
-import { http, WagmiProvider, createStorage } from "wagmi";
+import { http, WagmiProvider, createStorage, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  connectorsForWallets,
   getDefaultConfig,
   lightTheme,
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
+import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
 
-const config = getDefaultConfig({
-  appName: "Veraswap",
-  projectId: "veraswap",
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [metaMaskWallet],
+    },
+  ],
+  { projectId: "veraswap", appName: "Owl Protocol" }
+);
+
+const config = createConfig({
   chains: [localhost],
   transports: {
     [localhost.id]: http(),
   },
+  connectors,
   storage: createStorage({ storage: window.localStorage }),
 });
 
