@@ -1,5 +1,5 @@
-import { atom } from "jotai";
-import { atomWithQuery } from 'jotai-tanstack-query'
+import { atom, WritableAtom } from "jotai";
+import { atomWithQuery, AtomWithQueryResult } from 'jotai-tanstack-query'
 import { Chain, localhost } from "viem/chains"
 import { MOCK_A, MOCK_B, PoolKey, quoteQueryOptions, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk"
 import { Address, parseUnits, zeroAddress } from "viem";
@@ -101,6 +101,7 @@ const emtpyPooKey = {
 }
 
 // Uniswap Quote
+// type inference fails?
 export const quoteAtom = atomWithQuery((get) => {
     const poolKey = get(poolKeyAtom);
     const chainIn = get(chainInAtom);
@@ -123,4 +124,4 @@ export const quoteAtom = atomWithQuery((get) => {
         }),
         enabled
     }
-})
+}) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>

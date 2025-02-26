@@ -60,8 +60,8 @@ function Index() {
   const [token1, setToken1] = useState<TokenCustom | null>(null);
   const [amountIn, setAmountIn] = useState<bigint | undefined>(undefined);
   const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
-  const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
 
+  const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
   const chains = useAtomValue(chainsAtom)
   const [chainIn, setChainIn] = useAtom(chainInAtom)
   const [chainOut, setChainOut] = useAtom(chainOutAtom);
