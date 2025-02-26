@@ -255,7 +255,8 @@ export enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
   APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
   EXECUTE_SWAP = "Execute Swap",
-  PENDING_TRANSACTION = "Wait for transaction receipt"
+  PENDING_SIGNATURE = "Waiting for wallet signature...",
+  PENDING_TRANSACTION = "Waiting for transaction confirmation..."
 }
 
 export const swapStepAtom = atom((get) => {
@@ -267,9 +268,14 @@ export const swapStepAtom = atom((get) => {
     const tokenInBalance  = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInRouterAllowance = get(tokenInRouterAllowanceAtom)
-    console.debug({ tokenInPermit2Allowance, tokenInRouterAllowance})
+
+     const mutation = get(sendTransactionMutationAtom)
+     const hash = mutation.data;
+     const receipt = get(waitForReceiptQueryAtom)
 
     if (account.address === undefined) return SwapStep.CONNECT_WALLET;
+    if (mutation.isPending) return SwapStep.PENDING_SIGNATURE; 
+    if (hash && hash != receipt.data?.transactionHash) return SwapStep.PENDING_TRANSACTION;
     if (tokenIn === null || tokenOut === null) return SwapStep.SELECT_TOKEN
     if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_AMOUNT;
     if (tokenInBalance === null || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
@@ -284,7 +290,8 @@ export const sendTransactionMutationAtom = atomWithMutation(() => {
     // Compute mutation based on swap step
     return sendTransactionMutationOptions(config)
 })
-export const pendingTransactionAtom = atom((get) => {
+export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     const mutation = get(sendTransactionMutationAtom)
-    return mutation.isPending;
+    const hash = mutation.data
+    return waitForTransactionReceiptQueryOptions(config, { hash })
 })

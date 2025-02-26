@@ -6,6 +6,7 @@ import {
 import {
   getSwapExactInExecuteData,
   MAX_UINT_160,
+  MAX_UINT_256,
   MAX_UINT_48,
   PERMIT2_ADDRESS,
   UNISWAP_CONTRACTS,
@@ -92,7 +93,7 @@ function Index() {
         data: encodeFunctionData({
           abi: IERC20.abi,
           functionName: "approve",
-          args: [PERMIT2_ADDRESS, tokenInAmount!],
+          args: [PERMIT2_ADDRESS, MAX_UINT_256],
         }),
       });
       return;

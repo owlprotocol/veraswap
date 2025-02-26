@@ -99,6 +99,9 @@ contract DeployUniswapV4 is Script, Test, DeployPermit2 {
         // Mint
         token0.mint(msg.sender, 100_000 ether);
         token1.mint(msg.sender, 100_000 ether);
+        // Mint (Anvil 1)
+        token0.mint(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 100 ether);
+        token1.mint(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 100 ether);
         // Approve Permit2
         token0.approve(address(permit2), type(uint256).max);
         token1.approve(address(permit2), type(uint256).max);
