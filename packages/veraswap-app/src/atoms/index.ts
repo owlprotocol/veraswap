@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from 'jotai-tanstack-query'
 import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains"
-import { MOCK_A, MOCK_B, PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, UNISWAP_CONTRACTS,  } from "@owlprotocol/veraswap-sdk"
+import { MOCK_A, MOCK_B, PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, TOKEN_LIST, UNISWAP_CONTRACTS,  } from "@owlprotocol/veraswap-sdk"
 import { Address, Hash, parseUnits, TransactionReceipt, zeroAddress } from "viem";
 import { config } from "@/config";
 import { CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
@@ -57,18 +57,19 @@ export interface TokenAmountAtomData extends TokenAtomData { amount: bigint }
 /***** Tokens *****/
 // List of supported tokens
 //TODO: Add intermediate atom to fetch metadata, for now hardcode
-export const tokensAtom = atom<TokenAtomData[]>([
-    { chainId: localhost.id, address: MOCK_A, name: "Mock A", symbol: "A", decimals: 18 },
-    { chainId: localhost.id, address: MOCK_B, name: "Mock B", symbol: "B", decimals: 18 }
-])
+// export const tokensAtom = atom<TokenAtomData[]>([
+//     { chainId: localhost.id, address: MOCK_A, name: "Mock A", symbol: "A", decimals: 18 },
+//     { chainId: localhost.id, address: MOCK_B, name: "Mock B", symbol: "B", decimals: 18 }
+// ])
 
 // List of supported tokens on networkIn
 export const tokensInAtom = atom((get) => {
     const chainIn = get(chainInAtom)
     if (!chainIn) return [];
 
-    const tokens = get(tokensAtom)
-    return tokens.filter((token) => token.chainId === chainIn.id)
+    const tokens = TOKEN_LIST[chainIn.id];
+    if (!tokens) return [];
+    return tokens;
 })
 // List of supported tokens on networkOut
 //TODO: Use pool info in addition to network
@@ -76,8 +77,10 @@ export const tokensOutAtom = atom((get) => {
     const chainOut = get(chainOutAtom)
     if (!chainOut) return [];
 
-    const tokens = get(tokensAtom)
-    return tokens.filter((token) => token.chainId === chainOut.id)
+    const tokens = TOKEN_LIST[chainOut.id];
+    if (!tokens) return [];
+    // TODO: filter out tokenIn
+    return tokens
 })
 // Selected tokenIn
 export const tokenInAtom = atom<TokenAtomData | null>(null)
