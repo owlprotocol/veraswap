@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from 'jotai-tanstack-query'
-import { Chain, localhost } from "viem/chains"
-import { MOCK_A, MOCK_B, PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk"
+import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains"
+import { MOCK_A, MOCK_B, PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, UNISWAP_CONTRACTS,  } from "@owlprotocol/veraswap-sdk"
 import { Address, Hash, parseUnits, TransactionReceipt, zeroAddress } from "viem";
 import { config } from "@/config";
 import { CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
@@ -9,6 +9,7 @@ import { readContractQueryOptions, sendTransactionMutationOptions, waitForTransa
 import { getAccount } from "@wagmi/core"
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer"
+
 
 /**
  * - networks
@@ -28,9 +29,22 @@ import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/arti
 /***** Chains *****/
 // List of supported networks
 //TODO: Use wagmi config instead?
-export const chainsAtom = atom<Chain[]>([
-    localhost
-])
+
+
+export const localhost2 = {
+    ...localhost,
+    id: 1338,
+    name: "Localhost 2",
+    rpcUrls: { default: { http: ["http://127.0.0.1:9545"] } },
+} as Chain;
+
+
+
+const chains = import.meta.env.MODE != 'development' ?  [localhost,localhost2] : [sepolia,arbitrumSepolia]
+
+export const chainsAtom = atom<Chain[]>(
+    chains
+)
 // Selected chain in
 export const chainInAtom = atom<null | Chain>(null);
 // Selected chain out
