@@ -44,7 +44,7 @@
     }
   },
   "scripts": {
-    "build": "npm-run-all -p build:forge build:artifacts tsc esbuild",
+    "build": "npm-run-all -p build:artifacts tsc esbuild",
     "build:artifacts": "tsx src/codegen/runHardhatArtifactsExport.ts",
     "build:forge": "forge build",
     "build:watch": "npm-run-all -p tsc:watch esbuild:watch",
