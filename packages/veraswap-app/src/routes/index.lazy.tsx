@@ -37,13 +37,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { useAtom, useAtomValue } from "jotai";
-import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenOutAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
-
-enum SwapStep {
-  APPROVE_PERMIT2 = "Approve Permit2",
-  APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
-  EXECUTE = "Execute Swap",
-}
+import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, swapInvertAtom, SwapStep, swapStepAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenInBalanceAtom, tokenInPermit2AllowanceAtom, tokenInRouterAllowanceAtom, tokenOutAtom, tokenOutBalanceAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
 
 const emptyToken = new Token(1, zeroAddress, 1);
 const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
@@ -54,34 +48,34 @@ export const Route = createLazyFileRoute("/")({
 
 function Index() {
   const { isConnected, address: walletAddress } = useAccount();
-  const [fromChain, setFromChain] = useState<Network | null>(networks[0]);
-  const [toChain, setToChain] = useState<Network | null>(null);
-  const [token0, setToken0] = useState<TokenCustom | null>(null);
-  const [token1, setToken1] = useState<TokenCustom | null>(null);
-  const [amountIn, setAmountIn] = useState<bigint | undefined>(undefined);
-  const [amountOut, setAmountOut] = useState<bigint | undefined>(undefined);
 
-  const [swapStep, setSwapStep] = useState<SwapStep | undefined>(undefined);
   const chains = useAtomValue(chainsAtom)
   const [chainIn, setChainIn] = useAtom(chainInAtom)
   const [chainOut, setChainOut] = useAtom(chainOutAtom);
+
   const tokensIn = useAtomValue(tokensInAtom)
   const tokensOut = useAtomValue(tokensOutAtom)
+
   const [tokenIn, setTokenIn] = useAtom(tokenInAtom)
+  const tokenInAmount = useAtomValue(tokenInAmountAtom)
+  const { data: tokenInBalance, refetch: refetchBalanceIn } = useAtomValue(tokenInBalanceAtom)
+  const { data: tokenInPermit2Allowance } = useAtomValue(tokenInPermit2AllowanceAtom)
+  const { data: tokenInRouterAllowance } = useAtomValue(tokenInRouterAllowanceAtom)
+
   const [tokenOut, setTokenOut] = useAtom(tokenOutAtom)
-  const quote = useAtomValue(quoteAtom);
+  const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceAtom)
+
+  const poolKey = useAtomValue(poolKeyAtom)
+  const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteAtom);
 
   const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom)
-  const tokenInAmount = useAtomValue(tokenInAmountAtom)
+  const [, swapInvert] = useAtom(swapInvertAtom)
+  const swapStep = useAtomValue(swapStepAtom)
   // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
-
-  console.debug({ chainIn, tokensIn, tokenIn, tokenInAmountInput, tokenInAmount, quote })
 
   const { toast } = useToast();
 
   const isNotConnected = !isConnected || !walletAddress;
-
-  const config = useConfig();
 
   const { data: hyperlaneRegistry } = useSuspenseQuery(
     hyperlaneRegistryOptions(),
@@ -89,138 +83,15 @@ function Index() {
 
   console.log("Hyperlane Registry Data", hyperlaneRegistry);
 
-  // const token0Uniswap: Token = {address: token0?.address, decimals: token0?.decimals, symbol: token0?.symbol, name: token0?.name}
-  const { data: token0Data } = useQuery({
-    ...tokenDataQueryOptions(config, {
-      address: token0?.address ?? zeroAddress,
-      chainId: Number(fromChain?.id ?? 0),
-      ...token0,
-    }),
-    enabled: !!token0 && !!fromChain,
-  });
-
-  const { data: token1Data } = useQuery({
-    ...tokenDataQueryOptions(config, {
-      address: token1?.address ?? zeroAddress,
-      chainId: Number(toChain?.id ?? 0),
-      ...token1,
-    }),
-    enabled: !!token1 && !!toChain,
-  });
-
-  const token0Uniswap: Currency | undefined =
-    fromChain && token0 && token0Data
-      ? token0.address === zeroAddress
-        ? Ether.onChain(Number(fromChain.id))
-        : new Token(
-          Number(fromChain.id),
-          token0.address,
-          token0Data.decimals ?? 18,
-          token0Data.symbol,
-        )
-      : undefined;
-
-  const token1Uniswap: Currency | undefined =
-    toChain && token1 && token1Data
-      ? token1.address === zeroAddress
-        ? Ether.onChain(Number(toChain.id))
-        : new Token(
-          Number(toChain.id),
-          token1.address,
-          token1Data.decimals ?? 18,
-          token1Data.symbol,
-        )
-      : undefined;
-
-  const { data: token0Balance, refetch: refetchBalance0 } = useReadContract({
-    abi: IERC20.abi,
-    chainId: Number(fromChain?.id ?? 0),
-    address: token0?.address,
-    functionName: "balanceOf",
-    args: [walletAddress!],
-    query: {
-      enabled: !!token0 && !!walletAddress && !!fromChain,
-      refetchInterval: 2000,
-    },
-  });
-
-  const token0BalanceFromatted =
-    token0Balance != undefined && token0
-      ? `
-     ${formatUnits(token0Balance, token0.decimals ?? 18)} ${token0.symbol}`
+  const tokenInBalanceFormatted =
+    tokenInBalance != undefined
+      ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}`
       : "-";
-
-  const { data: token1Balance, refetch: refetchToken1 } = useReadContract({
-    abi: IERC20.abi,
-    chainId: Number(toChain?.id ?? 0),
-    address: token1?.address,
-    functionName: "balanceOf",
-    args: [walletAddress!],
-    query: {
-      enabled: !!token1 && !!walletAddress && !!toChain,
-      refetchInterval: 2000,
-    },
-  });
-
-  const token1BalanceFormatted =
-    token1Balance != undefined && token1
+  const tokenOutBalanceFormatted =
+    tokenOutBalance != undefined
       ? `
-     ${formatUnits(token1Balance, token1.decimals ?? 18)} ${token1.symbol}`
+     ${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}`
       : "-";
-
-  const {
-    data: quoterData,
-    error: quoterError,
-    isLoading: isQuoterLoading,
-  } = useQuery({
-    ...quoteQueryOptions(config, {
-      chainId: Number(toChain?.id ?? 0),
-      exactCurrencyAmount:
-        !!amountIn && token0Uniswap
-          ? CurrencyAmount.fromRawAmount(token0Uniswap, amountIn.toString())
-          : emptyCurrencyAmount,
-      poolKey: MOCK_POOLS[fromChain?.id ?? 0],
-      quoteType: "quoteExactInputSingle",
-      quoterAddress: !!fromChain
-        ? UNISWAP_CONTRACTS[fromChain.id].QUOTER
-        : zeroAddress,
-    }),
-    enabled: !!amountIn && !!toChain,
-  });
-
-  useEffect(() => {
-    if (quoterData) {
-      const amountOutQuoted = quoterData[0];
-      setAmountOut(amountOutQuoted);
-      return;
-    }
-
-    if (quoterError) {
-      setAmountOut(undefined);
-    }
-  }, [quoterData, quoterError]);
-
-  const { data: token0Permit2Allowance } = useReadContract({
-    abi: IERC20.abi,
-    address: token0?.address,
-    functionName: "allowance",
-    args: [walletAddress ?? zeroAddress, PERMIT2_ADDRESS],
-    query: { enabled: !!token0 && !!walletAddress },
-  });
-
-  const { data: transferAllowance } = useReadContract({
-    abi: IAllowanceTransfer.abi,
-    address: PERMIT2_ADDRESS,
-    functionName: "allowance",
-    args: [
-      walletAddress ?? zeroAddress,
-      token0?.address ?? zeroAddress,
-      !!fromChain
-        ? UNISWAP_CONTRACTS[fromChain?.id].UNIVERSAL_ROUTER
-        : zeroAddress,
-    ],
-    query: { enabled: !!token0 && !!walletAddress && !!fromChain },
-  });
 
   const {
     sendTransaction,
@@ -232,30 +103,18 @@ function Index() {
       hash,
     });
 
-  const handleInvert = () => {
-    const tempNetwork = fromChain;
-    const tempToken = token0;
-    const tempAmount = amountIn;
-    setFromChain(toChain!);
-    setToken0(token1!);
-    setAmountIn(amountOut);
-    setToChain(tempNetwork);
-    setToken1(tempToken);
-    setAmountOut(tempAmount);
-  };
 
   const handleSwapSteps = () => {
     if (!swapStep || transactionIsPending) return;
     if (swapStep === SwapStep.APPROVE_PERMIT2) {
       sendTransaction({
-        to: token0!.address,
+        to: tokenIn!.address,
         data: encodeFunctionData({
           abi: IERC20.abi,
           functionName: "approve",
-          args: [PERMIT2_ADDRESS, amountIn!],
+          args: [PERMIT2_ADDRESS, tokenInAmount!],
         }),
       });
-      setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
       return;
     }
 
@@ -266,26 +125,25 @@ function Index() {
           abi: IAllowanceTransfer.abi,
           functionName: "approve",
           args: [
-            token0!.address,
-            UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
+            tokenIn!.address,
+            UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
             MAX_UINT_160,
             MAX_UINT_48,
           ],
         }),
       });
-      setSwapStep(SwapStep.EXECUTE);
       return;
     }
     if (swapStep === SwapStep.EXECUTE) {
       sendTransaction(
         getSwapExactInExecuteData({
-          universalRouter: UNISWAP_CONTRACTS[fromChain!.id].UNIVERSAL_ROUTER,
-          poolKey: MOCK_POOLS[fromChain!.id],
-          currencyIn: token0!.address,
-          currencyOut: token1!.address,
-          zeroForOne: token0!.address < token1!.address,
-          amountIn: amountIn!,
-          amountOutMinimum: amountOut!,
+          universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+          poolKey: poolKey!,
+          currencyIn: tokenIn!.address,
+          currencyOut: tokenOut!.address,
+          zeroForOne: tokenIn!.address === poolKey!.currency0,
+          amountIn: tokenInAmount!,
+          amountOutMinimum: quoterData![0],
         }),
       );
     }
@@ -293,12 +151,10 @@ function Index() {
 
   useEffect(() => {
     if (receipt) {
-      refetchBalance0();
-      refetchToken1();
+      refetchBalanceIn();
+      refetchBalanceOut();
 
-      setAmountIn(undefined);
-      setAmountOut(undefined);
-      setSwapStep(undefined);
+      setTokenInAmountInput("");
 
       toast({
         title: "Swap Complete",
@@ -306,38 +162,19 @@ function Index() {
         variant: "default",
       });
     }
-  }, [receipt, refetchBalance0, refetchToken1]);
-
-  useEffect(() => {
-    if (
-      !swapStep &&
-      token0Permit2Allowance !== undefined &&
-      transferAllowance !== undefined &&
-      amountIn
-    ) {
-      const transferAllowanceAmount = transferAllowance?.[0] ?? 0n;
-
-      if (token0Permit2Allowance < amountIn) {
-        setSwapStep(SwapStep.APPROVE_PERMIT2);
-      } else if (transferAllowanceAmount < amountIn) {
-        setSwapStep(SwapStep.APPROVE_UNISWAP_ROUTER);
-      } else {
-        setSwapStep(SwapStep.EXECUTE);
-      }
-    }
-  }, [token0Permit2Allowance, transferAllowance, amountIn]);
+  }, [receipt, refetchBalanceIn, refetchBalanceOut]);
 
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
-    if (!toChain) return "Select A Network";
-    if (!token1) return "Select Input Token";
-    if (!amountIn) return "Enter Amount";
-    if (token0Balance != undefined && amountIn && token0Balance < amountIn)
+    if (swapStep === SwapStep.SELECT_NETWORK) return "Select A Network";
+    if (swapStep === SwapStep.SELECT_TOKEN_IN) return "Select Input Token";
+    if (swapStep === SwapStep.SELECT_TOKEN_IN_AMOUNT) return "Enter Amount";
+    if (swapStep === SwapStep.INSUFFICIENT_LIQUIDITY)
       return "Insufficient Balance";
-    if (token0Permit2Allowance && amountIn && token0Permit2Allowance < amountIn)
-      return "Approve Token";
-    if (transferAllowance && amountIn && transferAllowance[0] < amountIn)
-      return "Approve Token";
+    if (swapStep === SwapStep.APPROVE_PERMIT2)
+      return "Approve Token (1/2)";
+    if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER)
+      return "Approve Token (2/2)";
     if (!!quoterError) return "Insufficient Liquidity";
     if (transactionIsPending) return "Transaction Pending...";
     if (swapStep) return swapStep;
@@ -383,11 +220,11 @@ function Index() {
                 {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>$0.00</span> */}
                 <div className="space-x-2">
-                  <span>Balance: {token0BalanceFromatted}</span>
+                  <span>Balance: {tokenInBalanceFormatted}</span>
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
-                    onClick={() => token0Balance && setAmountIn(token0Balance)}
+                    onClick={() => tokenInBalance && setTokenInAmountInput(formatUnits(tokenInBalance, tokenIn!.decimals))}
                   >
                     Max
                   </Button>
@@ -400,8 +237,8 @@ function Index() {
                 variant="outline"
                 size="icon"
                 className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
-                onClick={handleInvert}
-                disabled={!toChain || !token1}
+                onClick={swapInvert}
+                disabled={!tokenInAmount}
               >
                 <ArrowUpDown className="h-6 w-6" />
               </Button>
@@ -421,18 +258,10 @@ function Index() {
               <div className="flex items-center gap-2">
                 <Input
                   value={
-                    amountOut
-                      ? formatUnits(amountOut, token1?.decimals ?? 18)
+                    quoterData
+                      ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
                       : ""
                   }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setAmountOut(
-                      value === ""
-                        ? undefined
-                        : parseUnits(value, token1?.decimals ?? 18),
-                    );
-                  }}
                   type="number"
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
@@ -446,7 +275,7 @@ function Index() {
                         ? "Fetching quote..."
                         : "0.0"
                   }
-                  disabled={!toChain || !token1}
+                  disabled={true}
                 />
 
                 <TokenSelect
@@ -459,24 +288,13 @@ function Index() {
                 {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>$0.00</span> */}
                 <div className="space-x-2 align-right">
-                  <span>Balance: {token1BalanceFormatted}</span>
+                  <span>Balance: {tokenOutBalanceFormatted}</span>
                 </div>
               </div>
             </div>
           </div>
           <Button
-            disabled={
-              isNotConnected ||
-              !toChain ||
-              !token1 ||
-              !amountIn ||
-              (token0Balance != undefined &&
-                amountIn &&
-                token0Balance < amountIn) ||
-              !!quoterError ||
-              !!transactionIsPending ||
-              !!receiptIsLoading
-            }
+            disabled={false}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
             onClick={() => handleSwapSteps()}
           >
