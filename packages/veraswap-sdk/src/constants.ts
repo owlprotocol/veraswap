@@ -126,7 +126,7 @@ export const UNISWAP_CONTRACTS = {
     },
 } as const;
 
-export const MOCK_TOKENS = {
+export const TOKEN_LIST = {
     [1337]: {
         MOCK_A,
         MOCK_B,
@@ -140,31 +140,40 @@ export const MOCK_TOKENS = {
         MOCK_B,
         testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
     },
+    [sepolia.id]: {
+        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
+        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
+        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
+        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+    },
+    [arbitrumSepolia.id]: {
+        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+    },
 } as const;
 
 export const MOCK_POOLS = {
     [1337]: {
         // currency0:
-        //     MOCK_TOKENS[1337].TokenA < MOCK_TOKENS[1337].testUSDC
-        //         ? MOCK_TOKENS[1337].TokenA
-        //         : MOCK_TOKENS[1337].testUSDC,
+        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
+        //         ? TOKEN_LIST[1337].TokenA
+        //         : TOKEN_LIST[1337].testUSDC,
         // currency1:
-        //     MOCK_TOKENS[1337].TokenA < MOCK_TOKENS[1337].testUSDC
-        //         ? MOCK_TOKENS[1337].testUSDC
-        //         : MOCK_TOKENS[1337].TokenA,
+        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
+        //         ? TOKEN_LIST[1337].testUSDC
+        //         : TOKEN_LIST[1337].TokenA,
         currency0:
-            MOCK_TOKENS[1337].MOCK_A < MOCK_TOKENS[1337].MOCK_B ? MOCK_TOKENS[1337].MOCK_A : MOCK_TOKENS[1337].MOCK_B,
+            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_A : TOKEN_LIST[1337].MOCK_B,
         currency1:
-            MOCK_TOKENS[1337].MOCK_A < MOCK_TOKENS[1337].MOCK_B ? MOCK_TOKENS[1337].MOCK_B : MOCK_TOKENS[1337].MOCK_A,
+            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_B : TOKEN_LIST[1337].MOCK_A,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
     },
     [1338]: {
         currency0:
-            MOCK_TOKENS[1338].MOCK_A < MOCK_TOKENS[1338].MOCK_B ? MOCK_TOKENS[1338].MOCK_A : MOCK_TOKENS[1338].MOCK_B,
+            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_A : TOKEN_LIST[1338].MOCK_B,
         currency1:
-            MOCK_TOKENS[1338].MOCK_A < MOCK_TOKENS[1338].MOCK_B ? MOCK_TOKENS[1338].MOCK_B : MOCK_TOKENS[1338].MOCK_A,
+            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_B : TOKEN_LIST[1338].MOCK_A,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,

@@ -10,7 +10,7 @@ import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
-import { MOCK_POOLS, MOCK_TOKENS, UNISWAP_CONTRACTS } from "../constants.js";
+import { MOCK_POOLS, TOKEN_LIST, UNISWAP_CONTRACTS } from "../constants.js";
 import { port } from "../test/constants.js";
 
 describe("quote.test.tsx", () => {
@@ -28,8 +28,8 @@ describe("quote.test.tsx", () => {
         },
     });
 
-    const currencyA = new Token(chain.id, MOCK_TOKENS[chainId].MOCK_A, 18, "A");
-    const currencyB = new Token(chain.id, MOCK_TOKENS[chainId].MOCK_B, 18, "B");
+    const currencyA = new Token(chain.id, TOKEN_LIST[chainId].MOCK_A, 18, "A");
+    const currencyB = new Token(chain.id, TOKEN_LIST[chainId].MOCK_B, 18, "B");
 
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;

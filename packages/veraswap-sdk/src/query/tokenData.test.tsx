@@ -6,7 +6,7 @@ import { http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
 import { ReactNode } from "react";
 import { tokenDataQueryOptions } from "./tokenData.js";
-import { MOCK_TOKENS } from "../constants.js";
+import { TOKEN_LIST } from "../constants.js";
 
 describe("tokenData.test.tsx", () => {
     // Wagmi Config
@@ -33,7 +33,7 @@ describe("tokenData.test.tsx", () => {
                 useQuery(
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
-                        address: MOCK_TOKENS[chainId].MOCK_A,
+                        address: TOKEN_LIST[chainId].MOCK_A,
                     }),
                 ),
             { wrapper },
