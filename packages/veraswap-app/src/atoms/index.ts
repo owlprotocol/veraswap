@@ -1,11 +1,11 @@
 import { atom, WritableAtom } from "jotai";
-import { atomWithQuery, AtomWithQueryResult } from 'jotai-tanstack-query'
+import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from 'jotai-tanstack-query'
 import { Chain, localhost } from "viem/chains"
 import { MOCK_A, MOCK_B, PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk"
-import { Address, parseUnits, zeroAddress } from "viem";
+import { Address, Hash, parseUnits, TransactionReceipt, zeroAddress } from "viem";
 import { config } from "@/config";
 import { CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
-import { readContractQueryOptions } from "wagmi/query"
+import { readContractQueryOptions, sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query"
 import { getAccount } from "@wagmi/core"
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer"
@@ -71,7 +71,7 @@ export const tokenInAtom = atom<TokenAtomData | null>(null)
 export const tokenOutAtom = atom<TokenAtomData | null>(null)
 
 // Selected tokenIn balance
-export const tokenInBalanceAtom = atomWithQuery((get) => {
+export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config)
     const tokenIn = get(tokenInAtom)
@@ -89,8 +89,12 @@ export const tokenInBalanceAtom = atomWithQuery((get) => {
         refetchInterval: 2000,
     }
 })
+export const tokenInBalanceAtom = atom<bigint | null>((get) => {
+    return get(tokenInBalanceQueryAtom).data ?? null;
+})
+
 // Selected tokenIn Permit2 allowance
-export const tokenInPermit2AllowanceAtom = atomWithQuery((get) => {
+export const tokenInPermit2AllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config)
     const tokenIn = get(tokenInAtom)
@@ -108,8 +112,11 @@ export const tokenInPermit2AllowanceAtom = atomWithQuery((get) => {
         refetchInterval: 2000,
     }
 })
+export const tokenInPermit2AllowanceAtom = atom<bigint | null>((get) => {
+    return get(tokenInPermit2AllowanceQueryAtom).data ?? null;
+})
 // Selected tokenIn UniversalRouter allowance (via Permit2)
-export const tokenInRouterAllowanceAtom = atomWithQuery((get) => {
+export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config)
     const tokenIn = get(tokenInAtom)
@@ -131,9 +138,13 @@ export const tokenInRouterAllowanceAtom = atomWithQuery((get) => {
         refetchInterval: 2000,
     }
 })
+export const tokenInRouterAllowanceAtom = atom<bigint | null>((get) => {
+    const data = get(tokenInRouterAllowanceQueryAtom).data
+    return data ? data[0] : null;
+})
 
 // Selected tokenOut balance
-export const tokenOutBalanceAtom = atomWithQuery((get) => {
+export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config)
     const tokenOut = get(tokenOutAtom)
@@ -150,6 +161,9 @@ export const tokenOutBalanceAtom = atomWithQuery((get) => {
         enabled,
         refetchInterval: 2000,
     }
+})
+export const tokenOutBalanceAtom = atom<bigint | null>((get) => {
+    return get(tokenOutBalanceQueryAtom).data ?? null;
 })
 
 // Selected tokenInAmount
@@ -241,22 +255,33 @@ export enum SwapStep {
   APPROVE_PERMIT2 = "Approve Permit2",
   APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
   EXECUTE = "Execute Swap",
+  PENDING = "Wait for transaction receipt"
 }
 
 export const swapStepAtom = atom(null, (get) => {
     const chainIn = get(chainInAtom);
     const tokenIn = get(tokenInAtom)
     const tokenInAmount = get(tokenInAmountAtom);
-    const { data: tokenInBalance } = get(tokenInBalanceAtom);
-    const { data: tokenInPermit2Allowance } = get(tokenInPermit2AllowanceAtom);
-    const { data: tokenInRouterAllowance } = get(tokenInRouterAllowanceAtom)
+    const tokenInBalance  = get(tokenInBalanceAtom);
+    const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
+    const tokenInRouterAllowance = get(tokenInRouterAllowanceAtom)
 
     if (chainIn === null) return SwapStep.SELECT_NETWORK;
     if (tokenIn === null) return SwapStep.SELECT_TOKEN_IN
     if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_IN_AMOUNT;
-    if (tokenInBalance === undefined || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
-    if (tokenInPermit2Allowance === undefined || tokenInPermit2Allowance < tokenInAmount) return SwapStep.APPROVE_PERMIT2
-    if (tokenInRouterAllowance === undefined || tokenInRouterAllowance[0] < tokenInAmount) return SwapStep.APPROVE_UNISWAP_ROUTER
+    if (tokenInBalance === null || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
+    if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) return SwapStep.APPROVE_PERMIT2
+    if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount) return SwapStep.APPROVE_UNISWAP_ROUTER
    
     return SwapStep.EXECUTE
+})
+
+// Set this atom after sending transaction
+export const sendTransactionMutationAtom = atomWithMutation(() => {
+    // Compute mutation based on swap step
+    return sendTransactionMutationOptions(config)
+})
+export const pendingTransactionAtom = atom((get) => {
+    const mutation = get(sendTransactionMutationAtom)
+    return mutation.isPending;
 })

@@ -1,46 +1,31 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
   useAccount,
-  useConfig,
-  useReadContract,
-  useSendTransaction,
-  useWaitForTransactionReceipt,
 } from "wagmi";
-import { Currency, CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
 import {
   getSwapExactInExecuteData,
   MAX_UINT_160,
   MAX_UINT_48,
-  MOCK_POOLS,
-  MOCK_TOKENS,
   PERMIT2_ADDRESS,
-  quoteQueryOptions,
-  tokenDataQueryOptions,
   UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { encodeFunctionData, formatUnits } from "viem";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   IAllowanceTransfer,
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { networks, Network, Token as TokenCustom } from "@/types";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { useAtom, useAtomValue } from "jotai";
-import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, swapInvertAtom, SwapStep, swapStepAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenInBalanceAtom, tokenInPermit2AllowanceAtom, tokenInRouterAllowanceAtom, tokenOutAtom, tokenOutBalanceAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
-
-const emptyToken = new Token(1, zeroAddress, 1);
-const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
+import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, sendTransactionMutationAtom, swapInvertAtom, SwapStep, swapStepAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenInBalanceQueryAtom, tokenInPermit2AllowanceQueryAtom, tokenInRouterAllowanceQueryAtom, tokenOutAtom, tokenOutBalanceQueryAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -58,12 +43,10 @@ function Index() {
 
   const [tokenIn, setTokenIn] = useAtom(tokenInAtom)
   const tokenInAmount = useAtomValue(tokenInAmountAtom)
-  const { data: tokenInBalance, refetch: refetchBalanceIn } = useAtomValue(tokenInBalanceAtom)
-  const { data: tokenInPermit2Allowance } = useAtomValue(tokenInPermit2AllowanceAtom)
-  const { data: tokenInRouterAllowance } = useAtomValue(tokenInRouterAllowanceAtom)
+  const { data: tokenInBalance, refetch: refetchBalanceIn } = useAtomValue(tokenInBalanceQueryAtom)
 
   const [tokenOut, setTokenOut] = useAtom(tokenOutAtom)
-  const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceAtom)
+  const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom)
 
   const poolKey = useAtomValue(poolKeyAtom)
   const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteAtom);
@@ -93,16 +76,11 @@ function Index() {
      ${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}`
       : "-";
 
-  const {
-    sendTransaction,
+  const [{
+    mutate: sendTransaction,
     data: hash,
     isPending: transactionIsPending,
-  } = useSendTransaction();
-  const { data: receipt, isLoading: receiptIsLoading } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
-
+  }] = useAtom(sendTransactionMutationAtom);
 
   const handleSwapSteps = () => {
     if (!swapStep || transactionIsPending) return;
@@ -149,6 +127,7 @@ function Index() {
     }
   };
 
+  /*
   useEffect(() => {
     if (receipt) {
       refetchBalanceIn();
@@ -163,6 +142,7 @@ function Index() {
       });
     }
   }, [receipt, refetchBalanceIn, refetchBalanceOut]);
+  */
 
   const getButtonText = () => {
     if (isNotConnected) return "Connect Wallet";
