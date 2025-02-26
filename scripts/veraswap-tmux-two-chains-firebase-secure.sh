@@ -21,7 +21,12 @@ if [ $? != 0 ]; then
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
 forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
-forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:9545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216" ENTER
+forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:9545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
+cd $WORKSPACE/packages-public/packages/contracts-hyperlane && git checkout test/mailbox-veraswap && \
+tsx ./src/scripts/setupTestMailboxContractsWithProxy.ts && \
+cd $VERASWAP/packages/veraswap-sdk && \
+PRIVATE_KEY=${privateKeyAnvil0} tsx ./src/scripts/deployTestTokens.ts" ENTER
+
     # Start auth dev mode
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
 fi
