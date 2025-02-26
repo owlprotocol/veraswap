@@ -1,5 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { FundCard } from "@coinbase/onchainkit/fund";
+import { FundButton } from "@coinbase/onchainkit/fund";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export const Route = createRootRoute({
@@ -16,6 +18,7 @@ function RootComponent() {
           </h1>
           <div className="flex-1 flex justify-end items-center gap-2">
             <ThemeSwitcher />
+            <FundButton />
             <ConnectButton
               showBalance={false}
               accountStatus="address"

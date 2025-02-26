@@ -36,6 +36,7 @@
     "tsr:generate": "tsr generate"
   },
   "dependencies": {
+    "@coinbase/onchainkit":"^0.37.4",
     "@owlprotocol/veraswap-sdk": "workspace:*",
     "@hookform/resolvers": "^3.3.4",
     "@hyperlane-xyz/registry":"^10.2.0",

@@ -27,6 +27,7 @@ import {
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
 
+import { FundCard } from "@coinbase/onchainkit/fund";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -340,6 +341,7 @@ function Index() {
 
   return (
     <div className="max-w-xl mx-auto px-4">
+      <FundCard assetSymbol="USDC" country="US" currency="USD"></FundCard>
       <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
         <CardContent className="p-4 space-y-6">
           <div className="space-y-4">
