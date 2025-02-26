@@ -128,56 +128,79 @@ export const UNISWAP_CONTRACTS = {
 
 export const TOKEN_LIST = {
     [1337]: {
-        MOCK_A,
-        MOCK_B,
-        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
-        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
-        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        // TokenA: {name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42"},
+        // TokenB:{name: "TokenB", symbol: "B", decimals: 18, address: "0x7C40Fa89B2887738563a88da36b60221861C64d6"},
+        // TokenC:{name: "TokenC", symbol: "C", decimals: 18, address: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327"},
+        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
+        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x500a80035829572e8E637dC654AE32bC2560968F" },
+        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e" },
+        MOCK_A: { name: "MockA", symbol: "A", decimals: 18, address: MOCK_A },
+        MOCK_B: { name: "MockB", symbol: "B", decimals: 18, address: MOCK_B },
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
     [1338]: {
-        MOCK_A,
-        MOCK_B,
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
     [sepolia.id]: {
-        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
-        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
-        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42" },
+        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x7C40Fa89B2887738563a88da36b60221861C64d6" },
+        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327" },
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        },
     },
     [arbitrumSepolia.id]: {
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        },
     },
 } as const;
 
 export const MOCK_POOLS = {
     [1337]: {
-        // currency0:
-        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
-        //         ? TOKEN_LIST[1337].TokenA
-        //         : TOKEN_LIST[1337].testUSDC,
-        // currency1:
-        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
-        //         ? TOKEN_LIST[1337].testUSDC
-        //         : TOKEN_LIST[1337].TokenA,
         currency0:
-            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_A : TOKEN_LIST[1337].MOCK_B,
+            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
+                ? TOKEN_LIST[1337].TokenA.address
+                : TOKEN_LIST[1337].testUSDC.address,
         currency1:
-            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_B : TOKEN_LIST[1337].MOCK_A,
+            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
+                ? TOKEN_LIST[1337].testUSDC.address
+                : TOKEN_LIST[1337].TokenA.address,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
     },
-    [1338]: {
-        currency0:
-            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_A : TOKEN_LIST[1338].MOCK_B,
-        currency1:
-            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_B : TOKEN_LIST[1338].MOCK_A,
-        fee: 3000,
-        tickSpacing: 60,
-        hooks: zeroAddress,
-    },
+    // [1338]: {
+    //     currency0:
+    //     TOKEN_LIST[1338].TokenA.address < TOKEN_LIST[1338].testUSDC.address
+    //         ? TOKEN_LIST[1338].TokenA.address
+    //         : TOKEN_LIST[1338].testUSDC.address,
+    // currency1:
+    //     TOKEN_LIST[1338].TokenA.address < TOKEN_LIST[1338].testUSDC.address
+    //         ? TOKEN_LIST[1338].testUSDC.address
+    //         : TOKEN_LIST[1338].TokenA.address,
+    //     fee: 3000,
+    //     tickSpacing: 60,
+    //     hooks: zeroAddress,
+    // },
 };
 
 // TODO: Fix values

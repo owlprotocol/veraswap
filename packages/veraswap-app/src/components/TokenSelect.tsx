@@ -29,11 +29,11 @@ export function TokenSelect({
   const filteredTokens = tokens.filter(
     (token) =>
       token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>,
+    e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
     e.currentTarget.src = "/placeholder.jpg";
   };
@@ -48,7 +48,7 @@ export function TokenSelect({
             "hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors",
             "rounded-xl border-2 border-gray-100 dark:border-gray-700",
             "hover:border-gray-200 dark:hover:border-gray-600",
-            "shadow-sm hover:shadow-md transition-all",
+            "shadow-sm hover:shadow-md transition-all"
           )}
         >
           {value ? (
@@ -96,14 +96,14 @@ export function TokenSelect({
           <div className="space-y-1.5 pb-2">
             {filteredTokens.map((token) => (
               <Button
-                key={token.symbol}
+                key={token.address}
                 variant="ghost"
                 className={cn(
                   "group h-16 w-full justify-between px-4 py-3",
                   "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
                   "active:scale-[0.98]",
                   value?.symbol === token.symbol &&
-                  "bg-gray-100 dark:bg-gray-700",
+                    "bg-gray-100 dark:bg-gray-700"
                 )}
                 onClick={() => {
                   onChange(token);

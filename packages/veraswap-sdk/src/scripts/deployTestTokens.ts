@@ -161,7 +161,7 @@ async function deployTestTokens(chains: Chain[]) {
             abi: MockERC20.abi,
             address,
             functionName: "mint",
-            args: [walletClients[0].account.address, parseUnits("1", testTokenDefs[i].decimals)],
+            args: [walletClients[0].account.address, parseUnits("100", testTokenDefs[i].decimals)],
         });
 
         await publicClients[0].waitForTransactionReceipt({ hash });
@@ -178,13 +178,13 @@ async function deployTestTokens(chains: Chain[]) {
                 args: [walletClients[i].account.address],
             });
 
-            if (balance >= parseUnits("1", testUSDCDef.decimals)) return;
+            if (balance >= parseUnits("1000", testUSDCDef.decimals)) return;
 
             const hash = await walletClients[i].writeContract({
                 abi: MockERC20.abi,
                 address,
                 functionName: "mint",
-                args: [walletClients[i].account.address, parseUnits("1", testUSDCDef.decimals)],
+                args: [walletClients[i].account.address, parseUnits("1000", testUSDCDef.decimals)],
             });
 
             await publicClients[i].waitForTransactionReceipt({ hash });
