@@ -12,15 +12,16 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Token } from "@/types";
 import { cn } from "@/lib/utils";
+import { TokenAtomData } from "@/atoms";
 
 export function TokenSelect({
   value,
   onChange,
   tokens,
 }: {
-  value: Token | null;
-  onChange: (token: Token) => void;
-  tokens: Token[];
+  value: TokenAtomData | null;
+  onChange: (token: TokenAtomData) => void;
+  tokens: TokenAtomData[];
 }) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +103,7 @@ export function TokenSelect({
                   "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
                   "active:scale-[0.98]",
                   value?.symbol === token.symbol &&
-                    "bg-gray-100 dark:bg-gray-700",
+                  "bg-gray-100 dark:bg-gray-700",
                 )}
                 onClick={() => {
                   onChange(token);
