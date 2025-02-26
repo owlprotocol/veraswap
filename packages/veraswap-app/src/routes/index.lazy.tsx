@@ -56,6 +56,8 @@ function Index() {
   const swapStep = useAtomValue(swapStepAtom)
   // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
 
+  console.debug({ swapStep })
+
   const { toast } = useToast();
 
   const isNotConnected = !isConnected || !walletAddress;
@@ -112,7 +114,7 @@ function Index() {
       });
       return;
     }
-    if (swapStep === SwapStep.EXECUTE) {
+    if (swapStep === SwapStep.EXECUTE_SWAP) {
       sendTransaction(
         getSwapExactInExecuteData({
           universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
@@ -143,23 +145,6 @@ function Index() {
     }
   }, [receipt, refetchBalanceIn, refetchBalanceOut]);
   */
-
-  const getButtonText = () => {
-    if (isNotConnected) return "Connect Wallet";
-    if (swapStep === SwapStep.SELECT_NETWORK) return "Select A Network";
-    if (swapStep === SwapStep.SELECT_TOKEN_IN) return "Select Input Token";
-    if (swapStep === SwapStep.SELECT_TOKEN_IN_AMOUNT) return "Enter Amount";
-    if (swapStep === SwapStep.INSUFFICIENT_LIQUIDITY)
-      return "Insufficient Balance";
-    if (swapStep === SwapStep.APPROVE_PERMIT2)
-      return "Approve Token (1/2)";
-    if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER)
-      return "Approve Token (2/2)";
-    if (!!quoterError) return "Insufficient Liquidity";
-    if (transactionIsPending) return "Transaction Pending...";
-    if (swapStep) return swapStep;
-    return "Swap";
-  };
 
   return (
     <div className="max-w-xl mx-auto px-4">
@@ -274,11 +259,15 @@ function Index() {
             </div>
           </div>
           <Button
-            disabled={false}
+            disabled={
+              !(swapStep === SwapStep.APPROVE_PERMIT2 ||
+                swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
+                swapStep === SwapStep.EXECUTE_SWAP)
+            }
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
             onClick={() => handleSwapSteps()}
           >
-            {getButtonText()}
+            {swapStep}
           </Button>
         </CardContent>
       </Card>

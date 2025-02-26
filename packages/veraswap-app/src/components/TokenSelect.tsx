@@ -31,7 +31,6 @@ export function TokenSelect({
       token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-  console.debug({ searchQuery, tokens, filteredTokens })
 
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>,

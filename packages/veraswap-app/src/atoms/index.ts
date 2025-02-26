@@ -131,7 +131,7 @@ export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
             args: [
                 account.address ?? zeroAddress, 
                 tokenIn?.address ?? zeroAddress,
-                tokenIn?.chainId ? UNISWAP_CONTRACTS[tokenIn.chainId] : zeroAddress 
+                tokenIn?.chainId ? UNISWAP_CONTRACTS[tokenIn.chainId].UNIVERSAL_ROUTER : zeroAddress 
             ],
         }),
         enabled,
@@ -140,6 +140,7 @@ export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
 })
 export const tokenInRouterAllowanceAtom = atom<bigint | null>((get) => {
     const data = get(tokenInRouterAllowanceQueryAtom).data
+    console.debug(data)
     return data ? data[0] : null;
 })
 
@@ -247,33 +248,35 @@ export const swapInvertAtom = atom(null, (get, set) => {
 
 export enum SwapStep {
   CONNECT_WALLET = "Connect Wallet",
-  SELECT_NETWORK = "Select A Network",
-  SELECT_TOKEN_IN = "Select Input Token",
-  SELECT_TOKEN_IN_AMOUNT = "Enter Amount", 
+  SELECT_TOKEN = "Select a token",
+  SELECT_TOKEN_AMOUNT = "Enter an amount", 
   INSUFFICIENT_BALANCE = "Insufficient Balance",
   INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
   APPROVE_PERMIT2 = "Approve Permit2",
   APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
-  EXECUTE = "Execute Swap",
-  PENDING = "Wait for transaction receipt"
+  EXECUTE_SWAP = "Execute Swap",
+  PENDING_TRANSACTION = "Wait for transaction receipt"
 }
 
-export const swapStepAtom = atom(null, (get) => {
-    const chainIn = get(chainInAtom);
+export const swapStepAtom = atom((get) => {
+    // TODO: Could cause issues on account change
+    const account = getAccount(config)
     const tokenIn = get(tokenInAtom)
+    const tokenOut = get(tokenOutAtom)
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance  = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInRouterAllowance = get(tokenInRouterAllowanceAtom)
+    console.debug({ tokenInPermit2Allowance, tokenInRouterAllowance})
 
-    if (chainIn === null) return SwapStep.SELECT_NETWORK;
-    if (tokenIn === null) return SwapStep.SELECT_TOKEN_IN
-    if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_IN_AMOUNT;
+    if (account.address === undefined) return SwapStep.CONNECT_WALLET;
+    if (tokenIn === null || tokenOut === null) return SwapStep.SELECT_TOKEN
+    if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_AMOUNT;
     if (tokenInBalance === null || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
     if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) return SwapStep.APPROVE_PERMIT2
     if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount) return SwapStep.APPROVE_UNISWAP_ROUTER
    
-    return SwapStep.EXECUTE
+    return SwapStep.EXECUTE_SWAP
 })
 
 // Set this atom after sending transaction
