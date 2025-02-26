@@ -2,6 +2,7 @@ import { zeroAddress, zeroHash, encodeDeployData } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 
+import { arbitrumSepolia, sepolia } from "viem/chains";
 import {
     UnsupportedProtocol,
     PoolManager,
@@ -109,21 +110,48 @@ export const UNISWAP_CONTRACTS = {
         QUOTER,
         STATE_VIEW,
     },
+    [sepolia.id]: {
+        POOL_MANAGER: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+        UNIVERSAL_ROUTER: "0x3a9d48ab9751398bbfa63ad67599bb04e4bdf98b",
+        POSITION_MANAGER: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
+        STATE_VIEW: "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
+        QUOTER: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
+    },
+    [arbitrumSepolia.id]: {
+        POOL_MANAGER: "0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317",
+        UNIVERSAL_ROUTER: "0xefd1d4bd4cf1e86da286bb4cb1b8bced9c10ba47",
+        POSITION_MANAGER: "0xAc631556d3d4019C95769033B5E719dD77124BAc",
+        STATE_VIEW: "0x9d467fa9062b6e9b1a46e26007ad82db116c67cb",
+        QUOTER: "0x7de51022d70a725b508085468052e25e22b5c4c9",
+    },
 } as const;
 
 export const MOCK_TOKENS = {
     [1337]: {
         MOCK_A,
         MOCK_B,
+        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
+        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
+        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
+        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
     },
     [1338]: {
         MOCK_A,
         MOCK_B,
+        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
     },
 } as const;
 
 export const MOCK_POOLS = {
     [1337]: {
+        // currency0:
+        //     MOCK_TOKENS[1337].TokenA < MOCK_TOKENS[1337].testUSDC
+        //         ? MOCK_TOKENS[1337].TokenA
+        //         : MOCK_TOKENS[1337].testUSDC,
+        // currency1:
+        //     MOCK_TOKENS[1337].TokenA < MOCK_TOKENS[1337].testUSDC
+        //         ? MOCK_TOKENS[1337].testUSDC
+        //         : MOCK_TOKENS[1337].TokenA,
         currency0:
             MOCK_TOKENS[1337].MOCK_A < MOCK_TOKENS[1337].MOCK_B ? MOCK_TOKENS[1337].MOCK_A : MOCK_TOKENS[1337].MOCK_B,
         currency1:
@@ -142,9 +170,6 @@ export const MOCK_POOLS = {
         hooks: zeroAddress,
     },
 };
-
-console.debug(UNISWAP_CONTRACTS);
-console.debug(MOCK_TOKENS);
 
 // TODO: Fix values
 export const testHyperlaneRegistry: HyperlaneRegistry = {
