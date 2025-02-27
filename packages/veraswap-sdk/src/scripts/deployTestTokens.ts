@@ -481,12 +481,28 @@ async function deployTestTokens(chains: Chain[]) {
         let currency0: Token;
         let currency1: Token;
 
+        const testUSDCToken = new Token(
+            chains[0].id,
+            testUSDCAddresses[0],
+            testUSDCDef.decimals,
+            testUSDCDef.symbol,
+            testUSDCDef.name,
+        );
+
+        const testToken = new Token(
+            chains[0].id,
+            testTokenAddress,
+            testTokenDefs[i].decimals,
+            testTokenDefs[i].symbol,
+            testTokenDefs[i].name,
+        );
+
         if (testUSDCAddresses[0] < testTokenAddress) {
-            currency0 = new Token(chains[0].id, testUSDCAddresses[0], testUSDCDef.decimals);
-            currency1 = new Token(chains[0].id, testTokenAddress, testTokenDefs[i].decimals);
+            currency0 = testUSDCToken;
+            currency1 = testToken;
         } else {
-            currency0 = new Token(chains[0].id, testTokenAddress, testTokenDefs[i].decimals);
-            currency1 = new Token(chains[0].id, testUSDCAddresses[0], testUSDCDef.decimals);
+            currency0 = testToken;
+            currency1 = testUSDCToken;
         }
 
         const currency0Address = currency0.address as Address;

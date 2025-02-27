@@ -1,7 +1,7 @@
 import { Chain, localhost } from "viem/chains";
 
 export const port = 8545;
-export const port2 = 9545;
+export const port2 = 8546;
 
 export const chainId = 1338;
 export const chainId2 = 1338;
