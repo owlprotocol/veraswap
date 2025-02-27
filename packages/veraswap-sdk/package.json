@@ -75,6 +75,7 @@
     "@uniswap/v4-periphery": "1.0.1",
     "@uniswap/v4-sdk": "^1.19.4",
     "@wagmi/core": "^2.9.10",
+    "abitype": "1.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "viem": "2.21.19",

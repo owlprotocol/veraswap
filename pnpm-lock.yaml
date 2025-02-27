@@ -330,6 +330,9 @@ importers:
       '@wagmi/core':
         specifier: ^2.9.10
         version: 2.16.5(@tanstack/query-core@5.24.8)(@types/react@18.3.18)(react@18.3.1)(typescript@5.4.5)(use-sync-external-store@1.4.0(react@18.3.1))(viem@2.21.19(bufferutil@4.0.9)(typescript@5.4.5)(utf-8-validate@5.0.10)(zod@3.22.4))
+      abitype:
+        specifier: 1.0.8
+        version: 1.0.8(typescript@5.4.5)(zod@3.22.4)
       react:
         specifier: ^18.2.0
         version: 18.3.1
