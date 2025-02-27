@@ -63,19 +63,32 @@ export const chains = import.meta.env.MODE != "development" ? prodChains : local
 
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
-export const chainsAtom = atom((get) => {
-    const networkType = get(networkTypeAtom);
+const filterChainsByNetworkType = (networkType: "mainnet" | "testnet" | "superchain") => {
     return chains.filter((chain) => {
         const isInteropDevnet = chain.id === interopDevnet0.id || chain.id === interopDevnet1.id;
-        if (networkType === "testnet") {
-            return chain.testnet === true && !isInteropDevnet;
-        }
-        if (networkType === "superchain") {
-            return isInteropDevnet;
-        }
+        if (networkType === "testnet") return chain.testnet === true && !isInteropDevnet;
+        if (networkType === "superchain") return isInteropDevnet;
         return !chain.testnet;
     });
-});
+};
+
+export const chainsAtom = atom((get) => filterChainsByNetworkType(get(networkTypeAtom)));
+
+export const networkTypeWithResetAtom = atom(
+    (get) => get(networkTypeAtom),
+    (_, set, newNetworkType: "mainnet" | "testnet" | "superchain") => {
+        set(networkTypeAtom, newNetworkType);
+        resetNetworkDependentAtoms(set);
+    },
+);
+
+const resetNetworkDependentAtoms = (set: any) => {
+    set(chainInAtom, null);
+    set(chainOutAtom, null);
+    set(tokenInAtom, null);
+    set(tokenOutAtom, null);
+    set(tokenInAmountInputAtom, "");
+};
 
 // Selected chain in
 export const chainInAtom = atom<null | Chain>(null);
