@@ -10,7 +10,6 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Token } from "@/types";
 import { cn } from "@/lib/utils";
 import { TokenAtomData } from "@/atoms";
 
@@ -29,11 +28,12 @@ export function TokenSelect({
   const filteredTokens = tokens.filter(
     (token) =>
       token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      token.address.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
   ) => {
     e.currentTarget.src = "/placeholder.jpg";
   };
@@ -48,7 +48,7 @@ export function TokenSelect({
             "hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors",
             "rounded-xl border-2 border-gray-100 dark:border-gray-700",
             "hover:border-gray-200 dark:hover:border-gray-600",
-            "shadow-sm hover:shadow-md transition-all"
+            "shadow-sm hover:shadow-md transition-all",
           )}
         >
           {value ? (
@@ -73,7 +73,7 @@ export function TokenSelect({
       </DialogTrigger>
 
       <DialogContent
-        className="max-w-xs rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg"
+        className="max-w-md max-h-[40vh] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
         aria-describedby={undefined}
       >
         <DialogHeader className="px-2">
@@ -92,46 +92,52 @@ export function TokenSelect({
           />
         </div>
 
-        <ScrollArea className="custom-scrollbar h-[360px] px-2">
-          <div className="space-y-1.5 pb-2">
-            {filteredTokens.map((token) => (
-              <Button
-                key={token.address}
-                variant="ghost"
-                className={cn(
-                  "group h-16 w-full justify-between px-4 py-3",
-                  "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
-                  "active:scale-[0.98]",
-                  value?.symbol === token.symbol &&
-                    "bg-gray-100 dark:bg-gray-700"
-                )}
-                onClick={() => {
-                  onChange(token);
-                  setOpen(false);
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={token.logo ?? "/placeholder.jpg"}
-                    alt={token.symbol}
-                    className="h-9 w-9 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
-                    onError={handleImageError}
-                  />
-                  <div className="text-left">
-                    <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                      {token.symbol}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {token.name}
+        <ScrollArea className="flex-1 overflow-y-auto px-2">
+          {filteredTokens.length > 0 ? (
+            <div className="space-y-1.5 pb-2">
+              {filteredTokens.map((token) => (
+                <Button
+                  key={token.address}
+                  variant="ghost"
+                  className={cn(
+                    "group h-16 w-full justify-between px-4 py-3",
+                    "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
+                    "active:scale-[0.98]",
+                    value?.symbol === token.symbol &&
+                      "bg-gray-100 dark:bg-gray-700",
+                  )}
+                  onClick={() => {
+                    onChange(token);
+                    setOpen(false);
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={token.logo ?? "/placeholder.jpg"}
+                      alt={token.symbol}
+                      className="h-9 w-9 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
+                      onError={handleImageError}
+                    />
+                    <div className="text-left">
+                      <div className="text-base font-medium text-gray-900 dark:text-gray-100">
+                        {token.name} ({token.symbol})
+                      </div>
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                        {token.address}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {value?.symbol === token.symbol && (
-                  <Check className="h-5 w-5 text-green-500 animate-in fade-in" />
-                )}
-              </Button>
-            ))}
-          </div>
+                  {value?.symbol === token.symbol && (
+                    <Check className="h-5 w-5 text-green-500 animate-in fade-in" />
+                  )}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-40 text-gray-500 dark:text-gray-400">
+              No tokens found
+            </div>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>

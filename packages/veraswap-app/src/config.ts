@@ -1,8 +1,6 @@
 import { http, createStorage, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
-import {
-  connectorsForWallets,
-} from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
 
 export const connectors = connectorsForWallets(

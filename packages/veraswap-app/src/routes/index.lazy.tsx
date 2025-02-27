@@ -15,14 +15,6 @@ import {
   IAllowanceTransfer,
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NetworkSelect } from "@/components/NetworkSelect";
-import { TokenSelect } from "@/components/TokenSelect";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { useAtom, useAtomValue } from "jotai";
 import {
   chainInAtom,
@@ -45,6 +37,14 @@ import {
   tokensInAtom,
   tokensOutAtom,
 } from "../atoms/index.js";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { NetworkSelect } from "@/components/NetworkSelect";
+import { TokenSelect } from "@/components/TokenSelect";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 
 export const Route = createLazyFileRoute("/")({
@@ -68,7 +68,7 @@ function Index() {
 
   const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
   const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(
-    tokenOutBalanceQueryAtom
+    tokenOutBalanceQueryAtom,
   );
 
   const poolKey = useAtomValue(poolKeyAtom);
@@ -81,7 +81,7 @@ function Index() {
   console.log({ quoterError, quoterData });
 
   const [tokenInAmountInput, setTokenInAmountInput] = useAtom(
-    tokenInAmountInputAtom
+    tokenInAmountInputAtom,
   );
   const [, swapInvert] = useAtom(swapInvertAtom);
   const swapStep = useAtomValue(swapStepAtom);
@@ -94,7 +94,7 @@ function Index() {
   const isNotConnected = !isConnected || !walletAddress;
 
   const { data: hyperlaneRegistry } = useSuspenseQuery(
-    hyperlaneRegistryOptions()
+    hyperlaneRegistryOptions(),
   );
 
   const tokenInBalanceFormatted =
@@ -151,7 +151,7 @@ function Index() {
           zeroForOne: tokenIn!.address === poolKey!.currency0,
           amountIn: tokenInAmount!,
           amountOutMinimum: quoterData![0],
-        })
+        }),
       );
     }
   };
@@ -198,7 +198,7 @@ function Index() {
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                   )}
                   placeholder="0.0"
                   disabled={!tokenIn}
@@ -220,7 +220,7 @@ function Index() {
                     onClick={() =>
                       tokenInBalance &&
                       setTokenInAmountInput(
-                        formatUnits(tokenInBalance, tokenIn!.decimals)
+                        formatUnits(tokenInBalance, tokenIn!.decimals),
                       )
                     }
                   >
@@ -264,7 +264,7 @@ function Index() {
                   className={cn(
                     "border-0 bg-transparent text-3xl font-semibold p-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                    "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                   )}
                   placeholder={
                     !!quoterError
