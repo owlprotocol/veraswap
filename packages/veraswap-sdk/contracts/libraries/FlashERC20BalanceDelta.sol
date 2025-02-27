@@ -8,7 +8,6 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
  * - Get previous ERC20 balance
  * - Execute arbitrary call data (excluding erc20 & PERMIT2)
  * - Get current ERC20 balance
- * WARNING: External function requires reentrancy lock
  */
 library FlashERC20BalanceDelta {
     error TargetIsTokenOrPermit2();
@@ -16,7 +15,7 @@ library FlashERC20BalanceDelta {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
     /// @notice Computes ERC20 balance delta of an account pre and post execution
-    /// @dev External function requires reentrancy lock, if using Permit2 target MUST NOT be Permit2
+    /// @dev External function requires reentrancy lock
     /// @param token The token to fetch balance
     /// @param account The account to fetch balance (often address(this))
     /// @param target The target call address
@@ -32,7 +31,7 @@ library FlashERC20BalanceDelta {
         uint256 value,
         bytes calldata data
     ) internal returns (uint256 previousBalance, uint256 nextBalance, int256 delta) {
-        if (target == token) revert TargetIsTokenOrPermit2();
+        if (target == token || target == PERMIT2) revert TargetIsTokenOrPermit2();
 
         previousBalance = IERC20(token).balanceOf(account);
         target.call{value: value}(data);
