@@ -49,7 +49,7 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
             value,
             data
         );
-        if (balanceDelta < 0) revert NegativeBalanceDelta(); // Should never occur since contract never gives approvals
+        if (balanceDelta <= 0) revert NegativeBalanceDelta(); // Should never occur since contract never gives approvals
 
         return _dispatchTokenMessage(_destination, _recipient, uint256(balanceDelta), msg.value);
     }
