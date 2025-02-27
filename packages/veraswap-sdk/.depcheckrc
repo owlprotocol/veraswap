@@ -1,6 +1,6 @@
 ignores: [
     "@types/node",
-    "vite"
+    "vite",
     "@uniswap/v4-core",
     "@uniswap/v4-periphery",
     "@types/react-dom",
