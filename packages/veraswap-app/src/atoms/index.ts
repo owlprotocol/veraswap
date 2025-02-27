@@ -19,6 +19,7 @@ import {
 import { getAccount } from "@wagmi/core";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
+import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { config } from "@/config";
 
 /**
@@ -53,18 +54,27 @@ export const prodChains = [
         rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } },
     },
     arbitrumSepolia,
+    interopDevnet0,
+    interopDevnet1,
 ] as const;
 export const localChains = [...prodChains, localhost, localhost2] as const;
 
 export const chains = import.meta.env.MODE != "development" ? prodChains : localChains;
 
-export const networkTypeAtom = atom<"mainnet" | "testnet">("mainnet");
+export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
 export const chainsAtom = atom((get) => {
     const networkType = get(networkTypeAtom);
-    return chains.filter((chain) =>
-        networkType === "testnet" ? chain.testnet === true : chain.testnet === false || chain.testnet === undefined,
-    );
+    return chains.filter((chain) => {
+        const isInteropDevnet = chain.id === interopDevnet0.id || chain.id === interopDevnet1.id;
+        if (networkType === "testnet") {
+            return chain.testnet === true && !isInteropDevnet;
+        }
+        if (networkType === "superchain") {
+            return isInteropDevnet;
+        }
+        return !chain.testnet;
+    });
 });
 
 // Selected chain in
