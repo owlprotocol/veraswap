@@ -329,17 +329,20 @@ export const quoteInAtom = atomWithQuery((get) => {
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {
-    const chainIn = get(chainInAtom);
-    const chainOut = get(chainOutAtom);
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
+    const currentChainIn = get(chainInAtom);
+    const currentChainOut = get(chainOutAtom);
+    const currentTokenIn = get(tokenInAtom);
+    const currentTokenOut = get(tokenOutAtom);
 
-    set(chainInAtom, chainOut);
-    set(chainOutAtom, chainIn);
-    set(tokenInAtom, tokenIn);
-    set(tokenOutAtom, tokenOut);
+    const tokenInAmountInput = get(tokenInAmountInputAtom);
 
-    //TODO: Invert amounts later
+    set(chainInAtom, currentChainOut);
+    set(chainOutAtom, currentChainIn);
+
+    set(tokenInAtom, currentTokenOut);
+    set(tokenOutAtom, currentTokenIn);
+
+    set(tokenInAmountInputAtom, "");
 });
 
 export enum SwapStep {

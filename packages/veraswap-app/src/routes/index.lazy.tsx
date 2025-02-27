@@ -208,7 +208,7 @@ function Index() {
                                 size="icon"
                                 className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
                                 onClick={swapInvert}
-                                disabled={!tokenInAmount}
+                                disabled={!tokenIn || !tokenOut}
                             >
                                 <ArrowUpDown className="h-6 w-6" />
                             </Button>
