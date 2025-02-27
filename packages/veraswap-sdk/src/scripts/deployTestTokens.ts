@@ -365,7 +365,7 @@ async function deployTestTokens(chains: Chain[]) {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [walletClient.account.address, currency0Address, positionManager],
+            args: [walletClient.account.address, currency1Address, positionManager],
         });
 
         if (currencyBPermit2Allowance < MAX_UINT_160 / 2n) {
