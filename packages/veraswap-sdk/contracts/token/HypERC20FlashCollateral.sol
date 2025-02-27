@@ -14,6 +14,7 @@ import {FlashERC20BalanceDelta} from "../libraries/FlashERC20BalanceDelta.sol";
 contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
     constructor(address erc20, address _mailbox) HypERC20Collateral(erc20, _mailbox) {}
 
+    error TargetIsMailbox();
     error NegativeBalanceDelta();
 
     /**
@@ -32,6 +33,8 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
         uint256 value,
         bytes calldata data
     ) external payable virtual isNotLocked returns (bytes32 messageId) {
+        if (target == address(mailbox)) revert error TargetIsMailbox();
+
         (, , int256 balanceDelta) = FlashERC20BalanceDelta.flashBalanceDelta(
             address(wrappedToken),
             address(this),
