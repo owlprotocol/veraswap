@@ -6,23 +6,14 @@ import {
 } from "jotai-tanstack-query";
 import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains";
 import {
-  MOCK_A,
-  MOCK_B,
-  MOCK_POOLS,
   PERMIT2_ADDRESS,
   PoolKey,
   quoteQueryOptions,
   TOKEN_LIST,
   UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import {
-  Address,
-  Hash,
-  parseUnits,
-  TransactionReceipt,
-  zeroAddress,
-} from "viem";
-import { CurrencyAmount, Ether, Token } from "@uniswap/sdk-core";
+import { Address, parseUnits, zeroAddress } from "viem";
+import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
   readContractQueryOptions,
   sendTransactionMutationOptions,
@@ -62,10 +53,17 @@ export const localhost2 = {
   rpcUrls: { default: { http: ["http://127.0.0.1:9545"] } },
 } as Chain;
 
-const chains =
-  import.meta.env.MODE != "development"
-    ? [sepolia, arbitrumSepolia]
-    : [localhost, localhost2];
+export const prodChains = [
+  {
+    ...sepolia,
+    rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } },
+  },
+  arbitrumSepolia,
+] as const;
+export const localChains = [...prodChains, localhost, localhost2] as const;
+
+export const chains =
+  import.meta.env.MODE != "development" ? prodChains : localChains;
 
 export const networkTypeAtom = atom<"mainnet" | "testnet">("mainnet");
 
@@ -74,7 +72,7 @@ export const chainsAtom = atom((get) => {
   return chains.filter((chain) =>
     networkType === "testnet"
       ? chain.testnet === true
-      : chain.testnet === false || chain.testnet === undefined,
+      : chain.testnet === false || chain.testnet === undefined
   );
 });
 
@@ -264,7 +262,7 @@ export const poolKeyAtom = atom<PoolKey | null>((get) => {
     currency0:
       tokenIn.address < tokenOut.address ? tokenIn.address : tokenOut.address,
     currency1:
-      tokenIn.address < tokenOut.address ? tokenOut.address : tokenOut.address,
+      tokenIn.address < tokenOut.address ? tokenOut.address : tokenIn.address,
     fee: 3_000,
     tickSpacing: 60,
     hooks: zeroAddress,
