@@ -13,6 +13,7 @@ import {
     MockERC20,
 } from "./artifacts/index.js";
 import { HyperlaneRegistry } from "./types/index.js";
+import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -198,6 +199,16 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
         },
         "localhost-1338": {
             mailbox: "0x1e8fC27Af09d117Df6B931433e29fCF6463f3a95",
+        },
+    },
+};
+
+// TODO: Fix values
+export const tokenBridgeMap: TokenBridgeMap = {
+    [1]: {
+        "0x0000000000000000000000000000000000000000": {
+            bridgeAddress: "0x0000000000000000000000000000000000000000",
+            remotes: { [1]: "0x0000000000000000000000000000000000000000" },
         },
     },
 };
