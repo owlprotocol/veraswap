@@ -5,7 +5,6 @@
 @uniswap/v4-periphery/=lib/v4-periphery/
 @uniswap/permit2/=lib/permit2/
 @uniswap/universal-router/=lib/universal-router/
-@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 @openzeppelin/uniswap-hooks=lib/uniswap-hooks/
 @hyperlane-xyz/core=lib/hyperlane-monorepo/solidity/contracts/
 
@@ -16,14 +15,12 @@ permit2/=lib/permit2/
 lib/uniswap-hooks:v4-periphery/=lib/v4-periphery/
 lib/uniswap-hooks:v4-core/=lib/v4-core/
 
+lib/hyperlane-monorepo/:@arbitrum/=lib/hyperlane-monorepo/node_modules/@arbitrum/
+lib/hyperlane-monorepo/:@eth-optimism/=lib/hyperlane-monorepo/node_modules/@eth-optimism/
+lib/hyperlane-monorepo/:@layerzerolabs/=lib/hyperlane-monorepo/node_modules/@layerzerolabs/
+lib/hyperlane-monorepo/:@openzeppelin/=lib/hyperlane-monorepo/node_modules/@openzeppelin/
+lib/hyperlane-monorepo/:@openzeppelin/contracts/=lib/hyperlane-monorepo/node_modules/@openzeppelin/contracts/
 
-
-
-lib/hyperlane-monorepo:@arbitrum=lib/hyperlane-monorepo/node_modules/@arbitrum
-lib/hyperlane-monorepo:@eth-optimism=lib/hyperlane-monorepo/node_modules/@eth-optimism
-lib/hyperlane-monorepo:@layerzerolabs=lib/hyperlane-monorepo/node_modules/@layerzerolabs
-lib/hyperlane-monorepo:@openzeppelin=lib/hyperlane-monorepo/node_modules/@openzeppelin
-
-lib/hyperlane-monorepo:ds-test/=lib/hyperlane-monorepo/solidity/lib/forge-std/lib/ds-test/src/
-lib/hyperlane-monorepo:forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
-lib/hyperlane-monorepo:fx-portal/=lib/hyperlane-monorepo/solidity/lib/fx-portal/
+lib/hyperlane-monorepo/:ds-test/=lib/hyperlane-monorepo/solidity/lib/forge-std/lib/ds-test/src/
+lib/hyperlane-monorepo/:forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
+lib/hyperlane-monorepo/:fx-portal/=lib/hyperlane-monorepo/solidity/lib/fx-portal/

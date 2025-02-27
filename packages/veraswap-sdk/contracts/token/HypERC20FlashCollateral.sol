@@ -38,9 +38,9 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
         uint256 value,
         bytes calldata data
     ) external payable virtual isNotLocked returns (bytes32 messageId) {
-        if (target == address(mailbox)) revert error TargetIsMailbox();
-        if (target == address(hook)) revert error TargetIsHook();
-        if (target == address(interchainSecurityModule)) revert error TargetIsISM();
+        if (target == address(mailbox)) revert TargetIsMailbox();
+        if (target == address(hook)) revert TargetIsHook();
+        if (target == address(interchainSecurityModule)) revert TargetIsISM();
 
         (, , int256 balanceDelta) = FlashERC20BalanceDelta.flashBalanceDelta(
             address(wrappedToken),
@@ -101,11 +101,8 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
         bytes memory _hookMetadata,
         address _hook
     ) internal virtual returns (bytes32 messageId) {
-        bytes memory _tokenMetadata = _transferFromSender(_amount);
-        bytes memory _tokenMessage = TokenMessage.format(_recipient, _amount, _tokenMetadata);
-
+        bytes memory _tokenMessage = TokenMessage.format(_recipient, _amount, bytes(""));
         messageId = _Router_dispatch(_destination, _value, _tokenMessage, _hookMetadata, _hook);
-
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
