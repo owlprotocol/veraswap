@@ -1,5 +1,6 @@
 import { ErrorComponent, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen.js";
+import { Loading } from "./components/ui/loading.js";
 
 // Create a new router instance
 //https://tanstack.com/router/v1/docs/framework/react/api/router/RouterOptionsType
@@ -18,7 +19,7 @@ export const router = createRouter({
         );
     },
     */
-    defaultPendingComponent: () => <>Hello</>,
+    defaultPendingComponent: () => <Loading isOpen={true} loadingMsg="Loading..." />,
     defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
     defaultNotFoundComponent: ({ data }) => <p>Not Found! ({`${data}`})</p>,
     //https://tanstack.com/router/v1/docs/framework/react/guide/preloading

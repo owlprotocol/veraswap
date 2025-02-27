@@ -1,17 +1,8 @@
 import { zeroAddress, zeroHash, encodeDeployData } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
-
-import { arbitrumSepolia, sepolia } from "viem/chains";
-import {
-    UnsupportedProtocol,
-    PoolManager,
-    PositionManager,
-    UniversalRouter,
-    V4Quoter,
-    StateView,
-    MockERC20,
-} from "./artifacts/index.js";
+import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
+import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
 import { HyperlaneRegistry } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
 
@@ -104,6 +95,34 @@ export const MOCK_B = getDeployDeterministicAddress({
 });
 
 export const UNISWAP_CONTRACTS = {
+    [mainnet.id]: {
+        POOL_MANAGER: "0x000000000004444c5dc75cB358380D2e3dE08A90",
+        POSITION_MANAGER: "0xbd216513d74c8cf14cf4747e6aaa6420ff64ee9e",
+        UNIVERSAL_ROUTER: "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
+        QUOTER: "0x52f0e24d1c21c8a0cb1e5a5dd6198556bd9e1203",
+        STATE_VIEW: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227",
+    },
+    [bsc.id]: {
+        POOL_MANAGER: "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df",
+        POSITION_MANAGER: "0x7a4a5c919ae2541aed11041a1aeee68f1287f95b",
+        UNIVERSAL_ROUTER: "0x1906c1d672b88cd1b9ac7593301ca990f94eae07",
+        QUOTER: "0x9f75dd27d6664c475b90e105573e550ff69437b0",
+        STATE_VIEW: "0xd13dd3d6e93f276fafc9db9e6bb47c1180aee0c4",
+    },
+    [base.id]: {
+        POOL_MANAGER: "0x498581ff718922c3f8e6a244956af099b2652b2b",
+        POSITION_MANAGER: "0x7c5f5a4bbd8fd63184577525326123b519429bdc",
+        UNIVERSAL_ROUTER: "0x6ff5693b99212da76ad316178a184ab56d299b43",
+        QUOTER: "0x0d5e0f971ed27fbff6c2837bf31316121532048d",
+        STATE_VIEW: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
+    },
+    [arbitrum.id]: {
+        POOL_MANAGER: "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
+        POSITION_MANAGER: "0xd88f38f930b7952f2db2432cb002e7abbf3dd869",
+        UNIVERSAL_ROUTER: "0xa51afafe0263b40edaef0df8781ea9aa03e381a3",
+        QUOTER: "0x3972c00f7ed4885e145823eb7c655375d275a1c5",
+        STATE_VIEW: "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
+    },
     [1337]: {
         UNSUPPORTED_PROTOCOL,
         POOL_MANAGER,
@@ -137,6 +156,24 @@ export const UNISWAP_CONTRACTS = {
 } as const;
 
 export const TOKEN_LIST = {
+    [mainnet.id]: {
+        ETH: zeroAddress,
+        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        PEPE: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+    },
+    [bsc.id]: {
+        BNB: zeroAddress,
+        USDC: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+        SOL: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+    },
+    [base.id]: {
+        ETH: zeroAddress,
+        USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        VVV: "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
+        VIRTUAL: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+    },
     [1337]: {
         // TokenA: {name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42"},
         // TokenB:{name: "TokenB", symbol: "B", decimals: 18, address: "0x7C40Fa89B2887738563a88da36b60221861C64d6"},
@@ -244,3 +281,88 @@ export const tokenBridgeMap: TokenBridgeMap = {
         },
     },
 };
+
+export const POOLS = {
+    [mainnet.id]: [
+        // USDC-WBTC
+        {
+            currency0:
+                TOKEN_LIST[mainnet.id].USDT < TOKEN_LIST[mainnet.id].WBTC
+                    ? TOKEN_LIST[mainnet.id].USDT
+                    : TOKEN_LIST[mainnet.id].WBTC,
+            currency1:
+                TOKEN_LIST[mainnet.id].USDT < TOKEN_LIST[mainnet.id].WBTC
+                    ? TOKEN_LIST[mainnet.id].WBTC
+                    : TOKEN_LIST[mainnet.id].USDT,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+        // USDC-PEPE
+        {
+            currency0:
+                TOKEN_LIST[mainnet.id].ETH < TOKEN_LIST[mainnet.id].PEPE
+                    ? TOKEN_LIST[mainnet.id].ETH
+                    : TOKEN_LIST[mainnet.id].PEPE,
+            currency1:
+                TOKEN_LIST[mainnet.id].ETH < TOKEN_LIST[mainnet.id].PEPE
+                    ? TOKEN_LIST[mainnet.id].PEPE
+                    : TOKEN_LIST[mainnet.id].ETH,
+            fee: 25000,
+            tickSpacing: 500,
+            hooks: zeroAddress,
+        },
+        // WBTC-USDT
+        {
+            currency0:
+                TOKEN_LIST[mainnet.id].WBTC < TOKEN_LIST[mainnet.id].USDT
+                    ? TOKEN_LIST[mainnet.id].WBTC
+                    : TOKEN_LIST[mainnet.id].USDT,
+            currency1:
+                TOKEN_LIST[mainnet.id].WBTC < TOKEN_LIST[mainnet.id].USDT
+                    ? TOKEN_LIST[mainnet.id].USDT
+                    : TOKEN_LIST[mainnet.id].WBTC,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
+    [bsc.id]: [
+        // USDC-SOL
+        {
+            currency0:
+                TOKEN_LIST[bsc.id].USDC < TOKEN_LIST[bsc.id].SOL ? TOKEN_LIST[bsc.id].USDC : TOKEN_LIST[bsc.id].SOL,
+            currency1:
+                TOKEN_LIST[bsc.id].USDC < TOKEN_LIST[bsc.id].SOL ? TOKEN_LIST[bsc.id].SOL : TOKEN_LIST[bsc.id].USDC,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
+    [base.id]: [
+        // VIRTUAL-USDC
+        {
+            currency0:
+                TOKEN_LIST[base.id].VIRTUAL < TOKEN_LIST[base.id].USDC
+                    ? TOKEN_LIST[base.id].VIRTUAL
+                    : TOKEN_LIST[base.id].USDC,
+            currency1:
+                TOKEN_LIST[base.id].VIRTUAL < TOKEN_LIST[base.id].USDC
+                    ? TOKEN_LIST[base.id].USDC
+                    : TOKEN_LIST[base.id].VIRTUAL,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+        // USDC-VVV
+        {
+            currency0:
+                TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].USDC : TOKEN_LIST[base.id].VVV,
+            currency1:
+                TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].VVV : TOKEN_LIST[base.id].USDC,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
+} as const;

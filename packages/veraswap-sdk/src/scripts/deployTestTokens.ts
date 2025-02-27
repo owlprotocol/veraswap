@@ -15,15 +15,10 @@ import {
     encodeAbiParameters,
     keccak256,
 } from "viem";
-import { localhost, sepolia, arbitrumSepolia } from "viem/chains";
+import { localhost } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { GithubRegistry } from "@hyperlane-xyz/registry";
-import {
-    getOrDeployTokenRouter,
-    getTokenRouterDeployTransactions,
-    IERC20,
-    TokenTypeExtended,
-} from "@owlprotocol/contracts-hyperlane";
+import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { Pool, V4PositionPlanner, priceToClosestTick, Position } from "@uniswap/v4-sdk";
 import { MockERC20 } from "../artifacts/MockERC20.js";
