@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Lock} from "@uniswap/universal-router/contracts/base/Lock.sol";
 import {FlashERC20BalanceDelta} from "./libraries/FlashERC20BalanceDelta.sol";
 
-contract FlashERC20BalanceCollateral {
+contract FlashERC20BalanceCollateral is Lock {
     address immutable token;
 
     /// @notice Computes ERC20 balance delta pre and post execution
@@ -20,7 +20,7 @@ contract FlashERC20BalanceCollateral {
         address target,
         uint256 value,
         bytes calldata data
-    ) internal returns (uint256 previousBalance, uint256 nextBalance, int256 delta) {
+    ) internal isNotLocked returns (uint256 previousBalance, uint256 nextBalance, int256 delta) {
         return FlashERC20BalanceDelta.flashBalanceDelta(token, address(this), target, value, data);
     }
 }
