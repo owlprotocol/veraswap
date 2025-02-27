@@ -17,12 +17,12 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n apps;
     # Start blockchain
     tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil --chain-id 1337" ENTER
-    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 1338" ENTER
+    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 8546 --chain-id 1338" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
 forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
-forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:9545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
-cd $WORKSPACE/packages-public/packages/contracts-hyperlane && git checkout test/mailbox-veraswap && \
+forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8546 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
+cd $WORKSPACE/packages-public/packages/contracts-hyperlane && \
 tsx ./src/scripts/setupTestMailboxContractsWithProxy.ts && \
 cd $VERASWAP/packages/veraswap-sdk && \
 PRIVATE_KEY=${privateKeyAnvil0} tsx ./src/scripts/deployTestTokens.ts" ENTER
