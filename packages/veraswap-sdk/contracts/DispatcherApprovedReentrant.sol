@@ -36,6 +36,7 @@ abstract contract DispatcherApprovedReentrant is
 
     error InvalidCommandType(uint256 commandType);
     error BalanceTooLow();
+    error CallTargetPermit2();
 
     /// @notice Executes encoded commands along with provided inputs.
     /// @param commands A set of concatenated commands, each 1 byte in length
@@ -305,6 +306,9 @@ abstract contract DispatcherApprovedReentrant is
                 (address target, uint256 value, bytes calldata data) = CalldataCallTargetDecoder.decodeCallTarget(
                     inputs
                 );
+                // Call target cannot be PERMIT2 to avoid arbitrary token transfers
+                if (target == address(PERMIT2)) revert CallTargetPermit2();
+
                 (success, output) = payable(target).call{value: value}(data);
             } else {
                 // placeholder area for commands 0x22-0x3f
