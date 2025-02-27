@@ -11,35 +11,35 @@ import { config } from "./config.js";
 import { Toaster } from "@/components/ui/toaster.jsx";
 
 const customTheme = {
-  ...lightTheme({
-    accentColor: "#6366f1",
-    borderRadius: "medium",
-  }),
+    ...lightTheme({
+        accentColor: "#6366f1",
+        borderRadius: "medium",
+    }),
 };
 
 function InnerApp() {
-  return <RouterProvider router={router} />;
+    return <RouterProvider router={router} />;
 }
 
 const queryClient = new QueryClient();
 
 function App() {
-  return (
-    <>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <WagmiProvider config={config}>
-          <QueryClientProvider client={queryClient}>
-            <RainbowKitProvider theme={customTheme} coolMode>
-              <InnerApp />
-              <ReactQueryDevtools initialIsOpen={false} />
-              <Analytics />
-              <Toaster />
-            </RainbowKitProvider>
-          </QueryClientProvider>
-        </WagmiProvider>
-      </ThemeProvider>
-    </>
-  );
+    return (
+        <>
+            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+                <WagmiProvider config={config}>
+                    <QueryClientProvider client={queryClient}>
+                        <RainbowKitProvider theme={customTheme} coolMode>
+                            <InnerApp />
+                            <ReactQueryDevtools initialIsOpen={false} />
+                            <Analytics />
+                            <Toaster />
+                        </RainbowKitProvider>
+                    </QueryClientProvider>
+                </WagmiProvider>
+            </ThemeProvider>
+        </>
+    );
 }
 
 export default App;
