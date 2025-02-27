@@ -33,7 +33,7 @@ describe("tokenData.test.tsx", () => {
                 useQuery(
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
-                        address: TOKEN_LIST[chainId].MOCK_A,
+                        address: TOKEN_LIST[chainId].TokenA.address,
                     }),
                 ),
             { wrapper },

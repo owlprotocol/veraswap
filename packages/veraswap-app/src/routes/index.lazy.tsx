@@ -1,8 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import {
-  useAccount,
-} from "wagmi";
+import { useAccount } from "wagmi";
 import {
   getSwapExactInExecuteData,
   MAX_UINT_160,
@@ -17,6 +15,28 @@ import {
   IAllowanceTransfer,
   IERC20,
 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  chainInAtom,
+  chainOutAtom,
+  chainsAtom,
+  poolKeyAtom,
+  quoteAtom,
+  sendTransactionMutationAtom,
+  swapInvertAtom,
+  SwapStep,
+  swapStepAtom,
+  tokenInAmountAtom,
+  tokenInAmountInputAtom,
+  tokenInAtom,
+  tokenInBalanceQueryAtom,
+  tokenInPermit2AllowanceQueryAtom,
+  tokenInRouterAllowanceQueryAtom,
+  tokenOutAtom,
+  tokenOutBalanceQueryAtom,
+  tokensInAtom,
+  tokensOutAtom,
+} from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,8 +45,7 @@ import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
-import { useAtom, useAtomValue } from "jotai";
-import { chainInAtom, chainOutAtom, chainsAtom, poolKeyAtom, quoteAtom, sendTransactionMutationAtom, swapInvertAtom, SwapStep, swapStepAtom, tokenInAmountAtom, tokenInAmountInputAtom, tokenInAtom, tokenInBalanceQueryAtom, tokenInPermit2AllowanceQueryAtom, tokenInRouterAllowanceQueryAtom, tokenOutAtom, tokenOutBalanceQueryAtom, tokensInAtom, tokensOutAtom } from "../atoms/index.js"
+import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -35,29 +54,40 @@ export const Route = createLazyFileRoute("/")({
 function Index() {
   const { isConnected, address: walletAddress } = useAccount();
 
-  const chains = useAtomValue(chainsAtom)
-  const [chainIn, setChainIn] = useAtom(chainInAtom)
+  const chains = useAtomValue(chainsAtom);
+  const [chainIn, setChainIn] = useAtom(chainInAtom);
   const [chainOut, setChainOut] = useAtom(chainOutAtom);
 
-  const tokensIn = useAtomValue(tokensInAtom)
-  const tokensOut = useAtomValue(tokensOutAtom)
+  const tokensIn = useAtomValue(tokensInAtom);
+  const tokensOut = useAtomValue(tokensOutAtom);
 
-  const [tokenIn, setTokenIn] = useAtom(tokenInAtom)
-  const tokenInAmount = useAtomValue(tokenInAmountAtom)
-  const { data: tokenInBalance, refetch: refetchBalanceIn } = useAtomValue(tokenInBalanceQueryAtom)
+  const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
 
-  const [tokenOut, setTokenOut] = useAtom(tokenOutAtom)
-  const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom)
+  const tokenInAmount = useAtomValue(tokenInAmountAtom);
+  const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
 
-  const poolKey = useAtomValue(poolKeyAtom)
-  const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteAtom);
+  const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
+  const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(
+    tokenOutBalanceQueryAtom,
+  );
 
-  const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom)
-  const [, swapInvert] = useAtom(swapInvertAtom)
-  const swapStep = useAtomValue(swapStepAtom)
+  const poolKey = useAtomValue(poolKeyAtom);
+  const {
+    data: quoterData,
+    error: quoterError,
+    isLoading: isQuoterLoading,
+  } = useAtomValue(quoteAtom);
+
+  console.log({ quoterError, quoterData });
+
+  const [tokenInAmountInput, setTokenInAmountInput] = useAtom(
+    tokenInAmountInputAtom,
+  );
+  const [, swapInvert] = useAtom(swapInvertAtom);
+  const swapStep = useAtomValue(swapStepAtom);
   // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
 
-  console.debug({ swapStep })
+  console.debug({ swapStep });
 
   const { toast } = useToast();
 
@@ -66,8 +96,6 @@ function Index() {
   const { data: hyperlaneRegistry } = useSuspenseQuery(
     hyperlaneRegistryOptions(),
   );
-
-  console.log("Hyperlane Registry Data", hyperlaneRegistry);
 
   const tokenInBalanceFormatted =
     tokenInBalance != undefined
@@ -79,11 +107,9 @@ function Index() {
      ${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}`
       : "-";
 
-  const [{
-    mutate: sendTransaction,
-    data: hash,
-    isPending: transactionIsPending,
-  }] = useAtom(sendTransactionMutationAtom);
+  const [
+    { mutate: sendTransaction, data: hash, isPending: transactionIsPending },
+  ] = useAtom(sendTransactionMutationAtom);
 
   const handleSwapSteps = () => {
     if (!swapStep || transactionIsPending) return;
@@ -149,6 +175,7 @@ function Index() {
 
   return (
     <div className="max-w-xl mx-auto px-4">
+      <MainnetTestnetButtons />
       <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
         <CardContent className="p-4 space-y-6">
           <div className="space-y-4">
@@ -190,7 +217,12 @@ function Index() {
                   <Button
                     variant="link"
                     className="h-auto p-0 text-sm"
-                    onClick={() => tokenInBalance && setTokenInAmountInput(formatUnits(tokenInBalance, tokenIn!.decimals))}
+                    onClick={() =>
+                      tokenInBalance &&
+                      setTokenInAmountInput(
+                        formatUnits(tokenInBalance, tokenIn!.decimals),
+                      )
+                    }
                   >
                     Max
                   </Button>
@@ -261,9 +293,11 @@ function Index() {
           </div>
           <Button
             disabled={
-              !(swapStep === SwapStep.APPROVE_PERMIT2 ||
+              !(
+                swapStep === SwapStep.APPROVE_PERMIT2 ||
                 swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
-                swapStep === SwapStep.EXECUTE_SWAP)
+                swapStep === SwapStep.EXECUTE_SWAP
+              )
             }
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
             onClick={() => handleSwapSteps()}

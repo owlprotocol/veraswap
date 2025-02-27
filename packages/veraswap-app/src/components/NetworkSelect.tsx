@@ -1,5 +1,6 @@
 import { ChevronDown, Search, Check } from "lucide-react";
 import { useState } from "react";
+import { Chain } from "viem";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,7 @@ import {
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
-import { Network } from "@/types";
 import { cn } from "@/lib/utils";
-import { Chain } from "viem";
 
 export function NetworkSelect({
   value,
@@ -53,12 +52,12 @@ export function NetworkSelect({
         >
           {value ? (
             <>
-              <img
-                // src={value.logo}
+              {/* <img
+                src={value.logo}
                 alt={value.name}
                 className="h-5 w-5 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
                 onError={handleImageError}
-              />
+              /> */}
               <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                 {value.name}
               </span>
@@ -73,7 +72,7 @@ export function NetworkSelect({
       </DialogTrigger>
 
       <DialogContent
-        className="max-w-xs rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg"
+        className="max-w-xs max-h-[80vh] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
         aria-describedby={undefined}
       >
         <DialogHeader className="px-2">
@@ -92,45 +91,50 @@ export function NetworkSelect({
           />
         </div>
 
-        <ScrollArea className="custom-scrollbar h-[360px] px-2">
-          <div className="space-y-1.5 pb-2">
-            {filteredNetworks.map((network) => (
-              <Button
-                key={network.id}
-                variant="ghost"
-                className={cn(
-                  "group h-14 w-full justify-between px-4 py-3",
-                  "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
-                  "active:scale-[0.98]",
-                  value?.id === network.id && "bg-gray-100 dark:bg-gray-700",
-                )}
-                onClick={() => {
-                  onChange(network);
-                  setOpen(false);
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    // src={network.logo}
-                    alt={network.name}
-                    className="h-8 w-8 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
-                    onError={handleImageError}
-                  />
-                  <div className="text-left">
-                    <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                      {network.name}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Chain ID: {network.id}
+        <ScrollArea className="flex-1 overflow-y-auto px-2">
+          {filteredNetworks.length > 0 ? (
+            <div className="space-y-1.5 pb-2">
+              {filteredNetworks.map((network) => (
+                <Button
+                  key={network.id}
+                  variant="ghost"
+                  className={cn(
+                    "group h-14 w-full justify-between px-4 py-3",
+                    "rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-gray-700/50",
+                    "active:scale-[0.98]",
+                    value?.id === network.id && "bg-gray-100 dark:bg-gray-700",
+                  )}
+                  onClick={() => {
+                    onChange(network);
+                    setOpen(false);
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* <img
+                      alt={network.name}
+                      className="h-8 w-8 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
+                      onError={handleImageError}
+                    /> */}
+                    <div className="text-left">
+                      <div className="text-base font-medium text-gray-900 dark:text-gray-100">
+                        {network.name}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Chain ID: {network.id}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {value?.id === network.id && (
-                  <Check className="h-5 w-5 text-green-500 animate-in fade-in" />
-                )}
-              </Button>
-            ))}
-          </div>
+                  {value?.id === network.id && (
+                    <Check className="h-5 w-5 text-green-500 animate-in fade-in" />
+                  )}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-40 text-gray-500 dark:text-gray-400">
+              No networks found
+            </div>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>

@@ -2,16 +2,13 @@ import { RouterProvider } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  lightTheme,
-  RainbowKitProvider,
-} from "@rainbow-me/rainbowkit";
+import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
-import { Toaster } from "@/components/ui/toaster.jsx";
 import { config } from "./config.js";
+import { Toaster } from "@/components/ui/toaster.jsx";
 
 const customTheme = {
   ...lightTheme({

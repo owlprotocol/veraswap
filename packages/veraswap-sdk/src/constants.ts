@@ -25,58 +25,67 @@ export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
     bytecode: UnsupportedProtocol.bytecode,
     salt: zeroHash,
 });
-export const POOL_MANAGER = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: PoolManager.bytecode,
-        abi: PoolManager.abi,
-        args: [zeroAddress],
-    }),
-    salt: zeroHash,
-});
-export const POSITION_MANAGER = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: PositionManager.bytecode,
-        abi: PositionManager.abi,
-        args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
-    }),
-    salt: zeroHash,
-});
-export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: UniversalRouter.bytecode,
-        abi: UniversalRouter.abi,
-        args: [
-            {
-                permit2: PERMIT2_ADDRESS,
-                weth9: zeroAddress,
-                v2Factory: zeroAddress,
-                v3Factory: zeroAddress,
-                pairInitCodeHash: zeroHash,
-                poolInitCodeHash: zeroHash,
-                v4PoolManager: POOL_MANAGER,
-                v3NFTPositionManager: zeroAddress,
-                v4PositionManager: POSITION_MANAGER,
-            },
-        ],
-    }),
-    salt: zeroHash,
-});
-export const QUOTER = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: V4Quoter.bytecode,
-        abi: V4Quoter.abi,
-        args: [POOL_MANAGER],
-    }),
-    salt: zeroHash,
-});
-export const STATE_VIEW = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: StateView.bytecode,
-        abi: StateView.abi,
-        args: [POOL_MANAGER],
-    }),
-    salt: zeroHash,
-});
+
+export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
+export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
+export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
+export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
+export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
+
+// export const POOL_MANAGER = getDeployDeterministicAddress({
+//     bytecode: encodeDeployData({
+//         bytecode: PoolManager.bytecode,
+//         abi: PoolManager.abi,
+//         args: [zeroAddress],
+//     }),
+//     salt: zeroHash,
+// });
+// export const POSITION_MANAGER = getDeployDeterministicAddress({
+//     bytecode: encodeDeployData({
+//         bytecode: PositionManager.bytecode,
+//         abi: PositionManager.abi,
+//         args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
+//     }),
+//     salt: zeroHash,
+// });
+// export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
+//     bytecode: encodeDeployData({
+//         bytecode: UniversalRouter.bytecode,
+//         abi: UniversalRouter.abi,
+//         args: [
+//             {
+//                 permit2: PERMIT2_ADDRESS,
+//                 weth9: zeroAddress,
+//                 v2Factory: zeroAddress,
+//                 v3Factory: zeroAddress,
+//                 pairInitCodeHash: zeroHash,
+//                 poolInitCodeHash: zeroHash,
+//                 v4PoolManager: POOL_MANAGER,
+//                 v3NFTPositionManager: zeroAddress,
+//                 v4PositionManager: POSITION_MANAGER,
+//             },
+//         ],
+//     }),
+//     salt: zeroHash,
+// });
+
+// export const QUOTER = getDeployDeterministicAddress({
+//     bytecode: encodeDeployData({
+//         bytecode: V4Quoter.bytecode,
+//         abi: V4Quoter.abi,
+//         args: [POOL_MANAGER],
+//     }),
+//     salt: zeroHash,
+// });
+// export const STATE_VIEW = getDeployDeterministicAddress({
+//     bytecode: encodeDeployData({
+//         bytecode: StateView.bytecode,
+//         abi: StateView.abi,
+//         args: [POOL_MANAGER],
+//     }),
+//     salt: zeroHash,
+// });
+
 export const MOCK_A = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: MockERC20.bytecode,
@@ -129,56 +138,79 @@ export const UNISWAP_CONTRACTS = {
 
 export const TOKEN_LIST = {
     [1337]: {
-        MOCK_A,
-        MOCK_B,
-        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
-        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
-        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        // TokenA: {name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42"},
+        // TokenB:{name: "TokenB", symbol: "B", decimals: 18, address: "0x7C40Fa89B2887738563a88da36b60221861C64d6"},
+        // TokenC:{name: "TokenC", symbol: "C", decimals: 18, address: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327"},
+        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
+        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x500a80035829572e8E637dC654AE32bC2560968F" },
+        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e" },
+        MOCK_A: { name: "MockA", symbol: "A", decimals: 18, address: MOCK_A },
+        MOCK_B: { name: "MockB", symbol: "B", decimals: 18, address: MOCK_B },
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
     [1338]: {
-        MOCK_A,
-        MOCK_B,
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
     [sepolia.id]: {
-        TokenA: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42",
-        TokenB: "0x7C40Fa89B2887738563a88da36b60221861C64d6",
-        TokenC: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327",
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
+        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x500a80035829572e8E637dC654AE32bC2560968F" },
+        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e" },
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
     [arbitrumSepolia.id]: {
-        testUSDC: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8",
+        testUSDC: {
+            name: "testUSDC",
+            symbol: "tUSDC",
+            decimals: 6,
+            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        },
     },
 } as const;
 
 export const MOCK_POOLS = {
     [1337]: {
-        // currency0:
-        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
-        //         ? TOKEN_LIST[1337].TokenA
-        //         : TOKEN_LIST[1337].testUSDC,
-        // currency1:
-        //     TOKEN_LIST[1337].TokenA < TOKEN_LIST[1337].testUSDC
-        //         ? TOKEN_LIST[1337].testUSDC
-        //         : TOKEN_LIST[1337].TokenA,
         currency0:
-            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_A : TOKEN_LIST[1337].MOCK_B,
+            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
+                ? TOKEN_LIST[1337].TokenA.address
+                : TOKEN_LIST[1337].testUSDC.address,
         currency1:
-            TOKEN_LIST[1337].MOCK_A < TOKEN_LIST[1337].MOCK_B ? TOKEN_LIST[1337].MOCK_B : TOKEN_LIST[1337].MOCK_A,
+            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
+                ? TOKEN_LIST[1337].testUSDC.address
+                : TOKEN_LIST[1337].TokenA.address,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
     },
-    [1338]: {
-        currency0:
-            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_A : TOKEN_LIST[1338].MOCK_B,
-        currency1:
-            TOKEN_LIST[1338].MOCK_A < TOKEN_LIST[1338].MOCK_B ? TOKEN_LIST[1338].MOCK_B : TOKEN_LIST[1338].MOCK_A,
-        fee: 3000,
-        tickSpacing: 60,
-        hooks: zeroAddress,
-    },
+    // [1338]: {
+    //     currency0:
+    //     TOKEN_LIST[1338].TokenA.address < TOKEN_LIST[1338].testUSDC.address
+    //         ? TOKEN_LIST[1338].TokenA.address
+    //         : TOKEN_LIST[1338].testUSDC.address,
+    // currency1:
+    //     TOKEN_LIST[1338].TokenA.address < TOKEN_LIST[1338].testUSDC.address
+    //         ? TOKEN_LIST[1338].testUSDC.address
+    //         : TOKEN_LIST[1338].TokenA.address,
+    //     fee: 3000,
+    //     tickSpacing: 60,
+    //     hooks: zeroAddress,
+    // },
 };
 
 // TODO: Fix values

@@ -30,7 +30,7 @@ export interface QuoteResult {
 }
 
 export function quoteQueryOptions(config: Config, params: QuoteParams) {
-    return queryOptions({ queryKey: quoteQueryKey(params), queryFn: () => quote(config, params) });
+    return queryOptions({ queryKey: quoteQueryKey(params), queryFn: () => quote(config, params), retry: 1 });
 }
 
 export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams) {
