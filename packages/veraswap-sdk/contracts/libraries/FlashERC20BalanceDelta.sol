@@ -14,9 +14,10 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 library FlashERC20BalanceDelta {
     error TargetIsToken();
 
-    /// @notice Computes ERC20 balance delta pre and post execution
+    /// @notice Computes ERC20 balance delta of an account pre and post execution
     /// @dev External function requires reentrancy lock, if using Permit2 target MUST NOT be Permit2
-    /// @param token The token balance to fetch
+    /// @param token The token to fetch balance
+    /// @param account The account to fetch balance (often address(this))
     /// @param target The target call address
     /// @param value The call value
     /// @param data The call data
@@ -25,16 +26,17 @@ library FlashERC20BalanceDelta {
     /// @return delta Positive means balance increased, negative means balance decreased
     function flashBalanceDelta(
         address token,
+        address account,
         address target,
         uint256 value,
         bytes calldata data
-    ) internal returns (uint256 prevBalance, uint256 currBalance, int256 delta) {
+    ) internal returns (uint256 previousBalance, uint256 nextBalance, int256 delta) {
         if (target == token) revert TargetIsToken();
 
-        prevBalance = IERC20(token).balanceOf();
+        previousBalance = IERC20(token).balanceOf(account);
         target.call{value: value}(data);
-        currBalance = IERC20(token).balanceOf();
+        nextBalance = IERC20(token).balanceOf(account);
 
-        delta = currBalance - prevBalance;
+        delta = int256(nextBalance) - int256(previousBalance);
     }
 }
