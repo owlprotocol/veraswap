@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import "forge-std/Test.sol";
-
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {UnsupportedProtocol} from "@uniswap/universal-router/contracts/deploy/UnsupportedProtocol.sol";
@@ -11,12 +9,15 @@ import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
 import {IPositionDescriptor} from "@uniswap/v4-periphery/src/interfaces/IPositionDescriptor.sol";
 import {IWETH9} from "@uniswap/v4-periphery/src/interfaces/external/IWETH9.sol";
+import {V4Quoter} from "@uniswap/universal-router/lib/v4-periphery/src/lens/V4Quoter.sol";
+
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import {DeployPermit2} from "../../test/utils/forks/DeployPermit2.sol";
 import {DeployParameters} from "../DeployParameters.s.sol";
+import {DeployRouter} from "../DeployRouter.s.sol";
 
-contract DeployAnvil is DeployParameters, DeployPermit2, Test {
+contract DeployAnvil is DeployParameters, DeployPermit2, DeployRouter {
     function setUp() public override {
         address permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
@@ -34,7 +35,7 @@ contract DeployAnvil is DeployParameters, DeployPermit2, Test {
         // V4 Pool Manager
         address v4PoolManager = Create2.computeAddress(
             BYTES32_ZERO,
-            keccak256(abi.encodePacked(type(PoolManager).creationCode, address(0)))
+            keccak256(abi.encodePacked(type(PoolManager).creationCode, abi.encode(address(0))))
         );
         if (v4PoolManager.code.length == 0) {
             address deployed = address(new PoolManager{salt: BYTES32_ZERO}(address(0)));
@@ -47,11 +48,7 @@ contract DeployAnvil is DeployParameters, DeployPermit2, Test {
             keccak256(
                 abi.encodePacked(
                     type(PositionManager).creationCode,
-                    v4PoolManager,
-                    permit2,
-                    uint256(300_000),
-                    address(0),
-                    address(0)
+                    abi.encode(v4PoolManager, permit2, uint256(300_000), address(0), address(0))
                 )
             )
         );
@@ -68,6 +65,16 @@ contract DeployAnvil is DeployParameters, DeployPermit2, Test {
             assertEq(v4PositionManager, deployed);
         }
 
+        // V4 Quoter
+        v4Quoter = Create2.computeAddress(
+            BYTES32_ZERO,
+            keccak256(abi.encodePacked(type(V4Quoter).creationCode, abi.encode(v4PoolManager)))
+        );
+        if (v4Quoter.code.length == 0) {
+            address deployed = address(new V4Quoter{salt: BYTES32_ZERO}(IPoolManager(v4PoolManager)));
+            assertEq(v4Quoter, deployed);
+        }
+
         params = RouterParameters({
             permit2: permit2,
             //TODO: Add WETH9
@@ -80,7 +87,5 @@ contract DeployAnvil is DeployParameters, DeployPermit2, Test {
             v3NFTPositionManager: UNSUPPORTED_PROTOCOL,
             v4PositionManager: v4PositionManager
         });
-
-        unsupported = address(1);
     }
 }

@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/console2.sol";
 import "forge-std/Script.sol";
+import "forge-std/Test.sol";
+
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
 struct HyperlaneParameters {
@@ -10,8 +12,10 @@ struct HyperlaneParameters {
 }
 
 /// @notice Uniswap Deploy Parameters
-abstract contract DeployParameters is Script {
+abstract contract DeployParameters is Script, Test {
     RouterParameters internal params;
+    address internal v4Quoter;
+
     HyperlaneParameters internal hyperlaneParams;
     address internal unsupported;
 
@@ -31,6 +35,7 @@ abstract contract DeployParameters is Script {
         console2.log("v4PoolManager:", params.v4PoolManager);
         console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
         console2.log("v4PositionManager:", params.v4PositionManager);
+        console2.log("v4Quoter:", v4Quoter);
 
         console2.log("***** HYPERLANE PARAMS *****");
         console2.log("mailbox:", hyperlaneParams.mailbox);
