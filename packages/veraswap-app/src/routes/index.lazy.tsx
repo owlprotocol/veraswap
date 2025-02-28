@@ -8,19 +8,20 @@ import {
     MAX_UINT_256,
     MAX_UINT_48,
     PERMIT2_ADDRESS,
-    SwapTypes,
+    SwapType,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, parseEther, zeroAddress } from "viem";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Address, encodeFunctionData, formatUnits, Hex } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import {
+    bridgeGasPaymentAtom,
     chainInAtom,
     chainOutAtom,
     chainsAtom,
     poolKeyInAtom,
     quoteInAtom,
+    remoteTokenInfoAtom,
     sendTransactionMutationAtom,
     swapInvertAtom,
     SwapStep,
@@ -29,12 +30,11 @@ import {
     tokenInAmountInputAtom,
     tokenInAtom,
     tokenInBalanceQueryAtom,
-    tokenInPermit2AllowanceQueryAtom,
-    tokenInRouterAllowanceQueryAtom,
     tokenOutAtom,
     tokenOutBalanceQueryAtom,
     tokensInAtom,
     tokensOutAtom,
+    swapTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +43,6 @@ import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 
 export const Route = createLazyFileRoute("/")({
@@ -54,6 +53,9 @@ function Index() {
     const { isConnected, address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
+    const swapType = useAtomValue(swapTypeAtom);
+    const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
+
     const [chainIn, setChainIn] = useAtom(chainInAtom);
     const [chainOut, setChainOut] = useAtom(chainOutAtom);
 
@@ -69,22 +71,21 @@ function Index() {
     const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
 
     const poolKey = useAtomValue(poolKeyInAtom);
-    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
-    console.log({ quoterError, quoterData });
+    const { data: bridgePayment } = useAtomValue(bridgeGasPaymentAtom);
+
+    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
     // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
 
-    console.debug({ swapStep });
-
     const { toast } = useToast();
 
     const isNotConnected = !isConnected || !walletAddress;
 
-    const { data: hyperlaneRegistry } = useSuspenseQuery(hyperlaneRegistryOptions());
+    // const { data: hyperlaneRegistry } = useAtomValue(hyperlaneRegistryQueryAtom);
 
     const tokenInBalanceFormatted =
         tokenInBalance != undefined ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}` : "-";
@@ -96,6 +97,8 @@ function Index() {
 
     const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending }] =
         useAtom(sendTransactionMutationAtom);
+
+    console.log({ hash });
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
@@ -128,15 +131,14 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            // TODO: make this modular
-            const swapType = SwapTypes.Swap;
-
             let transaction: { to: Address; data: Hex; value: bigint };
 
             const amountOutMinimum = quoterData![0];
             const zeroForOne = tokenIn!.address === poolKey!.currency0;
-
-            if (swapType === SwapTypes.Swap) {
+            if (swapType === SwapType.Swap) {
+                if (!tokenOut) {
+                    throw new Error("Token out not selected for swap");
+                }
                 transaction = getSwapExactInExecuteData({
                     universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                     poolKey: poolKey!,
@@ -146,11 +148,18 @@ function Index() {
                     amountIn: tokenInAmount!,
                     amountOutMinimum,
                 });
-            } else if (swapType === SwapTypes.BridgeAndSwap) {
-                // TODO: get bridge address
-                const bridgeAddress = zeroAddress;
-                // TODO: get payment from quoteDispatch
-                const bridgePayment = parseEther("0.001");
+            } else if (swapType === SwapType.SwapAndBridge) {
+                // assuning it's a collateral token\
+                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress;
+
+                if (!bridgeAddress) {
+                    throw new Error("Bridge address not found");
+                }
+
+                // TODO: check why it can't infer type
+                if (!bridgePayment || typeof bridgePayment !== "bigint") {
+                    throw new Error("Bridge payment not found");
+                }
 
                 transaction = getSwapAndHyperlaneBridgeTransaction({
                     universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,

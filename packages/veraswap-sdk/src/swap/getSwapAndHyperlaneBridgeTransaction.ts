@@ -1,9 +1,10 @@
 import { encodeFunctionData, Address, padHex, Hex } from "viem";
+import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
-import { Actions, V4Planner } from "../uniswap/v4Planner.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
+
 /**
  * getSwapAndHyperlaneBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
  */
@@ -39,11 +40,11 @@ export function getSwapAndHyperlaneBridgeTransaction({
 
     // planner data: use take instead of take all to set receive to  bridge
     const tradePlan = new V4Planner();
-    tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [poolKey, zeroForOne, amountIn, amountOutMinimum, hookData]);
+    tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
     tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, receiver, amountOutMinimum]);
+    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, bridgeAddress, amountOutMinimum]);
 
-    const swapInput = tradePlan.finalize();
+    const swapInput = tradePlan.finalize() as Hex;
 
     routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
 
