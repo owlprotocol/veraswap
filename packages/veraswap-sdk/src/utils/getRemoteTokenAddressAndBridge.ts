@@ -1,5 +1,5 @@
-import { tokenBridgeMap } from "@owlprotocol/veraswap-sdk";
 import { Address } from "viem";
+import { tokenBridgeMap } from "../constants.js";
 
 export const getRemoteTokenAddressAndBridge = (chainId: number, address: Address, remoteChainId: number) => {
     const chainMap = tokenBridgeMap[chainId];
