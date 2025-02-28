@@ -18,8 +18,12 @@ import {StateView} from "@uniswap/universal-router/lib/v4-periphery/src/lens/Sta
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
+import {Mailbox} from "@hyperlane-xyz/core/Mailbox.sol";
+import {NoopIsm} from "@hyperlane-xyz/core/isms/NoopIsm.sol";
+import {PausableHook} from "@hyperlane-xyz/core/hooks/PausableHook.sol";
+
 import {DeployPermit2} from "../../test/utils/forks/DeployPermit2.sol";
-import {DeployParameters} from "../DeployParameters.s.sol";
+import {DeployParameters, HyperlaneParameters} from "../DeployParameters.s.sol";
 import {DeployRouter} from "../DeployRouter.s.sol";
 
 contract DeployAnvil is DeployParameters, DeployPermit2, DeployRouter {
@@ -94,6 +98,7 @@ contract DeployAnvil is DeployParameters, DeployPermit2, DeployRouter {
             assertEq(v4StateView, deployed);
         }
 
+        // Router Params
         params = RouterParameters({
             permit2: permit2,
             //TODO: Add WETH9
@@ -106,5 +111,31 @@ contract DeployAnvil is DeployParameters, DeployPermit2, DeployRouter {
             v3NFTPositionManager: UNSUPPORTED_PROTOCOL,
             v4PositionManager: v4PositionManager
         });
+
+        // Hyperlane
+        address ism = Create2.computeAddress(BYTES32_ZERO, keccak256(abi.encodePacked(type(NoopIsm).creationCode)));
+        if (ism.code.length == 0) {
+            address deployed = address(new NoopIsm{salt: BYTES32_ZERO}());
+            assertEq(deployed, ism);
+        }
+        address hook = Create2.computeAddress(
+            BYTES32_ZERO,
+            keccak256(abi.encodePacked(type(PausableHook).creationCode))
+        );
+        if (hook.code.length == 0) {
+            address deployed = address(new PausableHook{salt: BYTES32_ZERO}());
+            assertEq(deployed, hook);
+        }
+        address mailbox = Create2.computeAddress(
+            BYTES32_ZERO,
+            keccak256(abi.encodePacked(type(Mailbox).creationCode, abi.encode(uint32(block.chainId))))
+        );
+        if (mailbox.code.length == 0) {
+            address deployed = address(new Mailbox{salt: BYTES32_ZERO}(uint32(block.chainId)));
+            assertEq(deployed, hook);
+            mailbox.initialize(msg.sender, address(ism), address(hook), address(hook));
+        }
+
+        hyperlaneParams = HyperlaneParameters({mailbox: mailbox});
     }
 }

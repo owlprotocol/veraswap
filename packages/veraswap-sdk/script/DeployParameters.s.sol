@@ -5,6 +5,7 @@ import "forge-std/console2.sol";
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
+import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 import {IV4Quoter} from "@uniswap/v4-periphery/src/interfaces/IV4Quoter.sol";

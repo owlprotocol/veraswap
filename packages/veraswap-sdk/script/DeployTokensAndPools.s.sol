@@ -38,8 +38,6 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";
 
 abstract contract DeployTokensAndPools is DeployParameters {
-    MockERC20[] tokens;
-
     function deployTokensAndPools() internal {
         tokens.push(deployToken("Token A", "A", 18));
         tokens.push(deployToken("Token B", "B", 18));
