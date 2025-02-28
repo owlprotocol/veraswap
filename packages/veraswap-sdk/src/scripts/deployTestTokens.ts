@@ -626,8 +626,8 @@ async function deployTestTokens(chains: Chain[]) {
         );
         tickUpper = tickUpper - (tickUpper % tickSpacing);
 
-        const amountAMax = parseUnits("0.1", currency0.decimals);
-        const amountBMax = parseUnits("0.1", currency1.decimals);
+        const amountAMax = parseUnits("1", currency0.decimals);
+        const amountBMax = parseUnits("1", currency1.decimals);
         const recipient = walletClient.account.address;
 
         // Create Position (to compute liquidity)
@@ -667,9 +667,8 @@ async function deployTestTokens(chains: Chain[]) {
             args: [[initializePoolData, modifyLiquiditiesData]],
         });
         await publicClient.waitForTransactionReceipt({ hash: multicallHash });
-        console.log({ multicallHash, testTokenAddress, token: testTokenDefs[i].name });
 
-        await publicClient.waitForTransactionReceipt({ hash: multicallHash });
+        console.log({ multicallHash, testTokenAddress, token: testTokenDefs[i].name });
 
         /***** Get Pool Liquidity *****/
         const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
