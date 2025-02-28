@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
-import { base } from "wagmi/chains";
+import { base, Chain } from "wagmi/chains";
 import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
@@ -31,10 +31,11 @@ function App() {
         <>
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
                 <WagmiProvider config={config}>
+                    {/* TODO: use switch chain */}
                     <OnchainKitProvider
                         apiKey={import.meta.env.VITE_PUBLIC_ONCHAINKIT_API_KEY}
                         projectId={import.meta.env.NEXT_PUBLIC_CDP_PROJECT_ID}
-                        chain={base}
+                        chain={base as Chain}
                     >
                         <QueryClientProvider client={queryClient}>
                             <RainbowKitProvider theme={customTheme}>
