@@ -70,7 +70,7 @@ export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainn
 
 export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
 
-export const transactionTypeAtom = atom<SwapType | null>((get) => {
+export const swapTypeAtom = atom<SwapType | null>((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
     const isSynthetic = get(isTokenOutSyntheticAtom);
@@ -299,7 +299,7 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 export const poolKeyInAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
-    const swapType = get(transactionTypeAtom);
+    const swapType = get(swapTypeAtom);
     const remoteInfo = get(remoteTokenInfoAtom);
 
     if (!tokenIn || !tokenOut) return null;

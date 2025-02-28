@@ -34,7 +34,7 @@ import {
     tokenOutBalanceQueryAtom,
     tokensInAtom,
     tokensOutAtom,
-    transactionTypeAtom,
+    swapTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,7 +53,7 @@ function Index() {
     const { isConnected, address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
-    const transactionType = useAtomValue(transactionTypeAtom);
+    const swapType = useAtomValue(swapTypeAtom);
     const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
 
     const [chainIn, setChainIn] = useAtom(chainInAtom);
@@ -131,8 +131,6 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            const swapType = transactionType;
-
             let transaction: { to: Address; data: Hex; value: bigint };
 
             const amountOutMinimum = quoterData![0];
