@@ -63,6 +63,20 @@ export const chains = import.meta.env.MODE != "development" ? prodChains : local
 
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
+export const transactionTypeAtom = atom<"swap" | "bridgeAndSwap" | "swapAndBridge" | null>((get) => {
+    const chainIn = get(chainInAtom);
+    const chainOut = get(chainOutAtom);
+    const tokenIn = get(tokenInAtom);
+    const tokenOut = get(tokenOutAtom);
+
+    //TODO: Add additional logic here
+    if (chainIn && chainOut && tokenIn && tokenOut) {
+        return chainIn.id === chainOut.id ? "swap" : "bridgeAndSwap";
+    }
+
+    return null;
+});
+
 const filterChainsByNetworkType = (networkType: "mainnet" | "testnet" | "superchain") => {
     return chains.filter((chain) => {
         const isInteropDevnet = chain.id === interopDevnet0.id || chain.id === interopDevnet1.id;

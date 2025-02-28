@@ -35,6 +35,7 @@ import {
     tokenOutBalanceQueryAtom,
     tokensInAtom,
     tokensOutAtom,
+    transactionTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +55,7 @@ function Index() {
     const { isConnected, address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
+    const transactionType = useAtomValue(transactionTypeAtom);
     const [chainIn, setChainIn] = useAtom(chainInAtom);
     const [chainOut, setChainOut] = useAtom(chainOutAtom);
 
@@ -71,14 +73,10 @@ function Index() {
     const poolKey = useAtomValue(poolKeyInAtom);
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
-    console.log({ quoterError, quoterData });
-
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
     // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
-
-    console.debug({ swapStep });
 
     const { toast } = useToast();
 
