@@ -11,7 +11,7 @@ import {
     SwapType,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex } from "viem";
+import { Address, Hex, encodeFunctionData, formatUnits } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import {
@@ -42,7 +42,6 @@ import { Input } from "@/components/ui/input";
 import { NetworkSelect } from "@/components/NetworkSelect";
 import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 
 export const Route = createLazyFileRoute("/")({
@@ -50,7 +49,7 @@ export const Route = createLazyFileRoute("/")({
 });
 
 function Index() {
-    const { isConnected, address: walletAddress } = useAccount();
+    const { address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
     const swapType = useAtomValue(swapTypeAtom);
@@ -68,7 +67,8 @@ function Index() {
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
 
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
-    const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
+    // const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
+    const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
 
     const poolKey = useAtomValue(poolKeyInAtom);
 
@@ -81,11 +81,7 @@ function Index() {
     const swapStep = useAtomValue(swapStepAtom);
     // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
 
-    const { toast } = useToast();
-
-    const isNotConnected = !isConnected || !walletAddress;
-
-    // const { data: hyperlaneRegistry } = useAtomValue(hyperlaneRegistryQueryAtom);
+    // const { toast } = useToast();
 
     const tokenInBalanceFormatted =
         tokenInBalance != undefined ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}` : "-";
@@ -105,6 +101,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             sendTransaction({
                 to: tokenIn!.address,
+                chainId: tokenIn!.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
                     functionName: "approve",
@@ -117,6 +114,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER) {
             sendTransaction({
                 to: PERMIT2_ADDRESS,
+                chainId: tokenIn!.chainId,
                 data: encodeFunctionData({
                     abi: IAllowanceTransfer.abi,
                     functionName: "approve",

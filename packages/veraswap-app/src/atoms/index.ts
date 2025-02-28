@@ -1,9 +1,8 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains";
+import { Chain, localhost, sepolia, arbitrumSepolia, base, arbitrum } from "viem/chains";
 import {
     PERMIT2_ADDRESS,
-    PoolKey,
     quoteQueryOptions,
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
@@ -61,6 +60,8 @@ export const prodChains = [
     arbitrumSepolia,
     interopDevnet0,
     interopDevnet1,
+    base,
+    arbitrum,
 ] as const;
 export const localChains = [...prodChains, localhost, localhost2] as const;
 
@@ -143,6 +144,7 @@ export const tokensInAtom = atom((get) => {
 
     const tokensMap = get(tokensAtom);
     const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
+
     if (!tokens) return [];
 
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
@@ -161,11 +163,12 @@ export const tokensOutAtom = atom((get) => {
     const tokensMap = get(tokensAtom);
     const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
 
+    if (!tokens) return [];
+
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainOut.id,
         ...value,
     }));
-    if (!tokens) return [];
     // TODO: filter out tokenIn
     return formattedTokens;
 });
@@ -365,8 +368,6 @@ export const swapInvertAtom = atom(null, (get, set) => {
     const currentChainOut = get(chainOutAtom);
     const currentTokenIn = get(tokenInAtom);
     const currentTokenOut = get(tokenOutAtom);
-
-    const tokenInAmountInput = get(tokenInAmountInputAtom);
 
     set(chainInAtom, currentChainOut);
     set(chainOutAtom, currentChainIn);
