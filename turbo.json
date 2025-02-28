@@ -6,7 +6,7 @@
     "globalDependencies": [
         ".env.vault"
     ],
-    "pipeline": {
+    "tasks": {
         "build": {
             "dependsOn": [
                 "^build"
