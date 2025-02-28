@@ -90,6 +90,8 @@ const resetNetworkDependentAtoms = (set: any) => {
     set(tokenInAmountInputAtom, "");
 };
 
+export const tokensAtom = atom(TOKEN_LIST);
+
 // Selected chain in
 export const chainInAtom = atom<null | Chain>(null);
 // Selected chain out
@@ -121,15 +123,14 @@ export const tokensInAtom = atom((get) => {
     const chainIn = get(chainInAtom);
     if (!chainIn) return [];
 
-    const tokens = TOKEN_LIST[chainIn.id as keyof typeof TOKEN_LIST];
-    console.log({ tokens, where: "tokensInAtom" });
+    const tokensMap = get(tokensAtom);
+    const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
     if (!tokens) return [];
 
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainIn.id,
         ...value,
     }));
-    console.log({ formattedTokens });
 
     return formattedTokens;
 });
@@ -139,7 +140,9 @@ export const tokensOutAtom = atom((get) => {
     const chainOut = get(chainOutAtom);
     if (!chainOut) return [];
 
-    const tokens = TOKEN_LIST[chainOut.id as keyof typeof TOKEN_LIST];
+    const tokensMap = get(tokensAtom);
+    const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
+
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainOut.id,
         ...value,
