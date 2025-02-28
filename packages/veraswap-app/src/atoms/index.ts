@@ -8,6 +8,9 @@ import {
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
     getPoolKey,
+    SwapTypes,
+    isSyntheticToken,
+    getRemoteTokenAddressAndBridge,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -21,6 +24,8 @@ import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotoc
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { config } from "@/config";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry";
+import { quoteGasPayment } from "@/abis/quoteGasPayment";
 
 /**
  * - networks
@@ -63,17 +68,16 @@ export const chains = import.meta.env.MODE != "development" ? prodChains : local
 
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
-export const transactionTypeAtom = atom<"swap" | "bridgeAndSwap" | "swapAndBridge" | null>((get) => {
+export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
+
+export const transactionTypeAtom = atom<SwapTypes | null>((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
+    const isSynthetic = get(isTokenOutSyntheticAtom);
 
-    //TODO: Add additional logic here
-    if (chainIn && chainOut && tokenIn && tokenOut) {
-        return chainIn.id === chainOut.id ? "swap" : "bridgeAndSwap";
+    if (chainIn && chainOut) {
+        return chainIn.id === chainOut.id && !isSynthetic ? SwapTypes.Swap : SwapTypes.SwapAndBridge;
     }
-
     return null;
 });
 
@@ -170,12 +174,25 @@ export const tokenInAtom = atom<TokenAtomData | null>(null);
 // Selected tokenOut
 export const tokenOutAtom = atom<TokenAtomData | null>(null);
 
+export const remoteTokenInfoAtom = atom((get) => {
+    const tokenOut = get(tokenOutAtom);
+    const chainIn = get(chainInAtom);
+
+    if (!tokenOut || !chainIn) return null;
+
+    return getRemoteTokenAddressAndBridge(tokenOut.chainId, tokenOut.address, chainIn.id);
+});
+
+export const isTokenOutSyntheticAtom = atom((get) => {
+    const tokenOut = get(tokenOutAtom);
+    return tokenOut ? isSyntheticToken(tokenOut.chainId, tokenOut.address) : false;
+});
+
 // Selected tokenIn balance
 export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
     const tokenIn = get(tokenInAtom);
-    console.log({ tokenIn, account: account.address });
     const enabled = !!tokenIn && !!account.address;
 
     return {
@@ -241,7 +258,6 @@ export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
 });
 export const tokenInRouterAllowanceAtom = atom<bigint | null>((get) => {
     const data = get(tokenInRouterAllowanceQueryAtom).data;
-    console.debug(data);
     return data ? data[0] : null;
 });
 
@@ -283,17 +299,22 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 export const poolKeyInAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
-    if (!tokenIn || !tokenOut) return null; // Tokens not selected
-    if (tokenIn.address === tokenOut.address) return null; // Invalid same token
-    // TODO: Assumes that Pool is on 'chainIn'
-    return getPoolKey(tokenIn.chainId, tokenIn.address, tokenOut.address);
-});
+    const swapType = get(transactionTypeAtom);
+    const remoteInfo = get(remoteTokenInfoAtom);
 
+    if (!tokenIn || !tokenOut) return null;
+    if (tokenIn.address === tokenOut.address) return null;
+
+    const currencyOut =
+        swapType === SwapTypes.SwapAndBridge && remoteInfo ? remoteInfo.remoteTokenAddress : tokenOut.address;
+
+    return getPoolKey(tokenIn.chainId, tokenIn.address, currencyOut);
+});
 // TODO: handle
 export const poolKeyOutAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
-    console.log({ tokenIn, tokenOut, where: "poolKeyAtom" });
+
     if (!tokenIn || !tokenOut) return null; // Tokens not selected
     if (tokenIn.address === tokenOut.address) return null; // Invalid same token
 
@@ -326,12 +347,6 @@ export const quoteInAtom = atomWithQuery((get) => {
             ? CurrencyAmount.fromRawAmount(currencyIn, tokenInAmount.toString())
             : emptyCurrencyAmount;
     const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].QUOTER : zeroAddress;
-
-    console.log({
-        quoterAddress,
-        exactCurrencyAmount: exactCurrencyAmount.quotient.toString(),
-        poolKey,
-    });
 
     return {
         ...quoteQueryOptions(config, {
@@ -411,4 +426,19 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;
     return waitForTransactionReceiptQueryOptions(config, { hash });
+});
+
+export const bridgeGasPaymentAtom = atomWithQuery((get) => {
+    const chainOut = get(chainOutAtom);
+    const remoteInfo = get(remoteTokenInfoAtom);
+
+    return {
+        ...readContractQueryOptions(config, {
+            address: remoteInfo?.remoteBridgeAddress ?? zeroAddress,
+            abi: [quoteGasPayment],
+            functionName: "quoteGasPayment",
+            args: [chainOut?.id ?? 0],
+        }),
+        enabled: !!remoteInfo?.remoteBridgeAddress && !!chainOut,
+    };
 });

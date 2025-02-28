@@ -141,7 +141,8 @@ export const UNISWAP_CONTRACTS = {
     },
     [sepolia.id]: {
         POOL_MANAGER: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
-        UNIVERSAL_ROUTER: "0x3a9d48ab9751398bbfa63ad67599bb04e4bdf98b",
+        // UNIVERSAL_ROUTER: "0x3a9d48ab9751398bbfa63ad67599bb04e4bdf98b",
+        UNIVERSAL_ROUTER: "0xa14895f23a3a5a4d76799e02ebebc6df3cbe61d6",
         POSITION_MANAGER: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         STATE_VIEW: "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
         QUOTER: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
@@ -218,6 +219,7 @@ export const TOKEN_LIST = {
             decimals: 6,
             address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
         },
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
     },
 } as const;
 
@@ -280,10 +282,16 @@ export const tokenBridgeMap: TokenBridgeMap = {
             remotes: { [2]: "0x0000000000000000000000000000000000000002" },
         },
     },
-    [2]: {
-        "0x0000000000000000000000000000000000000002": {
-            bridgeAddress: "0x0000000000000000000000000000000000000003",
-            remotes: { [1]: "0x0000000000000000000000000000000000000001" },
+    // Token A
+    [arbitrumSepolia.id]: {
+        "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900": {
+            remotes: { [sepolia.id]: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
+        },
+    },
+    [sepolia.id]: {
+        "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280": {
+            bridgeAddress: "0x2078763224e3C8Fc0cDe40C29a98e8d6b2a540F1",
+            remotes: { [arbitrumSepolia.id]: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
         },
     },
 };
@@ -366,6 +374,22 @@ export const POOLS: Record<number, PoolKey[]> = {
                 TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].USDC : TOKEN_LIST[base.id].VVV,
             currency1:
                 TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].VVV : TOKEN_LIST[base.id].USDC,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
+    [sepolia.id]: [
+        // TokenA-TokenB
+        {
+            currency0:
+                TOKEN_LIST[sepolia.id].TokenA.address < TOKEN_LIST[sepolia.id].TokenB.address
+                    ? TOKEN_LIST[sepolia.id].TokenA.address
+                    : TOKEN_LIST[sepolia.id].TokenB.address,
+            currency1:
+                TOKEN_LIST[sepolia.id].TokenA.address < TOKEN_LIST[sepolia.id].TokenB.address
+                    ? TOKEN_LIST[sepolia.id].TokenB.address
+                    : TOKEN_LIST[sepolia.id].TokenA.address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
