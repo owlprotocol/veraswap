@@ -14,7 +14,9 @@
             "outputs": [
                 "build/**",
                 "dist/**",
-                "lib/**"
+                "_esm/**",
+                "_cjs/**",
+                "_types/**"
             ]
         },
         "depcheck": {
