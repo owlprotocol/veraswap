@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {DeployRouter} from "./DeployRouter.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {DeployRouter} from "./DeployRouter.s.sol";
+import {DeployTokensAndPools} from "./DeployTokensAndPools.s.sol";
 
-abstract contract DeployAll is DeployRouter {
+abstract contract DeployAll is DeployRouter, DeployTokensAndPools {
     function run() external {
         vm.startBroadcast();
 
@@ -21,6 +22,7 @@ abstract contract DeployAll is DeployRouter {
         });
 
         logParams();
+        deployTokensAndPools();
         deployRouter();
 
         vm.stopBroadcast();

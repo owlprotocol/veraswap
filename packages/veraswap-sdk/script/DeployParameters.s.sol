@@ -6,21 +6,29 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {IV4Quoter} from "@uniswap/v4-periphery/src/interfaces/IV4Quoter.sol";
+import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 
 struct HyperlaneParameters {
     address mailbox;
 }
 
-/// @notice Uniswap Deploy Parameters
+/// @notice Shared Deploy Parameters
 abstract contract DeployParameters is Script, Test {
     RouterParameters internal params;
-    address internal v4Quoter;
 
+    IUniversalRouter internal router;
+    IV4Quoter internal v4Quoter;
+    IStateView internal v4StateView;
+
+    MockERC20[] tokens;
     HyperlaneParameters internal hyperlaneParams;
     address internal unsupported;
 
     address constant UNSUPPORTED_PROTOCOL = address(0);
     bytes32 constant BYTES32_ZERO = bytes32(0);
+    bytes constant ZERO_BYTES = new bytes(0);
 
     error Permit2NotDeployed();
 
@@ -35,7 +43,7 @@ abstract contract DeployParameters is Script, Test {
         console2.log("v4PoolManager:", params.v4PoolManager);
         console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
         console2.log("v4PositionManager:", params.v4PositionManager);
-        console2.log("v4Quoter:", v4Quoter);
+        console2.log("v4Quoter:", address(v4Quoter));
 
         console2.log("***** HYPERLANE PARAMS *****");
         console2.log("mailbox:", hyperlaneParams.mailbox);

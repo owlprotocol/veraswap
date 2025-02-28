@@ -9,7 +9,12 @@ import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
 import {IPositionDescriptor} from "@uniswap/v4-periphery/src/interfaces/IPositionDescriptor.sol";
 import {IWETH9} from "@uniswap/v4-periphery/src/interfaces/external/IWETH9.sol";
+
+import {IV4Quoter} from "@uniswap/v4-periphery/src/interfaces/IV4Quoter.sol";
 import {V4Quoter} from "@uniswap/universal-router/lib/v4-periphery/src/lens/V4Quoter.sol";
+
+import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {StateView} from "@uniswap/universal-router/lib/v4-periphery/src/lens/StateView.sol";
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
@@ -66,13 +71,27 @@ contract DeployAnvil is DeployParameters, DeployPermit2, DeployRouter {
         }
 
         // V4 Quoter
-        v4Quoter = Create2.computeAddress(
-            BYTES32_ZERO,
-            keccak256(abi.encodePacked(type(V4Quoter).creationCode, abi.encode(v4PoolManager)))
+        v4Quoter = IV4Quoter(
+            Create2.computeAddress(
+                BYTES32_ZERO,
+                keccak256(abi.encodePacked(type(V4Quoter).creationCode, abi.encode(v4PoolManager)))
+            )
         );
-        if (v4Quoter.code.length == 0) {
+        if (address(v4Quoter).code.length == 0) {
             address deployed = address(new V4Quoter{salt: BYTES32_ZERO}(IPoolManager(v4PoolManager)));
             assertEq(v4Quoter, deployed);
+        }
+
+        // V4 State View
+        v4StateView = IStateView(
+            Create2.computeAddress(
+                BYTES32_ZERO,
+                keccak256(abi.encodePacked(type(StateView).creationCode, abi.encode(v4PoolManager)))
+            )
+        );
+        if (address(v4StateView).code.length == 0) {
+            address deployed = address(new StateView{salt: BYTES32_ZERO}(IPoolManager(v4PoolManager)));
+            assertEq(v4StateView, deployed);
         }
 
         params = RouterParameters({

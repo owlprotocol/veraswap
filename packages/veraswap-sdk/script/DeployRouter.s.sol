@@ -13,8 +13,6 @@ import {UniversalRouterApprovedReentrant} from "../contracts/UniversalRouterAppr
 import {DeployParameters} from "./DeployParameters.s.sol";
 
 abstract contract DeployRouter is DeployParameters {
-    IUniversalRouter router;
-
     function deployRouter() internal {
         //TODO: Use CREATE2 existance check???
         /*
