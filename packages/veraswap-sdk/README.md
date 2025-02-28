@@ -22,6 +22,7 @@ foundryup
 
 ```bash
 forge install
+cd lib/hyperlane-monorepo && yarn
 forge build
 forge test
 ```
@@ -70,5 +71,6 @@ forge install \
     uniswap/v4-core@main \
     uniswap/v4-periphery@main \
     openzeppelin/uniswap-hooks@master \
-    uniswap/universal-router@main
+    uniswap/universal-router@main \
+    hyperlane-xyz/hyperlane-monorepo@main
 ```

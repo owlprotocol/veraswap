@@ -48,3 +48,8 @@
 [submodule "packages/veraswap-sdk/lib/v3-periphery"]
 	path = packages/veraswap-sdk/lib/v3-periphery
 	url = https://github.com/leovigna/v3-periphery
+[submodule "packages/veraswap-sdk/lib/hyperlane-monorepo"]
+	path = packages/veraswap-sdk/lib/hyperlane-monorepo
+	url = https://github.com/hyperlane-xyz/hyperlane-monorepo
+[submodule "lib/hyperlane-monorepo"]
+	branch = main
