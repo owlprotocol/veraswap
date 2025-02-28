@@ -235,4 +235,51 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "GasSet",
+        inputs: [
+            { name: "domain", type: "uint32", indexed: false, internalType: "uint32" },
+            { name: "gas", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "HookSet",
+        inputs: [{ name: "_hook", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Initialized",
+        inputs: [{ name: "version", type: "uint8", indexed: false, internalType: "uint8" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "IsmSet",
+        inputs: [{ name: "_ism", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "ReceivedTransferRemote",
+        inputs: [
+            { name: "origin", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "recipient", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "SentTransferRemote",
+        inputs: [
+            { name: "destination", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "recipient", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
 ] as const;

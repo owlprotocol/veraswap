@@ -193,4 +193,9 @@ export const errors = [
         name: "UnexpectedRevertBytes",
         inputs: [{ name: "revertData", type: "bytes", internalType: "bytes" }],
     },
+    { type: "error", name: "ContractUnlocked", inputs: [] },
+    { type: "error", name: "NegativeBalanceDelta", inputs: [] },
+    { type: "error", name: "TargetIsHook", inputs: [] },
+    { type: "error", name: "TargetIsISM", inputs: [] },
+    { type: "error", name: "TargetIsMailbox", inputs: [] },
 ] as const;
