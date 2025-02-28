@@ -22,6 +22,7 @@ foundryup
 
 ```bash
 forge install
+cd lib/hyperlane-monorepo && yarn
 forge build
 forge test
 ```
