@@ -1,7 +1,7 @@
 import { Address } from "viem";
 
 type TokenBridgeInfo = {
-    bridgeAddress: Address;
+    bridgeAddress?: Address;
     remotes: Record<number, Address>;
 };
 

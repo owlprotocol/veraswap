@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
@@ -275,9 +275,15 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
 // TODO: Fix values
 export const tokenBridgeMap: TokenBridgeMap = {
     [1]: {
-        "0x0000000000000000000000000000000000000000": {
-            bridgeAddress: "0x0000000000000000000000000000000000000000",
-            remotes: { [1]: "0x0000000000000000000000000000000000000000" },
+        "0x0000000000000000000000000000000000000001": {
+            bridgeAddress: "0x0000000000000000000000000000000000000001",
+            remotes: { [2]: "0x0000000000000000000000000000000000000002" },
+        },
+    },
+    [2]: {
+        "0x0000000000000000000000000000000000000002": {
+            bridgeAddress: "0x0000000000000000000000000000000000000003",
+            remotes: { [1]: "0x0000000000000000000000000000000000000001" },
         },
     },
 };
@@ -366,3 +372,63 @@ export const POOLS: Record<number, PoolKey[]> = {
         },
     ],
 } as const;
+
+// Superchains
+
+export const interopDevnet0 = defineChain({
+    id: 420120000,
+    name: "Interop Devnet 0",
+    network: "interop-alpha-0",
+    nativeCurrency: {
+        name: "Ether",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: ["https://interop-alpha-0.optimism.io"],
+        },
+        public: {
+            http: ["https://interop-alpha-0.optimism.io"],
+        },
+    },
+    blockExplorers: {
+        default: { name: "Blockscout", url: "https://optimism-interop-alpha-0.blockscout.com/" },
+        routescan: { name: "RouteScan", url: "https://420120000.testnet.routescan.io/" },
+    },
+    contracts: {
+        OptimismPortal: {
+            address: "0x7385d89d38ab79984e7c84fab9ce5e6f4815468a",
+        },
+    },
+    testnet: true,
+});
+
+export const interopDevnet1 = defineChain({
+    id: 420120001,
+    name: "Interop Devnet 1",
+    network: "interop-alpha-1",
+    nativeCurrency: {
+        name: "Ether",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: ["https://interop-alpha-1.optimism.io"],
+        },
+        public: {
+            http: ["https://interop-alpha-1.optimism.io"],
+        },
+    },
+    blockExplorers: {
+        default: { name: "Blockscout", url: "https://optimism-interop-alpha-1.blockscout.com/" },
+        routescan: { name: "RouteScan", url: "https://420120001.testnet.routescan.io/" },
+    },
+    contracts: {
+        OptimismPortal: {
+            address: "0x55f5c4653dbcde7d1254f9c690a5d761b315500c",
+        },
+    },
+    testnet: true,
+});

@@ -19,6 +19,7 @@ import {
 import { getAccount } from "@wagmi/core";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
+import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { config } from "@/config";
 
 /**
@@ -53,19 +54,43 @@ export const prodChains = [
         rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } },
     },
     arbitrumSepolia,
+    interopDevnet0,
+    interopDevnet1,
 ] as const;
 export const localChains = [...prodChains, localhost, localhost2] as const;
 
 export const chains = import.meta.env.MODE != "development" ? prodChains : localChains;
 
-export const networkTypeAtom = atom<"mainnet" | "testnet">("mainnet");
+export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
-export const chainsAtom = atom((get) => {
-    const networkType = get(networkTypeAtom);
-    return chains.filter((chain) =>
-        networkType === "testnet" ? chain.testnet === true : chain.testnet === false || chain.testnet === undefined,
-    );
-});
+const filterChainsByNetworkType = (networkType: "mainnet" | "testnet" | "superchain") => {
+    return chains.filter((chain) => {
+        const isInteropDevnet = chain.id === interopDevnet0.id || chain.id === interopDevnet1.id;
+        if (networkType === "testnet") return chain.testnet === true && !isInteropDevnet;
+        if (networkType === "superchain") return isInteropDevnet;
+        return !chain.testnet;
+    });
+};
+
+export const chainsAtom = atom((get) => filterChainsByNetworkType(get(networkTypeAtom)));
+
+export const networkTypeWithResetAtom = atom(
+    (get) => get(networkTypeAtom),
+    (_, set, newNetworkType: "mainnet" | "testnet" | "superchain") => {
+        set(networkTypeAtom, newNetworkType);
+        resetNetworkDependentAtoms(set);
+    },
+);
+
+const resetNetworkDependentAtoms = (set: any) => {
+    set(chainInAtom, null);
+    set(chainOutAtom, null);
+    set(tokenInAtom, null);
+    set(tokenOutAtom, null);
+    set(tokenInAmountInputAtom, "");
+};
+
+export const tokensAtom = atom(TOKEN_LIST);
 
 // Selected chain in
 export const chainInAtom = atom<null | Chain>(null);
@@ -98,15 +123,14 @@ export const tokensInAtom = atom((get) => {
     const chainIn = get(chainInAtom);
     if (!chainIn) return [];
 
-    const tokens = TOKEN_LIST[chainIn.id as keyof typeof TOKEN_LIST];
-    console.log({ tokens, where: "tokensInAtom" });
+    const tokensMap = get(tokensAtom);
+    const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
     if (!tokens) return [];
 
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainIn.id,
         ...value,
     }));
-    console.log({ formattedTokens });
 
     return formattedTokens;
 });
@@ -116,7 +140,9 @@ export const tokensOutAtom = atom((get) => {
     const chainOut = get(chainOutAtom);
     if (!chainOut) return [];
 
-    const tokens = TOKEN_LIST[chainOut.id as keyof typeof TOKEN_LIST];
+    const tokensMap = get(tokensAtom);
+    const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
+
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainOut.id,
         ...value,
@@ -306,17 +332,20 @@ export const quoteInAtom = atomWithQuery((get) => {
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {
-    const chainIn = get(chainInAtom);
-    const chainOut = get(chainOutAtom);
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
+    const currentChainIn = get(chainInAtom);
+    const currentChainOut = get(chainOutAtom);
+    const currentTokenIn = get(tokenInAtom);
+    const currentTokenOut = get(tokenOutAtom);
 
-    set(chainInAtom, chainOut);
-    set(chainOutAtom, chainIn);
-    set(tokenInAtom, tokenIn);
-    set(tokenOutAtom, tokenOut);
+    const tokenInAmountInput = get(tokenInAmountInputAtom);
 
-    //TODO: Invert amounts later
+    set(chainInAtom, currentChainOut);
+    set(chainOutAtom, currentChainIn);
+
+    set(tokenInAtom, currentTokenOut);
+    set(tokenOutAtom, currentTokenIn);
+
+    set(tokenInAmountInputAtom, "");
 });
 
 export enum SwapStep {
