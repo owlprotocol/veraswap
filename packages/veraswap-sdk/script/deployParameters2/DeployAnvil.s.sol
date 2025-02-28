@@ -3,9 +3,16 @@ pragma solidity ^0.8.24;
 
 import {DeployParameters} from "../DeployParameters.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {DeployPermit2} from "../../test/utils/forks/DeployPermit2.sol";
 
-contract DeployAnvil is DeployParameters {
+contract DeployAnvil is DeployParameters, DeployPermit2 {
     function setUp() public override {
+        address permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
+        if (permit2.code.length == 0) {
+            deployPermit2();
+        }
+
         params = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             //TODO: Add WETH9
