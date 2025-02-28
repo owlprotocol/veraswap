@@ -10,6 +10,7 @@ contract DeployAllAnvil is DeployAll {
     function run() external virtual override {
         vm.startBroadcast();
 
+        anvilPermit2();
         deployCoreContracts();
         logParams();
 
