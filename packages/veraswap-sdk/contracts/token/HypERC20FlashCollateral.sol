@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.24;
 
-import {Lock} from "@uniswap/universal-router/contracts/base/Lock.sol";
+import {Locker} from "@uniswap/universal-router/contracts/libraries/Locker.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TokenMessage} from "@hyperlane-xyz/core/token/libs/TokenMessage.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
-import {FlashERC20BalanceDelta} from "../libraries/FlashERC20BalanceDelta.sol";
-
 /// @title HypERC20FlashCollateral
 /// @notice Extends HypERC20Collateral to support flash accounting based deposits (see https://docs.uniswap.org/contracts/v4/concepts/flash-accounting)
 /// @dev To avoid reentrancy, the standard `transferRemote` external functions are protected with a Lock
-contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
+contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral {
+    /// @notice Thrown when attempting to reenter when collateral is locked
+    error ContractLocked();
+    error ContractUnlocked();
+
+    // The slot holding the balance, transiently. bytes32(uint256(keccak256("Balance")) - 1)
+    bytes32 constant BALANCE_SLOT = 0x545608d0a01d2b02351975382c359965b0d9b259ce065eb8c064f439aa519304;
+
     constructor(address erc20, address _mailbox) HypERC20Collateral(erc20, _mailbox) {}
 
     // Critical: Messages are dispatched to Mailbox
@@ -23,32 +28,50 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
     error NegativeBalanceDelta();
 
     /**
+     * @notice Lock collateral contract to track balance
+     * @dev Stores current balance using TSTORE
+     */
+    function transferRemoteLock() external virtual returns (uint256 balanceCurrent) {
+        // Can only be called if unlocked
+        if (Locker.get() != address(0)) revert ContractLocked();
+        // Lock contract to track balance delta
+        Locker.set(msg.sender);
+
+        // Get balance
+        balanceCurrent = wrappedToken.balanceOf(address(this));
+        // Set balance
+        assembly ("memory-safe") {
+            tstore(BALANCE_SLOT, balanceCurrent)
+        }
+    }
+
+    /**
      * @notice Transfers token balance delta to `_recipient` on `_destination` domain using flash accounting.
-     * @dev Executes arbitrary call data to get ERC20 balance delta
      * @dev Emits `SentTransferRemote` event on the origin chain.
+     * @dev No need to check lock as balance will always be if contract is not locked
      * @param _destination The identifier of the destination chain.
      * @param _recipient The address of the recipient on the destination chain.
-     * @param target The target call address
      * @return messageId The identifier of the dispatched message.
      */
-    function transferRemoteFlash(
+    function transferRemoteUnlock(
         uint32 _destination,
-        bytes32 _recipient,
-        address target,
-        uint256 value,
-        bytes calldata data
-    ) external payable virtual isNotLocked returns (bytes32 messageId) {
-        if (target == address(mailbox)) revert TargetIsMailbox();
-        if (target == address(hook)) revert TargetIsHook();
-        if (target == address(interchainSecurityModule)) revert TargetIsISM();
+        bytes32 _recipient
+    ) external payable virtual returns (bytes32 messageId) {
+        // Can only be called if locked
+        if (Locker.get() == address(0)) revert ContractUnlocked();
+        // Unlock contract to reset to initial state
+        Locker.set(address(0));
 
-        (, , int256 balanceDelta) = FlashERC20BalanceDelta.flashBalanceDelta(
-            address(wrappedToken),
-            address(this),
-            target,
-            value,
-            data
-        );
+        // Get previous balance
+        uint256 balancePrevious;
+        assembly ("memory-safe") {
+            balancePrevious := tload(BALANCE_SLOT)
+            tstore(BALANCE_SLOT, 0) // clear as contract is now unlocked
+        }
+        // Get new balance
+        uint256 balanceNext = wrappedToken.balanceOf(address(this));
+        // Get balance delta
+        int256 balanceDelta = int256(balanceNext) - int256(balancePrevious);
         if (balanceDelta <= 0) revert NegativeBalanceDelta(); // Should never occur since contract never gives approvals
 
         return _dispatchTokenMessage(_destination, _recipient, uint256(balanceDelta), msg.value);
@@ -112,7 +135,10 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amount
-    ) external payable virtual override isNotLocked returns (bytes32 messageId) {
+    ) external payable virtual override returns (bytes32 messageId) {
+        // Can only be called if unlocked
+        if (Locker.get() != address(0)) revert ContractLocked();
+
         return _transferRemote(_destination, _recipient, _amount, msg.value);
     }
 
@@ -123,7 +149,10 @@ contract HypERC20FlashCollateral is TokenRouter, HypERC20Collateral, Lock {
         uint256 _amount,
         bytes calldata _hookMetadata,
         address _hook
-    ) external payable virtual override isNotLocked returns (bytes32 messageId) {
+    ) external payable virtual override returns (bytes32 messageId) {
+        // Can only be called if unlocked
+        if (Locker.get() != address(0)) revert ContractLocked();
+
         return _transferRemote(_destination, _recipient, _amount, msg.value, _hookMetadata, _hook);
     }
 }

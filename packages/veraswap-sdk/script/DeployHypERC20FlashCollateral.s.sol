@@ -13,7 +13,6 @@ import {NoopIsm} from "@hyperlane-xyz/core/isms/NoopIsm.sol";
 import {PausableHook} from "@hyperlane-xyz/core/hooks/PausableHook.sol";
 
 import {HypERC20FlashCollateral} from "../contracts/token/HypERC20FlashCollateral.sol";
-import {Execute} from "./Execute.sol";
 
 contract DeployHypERC20FlashCollateral is Script, Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
@@ -52,31 +51,15 @@ contract DeployHypERC20FlashCollateral is Script, Test {
         tokenACollateral.enrollRemoteRouter(1, bytes32(uint256(1)));
 
         // Deploy Execute
-        Execute execute = new Execute{salt: BYTES32_ZERO}();
-        tokenA.mint(msg.sender, 5);
-        tokenA.approve(address(execute), 5);
-
-        console2.log("balance msg.sender:", tokenA.balanceOf(msg.sender));
         console2.log("balance collateral:", tokenA.balanceOf(address(tokenACollateral)));
 
-        // Approve
-        bytes memory executeTransfer = abi.encodeWithSelector(
-            tokenA.transferFrom.selector,
-            address(msg.sender),
-            address(tokenACollateral),
-            5
-        );
-        bytes memory collateralExecute = abi.encodeWithSelector(
-            execute.execute.selector,
-            address(tokenA),
-            0,
-            executeTransfer
-        );
+        // Lock collateral
+        tokenACollateral.transferRemoteLock();
+        // Deposit ERC20
+        tokenA.mint(msg.sender, 5);
+        // Unlock collateral
+        tokenACollateral.transferRemoteUnlock(1, bytes32(uint256(2)));
 
-        // Deposit collateral (receiver address 2)
-        tokenACollateral.transferRemoteFlash(1, bytes32(uint256(2)), address(execute), 0, collateralExecute);
-
-        console2.log("balance msg.sender:", tokenA.balanceOf(msg.sender));
         console2.log("balance collateral:", tokenA.balanceOf(address(tokenACollateral)));
     }
 }

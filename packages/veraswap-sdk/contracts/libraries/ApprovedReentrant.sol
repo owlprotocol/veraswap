@@ -9,8 +9,6 @@ library ApprovedReentrant {
     bytes32 constant APPROVED_REENTRANT_SLOT = 0x954e40ac94e7c945c409f421f1846b7d735df1d1d7487ba181a55646c5c256fa;
 
     function set(address approvedReentrant) internal {
-        //TODO: What does this comment mean in Locker.sol???
-        // The locker is always msg.sender or address(0) so does not need to be cleaned
         assembly ("memory-safe") {
             tstore(APPROVED_REENTRANT_SLOT, approvedReentrant)
         }
