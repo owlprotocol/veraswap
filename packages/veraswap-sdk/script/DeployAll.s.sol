@@ -4,11 +4,10 @@ pragma solidity ^0.8.24;
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {DeployRouter} from "./DeployRouter.s.sol";
 import {DeployTokensAndPools} from "./DeployTokensAndPools.s.sol";
+import {DeployHypERC20FlashCollateral} from "./DeployHypERC20FlashCollateral.s.sol";
 
-abstract contract DeployAll is DeployRouter, DeployTokensAndPools {
+abstract contract DeployAll is DeployRouter, DeployTokensAndPools, DeployHypERC20FlashCollateral {
     function run() external {
-        vm.startBroadcast();
-
         params = RouterParameters({
             permit2: mapUnsupported(params.permit2),
             weth9: mapUnsupported(params.weth9),
@@ -22,9 +21,15 @@ abstract contract DeployAll is DeployRouter, DeployTokensAndPools {
         });
 
         logParams();
+
+        vm.startBroadcast();
+
+        deployCoreContracts();
         deployTokensAndPools();
+        deployHypERC20FlashCollaterals();
         deployRouter();
 
+        logDeployments();
         vm.stopBroadcast();
     }
 }

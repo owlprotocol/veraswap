@@ -14,19 +14,16 @@ import {DeployParameters} from "./DeployParameters.s.sol";
 
 abstract contract DeployRouter is DeployParameters {
     function deployRouter() internal {
-        //TODO: Use CREATE2 existance check???
-        /*
         address routerAddress = Create2.computeAddress(
             BYTES32_ZERO,
-            keccak256(abi.encodePacked(type(UniversalRouterApprovedReentrant).creationCode, abi.encode(params)))
+            keccak256(abi.encodePacked(type(UniversalRouterApprovedReentrant).creationCode, abi.encode(params))),
+            DETERMINISTIC_DEPLOYER
         );
+        router = IUniversalRouter(routerAddress);
+
         if (routerAddress.code.length == 0) {
             address deployed = address(new UniversalRouterApprovedReentrant{salt: BYTES32_ZERO}(params));
             assertEq(deployed, routerAddress);
         }
-
-        router = IUniversalRouter(routerAddress);
-        */
-        router = IUniversalRouter(new UniversalRouterApprovedReentrant{salt: BYTES32_ZERO}(params));
     }
 }

@@ -47,7 +47,8 @@ abstract contract DeployTokensAndPools is DeployParameters {
     function deployToken(string memory name, string memory symbol, uint8 decimals) internal returns (MockERC20 token) {
         address tokenAddress = Create2.computeAddress(
             BYTES32_ZERO,
-            keccak256(abi.encodePacked(type(MockERC20).creationCode, abi.encode(name, symbol, decimals)))
+            keccak256(bytes.concat(type(MockERC20).creationCode, abi.encode(name, symbol, decimals))),
+            DETERMINISTIC_DEPLOYER
         );
         token = MockERC20(tokenAddress);
 
@@ -73,10 +74,8 @@ abstract contract DeployTokensAndPools is DeployParameters {
                 type(uint160).max,
                 type(uint48).max
             );
+            console2.log("POSM:", params.v4PositionManager);
         }
-
-        //TODO: Log token deployment
-        // console2.log("Token", name, symbol, decimals, address(token));
     }
 
     // TODO: Check liquidity
