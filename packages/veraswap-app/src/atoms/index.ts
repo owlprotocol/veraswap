@@ -240,14 +240,24 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 // Selected tokenOutAmount
 //TODO: Implement later
 // const tokenInAmountAtom = atom<bigint | null>(null)
-export const poolKeyAtom = atom<PoolKey | null>((get) => {
+export const poolKeyInAtom = atom((get) => {
+    const tokenIn = get(tokenInAtom);
+    const tokenOut = get(tokenOutAtom);
+    if (!tokenIn || !tokenOut) return null; // Tokens not selected
+    if (tokenIn.address === tokenOut.address) return null; // Invalid same token
+    // TODO: Assumes that Pool is on 'chainIn'
+    return getPoolKey(tokenIn.chainId, tokenIn.address, tokenOut.address);
+});
+
+// TODO: handle
+export const poolKeyOutAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
     console.log({ tokenIn, tokenOut, where: "poolKeyAtom" });
     if (!tokenIn || !tokenOut) return null; // Tokens not selected
     if (tokenIn.address === tokenOut.address) return null; // Invalid same token
-    // TODO: Assumes that Pool is on 'chainIn'
-    return getPoolKey(tokenIn.chainId, tokenIn.address, tokenOut.address);
+
+    return getPoolKey(tokenOut.chainId, tokenIn.address, tokenOut.address);
 });
 
 const emptyToken = new Token(1, zeroAddress, 1);
@@ -262,8 +272,8 @@ const emptyPoolKey = {
 
 // Uniswap Quote
 // type inference fails?
-export const quoteAtom = atomWithQuery((get) => {
-    const poolKey = get(poolKeyAtom);
+export const quoteInAtom = atomWithQuery((get) => {
+    const poolKey = get(poolKeyInAtom);
     const chainIn = get(chainInAtom);
     const tokenIn = get(tokenInAtom);
     const tokenInAmount = get(tokenInAmountAtom);

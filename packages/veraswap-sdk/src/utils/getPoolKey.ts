@@ -4,13 +4,13 @@ import { PoolKey } from "../types/PoolKey.js";
 
 export function getPoolKey(chainId: number, tokenIn: Address, tokenOut: Address): PoolKey {
     const pools = POOLS[chainId];
-    const curr0 = tokenIn < tokenOut ? tokenIn : tokenOut;
-    const curr1 = tokenIn < tokenOut ? tokenOut : tokenIn;
+    const currency0 = tokenIn < tokenOut ? tokenIn : tokenOut;
+    const currency1 = tokenIn < tokenOut ? tokenOut : tokenIn;
 
     if (!pools) {
         return {
-            currency0: curr0,
-            currency1: curr1,
+            currency0,
+            currency1,
             fee: 3_000,
             tickSpacing: 60,
             hooks: zeroAddress,
@@ -18,8 +18,7 @@ export function getPoolKey(chainId: number, tokenIn: Address, tokenOut: Address)
     }
 
     const existingPool = pools.find((pool: PoolKey) => {
-        const { currency0, currency1 } = pool;
-        return currency0 === curr0 && currency1 === curr1;
+        return pool.currency0 === currency0 && pool.currency1 === currency1;
     });
 
     if (existingPool) {
@@ -27,8 +26,8 @@ export function getPoolKey(chainId: number, tokenIn: Address, tokenOut: Address)
     }
 
     return {
-        currency0: curr0,
-        currency1: curr1,
+        currency0,
+        currency1,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,

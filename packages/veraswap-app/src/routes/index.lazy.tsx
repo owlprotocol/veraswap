@@ -17,8 +17,8 @@ import {
     chainInAtom,
     chainOutAtom,
     chainsAtom,
-    poolKeyAtom,
-    quoteAtom,
+    poolKeyInAtom,
+    quoteInAtom,
     sendTransactionMutationAtom,
     swapInvertAtom,
     SwapStep,
@@ -66,8 +66,8 @@ function Index() {
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
     const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
 
-    const poolKey = useAtomValue(poolKeyAtom);
-    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteAtom);
+    const poolKey = useAtomValue(poolKeyInAtom);
+    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
     console.log({ quoterError, quoterData });
 
