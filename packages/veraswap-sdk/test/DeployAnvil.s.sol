@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
@@ -40,41 +39,40 @@ import {StateView} from "@uniswap/universal-router/lib/v4-periphery/src/lens/Sta
 
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 
-import {DeployPermit2} from "../test/utils/forks/DeployPermit2.sol";
-import {DeployCreate2Deployer} from "../test/utils/forks/DeployCreate2Deployer.sol";
-
-struct UniswapContractsAddresses {
-    address v4PositionManager;
-    address router;
-    address stateView;
-}
+import {DeployPermit2} from "./utils/forks/DeployPermit2.sol";
+import {DeployCreate2Deployer} from "./utils/forks/DeployCreate2Deployer.sol";
 
 struct UniswapContracts {
+    IAllowanceTransfer permit2;
+    UnsupportedProtocol unsupported;
+    IPoolManager v4PoolManager;
     IPositionManager v4PositionManager;
     UniversalRouter router;
+    IV4Quoter v4Quoter;
     IStateView stateView;
 }
 
 /// @notice Forge script for deploying v4 & hooks to **anvil**
 /// @dev This script only works on an anvil RPC because v4 exceeds bytecode limits
-abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
+contract DeployUniswapV4 is Script, Test, DeployPermit2 {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     bytes constant ZERO_BYTES = new bytes(0);
 
-    UniswapContractsAddresses internal params;
-
-    function setUp() public virtual;
+    function setUp() public {}
 
     function run() external {
         vm.startBroadcast();
-        UniswapContracts memory contracts = UniswapContracts({
-            v4PositionManager: IPositionManager(payable(params.v4PositionManager)),
-            router: UniversalRouter(payable(params.router)),
-            stateView: IStateView(payable(params.stateView))
-        });
+        UniswapContracts memory contracts = deployUniswapContracts();
 
+        console2.log("permit2:", address(contracts.permit2));
+        // console2.log("weth9:", params.weth9);
+        // console2.log("v2Factory:", params.v2Factory);
+        // console2.log("v3Factory:", params.v3Factory);
+        console2.log("v4PoolManager:", address(contracts.v4PoolManager));
+        // console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
         console2.log("v4PositionManager:", address(contracts.v4PositionManager));
         console2.log("router:", address(contracts.router));
+        console2.log("v4Quoter:", address(contracts.v4Quoter));
         console2.log("stateView:", address(contracts.stateView));
 
         testLifeCycle(contracts);
@@ -84,12 +82,10 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
 
     function testLifeCycle(UniswapContracts memory contracts) public {
         // Deploy Tokens
-        MockERC20 tokenA = new MockERC20{salt: BYTES32_ZERO}("Token A", "A", 18);
-        MockERC20 tokenB = new MockERC20{salt: BYTES32_ZERO}("Token B", "B", 18);
-        MockERC20 tokenC = new MockERC20{salt: BYTES32_ZERO}("Token C", "C", 18);
-        console2.log("Token A:", address(tokenA));
-        console2.log("Token B:", address(tokenB));
-        console2.log("Token C:", address(tokenC));
+        MockERC20 tokenA = new MockERC20{salt: BYTES32_ZERO}("MockA", "A", 18);
+        MockERC20 tokenB = new MockERC20{salt: BYTES32_ZERO}("MockB", "B", 18);
+        console2.log("MockA:", address(tokenA));
+        console2.log("MockB:", address(tokenB));
 
         MockERC20 token0;
         MockERC20 token1;
@@ -223,5 +219,52 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
         // 3.6: (Optional) Verifying the Swap Output
         console2.log("tokenA:", tokenA.balanceOf(msg.sender));
         console2.log("tokenB:", tokenB.balanceOf(msg.sender));
+    }
+
+    function deployUniswapContracts() public returns (UniswapContracts memory) {
+        // deployCreate2Deployer();
+        IAllowanceTransfer permit2 = etchPermit2();
+
+        UnsupportedProtocol unsupported = new UnsupportedProtocol{salt: BYTES32_ZERO}();
+
+        IPoolManager v4PoolManager = IPoolManager(address(new PoolManager{salt: BYTES32_ZERO}(address(0))));
+
+        IPositionManager v4PositionManager = IPositionManager(
+            new PositionManager{salt: BYTES32_ZERO}(
+                v4PoolManager,
+                permit2,
+                300_000,
+                IPositionDescriptor(address(0)),
+                IWETH9(address(0))
+            )
+        );
+
+        RouterParameters memory routerParams = RouterParameters({
+            permit2: address(permit2),
+            weth9: address(0),
+            v2Factory: address(0),
+            v3Factory: address(0),
+            pairInitCodeHash: BYTES32_ZERO,
+            poolInitCodeHash: BYTES32_ZERO,
+            v4PoolManager: address(v4PoolManager),
+            v3NFTPositionManager: address(0),
+            v4PositionManager: address(v4PositionManager)
+        });
+
+        UniversalRouter router = new UniversalRouter{salt: BYTES32_ZERO}(routerParams);
+
+        IV4Quoter v4Quoter = IV4Quoter(address(new V4Quoter{salt: BYTES32_ZERO}(v4PoolManager)));
+        IStateView stateView = IStateView(address(new StateView{salt: BYTES32_ZERO}(v4PoolManager)));
+
+        return
+            UniswapContracts({
+                permit2: permit2,
+                unsupported: unsupported,
+                v4PoolManager: v4PoolManager,
+                v4PositionManager: v4PositionManager,
+                router: router,
+                v4Quoter: v4Quoter,
+                stateView: stateView
+            });
     }
 }

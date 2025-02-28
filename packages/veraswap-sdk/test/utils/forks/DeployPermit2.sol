@@ -28,13 +28,4 @@ contract DeployPermit2 is CommonBase, Permit2Bytecode {
         );
         return permit2;
     }
-
-    /// @notice Deploys permit2 depending on environment
-    function deployPermit2() public returns (IAllowanceTransfer) {
-        if (vm.isContext(VmSafe.ForgeContext.ScriptBroadcast)) {
-            return anvilPermit2();
-        } else {
-            return etchPermit2();
-        }
-    }
 }

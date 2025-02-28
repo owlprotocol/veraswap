@@ -4,20 +4,20 @@ pragma solidity ^0.8.24;
 import {DeployParameters} from "../DeployParameters.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
-contract DeploySepolia is DeployParameters {
+contract DeployBase is DeployParameters {
     function setUp() public override {
         params = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
-            weth9: 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14,
-            v2Factory: 0xB7f907f7A9eBC822a80BD25E224be42Ce0A698A0,
-            v3Factory: 0x0227628f3F023bb0B980b67D528571c95c6DaC1c,
+            weth9: 0x4200000000000000000000000000000000000006,
+            v2Factory: 0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6,
+            v3Factory: 0x33128a8fC17869897dcE68Ed026d694621f6FDfD,
             pairInitCodeHash: 0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f,
             poolInitCodeHash: 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54,
-            v4PoolManager: 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543,
-            v3NFTPositionManager: 0x1238536071E1c677A632429e3655c799b22cDA52,
-            v4PositionManager: 0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4
+            v4PoolManager: 0x498581fF718922c3f8e6A244956aF099B2652b2b,
+            v3NFTPositionManager: 0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1,
+            v4PositionManager: 0x7C5f5A4bBd8fD63184577525326123B519429bDc
         });
 
-        unsupported = 0x5302086A3a25d473aAbBd0356eFf8Dd811a4d89B;
+        unsupported = 0x9E18Efb3BE848940b0C92D300504Fb08C287FE85;
     }
 }

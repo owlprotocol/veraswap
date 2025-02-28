@@ -40,8 +40,8 @@ import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import "@uniswap/v4-core/src/types/Currency.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 
-import {DeployPermit2} from "../test/utils/forks/DeployPermit2.sol";
-import {DeployCreate2Deployer} from "../test/utils/forks/DeployCreate2Deployer.sol";
+import {DeployPermit2} from "./utils/forks/DeployPermit2.sol";
+import {DeployCreate2Deployer} from "./utils/forks/DeployCreate2Deployer.sol";
 import {UniversalRouterApprovedReentrant} from "../contracts/UniversalRouterApprovedReentrant.sol";
 import {CommandsReentrant} from "../contracts/libraries/CommandsReentrant.sol";
 import {Execute} from "./Execute.sol";
