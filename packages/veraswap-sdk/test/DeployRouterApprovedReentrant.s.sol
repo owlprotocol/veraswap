@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
@@ -33,63 +32,67 @@ import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {UnsupportedProtocol} from "@uniswap/universal-router/contracts/deploy/UnsupportedProtocol.sol";
-import {UniversalRouter} from "@uniswap/universal-router/contracts/UniversalRouter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
 import {V4Quoter} from "@uniswap/universal-router/lib/v4-periphery/src/lens/V4Quoter.sol";
 import {StateView} from "@uniswap/universal-router/lib/v4-periphery/src/lens/StateView.sol";
 
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import "@uniswap/v4-core/src/types/Currency.sol";
+import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 
-import {DeployPermit2} from "../test/utils/forks/DeployPermit2.sol";
-import {DeployCreate2Deployer} from "../test/utils/forks/DeployCreate2Deployer.sol";
-
-struct UniswapContractsAddresses {
-    address v4PositionManager;
-    address router;
-    address stateView;
-}
+import {DeployPermit2} from "./utils/forks/DeployPermit2.sol";
+import {DeployCreate2Deployer} from "./utils/forks/DeployCreate2Deployer.sol";
+import {UniversalRouterApprovedReentrant} from "../contracts/UniversalRouterApprovedReentrant.sol";
+import {CommandsReentrant} from "../contracts/libraries/CommandsReentrant.sol";
+import {Execute} from "./Execute.sol";
 
 struct UniswapContracts {
+    IAllowanceTransfer permit2;
+    UnsupportedProtocol unsupported;
+    IPoolManager v4PoolManager;
     IPositionManager v4PositionManager;
-    UniversalRouter router;
+    IUniversalRouter router;
+    IV4Quoter v4Quoter;
     IStateView stateView;
 }
 
 /// @notice Forge script for deploying v4 & hooks to **anvil**
 /// @dev This script only works on an anvil RPC because v4 exceeds bytecode limits
-abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
+contract DeployRouterApprovedReentrant is Script, Test, DeployPermit2 {
+    using CurrencyLibrary for Currency;
+
     bytes32 constant BYTES32_ZERO = bytes32(0);
     bytes constant ZERO_BYTES = new bytes(0);
 
-    UniswapContractsAddresses internal params;
-
-    function setUp() public virtual;
+    function setUp() public {}
 
     function run() external {
         vm.startBroadcast();
-        UniswapContracts memory contracts = UniswapContracts({
-            v4PositionManager: IPositionManager(payable(params.v4PositionManager)),
-            router: UniversalRouter(payable(params.router)),
-            stateView: IStateView(payable(params.stateView))
-        });
+        UniswapContracts memory contracts = deployUniswapContracts();
 
+        console2.log("permit2:", address(contracts.permit2));
+        // console2.log("weth9:", params.weth9);
+        // console2.log("v2Factory:", params.v2Factory);
+        // console2.log("v3Factory:", params.v3Factory);
+        console2.log("v4PoolManager:", address(contracts.v4PoolManager));
+        // console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
         console2.log("v4PositionManager:", address(contracts.v4PositionManager));
         console2.log("router:", address(contracts.router));
+        console2.log("v4Quoter:", address(contracts.v4Quoter));
         console2.log("stateView:", address(contracts.stateView));
 
-        testLifeCycle(contracts);
+        PoolKey memory poolKey = createPool(contracts);
+        testLifeCycle(contracts, poolKey);
 
         vm.stopBroadcast();
     }
 
-    function testLifeCycle(UniswapContracts memory contracts) public {
+    function createPool(UniswapContracts memory contracts) public returns (PoolKey memory poolKey) {
         // Deploy Tokens
-        MockERC20 tokenA = new MockERC20{salt: BYTES32_ZERO}("Token A", "A", 18);
-        MockERC20 tokenB = new MockERC20{salt: BYTES32_ZERO}("Token B", "B", 18);
-        MockERC20 tokenC = new MockERC20{salt: BYTES32_ZERO}("Token C", "C", 18);
-        console2.log("Token A:", address(tokenA));
-        console2.log("Token B:", address(tokenB));
-        console2.log("Token C:", address(tokenC));
+        MockERC20 tokenA = new MockERC20{salt: BYTES32_ZERO}("MockA", "A", 18);
+        MockERC20 tokenB = new MockERC20{salt: BYTES32_ZERO}("MockB", "B", 18);
+        console2.log("MockA:", address(tokenA));
+        console2.log("MockB:", address(tokenB));
 
         MockERC20 token0;
         MockERC20 token1;
@@ -103,9 +106,6 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
         // Mint
         token0.mint(msg.sender, 100_000 ether);
         token1.mint(msg.sender, 100_000 ether);
-        // Mint (Anvil 1)
-        token0.mint(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 100 ether);
-        token1.mint(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 100 ether);
         // Approve Permit2
         token0.approve(address(permit2), type(uint256).max);
         token1.approve(address(permit2), type(uint256).max);
@@ -122,7 +122,7 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
 
         // 1. Initialize the parameters provided to multicall()
         int24 tickSpacing = 60;
-        PoolKey memory poolKey = PoolKey(
+        poolKey = PoolKey(
             Currency.wrap(address(token0)),
             Currency.wrap(address(token1)),
             3000,
@@ -178,12 +178,29 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
         console2.log("liquidity:", currentLiquidity);
         console2.log("tokenA:", tokenA.balanceOf(msg.sender));
         console2.log("tokenB:", tokenB.balanceOf(msg.sender));
+    }
+
+    function testLifeCycle(UniswapContracts memory contracts, PoolKey memory poolKey) public {
+        console2.log("currency0:", poolKey.currency0.balanceOf(msg.sender));
+        console2.log("currency1:", poolKey.currency1.balanceOf(msg.sender));
+
+        // Dummy contract that will be approved reentrant
+        Execute executor = new Execute();
+
+        // Commands sent from locker to Universal Router
+        bytes memory routerCommands0 = abi.encodePacked(
+            uint8(CommandsReentrant.APPROVE_REENTRANT),
+            uint8(CommandsReentrant.CALL_TARGET)
+        );
+        bytes[] memory routerInputs0 = new bytes[](2);
 
         // Swap
         // See https://docs.uniswap.org/contracts/v4/quickstart/swap
         // 3.2: Encoding the Swap Command
-        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V4_SWAP));
-        bytes[] memory routerInputs = new bytes[](1);
+
+        // Commands sent from executor to Universal Router (acting as locker)
+        bytes memory routerCommands1 = abi.encodePacked(uint8(Commands.V4_SWAP));
+        bytes[] memory routerInputs1 = new bytes[](1);
         // 3.3: Action Encoding
         // Encode V4Router actions
         bytes memory swapActions = abi.encodePacked(
@@ -193,7 +210,6 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
         );
         // 3.4: Preparing the Swap Inputs
         bytes[] memory swapParams = new bytes[](3);
-
         // SWAP_EXACT_IN_SINGLE: swap configuration
         uint128 amountIn = 1_000_000;
         uint128 minAmountOut = 0;
@@ -206,22 +222,86 @@ abstract contract DeployTokenAndPool is Script, Test, DeployPermit2 {
                 hookData: bytes("") // no hook data needed
             })
         );
-        console2.log("swapParams[0]:");
-        console2.logBytes(swapParams[0]);
-
         // SETTLE_ALL: specify input tokens for the swap
         swapParams[1] = abi.encode(poolKey.currency0, amountIn);
         // TAKE_ALL: specify output tokens from the swap
         swapParams[2] = abi.encode(poolKey.currency1, minAmountOut);
-
         // 3.5: Executing the Swap
         // Combine actions and params into inputs
-        routerInputs[0] = abi.encode(swapActions, swapParams);
+        routerInputs1[0] = abi.encode(swapActions, swapParams);
+
+        // Encode the executor address as approved
+        // APPROVE_REENTRANT input
+        routerInputs0[0] = abi.encode(address(executor));
+        // Encode the executor call to universal router
+        // Executor => Router (swap commands)
+        bytes memory executorRouterCall = abi.encodeWithSelector(
+            contracts.router.execute.selector,
+            routerCommands1,
+            routerInputs1,
+            block.timestamp + 60
+        );
+        // Router => Executor (approve and call target commands)
+        bytes memory routerExecutorCall = abi.encodeWithSelector(
+            executor.execute.selector,
+            address(contracts.router),
+            0,
+            executorRouterCall
+        );
+        // CALL_TARGET input
+        routerInputs0[1] = abi.encode(address(executor), 0, routerExecutorCall);
+
         // Execute the swap
-        contracts.router.execute(routerCommands, routerInputs, block.timestamp + 60);
+        contracts.router.execute(routerCommands0, routerInputs0, block.timestamp + 60);
 
         // 3.6: (Optional) Verifying the Swap Output
-        console2.log("tokenA:", tokenA.balanceOf(msg.sender));
-        console2.log("tokenB:", tokenB.balanceOf(msg.sender));
+        console2.log("currency0:", poolKey.currency0.balanceOf(msg.sender));
+        console2.log("currency1:", poolKey.currency1.balanceOf(msg.sender));
+    }
+
+    function deployUniswapContracts() public returns (UniswapContracts memory) {
+        // deployCreate2Deployer();
+        IAllowanceTransfer permit2 = deployPermit2();
+
+        UnsupportedProtocol unsupported = new UnsupportedProtocol{salt: BYTES32_ZERO}();
+
+        IPoolManager v4PoolManager = IPoolManager(address(new PoolManager{salt: BYTES32_ZERO}(address(0))));
+
+        IPositionManager v4PositionManager = IPositionManager(
+            new PositionManager{salt: BYTES32_ZERO}(
+                v4PoolManager,
+                permit2,
+                300_000,
+                IPositionDescriptor(address(0)),
+                IWETH9(address(0))
+            )
+        );
+
+        RouterParameters memory routerParams = RouterParameters({
+            permit2: address(permit2),
+            weth9: address(0),
+            v2Factory: address(0),
+            v3Factory: address(0),
+            pairInitCodeHash: BYTES32_ZERO,
+            poolInitCodeHash: BYTES32_ZERO,
+            v4PoolManager: address(v4PoolManager),
+            v3NFTPositionManager: address(0),
+            v4PositionManager: address(v4PositionManager)
+        });
+
+        IUniversalRouter router = new UniversalRouterApprovedReentrant{salt: BYTES32_ZERO}(routerParams);
+        IV4Quoter v4Quoter = IV4Quoter(address(new V4Quoter{salt: BYTES32_ZERO}(v4PoolManager)));
+        IStateView stateView = IStateView(address(new StateView{salt: BYTES32_ZERO}(v4PoolManager)));
+
+        return
+            UniswapContracts({
+                permit2: permit2,
+                unsupported: unsupported,
+                v4PoolManager: v4PoolManager,
+                v4PositionManager: v4PositionManager,
+                router: router,
+                v4Quoter: v4Quoter,
+                stateView: stateView
+            });
     }
 }
