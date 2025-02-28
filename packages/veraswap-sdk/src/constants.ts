@@ -161,18 +161,32 @@ export const TOKEN_LIST: Record<
     number,
     Record<string, { name: string; symbol: string; decimals: number; address: Address }>
 > = {
-    // [mainnet.id]: {
-    //     ETH: zeroAddress,
-    //     USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    //     USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    //     WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-    //     PEPE: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
-    // },
-    // [bsc.id]: {
-    //     BNB: zeroAddress,
-    //     USDC: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-    //     SOL: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
-    // },
+    [mainnet.id]: {
+        ETH: { name: "Ethereum", symbol: "ETH", decimals: 18, address: zeroAddress },
+        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+        Virtual: {
+            name: "Virtual",
+            symbol: "VIRTUAL",
+            decimals: 18,
+            address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        },
+        WBTC: {
+            name: "Wrapped Bitcoin",
+            symbol: "WBTC",
+            decimals: 8,
+            address: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+        },
+    },
+    [bsc.id]: {
+        BNB: { name: "BNB", symbol: "BNB", decimals: 8, address: zeroAddress },
+        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
+        SOL: {
+            name: "Solana",
+            symbol: "SOL",
+            decimals: 18,
+            address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+        },
+    },
     [base.id]: {
         // ETH: zeroAddress,
         // VVV: "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
