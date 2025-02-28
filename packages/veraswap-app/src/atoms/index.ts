@@ -1,7 +1,14 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains";
-import { PERMIT2_ADDRESS, PoolKey, quoteQueryOptions, TOKEN_LIST, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import {
+    PERMIT2_ADDRESS,
+    PoolKey,
+    quoteQueryOptions,
+    TOKEN_LIST,
+    UNISWAP_CONTRACTS,
+    getPoolKey,
+} from "@owlprotocol/veraswap-sdk";
 import { Address, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
@@ -239,14 +246,8 @@ export const poolKeyAtom = atom<PoolKey | null>((get) => {
     console.log({ tokenIn, tokenOut, where: "poolKeyAtom" });
     if (!tokenIn || !tokenOut) return null; // Tokens not selected
     if (tokenIn.address === tokenOut.address) return null; // Invalid same token
-
-    return {
-        currency0: tokenIn.address < tokenOut.address ? tokenIn.address : tokenOut.address,
-        currency1: tokenIn.address < tokenOut.address ? tokenOut.address : tokenIn.address,
-        fee: 3_000,
-        tickSpacing: 60,
-        hooks: zeroAddress,
-    };
+    // TODO: Assumes that Pool is on 'chainIn'
+    return getPoolKey(tokenIn.chainId, tokenIn.address, tokenOut.address);
 });
 
 const emptyToken = new Token(1, zeroAddress, 1);

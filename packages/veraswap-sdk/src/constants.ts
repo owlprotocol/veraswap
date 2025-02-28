@@ -3,7 +3,7 @@ import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
 import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
-import { HyperlaneRegistry } from "./types/index.js";
+import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
@@ -282,7 +282,7 @@ export const tokenBridgeMap: TokenBridgeMap = {
     },
 };
 
-export const POOLS = {
+export const POOLS: Record<number, PoolKey[]> = {
     [mainnet.id]: [
         // USDC-WBTC
         {
