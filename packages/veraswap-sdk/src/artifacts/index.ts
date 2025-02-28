@@ -1,3 +1,4 @@
+export { HypERC20FlashCollateral } from "./HypERC20FlashCollateral.js";
 export { IAllowanceTransfer } from "./IAllowanceTransfer.js";
 export { IERC20 } from "./IERC20.js";
 export { IMulticall_v4 } from "./IMulticall_v4.js";
