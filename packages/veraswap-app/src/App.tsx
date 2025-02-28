@@ -29,7 +29,7 @@ function App() {
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
                 <WagmiProvider config={config}>
                     <QueryClientProvider client={queryClient}>
-                        <RainbowKitProvider theme={customTheme} coolMode>
+                        <RainbowKitProvider theme={customTheme}>
                             <InnerApp />
                             <ReactQueryDevtools initialIsOpen={false} />
                             <Analytics />
