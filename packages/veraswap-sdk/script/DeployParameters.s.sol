@@ -5,9 +5,14 @@ import "forge-std/console2.sol";
 import "forge-std/Script.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
+struct HyperlaneParameters {
+    address mailbox;
+}
+
 /// @notice Uniswap Deploy Parameters
 abstract contract DeployParameters is Script {
     RouterParameters internal params;
+    HyperlaneParameters internal hyperlaneParams;
     address internal unsupported;
 
     address constant UNSUPPORTED_PROTOCOL = address(0);
@@ -18,6 +23,7 @@ abstract contract DeployParameters is Script {
     function setUp() public virtual;
 
     function logParams() internal view {
+        console2.log("***** UNISWAP PARAMS *****");
         console2.log("permit2:", params.permit2);
         console2.log("weth9:", params.weth9);
         console2.log("v2Factory:", params.v2Factory);
@@ -25,6 +31,9 @@ abstract contract DeployParameters is Script {
         console2.log("v4PoolManager:", params.v4PoolManager);
         console2.log("v3NFTPositionManager:", params.v3NFTPositionManager);
         console2.log("v4PositionManager:", params.v4PositionManager);
+
+        console2.log("***** HYPERLANE PARAMS *****");
+        console2.log("mailbox:", hyperlaneParams.mailbox);
     }
 
     function mapUnsupported(address protocol) internal view returns (address) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {DeployParameters} from "../DeployParameters.s.sol";
+import {DeployParameters, HyperlaneParameters} from "../DeployParameters.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
 contract DeployArbitrum is DeployParameters {
@@ -19,5 +19,7 @@ contract DeployArbitrum is DeployParameters {
         });
 
         unsupported = 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B;
+
+        hyperlaneParams = HyperlaneParameters({mailbox: 0x979Ca5202784112f4738403dBec5D0F3B9daabB9});
     }
 }
