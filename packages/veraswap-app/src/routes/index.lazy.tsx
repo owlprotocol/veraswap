@@ -2,14 +2,16 @@ import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
 import { useAccount } from "wagmi";
 import {
+    getSwapAndHyperlaneBridgeTransaction,
     getSwapExactInExecuteData,
     MAX_UINT_160,
     MAX_UINT_256,
     MAX_UINT_48,
     PERMIT2_ADDRESS,
+    SwapTypes,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hex, parseEther, zeroAddress } from "viem";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
@@ -126,17 +128,46 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            sendTransaction(
-                getSwapExactInExecuteData({
+            // TODO: make this modular
+            const swapType = SwapTypes.Swap;
+
+            let transaction: { to: Address; data: Hex; value: bigint };
+
+            const amountOutMinimum = quoterData![0];
+            const zeroForOne = tokenIn!.address === poolKey!.currency0;
+
+            if (swapType === SwapTypes.Swap) {
+                transaction = getSwapExactInExecuteData({
                     universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                     poolKey: poolKey!,
                     currencyIn: tokenIn!.address,
                     currencyOut: tokenOut!.address,
-                    zeroForOne: tokenIn!.address === poolKey!.currency0,
+                    zeroForOne,
                     amountIn: tokenInAmount!,
-                    amountOutMinimum: quoterData![0],
-                }),
-            );
+                    amountOutMinimum,
+                });
+            } else if (swapType === SwapTypes.BridgeAndSwap) {
+                // TODO: get bridge address
+                const bridgeAddress = zeroAddress;
+                // TODO: get payment from quoteDispatch
+                const bridgePayment = parseEther("0.001");
+
+                transaction = getSwapAndHyperlaneBridgeTransaction({
+                    universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                    bridgeAddress,
+                    bridgePayment,
+                    destinationChain: chainOut!.id,
+                    receiver: walletAddress!,
+                    poolKey: poolKey!,
+                    zeroForOne,
+                    amountIn: tokenInAmount!,
+                    amountOutMinimum,
+                });
+            } else {
+                throw new Error("Swap type not supported");
+            }
+
+            sendTransaction({ chainId: chainIn!.id, ...transaction });
         }
     };
 

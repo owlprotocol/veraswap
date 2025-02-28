@@ -3,12 +3,14 @@ import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
 import { Actions, V4Planner } from "../uniswap/v4Planner.js";
 import { PoolKey } from "../types/PoolKey.js";
+import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 /**
  * getSwapAndHyperlaneBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
  */
-export async function getSwapAndHyperlaneBridgeTransaction({
-    bridgePayment,
+export function getSwapAndHyperlaneBridgeTransaction({
+    universalRouter,
     bridgeAddress,
+    bridgePayment,
     destinationChain,
     receiver,
     amountIn,
@@ -17,15 +19,16 @@ export async function getSwapAndHyperlaneBridgeTransaction({
     zeroForOne,
     hookData = "0x",
 }: {
-    bridgePayment: bigint;
+    universalRouter: Address;
     bridgeAddress: Address;
+    bridgePayment: bigint;
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
     amountOutMinimum: bigint;
     poolKey: PoolKey;
     zeroForOne: boolean;
-    hookData: Hex;
+    hookData?: Hex;
 }) {
     const routePlanner = new RoutePlanner();
     routePlanner.addCommand(CommandType.CALL_TARGET, [
@@ -54,5 +57,15 @@ export async function getSwapAndHyperlaneBridgeTransaction({
         }),
     ]);
 
-    return { commands: routePlanner.commands, inputs: routePlanner.inputs };
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+
+    return {
+        to: universalRouter,
+        value: bridgePayment,
+        data: encodeFunctionData({
+            abi: IUniversalRouter.abi,
+            functionName: "execute",
+            args: [routePlanner.commands, routePlanner.inputs, routerDeadline],
+        }),
+    };
 }
