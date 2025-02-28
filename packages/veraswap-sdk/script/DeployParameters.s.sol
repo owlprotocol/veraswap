@@ -92,12 +92,6 @@ abstract contract DeployParameters is Script, Test, DeployPermit2 {
     }
 
     function deployCoreContracts() internal {
-        address permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
-
-        if (permit2.code.length == 0) {
-            deployPermit2();
-        }
-
         // Unsupported
         unsupported = Create2.computeAddress(
             BYTES32_ZERO,
@@ -145,14 +139,14 @@ abstract contract DeployParameters is Script, Test, DeployPermit2 {
             assertEq(v4PositionManager, deployed);
         }
         params = RouterParameters({
-            permit2: permit2,
-            weth9: params.weth9,
-            v2Factory: params.v2Factory,
-            v3Factory: params.v3Factory,
+            permit2: address(permit2),
+            weth9: mapUnsupported(params.weth9),
+            v2Factory: mapUnsupported(params.v2Factory),
+            v3Factory: mapUnsupported(params.v3Factory),
             pairInitCodeHash: params.pairInitCodeHash,
             poolInitCodeHash: params.poolInitCodeHash,
             v4PoolManager: address(v4PoolManager),
-            v3NFTPositionManager: params.v3NFTPositionManager,
+            v3NFTPositionManager: mapUnsupported(params.v3NFTPositionManager),
             v4PositionManager: address(v4PositionManager)
         });
 
@@ -184,7 +178,7 @@ abstract contract DeployParameters is Script, Test, DeployPermit2 {
 
         // Router Params
         params = RouterParameters({
-            permit2: permit2,
+            permit2: address(permit2),
             //TODO: Add WETH9
             weth9: 0x4200000000000000000000000000000000000006,
             v2Factory: UNSUPPORTED_PROTOCOL,

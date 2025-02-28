@@ -223,7 +223,7 @@ contract DeployUniswapV4 is Script, Test, DeployPermit2 {
 
     function deployUniswapContracts() public returns (UniswapContracts memory) {
         // deployCreate2Deployer();
-        IAllowanceTransfer permit2 = deployPermit2();
+        IAllowanceTransfer permit2 = etchPermit2();
 
         UnsupportedProtocol unsupported = new UnsupportedProtocol{salt: BYTES32_ZERO}();
 

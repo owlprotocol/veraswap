@@ -59,14 +59,9 @@ abstract contract DeployTokensAndPools is DeployParameters {
             // Mint
             token.mint(msg.sender, 100_000 ether);
             // Approve Permit2
-            token.approve(address(params.permit2), type(uint256).max);
+            token.approve(address(permit2), type(uint256).max);
             // Approve PositionManager using Permit2
-            IAllowanceTransfer(params.permit2).approve(
-                address(token),
-                params.v4PositionManager,
-                type(uint160).max,
-                type(uint48).max
-            );
+            permit2.approve(address(token), params.v4PositionManager, type(uint160).max, type(uint48).max);
             // Approve UnversalRouter using Permit2
             IAllowanceTransfer(params.permit2).approve(
                 address(token),
@@ -74,7 +69,6 @@ abstract contract DeployTokensAndPools is DeployParameters {
                 type(uint160).max,
                 type(uint48).max
             );
-            console2.log("POSM:", params.v4PositionManager);
         }
     }
 

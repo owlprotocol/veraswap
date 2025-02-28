@@ -7,7 +7,7 @@ import {DeployTokensAndPools} from "./DeployTokensAndPools.s.sol";
 import {DeployHypERC20FlashCollateral} from "./DeployHypERC20FlashCollateral.s.sol";
 
 abstract contract DeployAll is DeployRouter, DeployTokensAndPools, DeployHypERC20FlashCollateral {
-    function run() external {
+    function run() external virtual {
         params = RouterParameters({
             permit2: mapUnsupported(params.permit2),
             weth9: mapUnsupported(params.weth9),
@@ -24,7 +24,6 @@ abstract contract DeployAll is DeployRouter, DeployTokensAndPools, DeployHypERC2
 
         vm.startBroadcast();
 
-        deployCoreContracts();
         deployTokensAndPools();
         deployHypERC20FlashCollaterals();
         deployRouter();
