@@ -1,4 +1,4 @@
-export enum SwapTypes {
+export enum SwapType {
     Swap,
     SwapAndBridge,
     BridgeAndSwap,

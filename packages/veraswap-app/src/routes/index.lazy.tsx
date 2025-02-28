@@ -8,10 +8,10 @@ import {
     MAX_UINT_256,
     MAX_UINT_48,
     PERMIT2_ADDRESS,
-    SwapTypes,
+    SwapType,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, parseEther } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hex } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import {
@@ -19,7 +19,6 @@ import {
     chainInAtom,
     chainOutAtom,
     chainsAtom,
-    hyperlaneRegistryQueryAtom,
     poolKeyInAtom,
     quoteInAtom,
     remoteTokenInfoAtom,
@@ -138,7 +137,7 @@ function Index() {
 
             const amountOutMinimum = quoterData![0];
             const zeroForOne = tokenIn!.address === poolKey!.currency0;
-            if (swapType === SwapTypes.Swap) {
+            if (swapType === SwapType.Swap) {
                 if (!tokenOut) {
                     throw new Error("Token out not selected for swap");
                 }
@@ -151,7 +150,7 @@ function Index() {
                     amountIn: tokenInAmount!,
                     amountOutMinimum,
                 });
-            } else if (swapType === SwapTypes.SwapAndBridge) {
+            } else if (swapType === SwapType.SwapAndBridge) {
                 // assuning it's a collateral token\
                 const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress;
 

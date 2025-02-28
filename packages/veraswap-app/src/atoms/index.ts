@@ -8,7 +8,7 @@ import {
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
     getPoolKey,
-    SwapTypes,
+    SwapType,
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
 } from "@owlprotocol/veraswap-sdk";
@@ -70,13 +70,13 @@ export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainn
 
 export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
 
-export const transactionTypeAtom = atom<SwapTypes | null>((get) => {
+export const transactionTypeAtom = atom<SwapType | null>((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
     const isSynthetic = get(isTokenOutSyntheticAtom);
 
     if (chainIn && chainOut) {
-        return chainIn.id === chainOut.id && !isSynthetic ? SwapTypes.Swap : SwapTypes.SwapAndBridge;
+        return chainIn.id === chainOut.id && !isSynthetic ? SwapType.Swap : SwapType.SwapAndBridge;
     }
     return null;
 });
@@ -306,7 +306,7 @@ export const poolKeyInAtom = atom((get) => {
     if (tokenIn.address === tokenOut.address) return null;
 
     const currencyOut =
-        swapType === SwapTypes.SwapAndBridge && remoteInfo ? remoteInfo.remoteTokenAddress : tokenOut.address;
+        swapType === SwapType.SwapAndBridge && remoteInfo ? remoteInfo.remoteTokenAddress : tokenOut.address;
 
     return getPoolKey(tokenIn.chainId, tokenIn.address, currencyOut);
 });
