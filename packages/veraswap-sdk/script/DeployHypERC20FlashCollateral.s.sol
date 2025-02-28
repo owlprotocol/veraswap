@@ -26,6 +26,7 @@ abstract contract DeployHypERC20FlashCollateral is DeployParameters {
         if (collateralAddress.code.length == 0) {
             address deployed = address(new HypERC20FlashCollateral{salt: BYTES32_ZERO}(token, mailbox));
             assertEq(deployed, collateralAddress);
+            collateral.initialize(address(0), address(0), msg.sender);
         }
     }
 }

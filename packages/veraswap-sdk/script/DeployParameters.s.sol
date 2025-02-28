@@ -28,6 +28,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {Mailbox} from "@hyperlane-xyz/core/Mailbox.sol";
 import {NoopIsm} from "@hyperlane-xyz/core/isms/NoopIsm.sol";
 import {PausableHook} from "@hyperlane-xyz/core/hooks/PausableHook.sol";
+import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 
 import {DeployPermit2} from "../test/utils/forks/DeployPermit2.sol";
 import {DeployParameters, HyperlaneParameters} from "./DeployParameters.s.sol";
@@ -49,6 +50,7 @@ abstract contract DeployParameters is Script, Test, DeployPermit2 {
 
     MockERC20[] tokens;
     HypERC20FlashCollateral[] tokenCollaterals;
+    HypERC20[] tokenSynthetics;
 
     HyperlaneParameters internal hyperlaneParams;
     address internal unsupported;
