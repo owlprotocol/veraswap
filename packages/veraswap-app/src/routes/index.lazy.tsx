@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useAccount, useWatchContractEvent } from "wagmi";
 import {
     getSwapAndHyperlaneBridgeTransaction,
     getSwapExactInExecuteData,
@@ -10,12 +10,18 @@ import {
     PERMIT2_ADDRESS,
     SwapType,
     UNISWAP_CONTRACTS,
+    getHyperlaneMessageIdFromReceipt,
+    getSwapAndSuperchainBridgeTransaction,
+    getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hash, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
+import { useEffect } from "react";
+import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
+import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
-    bridgeGasPaymentAtom,
+    hyperlaneGasPaymentAtom,
     chainInAtom,
     chainOutAtom,
     chainsAtom,
@@ -35,22 +41,34 @@ import {
     tokensInAtom,
     tokensOutAtom,
     swapTypeAtom,
+    transactionModalOpenAtom,
+    transactionStepsAtom,
+    currentTransactionStepIdAtom,
+    transactionHashesAtom,
+    updateTransactionStepAtom,
+    initializeTransactionStepsAtom,
+    waitForReceiptQueryAtom,
+    messageIdAtom,
+    networkTypeAtom,
+    remoteTransactionHashAtom,
+    hyperlaneMailboxChainOut,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { NetworkSelect } from "@/components/NetworkSelect";
-import { TokenSelect } from "@/components/TokenSelect";
+import { NetworkSelect } from "@/components/NetworkSelect.js";
+import { TokenSelect } from "@/components/TokenSelect.js";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
+import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
 });
 
 function Index() {
-    const { isConnected, address: walletAddress } = useAccount();
+    const { address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
     const swapType = useAtomValue(swapTypeAtom);
@@ -68,37 +86,73 @@ function Index() {
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
 
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
-    const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
+    const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
+
+    const [messageId, setMessageId] = useAtom(messageIdAtom);
 
     const poolKey = useAtomValue(poolKeyInAtom);
 
-    const { data: bridgePayment } = useAtomValue(bridgeGasPaymentAtom);
+    const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
-    // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
+
+    const [transactionModalOpen, setTransactionModalOpen] = useAtom(transactionModalOpenAtom);
+    const [transactionSteps] = useAtom(transactionStepsAtom);
+    const [currentTransactionStepId] = useAtom(currentTransactionStepIdAtom);
+    const [transactionHashes, setTransactionHashes] = useAtom(transactionHashesAtom);
+    const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
+    const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
+
+    const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
 
     const { toast } = useToast();
 
-    const isNotConnected = !isConnected || !walletAddress;
-
-    // const { data: hyperlaneRegistry } = useAtomValue(hyperlaneRegistryQueryAtom);
+    const [{ data: receipt }] = useAtom(waitForReceiptQueryAtom);
 
     const tokenInBalanceFormatted =
         tokenInBalance != undefined ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}` : "-";
     const tokenOutBalanceFormatted =
-        tokenOutBalance != undefined
-            ? `
-     ${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}`
-            : "-";
+        tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
 
-    const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending }] =
+    const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending, error: transactionError }] =
         useAtom(sendTransactionMutationAtom);
 
-    console.log({ hash });
+    const networkType = useAtomValue(networkTypeAtom);
+
+    const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
+
+    useWatchContractEvent(
+        networkType === "superchain"
+            ? {
+                  abi: [RelayedMessage],
+                  eventName: "RelayedMessage",
+                  chainId: chainOut?.id ?? 0,
+                  // TODO: token bridge address
+                  address: hyperlaneMailboxAddress ?? zeroAddress,
+                  args: { messageHash: messageId ?? "0x" },
+                  enabled: !!messageId,
+                  strict: true,
+                  onLogs: (logs) => {
+                      setRemoteTransactionHash(logs[0].transactionHash);
+                  },
+              }
+            : {
+                  abi: [ProcessId],
+                  eventName: "ProcessId",
+                  chainId: chainOut?.id ?? 0,
+                  address: hyperlaneMailboxAddress ?? zeroAddress,
+                  args: { messageId: messageId ?? "0x" },
+                  enabled: !!messageId && !!hyperlaneMailboxAddress && !!chainOut,
+                  strict: true,
+                  onLogs: (logs) => {
+                      setRemoteTransactionHash(logs[0].transactionHash);
+                  },
+              },
+    );
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
@@ -133,6 +187,8 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
+            initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
+
             let transaction: { to: Address; data: Hex; value: bigint };
 
             const amountOutMinimum = quoterData![0];
@@ -151,52 +207,120 @@ function Index() {
                     amountOutMinimum,
                 });
             } else if (swapType === SwapType.SwapAndBridge) {
-                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
+                if (networkType === "superchain") {
+                    transaction = getSwapAndSuperchainBridgeTransaction({
+                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                        destinationChain: chainOut!.id,
+                        receiver: walletAddress!,
+                        poolKey: poolKey!,
+                        zeroForOne,
+                        amountIn: tokenInAmount!,
+                        amountOutMinimum,
+                    });
+                } else {
+                    const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
 
-                if (!bridgeAddress) {
-                    throw new Error("Bridge address not found");
+                    if (!bridgeAddress) {
+                        throw new Error("Bridge address not found");
+                    }
+
+                    // TODO: check why it can't infer type
+                    if (!bridgePayment) {
+                        throw new Error("Bridge payment not found");
+                    }
+
+                    transaction = getSwapAndHyperlaneBridgeTransaction({
+                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                        bridgeAddress,
+                        bridgePayment,
+                        destinationChain: chainOut!.id,
+                        receiver: walletAddress!,
+                        poolKey: poolKey!,
+                        zeroForOne,
+                        amountIn: tokenInAmount!,
+                        amountOutMinimum,
+                    });
                 }
-
-                // TODO: check why it can't infer type
-                if (!bridgePayment || typeof bridgePayment !== "bigint") {
-                    throw new Error("Bridge payment not found");
-                }
-
-                transaction = getSwapAndHyperlaneBridgeTransaction({
-                    universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                    bridgeAddress,
-                    bridgePayment,
-                    destinationChain: chainOut!.id,
-                    receiver: walletAddress!,
-                    poolKey: poolKey!,
-                    zeroForOne,
-                    amountIn: tokenInAmount!,
-                    amountOutMinimum,
-                });
             } else {
                 throw new Error("Swap type not supported");
             }
 
-            sendTransaction({ chainId: chainIn!.id, ...transaction });
+            sendTransaction(
+                { chainId: chainIn!.id, ...transaction },
+                {
+                    onSuccess: (hash) => {
+                        setTransactionHashes((prev) => ({ ...prev, swap: hash }));
+                        updateTransactionStep({ id: "swap", status: "processing" });
+                    },
+                    onError: () => {
+                        updateTransactionStep({ id: "swap", status: "error" });
+                        //TODO: show in UI instead
+                        toast({
+                            title: "Transaction Failed",
+                            description: "Your transaction has failed. Please try again.",
+                            variant: "destructive",
+                        });
+                    },
+                },
+            );
         }
     };
 
-    /*
-  useEffect(() => {
-    if (receipt) {
-      refetchBalanceIn();
-      refetchBalanceOut();
+    useEffect(() => {
+        if (!receipt) return;
 
-      setTokenInAmountInput("");
+        if (receipt.status === "reverted") {
+            updateTransactionStep({ id: "swap", status: "error" });
+            toast({
+                title: "Transaction Failed",
+                description: "Your transaction has failed. Please try again.",
+                variant: "destructive",
+            });
+            return;
+        }
 
-      toast({
-        title: "Swap Complete",
-        description: "Your swap has been completed successfully",
-        variant: "default",
-      });
-    }
-  }, [receipt, refetchBalanceIn, refetchBalanceOut]);
-  */
+        updateTransactionStep({ id: "swap", status: "success" });
+
+        if (swapType !== SwapType.SwapAndBridge) {
+            toast({
+                title: "Swap Complete",
+                description: "Your swap has been completed successfully",
+                variant: "default",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [receipt, swapType]);
+
+    useEffect(() => {
+        if (!receipt) return;
+        if (receipt.status === "reverted") return;
+        if (swapType !== SwapType.SwapAndBridge) return;
+        const messageId =
+            networkType === "superchain"
+                ? getSuperchainMessageIdFromReceipt(receipt)
+                : getHyperlaneMessageIdFromReceipt(receipt);
+
+        setMessageId(messageId);
+        setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
+        updateTransactionStep({ id: "bridge", status: "processing" });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [receipt, swapType, networkType]);
+
+    useEffect(() => {
+        if (!remoteTransactionHash) return;
+        if (swapType !== SwapType.SwapAndBridge) return;
+
+        updateTransactionStep({ id: "bridge", status: "success" });
+        updateTransactionStep({ id: "transfer", status: "success" });
+        setTransactionHashes((prev) => ({ ...prev, transfer: remoteTransactionHash }));
+
+        toast({
+            title: "Transaction Complete",
+            description: "Your swap and bridge has been completed successfully",
+            variant: "default",
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [remoteTransactionHash, swapType]);
 
     return (
         <div className="max-w-xl mx-auto px-4">
@@ -225,8 +349,6 @@ function Index() {
                                 <TokenSelect value={tokenIn} onChange={setTokenIn} tokens={tokensIn} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span> */}
                                 <div className="space-x-2">
                                     <span>Balance: {tokenInBalanceFormatted}</span>
                                     <Button
@@ -282,8 +404,6 @@ function Index() {
                                 <TokenSelect value={tokenOut} onChange={setTokenOut} tokens={tokensOut} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span> */}
                                 <div className="space-x-2 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>
@@ -295,7 +415,8 @@ function Index() {
                             !(
                                 swapStep === SwapStep.APPROVE_PERMIT2 ||
                                 swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
-                                swapStep === SwapStep.EXECUTE_SWAP
+                                swapStep === SwapStep.EXECUTE_SWAP ||
+                                swapStep === SwapStep.BRIDGING_NOT_SUPPORTED
                             )
                         }
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
@@ -305,6 +426,15 @@ function Index() {
                     </Button>
                 </CardContent>
             </Card>
+            <TransactionStatusModal
+                isOpen={transactionModalOpen}
+                onOpenChange={setTransactionModalOpen}
+                steps={transactionSteps}
+                currentStepId={currentTransactionStepId}
+                hashes={transactionHashes}
+                chains={{ source: chainIn ?? undefined, destination: chainOut ?? undefined }}
+                networkType={networkType}
+            />
         </div>
     );
 }

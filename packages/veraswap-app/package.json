@@ -40,6 +40,7 @@
     "@hookform/resolvers": "^3.3.4",
     "@hyperlane-xyz/registry": "^10.2.0",
     "@owlprotocol/veraswap-sdk": "workspace:*",
+    "@owlprotocol/contracts-hyperlane":"latest",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-collapsible": "^1.0.3",

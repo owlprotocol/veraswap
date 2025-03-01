@@ -10,8 +10,9 @@ import {
     SwapType,
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
+    getChainNameAndMailbox,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, parseUnits, zeroAddress } from "viem";
+import { Address, Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
     readContractQueryOptions,
@@ -25,6 +26,7 @@ import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
+import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
 /**
  * - networks
@@ -363,6 +365,7 @@ export enum SwapStep {
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
+    BRIDGING_NOT_SUPPORTED = "Bridging not supported",
 }
 
 export const swapStepAtom = atom((get) => {
@@ -379,11 +382,20 @@ export const swapStepAtom = atom((get) => {
     const hash = mutation.data;
     const receipt = get(waitForReceiptQueryAtom);
 
+    const swapType = get(swapTypeAtom);
+    const networkType = get(networkTypeAtom);
+
+    const remoteTokenInfo = get(remoteTokenInfoAtom);
+
+    const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
+
     if (account.address === undefined) return SwapStep.CONNECT_WALLET;
     if (mutation.isPending) return SwapStep.PENDING_SIGNATURE;
     if (hash && hash != receipt.data?.transactionHash) return SwapStep.PENDING_TRANSACTION;
     if (tokenIn === null || tokenOut === null) return SwapStep.SELECT_TOKEN;
     if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_AMOUNT;
+    if (swapType === SwapType.SwapAndBridge && networkType !== "superchain" && !bridgeAddress)
+        return SwapStep.BRIDGING_NOT_SUPPORTED;
     if (tokenInBalance === null || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
     if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) return SwapStep.APPROVE_PERMIT2;
     if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount)
@@ -403,9 +415,10 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     return waitForTransactionReceiptQueryOptions(config, { hash });
 });
 
-export const bridgeGasPaymentAtom = atomWithQuery((get) => {
+export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
     const remoteInfo = get(remoteTokenInfoAtom);
+    const networkType = get(networkTypeAtom);
 
     return {
         ...readContractQueryOptions(config, {
@@ -414,6 +427,69 @@ export const bridgeGasPaymentAtom = atomWithQuery((get) => {
             functionName: "quoteGasPayment",
             args: [chainOut?.id ?? 0],
         }),
-        enabled: !!remoteInfo?.remoteBridgeAddress && !!chainOut,
+        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut,
     };
+}) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
+
+export const transactionModalOpenAtom = atom<boolean>(false);
+export const transactionStepsAtom = atom<TransactionStep[]>([]);
+export const currentTransactionStepIdAtom = atom<string | undefined>(undefined);
+export const transactionHashesAtom = atom<{ swap?: string; bridge?: string; transfer?: string }>({});
+export const updateTransactionStepAtom = atom(
+    null,
+    (get, set, update: { id: "swap" | "bridge" | "transfer"; status: TransactionStep["status"] }) => {
+        const steps = get(transactionStepsAtom);
+        const updatedSteps = steps.map((step) => (step.id === update.id ? { ...step, status: update.status } : step));
+        set(transactionStepsAtom, updatedSteps);
+
+        if (update.status === "processing") {
+            set(currentTransactionStepIdAtom, update.id);
+        }
+    },
+);
+
+export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swap" | "SwapAndBridge") => {
+    const steps: TransactionStep[] = [
+        {
+            id: "swap",
+            title: "🤝 Swap",
+            description: "Trading with your local Walmart 💵💵💵💵💵💵",
+            status: "pending",
+        },
+    ];
+
+    if (swapType === "SwapAndBridge") {
+        steps.push(
+            {
+                id: "bridge",
+                title: "🚀 Bridge",
+                description: "Your token is traveling...",
+                status: "pending",
+            },
+            {
+                id: "transfer",
+                title: "🕊️ Transfer Token",
+                description: "We're freeing your token. Don't be impatient!",
+                status: "pending",
+            },
+        );
+    }
+
+    set(transactionStepsAtom, steps);
+    set(transactionModalOpenAtom, true);
+});
+
+export const messageIdAtom = atom<Hash | undefined>(undefined);
+
+export const remoteTransactionHashAtom = atom<Hash | null>(null);
+
+export const hyperlaneMailboxChainOut = atom((get) => {
+    const chainOut = get(chainOutAtom);
+    const networkType = get(networkTypeAtom);
+    if (!chainOut || networkType == "superchain") return null;
+
+    const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
+    if (!hyperlaneRegistry) return null;
+    const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
+    return mailbox;
 });
