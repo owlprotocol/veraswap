@@ -50,12 +50,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { NetworkSelect } from "@/components/NetworkSelect";
-import { TokenSelect } from "@/components/TokenSelect";
+import { NetworkSelect } from "@/components/NetworkSelect.js";
+import { TokenSelect } from "@/components/TokenSelect.js";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
-import { TransactionStatusModal } from "@/components/transaction-status-modal";
+import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,

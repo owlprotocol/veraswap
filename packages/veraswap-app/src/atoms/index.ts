@@ -23,9 +23,9 @@ import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotoc
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { chains, config } from "@/config.js";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry";
-import { quoteGasPayment } from "@/abis/quoteGasPayment";
-import { TransactionStep } from "@/components/transaction-status-modal";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
+import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
+import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
 /**
  * - networks
