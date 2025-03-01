@@ -65,7 +65,7 @@ export const config = createConfig({
     chains,
     // @ts-ignore
     transports: Object.fromEntries(
-        chains.map((chain: Chain) => [chain.id, chain.name.includes("Interop") ? http() : webSocket()]),
+        chains.map((chain: Chain) => [chain.id, !!chain.rpcUrls.default.webSocket?.[0] ? webSocket() : http()]),
     ),
     connectors,
     storage: createStorage({ storage: window.localStorage }),
