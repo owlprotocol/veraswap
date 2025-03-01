@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import { useAccount, useWatchContractEvent } from "wagmi";
+import { useAccount, useSwitchChain, useWatchContractEvent } from "wagmi";
 import {
     getSwapAndHyperlaneBridgeTransaction,
     getSwapExactInExecuteData,
@@ -124,6 +124,13 @@ function Index() {
     const networkType = useAtomValue(networkTypeAtom);
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
+
+    const { switchChain } = useSwitchChain();
+    useEffect(() => {
+        if (!chainIn) return;
+        switchChain({ chainId: chainIn.id });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chainIn]);
 
     useEffect(() => {
         if (!walletAddress) return;

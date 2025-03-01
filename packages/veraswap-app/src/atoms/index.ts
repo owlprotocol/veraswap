@@ -433,17 +433,19 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
 
 export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
+    const chainIn = get(chainInAtom);
     const remoteInfo = get(remoteTokenInfoAtom);
     const networkType = get(networkTypeAtom);
 
     return {
         ...readContractQueryOptions(config, {
+            chainId: chainIn?.id ?? 0,
             address: remoteInfo?.remoteBridgeAddress ?? zeroAddress,
             abi: [quoteGasPayment],
             functionName: "quoteGasPayment",
             args: [chainOut?.id ?? 0],
         }),
-        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut,
+        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut && !!chainIn,
     };
 }) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 
