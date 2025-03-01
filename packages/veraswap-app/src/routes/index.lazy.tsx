@@ -105,6 +105,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             sendTransaction({
                 to: tokenIn!.address,
+                chainId: tokenIn!.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
                     functionName: "approve",
@@ -117,6 +118,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER) {
             sendTransaction({
                 to: PERMIT2_ADDRESS,
+                chainId: tokenIn!.chainId,
                 data: encodeFunctionData({
                     abi: IAllowanceTransfer.abi,
                     functionName: "approve",

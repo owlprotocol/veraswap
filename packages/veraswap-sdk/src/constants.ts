@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, Address, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
@@ -221,22 +221,41 @@ export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8
 
 export const TOKEN_LIST = {
     [mainnet.id]: {
-        ETH: zeroAddress,
-        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        WBTC: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        PEPE: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+        ETH: { name: "Ethereum", symbol: "ETH", decimals: 18, address: zeroAddress },
+        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+        Virtual: {
+            name: "Virtual",
+            symbol: "VIRTUAL",
+            decimals: 18,
+            address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        },
+        WBTC: {
+            name: "Wrapped Bitcoin",
+            symbol: "WBTC",
+            decimals: 8,
+            address: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
+        },
     },
     [bsc.id]: {
-        BNB: zeroAddress,
-        USDC: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-        SOL: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+        BNB: { name: "BNB", symbol: "BNB", decimals: 8, address: zeroAddress },
+        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
+        SOL: {
+            name: "Solana",
+            symbol: "SOL",
+            decimals: 18,
+            address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+        },
     },
     [base.id]: {
-        ETH: zeroAddress,
-        USDC: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        VVV: "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
-        VIRTUAL: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        // ETH: zeroAddress,
+        // VVV: "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
+        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
+        Virtual: {
+            name: "Virtual",
+            symbol: "VIRTUAL",
+            decimals: 18,
+            address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        },
     },
     [1337]: {
         // TokenA: {name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42"},
@@ -312,7 +331,10 @@ export const TOKEN_LIST = {
             address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809"
         }
     }
-} as const;
+} as const satisfies Record<
+    number,
+    Record<string, { name: string; symbol: string; decimals: number; address: Address }>
+>;
 
 export const MOCK_POOLS = {
     [1337]: {
@@ -388,88 +410,96 @@ export const tokenBridgeMap: TokenBridgeMap = {
 };
 
 export const POOLS: Record<number, PoolKey[]> = {
-    [mainnet.id]: [
-        // USDC-WBTC
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].USDT < TOKEN_LIST[mainnet.id].WBTC
-                    ? TOKEN_LIST[mainnet.id].USDT
-                    : TOKEN_LIST[mainnet.id].WBTC,
-            currency1:
-                TOKEN_LIST[mainnet.id].USDT < TOKEN_LIST[mainnet.id].WBTC
-                    ? TOKEN_LIST[mainnet.id].WBTC
-                    : TOKEN_LIST[mainnet.id].USDT,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-        // USDC-PEPE
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].ETH < TOKEN_LIST[mainnet.id].PEPE
-                    ? TOKEN_LIST[mainnet.id].ETH
-                    : TOKEN_LIST[mainnet.id].PEPE,
-            currency1:
-                TOKEN_LIST[mainnet.id].ETH < TOKEN_LIST[mainnet.id].PEPE
-                    ? TOKEN_LIST[mainnet.id].PEPE
-                    : TOKEN_LIST[mainnet.id].ETH,
-            fee: 25000,
-            tickSpacing: 500,
-            hooks: zeroAddress,
-        },
-        // WBTC-USDT
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].WBTC < TOKEN_LIST[mainnet.id].USDT
-                    ? TOKEN_LIST[mainnet.id].WBTC
-                    : TOKEN_LIST[mainnet.id].USDT,
-            currency1:
-                TOKEN_LIST[mainnet.id].WBTC < TOKEN_LIST[mainnet.id].USDT
-                    ? TOKEN_LIST[mainnet.id].USDT
-                    : TOKEN_LIST[mainnet.id].WBTC,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
-    [bsc.id]: [
-        // USDC-SOL
-        {
-            currency0:
-                TOKEN_LIST[bsc.id].USDC < TOKEN_LIST[bsc.id].SOL ? TOKEN_LIST[bsc.id].USDC : TOKEN_LIST[bsc.id].SOL,
-            currency1:
-                TOKEN_LIST[bsc.id].USDC < TOKEN_LIST[bsc.id].SOL ? TOKEN_LIST[bsc.id].SOL : TOKEN_LIST[bsc.id].USDC,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
-    [base.id]: [
-        // VIRTUAL-USDC
-        {
-            currency0:
-                TOKEN_LIST[base.id].VIRTUAL < TOKEN_LIST[base.id].USDC
-                    ? TOKEN_LIST[base.id].VIRTUAL
-                    : TOKEN_LIST[base.id].USDC,
-            currency1:
-                TOKEN_LIST[base.id].VIRTUAL < TOKEN_LIST[base.id].USDC
-                    ? TOKEN_LIST[base.id].USDC
-                    : TOKEN_LIST[base.id].VIRTUAL,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-        // USDC-VVV
-        {
-            currency0:
-                TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].USDC : TOKEN_LIST[base.id].VVV,
-            currency1:
-                TOKEN_LIST[base.id].USDC < TOKEN_LIST[base.id].VVV ? TOKEN_LIST[base.id].VVV : TOKEN_LIST[base.id].USDC,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
+    // [mainnet.id]: [
+    //     // USDC-WBTC
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
+    //                 ? TOKEN_LIST[mainnet.id].USDT.address
+    //                 : TOKEN_LIST[mainnet.id].WBTC.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
+    //                 ? TOKEN_LIST[mainnet.id].WBTC.address
+    //                 : TOKEN_LIST[mainnet.id].USDT.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    //     // USDC-PEPE
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
+    //                 ? TOKEN_LIST[mainnet.id].ETH.address
+    //                 : TOKEN_LIST[mainnet.id].PEPE.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
+    //                 ? TOKEN_LIST[mainnet.id].PEPE.address
+    //                 : TOKEN_LIST[mainnet.id].ETH.address,
+    //         fee: 25000,
+    //         tickSpacing: 500,
+    //         hooks: zeroAddress,
+    //     },
+    //     // WBTC-USDT
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
+    //                 ? TOKEN_LIST[mainnet.id].WBTC.address
+    //                 : TOKEN_LIST[mainnet.id].USDT.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
+    //                 ? TOKEN_LIST[mainnet.id].USDT.address
+    //                 : TOKEN_LIST[mainnet.id].WBTC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
+    // [bsc.id]: [
+    //     // USDC-SOL
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
+    //                 ? TOKEN_LIST[bsc.id].USDC.address
+    //                 : TOKEN_LIST[bsc.id].SOL.address,
+    //         currency1:
+    //             TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
+    //                 ? TOKEN_LIST[bsc.id].SOL.address
+    //                 : TOKEN_LIST[bsc.id].USDC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
+    // [base.id]: [
+    //     // VIRTUAL-USDC
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
+    //                 ? TOKEN_LIST[base.id].VIRTUAL.address
+    //                 : TOKEN_LIST[base.id].USDC.address,
+    //         currency1:
+    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
+    //                 ? TOKEN_LIST[base.id].USDC.address
+    //                 : TOKEN_LIST[base.id].VIRTUAL.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    //     // USDC-VVV
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
+    //                 ? TOKEN_LIST[base.id].USDC.address
+    //                 : TOKEN_LIST[base.id].VVV.address,
+    //         currency1:
+    //             TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
+    //                 ? TOKEN_LIST[base.id].VVV.address
+    //                 : TOKEN_LIST[base.id].USDC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
     [sepolia.id]: [
         // TokenA-TokenB
         {

@@ -79,7 +79,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "viem": "2.21.19",
-    "wagmi": "^2.9.10"
+    "wagmi": "^2.14.2"
   },
   "devDependencies": {
     "@owlprotocol/anvil-account": "latest",

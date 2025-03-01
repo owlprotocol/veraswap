@@ -1,9 +1,8 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { Chain, localhost, sepolia, arbitrumSepolia } from "viem/chains";
+import { Chain } from "viem/chains";
 import {
     PERMIT2_ADDRESS,
-    PoolKey,
     quoteQueryOptions,
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
@@ -23,9 +22,9 @@ import { getAccount } from "@wagmi/core";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
-import { config } from "@/config";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry";
-import { quoteGasPayment } from "@/abis/quoteGasPayment";
+import { chains, config } from "@/config.js";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
+import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 
 /**
  * - networks
@@ -42,30 +41,6 @@ import { quoteGasPayment } from "@/abis/quoteGasPayment";
  */
 
 //TODO: Add additional atom write logic to clear values when certain atoms are written (eg. when network is changed, tokenIn should be cleared), for now this can be done manually
-/***** Chains *****/
-// List of supported networks
-//TODO: Use wagmi config instead?
-
-export const localhost2 = {
-    ...localhost,
-    id: 1338,
-    name: "Localhost 2",
-    rpcUrls: { default: { http: ["http://127.0.0.1:8546"] } },
-} as Chain;
-
-export const prodChains = [
-    {
-        ...sepolia,
-        rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } },
-    },
-    arbitrumSepolia,
-    interopDevnet0,
-    interopDevnet1,
-] as const;
-export const localChains = [...prodChains, localhost, localhost2] as const;
-
-export const chains = import.meta.env.MODE != "development" ? prodChains : localChains;
-
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
 
 export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
@@ -143,6 +118,7 @@ export const tokensInAtom = atom((get) => {
 
     const tokensMap = get(tokensAtom);
     const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
+
     if (!tokens) return [];
 
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
@@ -161,11 +137,12 @@ export const tokensOutAtom = atom((get) => {
     const tokensMap = get(tokensAtom);
     const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
 
+    if (!tokens) return [];
+
     const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
         chainId: chainOut.id,
         ...value,
     }));
-    if (!tokens) return [];
     // TODO: filter out tokenIn
     return formattedTokens;
 });
@@ -365,8 +342,6 @@ export const swapInvertAtom = atom(null, (get, set) => {
     const currentChainOut = get(chainOutAtom);
     const currentTokenIn = get(tokenInAtom);
     const currentTokenOut = get(tokenOutAtom);
-
-    const tokenInAmountInput = get(tokenInAmountInputAtom);
 
     set(chainInAtom, currentChainOut);
     set(chainOutAtom, currentChainIn);

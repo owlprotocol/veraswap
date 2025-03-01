@@ -1,6 +1,9 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { FundButton, getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
+
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { VeraFundButton } from "@/components/VeraFundButton";
 
 export const Route = createRootRoute({
     component: RootComponent,
@@ -13,6 +16,7 @@ function RootComponent() {
                     <div className="flex-1" />
                     <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraSwap</h1>
                     <div className="flex-1 flex justify-end items-center gap-2">
+                        <VeraFundButton />
                         <ThemeSwitcher />
                         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
                     </div>
