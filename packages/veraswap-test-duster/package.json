@@ -1,5 +1,5 @@
 {
-  "name": "veraswap-test-duster",
+  "name": "@owlprotocol/veraswap-test-duster",
   "version": "0.1.0",
   "private": true,
   "scripts": {
