@@ -5,7 +5,7 @@ import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {Create2Utils} from "./Create2Utils.sol";
 
 library PoolManagerUtils {
-    function getDeployBytecode(address owner) internal returns (bytes memory) {
+    function getDeployBytecode(address owner) internal pure returns (bytes memory) {
         return abi.encodePacked(type(PoolManager).creationCode, owner);
     }
 

@@ -6,7 +6,7 @@ import {V4Quoter} from "@uniswap/universal-router/lib/v4-periphery/src/lens/V4Qu
 import {Create2Utils} from "./Create2Utils.sol";
 
 library V4QuoterUtils {
-    function getDeployBytecode(address poolManager) internal returns (bytes memory) {
+    function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
         return abi.encodePacked(type(V4Quoter).creationCode, poolManager);
     }
 

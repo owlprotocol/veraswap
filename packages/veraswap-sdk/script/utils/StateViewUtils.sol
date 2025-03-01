@@ -6,7 +6,7 @@ import {StateView} from "@uniswap/universal-router/lib/v4-periphery/src/lens/Sta
 import {Create2Utils} from "./Create2Utils.sol";
 
 library StateViewUtils {
-    function getDeployBytecode(address poolManager) internal returns (bytes memory) {
+    function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
         return abi.encodePacked(type(StateView).creationCode, poolManager);
     }
 

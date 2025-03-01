@@ -16,7 +16,7 @@ library MockSuperchainERC20Utils {
     ) returns (address addr, bool exists) {
         (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(name, symbol, decimals));
         if (!exists) {
-            addr = address(new MockSuperchainERC20{salt: Create2Utils.BYTES32_ZERO}());
+            addr = address(new MockSuperchainERC20{salt: Create2Utils.BYTES32_ZERO}(name, symbol, decimals));
         }
     }
 }

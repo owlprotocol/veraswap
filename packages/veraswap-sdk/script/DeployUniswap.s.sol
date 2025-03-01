@@ -23,6 +23,7 @@ contract DeployParameters is Script {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
     function run() external virtual {
+        vm.startBroadcast();
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
@@ -55,5 +56,6 @@ contract DeployParameters is Script {
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        vm.stopBroadcast();
     }
 }

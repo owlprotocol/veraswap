@@ -11,7 +11,7 @@ import {Create2Utils} from "./Create2Utils.sol";
 library PositionManagerUtils {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
-    function getDeployBytecode(address poolManager) internal returns (bytes memory) {
+    function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 type(PositionManager).creationCode,

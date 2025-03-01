@@ -5,7 +5,7 @@ import {UnsupportedProtocol} from "@uniswap/universal-router/contracts/deploy/Un
 import {Create2Utils} from "./Create2Utils.sol";
 
 library UnsupportedProtocolUtils {
-    function getDeployBytecode() internal returns (bytes memory) {
+    function getDeployBytecode() internal pure returns (bytes memory) {
         return type(UnsupportedProtocol).creationCode;
     }
 

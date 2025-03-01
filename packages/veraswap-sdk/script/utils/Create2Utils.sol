@@ -30,7 +30,7 @@ library Create2Utils {
     }
 
     /// @notice Get Create2 address with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
-    function getAddress(bytes memory bytecode) internal returns (address expected) {
+    function getAddress(bytes memory bytecode) internal pure returns (address expected) {
         expected = Create2.computeAddress(BYTES32_ZERO, keccak256(bytecode), DETERMINISTIC_DEPLOYER);
     }
 
