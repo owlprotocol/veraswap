@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
-    bridgeGasPaymentAtom,
+    hyperlaneGasPaymentAtom,
     chainInAtom,
     chainOutAtom,
     chainsAtom,
@@ -90,7 +90,7 @@ function Index() {
 
     const poolKey = useAtomValue(poolKeyInAtom);
 
-    const { data: bridgePayment } = useAtomValue(bridgeGasPaymentAtom);
+    const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
@@ -198,39 +198,40 @@ function Index() {
                     amountOutMinimum,
                 });
             } else if (swapType === SwapType.SwapAndBridge) {
-                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
+                if (networkType === "superchain") {
+                    transaction = getSwapAndSuperchainBridgeTransaction({
+                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                        destinationChain: chainOut!.id,
+                        receiver: walletAddress!,
+                        poolKey: poolKey!,
+                        zeroForOne,
+                        amountIn: tokenInAmount!,
+                        amountOutMinimum,
+                    });
+                } else {
+                    const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
 
-                if (!bridgeAddress) {
-                    throw new Error("Bridge address not found");
+                    if (!bridgeAddress) {
+                        throw new Error("Bridge address not found");
+                    }
+
+                    // TODO: check why it can't infer type
+                    if (!bridgePayment) {
+                        throw new Error("Bridge payment not found");
+                    }
+
+                    transaction = getSwapAndHyperlaneBridgeTransaction({
+                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                        bridgeAddress,
+                        bridgePayment,
+                        destinationChain: chainOut!.id,
+                        receiver: walletAddress!,
+                        poolKey: poolKey!,
+                        zeroForOne,
+                        amountIn: tokenInAmount!,
+                        amountOutMinimum,
+                    });
                 }
-
-                // TODO: check why it can't infer type
-                if (!bridgePayment || typeof bridgePayment !== "bigint") {
-                    throw new Error("Bridge payment not found");
-                }
-
-                transaction =
-                    networkType === "superchain"
-                        ? getSwapAndSuperchainBridgeTransaction({
-                              universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                              destinationChain: chainOut!.id,
-                              receiver: walletAddress!,
-                              poolKey: poolKey!,
-                              zeroForOne,
-                              amountIn: tokenInAmount!,
-                              amountOutMinimum,
-                          })
-                        : getSwapAndHyperlaneBridgeTransaction({
-                              universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                              bridgeAddress,
-                              bridgePayment,
-                              destinationChain: chainOut!.id,
-                              receiver: walletAddress!,
-                              poolKey: poolKey!,
-                              zeroForOne,
-                              amountIn: tokenInAmount!,
-                              amountOutMinimum,
-                          });
             } else {
                 throw new Error("Swap type not supported");
             }
@@ -408,7 +409,8 @@ function Index() {
                             !(
                                 swapStep === SwapStep.APPROVE_PERMIT2 ||
                                 swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
-                                swapStep === SwapStep.EXECUTE_SWAP
+                                swapStep === SwapStep.EXECUTE_SWAP ||
+                                swapStep === SwapStep.BRIDGING_NOT_SUPPORTED
                             )
                         }
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"

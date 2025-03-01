@@ -364,6 +364,7 @@ export enum SwapStep {
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
+    BRIDGING_NOT_SUPPORTED = "Bridging not supported",
 }
 
 export const swapStepAtom = atom((get) => {
@@ -380,11 +381,20 @@ export const swapStepAtom = atom((get) => {
     const hash = mutation.data;
     const receipt = get(waitForReceiptQueryAtom);
 
+    const swapType = get(swapTypeAtom);
+    const networkType = get(networkTypeAtom);
+
+    const remoteTokenInfo = get(remoteTokenInfoAtom);
+
+    const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
+
     if (account.address === undefined) return SwapStep.CONNECT_WALLET;
     if (mutation.isPending) return SwapStep.PENDING_SIGNATURE;
     if (hash && hash != receipt.data?.transactionHash) return SwapStep.PENDING_TRANSACTION;
     if (tokenIn === null || tokenOut === null) return SwapStep.SELECT_TOKEN;
     if (tokenInAmount === null) return SwapStep.SELECT_TOKEN_AMOUNT;
+    if (swapType === SwapType.SwapAndBridge && networkType !== "superchain" && !bridgeAddress)
+        return SwapStep.BRIDGING_NOT_SUPPORTED;
     if (tokenInBalance === null || tokenInBalance < tokenInAmount) return SwapStep.INSUFFICIENT_BALANCE;
     if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) return SwapStep.APPROVE_PERMIT2;
     if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount)
@@ -404,9 +414,10 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     return waitForTransactionReceiptQueryOptions(config, { hash });
 });
 
-export const bridgeGasPaymentAtom = atomWithQuery((get) => {
+export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
     const remoteInfo = get(remoteTokenInfoAtom);
+    const networkType = get(networkTypeAtom);
 
     return {
         ...readContractQueryOptions(config, {
@@ -415,9 +426,9 @@ export const bridgeGasPaymentAtom = atomWithQuery((get) => {
             functionName: "quoteGasPayment",
             args: [chainOut?.id ?? 0],
         }),
-        enabled: !!remoteInfo?.remoteBridgeAddress && !!chainOut,
+        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut,
     };
-});
+}) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 
 export const transactionModalOpenAtom = atom<boolean>(false);
 export const transactionStepsAtom = atom<TransactionStep[]>([]);
