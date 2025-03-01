@@ -2,20 +2,46 @@ import { useAtom } from "jotai";
 import { Button } from "./ui/button";
 import { networkTypeWithResetAtom } from "@/atoms";
 
+const buttonStyles: Record<string, string> = {
+    mainnet: `
+    bg-blue-500 text-white 
+    hover:bg-blue-600
+    dark:bg-blue-600 dark:hover:bg-blue-700
+    shadow-md
+  `,
+    testnet: `
+    bg-green-500 text-white 
+    hover:bg-green-600
+    dark:bg-green-600 dark:hover:bg-green-700
+    shadow-md
+  `,
+    superchain: `
+    bg-red-500 text-white
+    hover:bg-red-600
+    dark:bg-red-600 dark:hover:bg-red-700
+    shadow-md
+  `,
+    default: `
+    bg-white text-gray-700
+    hover:bg-gray-100
+    dark:bg-gray-700 dark:text-gray-300
+    dark:hover:bg-gray-600
+    shadow-md
+  `,
+};
+
 export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(networkTypeWithResetAtom);
 
-    // TODO: improve button styles
-    const buttonStyles: Record<string, string> = {
-        mainnet: "bg-blue-500 text-white shadow-md",
-        testnet: "bg-green-500 text-white shadow-md",
-        superchain: "bg-red-500 text-white shadow-md",
-        default: "bg-gray-700 text-gray-300 hover:bg-gray-600",
-    };
-
     return (
         <div className="flex justify-center mb-4">
-            <div className="bg-gray-800 p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border border-gray-700">
+            <div
+                className="
+    bg-gray-100 border-gray-300 
+    dark:bg-gray-800 dark:border-gray-600 
+    p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border
+"
+            >
                 {["mainnet", "testnet", "superchain"].map((type) => (
                     <Button
                         key={type}
