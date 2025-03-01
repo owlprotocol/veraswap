@@ -13,6 +13,7 @@ import {
     getHyperlaneMessageIdFromReceipt,
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
+    SUPERCHAIN_TOKEN_BRIDGE,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hash, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -131,10 +132,9 @@ function Index() {
                   abi: [RelayedMessage],
                   eventName: "RelayedMessage",
                   chainId: chainOut?.id ?? 0,
-                  // TODO: token bridge address
-                  address: hyperlaneMailboxAddress ?? zeroAddress,
+                  address: SUPERCHAIN_TOKEN_BRIDGE ?? zeroAddress,
                   args: { messageHash: messageId ?? "0x" },
-                  enabled: !!messageId,
+                  enabled: !!chainOut && !!messageId,
                   strict: true,
                   onLogs: (logs) => {
                       setRemoteTransactionHash(logs[0].transactionHash);
@@ -146,7 +146,7 @@ function Index() {
                   chainId: chainOut?.id ?? 0,
                   address: hyperlaneMailboxAddress ?? zeroAddress,
                   args: { messageId: messageId ?? "0x" },
-                  enabled: !!messageId && !!hyperlaneMailboxAddress && !!chainOut,
+                  enabled: !!chainOut && !!messageId && !!hyperlaneMailboxAddress,
                   strict: true,
                   onLogs: (logs) => {
                       setRemoteTransactionHash(logs[0].transactionHash);
