@@ -34,7 +34,7 @@ export function getSwapAndSuperchainBridgeTransaction({
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
     tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, SUPERCHAIN_SWEEP_ADDRESS, amountOutMinimum]);
+    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, SUPERCHAIN_SWEEP_ADDRESS, 0]);
 
     const swapInput = tradePlan.finalize() as Hex;
 
