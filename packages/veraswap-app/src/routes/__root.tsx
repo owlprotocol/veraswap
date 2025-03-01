@@ -30,15 +30,16 @@ function RootComponent() {
                         </Button>
                     </div>
                 </nav>
-                <div
-                    className={`transition-all overflow-hidden ${
-                        menuOpen ? "max-h-30 opacity-100 py-4" : "max-h-0 opacity-0 py-0"
-                    }`}
-                >
-                    <div className="px-4 flex flex-col items-center space-y-3">
-                        <VeraFundButton />
-                        <ThemeSwitcher />
-                        <ConnectButton showBalance={false} accountStatus="address" chainStatus="full" />
+                <div className="md:hidden">
+                    <div
+                        className={`transition-all overflow-hidden ${
+                            menuOpen ? "max-h-30 opacity-100 py-4" : "max-h-0 opacity-0 py-0"
+                        }`}
+                    >
+                        <div className="px-4 flex flex-col items-center space-y-3">
+                            <VeraFundButton />
+                            <ConnectButton showBalance={false} accountStatus="address" chainStatus="full" />
+                        </div>
                     </div>
                 </div>
             </header>
