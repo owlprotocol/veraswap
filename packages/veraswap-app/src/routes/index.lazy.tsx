@@ -15,7 +15,7 @@ import {
     getSuperchainMessageIdFromReceipt,
     SUPERCHAIN_TOKEN_BRIDGE,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hash, Hex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
@@ -119,8 +119,7 @@ function Index() {
     const tokenOutBalanceFormatted =
         tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
 
-    const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending, error: transactionError }] =
-        useAtom(sendTransactionMutationAtom);
+    const [{ mutate: sendTransaction, isPending: transactionIsPending }] = useAtom(sendTransactionMutationAtom);
 
     const networkType = useAtomValue(networkTypeAtom);
 
