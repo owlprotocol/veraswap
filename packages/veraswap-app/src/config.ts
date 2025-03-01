@@ -64,7 +64,9 @@ export const connectors = connectorsForWallets(
 export const config = createConfig({
     chains,
     // @ts-ignore
-    transports: Object.fromEntries(chains.map((chain: Chain) => [chain.id, webSocket()])),
+    transports: Object.fromEntries(
+        chains.map((chain: Chain) => [chain.id, chain.name.includes("Interop") ? http() : webSocket()]),
+    ),
     connectors,
     storage: createStorage({ storage: window.localStorage }),
 });
