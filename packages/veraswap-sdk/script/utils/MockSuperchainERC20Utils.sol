@@ -13,7 +13,10 @@ library MockSuperchainERC20Utils {
         string memory name,
         string memory symbol,
         uint8 decimals
-    ) returns (address expected, bool exists) {
-        return Create2Utils.getOrCreate2(getDeployBytecode(name, symbol, decimals));
+    ) returns (address addr, bool exists) {
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(name, symbol, decimals));
+        if (!exists) {
+            addr = address(new MockSuperchainERC20{salt: Create2Utils.BYTES32_ZERO}());
+        }
     }
 }

@@ -9,7 +9,10 @@ library UnsupportedProtocolUtils {
         return type(UnsupportedProtocol).creationCode;
     }
 
-    function getOrCreate2() internal returns (address expected, bool exists) {
-        return Create2Utils.getOrCreate2(getDeployBytecode());
+    function getOrCreate2() internal returns (address addr, bool exists) {
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode());
+        if (!exists) {
+            addr = address(new UnsupportedProtocol{salt: Create2Utils.BYTES32_ZERO}());
+        }
     }
 }

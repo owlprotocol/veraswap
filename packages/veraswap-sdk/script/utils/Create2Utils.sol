@@ -7,12 +7,33 @@ library Create2Utils {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address DETERMINISTIC_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
-    function getOrCreate2(bytes memory bytecode) returns (address expected, bool exists) {
-        expected = Create2.computeAddress(BYTES32_ZERO, keccak256(bytecode), DETERMINISTIC_DEPLOYER);
-        exists = address(expected).code.length > 0;
+    /// @notice Get or deploy with Create2 using BYTES32_ZERO, DETERMINISTIC_DEPLOYER
+    /// @dev Be careful whether broadcast has started because expected/deployed can sometimes not match
+    /*
+    function getOrDeploy(bytes memory bytecode) returns (address addr, bool exists) {
+        (addr, exists) = getAddressExists(bytecode);
+
         if (!exists) {
-            Create2.deploy(0, BYTES32_ZERO, bytecode);
+            //TODO: This is incorrect, need call to DETERMINISTIC_DEPLOYER (unused for now)
+            addr = Create2.deploy(0, BYTES32_ZERO, bytecode);
         }
-        return (expected, exists);
+        return (addr, exists);
+    }
+    */
+
+    /// @notice Get Create2 address, exists with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
+    function getAddressExists(bytes memory bytecode) returns (address expected, bool exists) {
+        expected = getAddress(bytecode);
+        exists = expected.code.length > 0;
+    }
+
+    /// @notice Get Create2 address with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
+    function getAddress(bytes memory bytecode) returns (address expected) {
+        expected = Create2.computeAddress(BYTES32_ZERO, keccak256(bytecode), DETERMINISTIC_DEPLOYER);
+    }
+
+    /// @notice Create2 address deployed with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
+    function exists(bytes memory bytecode) returns (bool exists) {
+        (exists, ) = getAddressExists(bytecode);
     }
 }

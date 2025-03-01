@@ -19,7 +19,18 @@ library PositionManagerUtils {
             );
     }
 
-    function getOrCreate2(address owner) internal returns (address expected, bool exists) {
-        return Create2Utils.getOrCreate2(getDeployBytecode(owner));
+    function getOrCreate2(address poolManager) internal returns (address addr, bool exists) {
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(poolManager));
+        if (!exists) {
+            addr = address(
+                new PositionManager{salt: Create2Utils.BYTES32_ZERO}(
+                    poolManager,
+                    PERMIT2,
+                    uint256(300_000),
+                    address(0),
+                    address(0)
+                )
+            );
+        }
     }
 }

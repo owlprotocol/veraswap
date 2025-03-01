@@ -11,7 +11,10 @@ library V4QuoterUtils {
         return abi.encodePacked(type(V4Quoter).creationCode, poolManager);
     }
 
-    function getOrCreate2(address owner) internal returns (address expected, bool exists) {
-        return Create2Utils.getOrCreate2(getDeployBytecode(owner));
+    function getOrCreate2(address poolManager) internal returns (address addr, bool exists) {
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(poolManager));
+        if (!exists) {
+            addr = address(new V4Quoter{salt: Create2Utils.BYTES32_ZERO}(poolManager));
+        }
     }
 }
