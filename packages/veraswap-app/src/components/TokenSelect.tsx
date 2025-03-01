@@ -46,7 +46,10 @@ export function TokenSelect({
                     {value ? (
                         <>
                             <img
-                                src={value.logo ?? "/placeholder.jpg"}
+                                src={
+                                    "https://etherscan.io/images/main/empty-token.png"
+                                    //  ?? "/placeholder.jpg"}
+                                }
                                 alt={value.symbol}
                                 className="h-7 w-7 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
                                 onError={handleImageError}
@@ -98,7 +101,10 @@ export function TokenSelect({
                                 >
                                     <div className="flex items-center gap-4">
                                         <img
-                                            src={token.logo ?? "/placeholder.jpg"}
+                                            src={
+                                                "https://etherscan.io/images/main/empty-token.png"
+                                                // ?? "/placeholder.jpg"
+                                            }
                                             alt={token.symbol}
                                             className="h-9 w-9 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
                                             onError={handleImageError}
