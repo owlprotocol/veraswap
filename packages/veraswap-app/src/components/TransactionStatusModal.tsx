@@ -41,7 +41,7 @@ export function TransactionStatusModal({
 
                 if (networkType === "superchain") {
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.bridge}`;
-                    // return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
+                    // TODO: fix messageId return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
                 }
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "transfer":
