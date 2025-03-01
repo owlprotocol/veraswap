@@ -50,12 +50,14 @@ contract DeployParameters is Script {
         console2.log("v4Quoter:", v4Quoter);
         console2.log("router:", router);
 
+        /*
         IERC20 tokenA = IERC20(0x48824f0345964D1002bF4Ddd1F72BA99B5dbE5d5);
         IERC20 tokenB = IERC20(0x5710586e8D18F2e1c54c7a2247c1977578B11809);
 
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        */
         vm.stopBroadcast();
     }
 }
