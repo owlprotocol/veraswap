@@ -7,6 +7,7 @@
 @uniswap/universal-router/=lib/universal-router/
 @openzeppelin/uniswap-hooks=lib/uniswap-hooks/
 @hyperlane-xyz/core=lib/hyperlane-monorepo/solidity/contracts/
+@interop-lib/=lib/interop-lib/src/
 
 forge-std/=lib/forge-std/src/
 solmate/=lib/permit2/lib/solmate/

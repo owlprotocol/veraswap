@@ -72,5 +72,6 @@ forge install \
     uniswap/v4-periphery@main \
     openzeppelin/uniswap-hooks@master \
     uniswap/universal-router@main \
-    hyperlane-xyz/hyperlane-monorepo@main
+    hyperlane-xyz/hyperlane-monorepo@main \
+    ethereum-optimism/interop-lib@6093117
 ```
