@@ -99,15 +99,15 @@ export default async function handler(
     address: receiver,
   });
 
-  let min = parseEther("0.00001");
+  let min = parseEther("0.00005");
 
   if (balance < min) {
     const hash = await walletClient.sendTransaction({
       to: address,
-      value: min * 2n,
+      value: (min * 150n) / 100n,
     });
     await publicClient.waitForTransactionReceipt({ hash });
-    console.log(`Sent 0.00002 ETH to ${address}`);
+    console.log(`Sent 0.000075 ETH to ${address}`);
   }
 
   for (const token of Object.values(

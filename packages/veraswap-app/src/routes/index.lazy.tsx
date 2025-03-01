@@ -281,6 +281,10 @@ function Index() {
         updateTransactionStep({ id: "swap", status: "success" });
 
         if (swapType !== SwapType.SwapAndBridge) {
+            if (swapStep !== SwapStep.EXECUTE_SWAP) {
+                return;
+            }
+
             toast({
                 title: "Swap Complete",
                 description: "Your swap has been completed successfully",
