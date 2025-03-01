@@ -1,8 +1,8 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
-import { arbitrum, arbitrumSepolia, base, Chain, localhost, sepolia } from "wagmi/chains";
+import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, localhost, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
-import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
+import { inkSepolia, interopDevnet0, interopDevnet1, unichainSepolia } from "@owlprotocol/veraswap-sdk";
 
 /***** Chains *****/
 // List of supported networks
@@ -48,7 +48,22 @@ export const prodChains = [
             },
         },
     },
+    {
+        ...baseSepolia,
+        rpcUrls: {
+            default: {
+                http: [
+                    "https://lb.drpc.org/ogrpc?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+                webSocket: [
+                    "wss://lb.drpc.org/ogws?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+            },
+        },
+    },
     arbitrum,
+    inkSepolia,
+    unichainSepolia,
 ] as const;
 export const localChains = [...prodChains, localhost, localhost2] as const;
 

@@ -1,7 +1,9 @@
 import {
+  inkSepolia,
   interopDevnet0,
   interopDevnet1,
   TOKEN_LIST,
+  unichainSepolia,
 } from "@owlprotocol/veraswap-sdk";
 import { MockERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -18,7 +20,13 @@ import {
   parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia, arbitrumSepolia, base, arbitrum } from "viem/chains";
+import {
+  sepolia,
+  arbitrumSepolia,
+  base,
+  arbitrum,
+  baseSepolia,
+} from "viem/chains";
 
 const privateKey = process.env.PRIVATE_KEY;
 
@@ -49,10 +57,25 @@ export const prodChains = [
       },
     },
   },
+  {
+    ...baseSepolia,
+    rpcUrls: {
+      default: {
+        http: [
+          "https://lb.drpc.org/ogrpc?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+        ],
+        webSocket: [
+          "wss://lb.drpc.org/ogws?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+        ],
+      },
+    },
+  },
   interopDevnet0,
   interopDevnet1,
   base,
   arbitrum,
+  inkSepolia,
+  unichainSepolia,
 ] as const;
 
 export default async function handler(
