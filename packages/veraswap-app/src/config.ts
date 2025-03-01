@@ -1,4 +1,4 @@
-import { http, createStorage, createConfig } from "wagmi";
+import { http, createStorage, createConfig, webSocket } from "wagmi";
 import { arbitrum, arbitrumSepolia, base, Chain, localhost, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
@@ -17,9 +17,26 @@ export const localhost2 = {
 export const prodChains = [
     {
         ...sepolia,
-        rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } },
+        rpcUrls: {
+            default: {
+                http: ["https://lb.drpc.org/ogrpc?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+                webSocket: ["wss://lb.drpc.org/ogws?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            },
+        },
     },
-    arbitrumSepolia,
+    {
+        ...arbitrumSepolia,
+        rpcUrls: {
+            default: {
+                http: [
+                    "https://lb.drpc.org/ogrpc?network=arbitrum-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+                webSocket: [
+                    "wss://lb.drpc.org/ogws?network=arbitrum-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+            },
+        },
+    },
     interopDevnet0,
     interopDevnet1,
     base,
@@ -29,11 +46,16 @@ export const localChains = [...prodChains, localhost, localhost2] as const;
 
 export const chains = import.meta.env.MODE != "development" ? prodChains : localChains;
 
+const wallets =
+    import.meta.env.MODE === "development"
+        ? [metaMaskWallet]
+        : [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet];
+
 export const connectors = connectorsForWallets(
     [
         {
             groupName: "Recommended",
-            wallets: [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet],
+            wallets,
         },
     ],
     { projectId: "c2ad5c78be369f29fba3daa1799f2028", appName: "VeraSwap" },
@@ -42,7 +64,7 @@ export const connectors = connectorsForWallets(
 export const config = createConfig({
     chains,
     // @ts-ignore
-    transports: Object.fromEntries(chains.map((chain: Chain) => [chain.id, http()])),
+    transports: Object.fromEntries(chains.map((chain: Chain) => [chain.id, webSocket()])),
     connectors,
     storage: createStorage({ storage: window.localStorage }),
 });

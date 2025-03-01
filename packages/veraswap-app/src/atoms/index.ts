@@ -10,6 +10,7 @@ import {
     SwapType,
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
+    getChainNameAndMailbox,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -479,3 +480,16 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swa
 });
 
 export const messageIdAtom = atom<Hash | undefined>(undefined);
+
+export const remoteTransactionHashAtom = atom<Hash | null>(null);
+
+export const hyperlaneMailboxChainOut = atom((get) => {
+    const chainOut = get(chainOutAtom);
+    const networkType = get(networkTypeAtom);
+    if (!chainOut || networkType == "superchain") return null;
+
+    const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
+    if (!hyperlaneRegistry) return null;
+    const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
+    return mailbox;
+});

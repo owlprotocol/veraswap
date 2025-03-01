@@ -14,10 +14,10 @@ import {
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hash, Hex } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hash, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
@@ -50,6 +50,8 @@ import {
     waitForReceiptQueryAtom,
     messageIdAtom,
     networkTypeAtom,
+    remoteTransactionHashAtom,
+    hyperlaneMailboxChainOut,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,6 +107,8 @@ function Index() {
     const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
+    const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
+
     const { toast } = useToast();
 
     const [{ data: receipt }] = useAtom(waitForReceiptQueryAtom);
@@ -119,13 +123,16 @@ function Index() {
 
     const networkType = useAtomValue(networkTypeAtom);
 
-    const [remoteTransactionHash, setRemoteTransactionHash] = useState<Hash | null>(null);
+    const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
 
     useWatchContractEvent(
         networkType === "superchain"
             ? {
                   abi: [RelayedMessage],
                   eventName: "RelayedMessage",
+                  chainId: chainOut?.id ?? 0,
+                  // TODO: token bridge address
+                  address: hyperlaneMailboxAddress ?? zeroAddress,
                   args: { messageHash: messageId ?? "0x" },
                   enabled: !!messageId,
                   strict: true,
@@ -136,8 +143,10 @@ function Index() {
             : {
                   abi: [ProcessId],
                   eventName: "ProcessId",
+                  chainId: chainOut?.id ?? 0,
+                  address: hyperlaneMailboxAddress ?? zeroAddress,
                   args: { messageId: messageId ?? "0x" },
-                  enabled: !!messageId,
+                  enabled: !!messageId && !!hyperlaneMailboxAddress && !!chainOut,
                   strict: true,
                   onLogs: (logs) => {
                       setRemoteTransactionHash(logs[0].transactionHash);
@@ -256,6 +265,7 @@ function Index() {
             );
         }
     };
+
     useEffect(() => {
         if (!receipt) return;
 
@@ -266,55 +276,51 @@ function Index() {
                 description: "Your transaction has failed. Please try again.",
                 variant: "destructive",
             });
-
             return;
         }
 
-        // Only update transaction step if it's not already success
         updateTransactionStep({ id: "swap", status: "success" });
 
-        if (swapType === SwapType.SwapAndBridge) {
-            const messageId =
-                networkType === "superchain"
-                    ? getSuperchainMessageIdFromReceipt(receipt)
-                    : getHyperlaneMessageIdFromReceipt(receipt);
-            setMessageId(messageId);
-            setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
-            updateTransactionStep({ id: "bridge", status: "processing" });
-
-            // remoteTransactionHash
-            // TODO: fix this
-            const bridgeTimer = setTimeout(() => {
-                updateTransactionStep({ id: "bridge", status: "success" });
-                updateTransactionStep({ id: "transfer", status: "processing" });
-
-                // watchContractEvent (address mailbox, event ProcessId, arg:{messageId})
-                // onllogs callback -> logs[0].transactionHash
-                // call unwatch
-                const relayTimer = setTimeout(() => {
-                    const bridgeTxHash = receipt.transactionHash;
-                    setTransactionHashes((prev) => ({ ...prev, bridge: bridgeTxHash }));
-
-                    updateTransactionStep({ id: "transfer", status: "success" });
-                    toast({
-                        title: "Transaction Complete",
-                        description: "Your swap and bridge has been completed successfully",
-                        variant: "default",
-                    });
-                }, 10000);
-
-                return () => clearTimeout(relayTimer);
-            }, 5000);
-
-            return () => clearTimeout(bridgeTimer);
-        } else {
+        if (swapType !== SwapType.SwapAndBridge) {
             toast({
                 title: "Swap Complete",
                 description: "Your swap has been completed successfully",
                 variant: "default",
             });
         }
-    }, [receipt, swapType, toast, updateTransactionStep, setTransactionHashes, setMessageId, networkType]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [receipt, swapType]);
+
+    useEffect(() => {
+        if (!receipt) return;
+        if (receipt.status === "reverted") return;
+        if (swapType !== SwapType.SwapAndBridge) return;
+        const messageId =
+            networkType === "superchain"
+                ? getSuperchainMessageIdFromReceipt(receipt)
+                : getHyperlaneMessageIdFromReceipt(receipt);
+
+        setMessageId(messageId);
+        setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
+        updateTransactionStep({ id: "bridge", status: "processing" });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [receipt, swapType, networkType]);
+
+    useEffect(() => {
+        if (!remoteTransactionHash) return;
+        if (swapType !== SwapType.SwapAndBridge) return;
+
+        updateTransactionStep({ id: "bridge", status: "success" });
+        updateTransactionStep({ id: "transfer", status: "success" });
+        setTransactionHashes((prev) => ({ ...prev, transfer: remoteTransactionHash }));
+
+        toast({
+            title: "Transaction Complete",
+            description: "Your swap and bridge has been completed successfully",
+            variant: "default",
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [remoteTransactionHash, swapType]);
 
     return (
         <div className="max-w-xl mx-auto px-4">
