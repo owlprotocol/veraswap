@@ -1,9 +1,8 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { FundButton, getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
-
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { VeraFundButton } from "@/components/VeraFundButton";
+import { WelcomeDialog } from "@/components/welcome-dailog";
 
 export const Route = createRootRoute({
     component: RootComponent,
@@ -26,6 +25,7 @@ function RootComponent() {
             <main className="pt-24 pb-8">
                 <Outlet />
             </main>
+            <WelcomeDialog />
         </div>
     );
 }
