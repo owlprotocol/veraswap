@@ -17,6 +17,8 @@ export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
     salt: zeroHash,
 });
 
+export const DIVVI_BASE_REGISTRY = "0xba9655677f4e42dd289f5b7888170bc0c7da8cdc";
+
 export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
 export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
 export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
@@ -480,21 +482,22 @@ export const POOLS: Record<number, PoolKey[]> = {
     //         hooks: zeroAddress,
     //     },
     // ],
-    // [base.id]: [
-    //     // VIRTUAL-USDC
-    //     {
-    //         currency0:
-    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-    //                 ? TOKEN_LIST[base.id].VIRTUAL.address
-    //                 : TOKEN_LIST[base.id].USDC.address,
-    //         currency1:
-    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-    //                 ? TOKEN_LIST[base.id].USDC.address
-    //                 : TOKEN_LIST[base.id].VIRTUAL.address,
-    //         fee: 3000,
-    //         tickSpacing: 60,
-    //         hooks: zeroAddress,
-    //     },
+    [base.id]: [
+        // VIRTUAL-USDC
+        {
+            currency0:
+                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
+                    ? TOKEN_LIST[base.id].Virtual.address
+                    : TOKEN_LIST[base.id].USDC.address,
+            currency1:
+                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
+                    ? TOKEN_LIST[base.id].USDC.address
+                    : TOKEN_LIST[base.id].Virtual.address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
     //     // USDC-VVV
     //     {
     //         currency0:

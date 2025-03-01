@@ -39,7 +39,15 @@ export const prodChains = [
     },
     interopDevnet0,
     interopDevnet1,
-    base,
+    {
+        ...base,
+        rpcUrls: {
+            default: {
+                http: ["https://lb.drpc.org/ogrpc?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+                webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            },
+        },
+    },
     arbitrum,
 ] as const;
 export const localChains = [...prodChains, localhost, localhost2] as const;
