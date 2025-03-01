@@ -12,6 +12,12 @@ import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
 import {UniversalRouterApprovedReentrantUtils} from "./utils/UniversalRouterApprovedReentrantUtils.sol";
 
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
+import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
+import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {PoolUtils} from "./utils/PoolUtils.sol";
+
 contract DeployParameters is Script {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
@@ -42,5 +48,12 @@ contract DeployParameters is Script {
         console2.log("v4StateView:", v4StateView);
         console2.log("v4Quoter:", v4Quoter);
         console2.log("router:", router);
+
+        IERC20 tokenA = IERC20(0x48824f0345964D1002bF4Ddd1F72BA99B5dbE5d5);
+        IERC20 tokenB = IERC20(0x5710586e8D18F2e1c54c7a2247c1977578B11809);
+
+        PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
     }
 }
