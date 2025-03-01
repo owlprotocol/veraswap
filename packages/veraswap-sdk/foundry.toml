@@ -11,7 +11,53 @@ optimizer = true
 optimizer_runs = 200
 
 [rpc_endpoints]
+mainnet = "https://lb.drpc.org/ogrpc?network=mainnet&dkey=${DRPC_API_KEY}"
+sepolia = "https://lb.drpc.org/ogrpc?network=sepolia&dkey=${DRPC_API_KEY}"
+optimism = "https://lb.drpc.org/ogrpc?network=optimism&dkey=${DRPC_API_KEY}"
+optimism-sepolia = "https://lb.drpc.org/ogrpc?network=optimism-sepolia&dkey=${DRPC_API_KEY}"
+base = "https://lb.drpc.org/ogrpc?network=base&dkey=${DRPC_API_KEY}"
+# base-sepolia = "https://lb.drpc.org/ogrpc?network=base-sepolia&dkey=${DRPC_API_KEY}"
+base-sepolia = "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+unichain = "https://lb.drpc.org/ogrpc?network=unichain&dkey=${DRPC_API_KEY}"
+unichain-sepolia = "https://lb.drpc.org/ogrpc?network=unichain-sepolia&dkey=${DRPC_API_KEY}"
+zircuit = "https://lb.drpc.org/ogrpc?network=zircuit-mainnet&dkey=${DRPC_API_KEY}"
+zircuit-testnet = "https://lb.drpc.org/ogrpc?network=zircuit-testnet&dkey=${DRPC_API_KEY}"
+ink = "https://lb.drpc.org/ogrpc?network=ink&dkey=${DRPC_API_KEY}"
+# ink-sepolia = "https://lb.drpc.org/ogrpc?network=ink-sepolia&dkey=${DRPC_API_KEY}"
+ink-sepolia = "https://ink-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 op-interop-0 = "https://interop-alpha-0.optimism.io"
 op-interop-1 = "https://interop-alpha-1.optimism.io"
+story = "https://mainnet.storyrpc.io"
+story-aenid = "https://aeneid.storyrpc.io"
+somnia-testnet = "https://dream-rpc.somnia.network"
+
+# https://docs.blockscout.com/devs/verification/foundry-verification
+
+## TODO: Add key field and set envvars
+# [etherscan]
+# mainnet = { key = "${ETHERSCAN_MAINNET_KEY}" }
+# sepolia = { url = "https://sepolia.etherscan.io" }
+# base = { url = "https://basescan.org" }
+# base-sepolia = { url = "https://sepolia.basescan.org" }
+# unichain = { url = "https://uniscan.xyz" }
+# unichain-sepolia = { url = "https://sepolia.uniscan.xyz" }
+# zircuit = { url = "https://explorer.zircuit.com" }
+# zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
+# ink = { url = "https://explorer.inkonchain.com" }
+# ink-sepolia = { url = "https://explorer-sepolia.inkonchain.com" }
+# story = { url = "https://aeneid.storyscan.xyz" }
+# story-aeneid = { url = "https://storyscan.xyz" }
+# somnia-testnet = { url = "https://shannon-explorer.somnia.network" }
+# taraxa = { url = "https://mainnet.explorer.taraxa.io" }
+# taraxa-testnet = { url = "https://testnet.explorer.taraxa.io" }
+
+#### FAUCETS ###
+# ink => superchain console
+# https://metaverse-browser.somnia.network/faucet
+# hedera evm TODO
+# https://testnets.superbridge.app/ => unichain, base
+# https://superbridge.app/
+
+# ink
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
