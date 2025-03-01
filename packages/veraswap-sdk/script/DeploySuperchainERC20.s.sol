@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "forge-std/Test.sol";
 
-import {MockSuperchainERC20} from "../../test/MockSuperchainERC20.sol";
+import {MockSuperchainERC20} from "../test/MockSuperchainERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";

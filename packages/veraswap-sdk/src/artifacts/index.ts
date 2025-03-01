@@ -1,6 +1,7 @@
 export { HypERC20FlashCollateral } from "./HypERC20FlashCollateral.js";
 export { IAllowanceTransfer } from "./IAllowanceTransfer.js";
 export { IERC20 } from "./IERC20.js";
+export { IL2ToL2CrossDomainMessenger } from "./IL2ToL2CrossDomainMessenger.js";
 export { IMulticall_v4 } from "./IMulticall_v4.js";
 export { IPermit2 } from "./IPermit2.js";
 export { IPoolManager } from "./IPoolManager.js";
@@ -13,6 +14,7 @@ export { MockERC20 } from "./MockERC20.js";
 export { PoolManager } from "./PoolManager.js";
 export { PositionManager } from "./PositionManager.js";
 export { StateView } from "./StateView.js";
+export { SuperchainTokenBridgeSweep } from "./SuperchainTokenBridgeSweep.js";
 export { UniversalRouter } from "./UniversalRouter.js";
 export { UnsupportedProtocol } from "./UnsupportedProtocol.js";
 export { V4Quoter } from "./V4Quoter.js";

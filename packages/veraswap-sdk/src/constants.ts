@@ -217,7 +217,7 @@ export const UNISWAP_CONTRACTS = {
     },
 } as const;
 
-export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4"
+export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
 
 export const TOKEN_LIST = {
     [mainnet.id]: {
@@ -308,29 +308,29 @@ export const TOKEN_LIST = {
             name: "Super A",
             symbol: "A",
             decimals: 18,
-            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5"
+            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
         },
         superB: {
             name: "Super B",
             symbol: "B",
             decimals: 18,
-            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809"
-        }
+            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
+        },
     },
     [interopDevnet1.id]: {
         superA: {
             name: "Super A",
             symbol: "A",
             decimals: 18,
-            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5"
+            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
         },
         superB: {
             name: "Super B",
             symbol: "B",
             decimals: 18,
-            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809"
-        }
-    }
+            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
+        },
+    },
 } as const satisfies Record<
     number,
     Record<string, { name: string; symbol: string; decimals: number; address: Address }>

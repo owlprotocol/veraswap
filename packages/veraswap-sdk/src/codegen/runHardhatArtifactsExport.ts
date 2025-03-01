@@ -19,4 +19,6 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/StateView.sol/*.json",
     "out/IPermit2.sol/*.json",
     "out/HypERC20FlashCollateral.sol/*.json",
+    "out/IL2ToL2CrossDomainMessenger.sol/*.json",
+    "out/SuperchainTokenBridgeSweep.sol/*.json",
 ]);

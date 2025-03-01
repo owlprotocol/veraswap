@@ -10,7 +10,9 @@ import {DeployParameters} from "./DeployParameters.s.sol";
 import {SuperchainTokenBridgeSweep} from "../contracts/superchain/SuperchainTokenBridgeSweep.sol";
 
 contract DeploySuperchainTokenBridgeSweep is DeployParameters {
-    function run() external virtual override {
+    function setUp() public override {}
+
+    function run() external {
         vm.startBroadcast();
         deploySuperchainTokenBridgeSweep();
         vm.stopBroadcast();
