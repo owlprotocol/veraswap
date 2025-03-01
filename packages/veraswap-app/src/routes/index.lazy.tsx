@@ -10,13 +10,16 @@ import {
     PERMIT2_ADDRESS,
     SwapType,
     UNISWAP_CONTRACTS,
-    getMessageIdFromReceipt,
+    getHyperlaneMessageIdFromReceipt,
+    getSwapAndSuperchainBridgeTransaction,
+    getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hash, Hex } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
+import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
     bridgeGasPaymentAtom,
     chainInAtom,
@@ -45,7 +48,8 @@ import {
     updateTransactionStepAtom,
     initializeTransactionStepsAtom,
     waitForReceiptQueryAtom,
-    hyperlaneMessageIdAtom,
+    messageIdAtom,
+    networkTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,9 +84,9 @@ function Index() {
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
 
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
-    const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
+    const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
 
-    const [hyperlaneMessageId, setHyperlaneMessageId] = useAtom(hyperlaneMessageIdAtom);
+    const [messageId, setMessageId] = useAtom(messageIdAtom);
 
     const poolKey = useAtomValue(poolKeyInAtom);
 
@@ -98,7 +102,7 @@ function Index() {
     const [transactionSteps] = useAtom(transactionStepsAtom);
     const [currentTransactionStepId] = useAtom(currentTransactionStepIdAtom);
     const [transactionHashes, setTransactionHashes] = useAtom(transactionHashesAtom);
-    const [, updateTransactionStep] = useAtom(updateTransactionStepAtom);
+    const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
     const { toast } = useToast();
@@ -113,18 +117,33 @@ function Index() {
     const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending, error: transactionError }] =
         useAtom(sendTransactionMutationAtom);
 
+    const networkType = useAtomValue(networkTypeAtom);
+
     const [remoteTransactionHash, setRemoteTransactionHash] = useState<Hash | null>(null);
 
-    useWatchContractEvent({
-        abi: [ProcessId],
-        eventName: "ProcessId",
-        args: { messageId: hyperlaneMessageId ?? "0x" },
-        enabled: !!hyperlaneMessageId,
-        strict: true,
-        onLogs: (logs) => {
-            setRemoteTransactionHash(logs[0].transactionHash);
-        },
-    });
+    useWatchContractEvent(
+        networkType === "superchain"
+            ? {
+                  abi: [RelayedMessage],
+                  eventName: "RelayedMessage",
+                  args: { messageHash: messageId ?? "0x" },
+                  enabled: !!messageId,
+                  strict: true,
+                  onLogs: (logs) => {
+                      setRemoteTransactionHash(logs[0].transactionHash);
+                  },
+              }
+            : {
+                  abi: [ProcessId],
+                  eventName: "ProcessId",
+                  args: { messageId: messageId ?? "0x" },
+                  enabled: !!messageId,
+                  strict: true,
+                  onLogs: (logs) => {
+                      setRemoteTransactionHash(logs[0].transactionHash);
+                  },
+              },
+    );
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
@@ -190,17 +209,28 @@ function Index() {
                     throw new Error("Bridge payment not found");
                 }
 
-                transaction = getSwapAndHyperlaneBridgeTransaction({
-                    universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                    bridgeAddress,
-                    bridgePayment,
-                    destinationChain: chainOut!.id,
-                    receiver: walletAddress!,
-                    poolKey: poolKey!,
-                    zeroForOne,
-                    amountIn: tokenInAmount!,
-                    amountOutMinimum,
-                });
+                transaction =
+                    networkType === "superchain"
+                        ? getSwapAndSuperchainBridgeTransaction({
+                              universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                              destinationChain: chainOut!.id,
+                              receiver: walletAddress!,
+                              poolKey: poolKey!,
+                              zeroForOne,
+                              amountIn: tokenInAmount!,
+                              amountOutMinimum,
+                          })
+                        : getSwapAndHyperlaneBridgeTransaction({
+                              universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                              bridgeAddress,
+                              bridgePayment,
+                              destinationChain: chainOut!.id,
+                              receiver: walletAddress!,
+                              poolKey: poolKey!,
+                              zeroForOne,
+                              amountIn: tokenInAmount!,
+                              amountOutMinimum,
+                          });
             } else {
                 throw new Error("Swap type not supported");
             }
@@ -226,55 +256,64 @@ function Index() {
         }
     };
     useEffect(() => {
-        if (receipt?.status === "success") {
-            updateTransactionStep({ id: "swap", status: "success" });
+        if (!receipt) return;
 
-            if (swapType === SwapType.SwapAndBridge) {
-                const hyperlaneMessageId = getMessageIdFromReceipt(receipt);
-                setHyperlaneMessageId(hyperlaneMessageId);
-                setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneMessageId }));
-                updateTransactionStep({ id: "bridge", status: "processing" });
-
-                // TODO: fix this
-                const bridgeTimer = setTimeout(() => {
-                    updateTransactionStep({ id: "bridge", status: "success" });
-                    updateTransactionStep({ id: "transfer", status: "processing" });
-
-                    // watchContractEvent (address mailbox, event ProcessId, arg:{messageId})
-                    // onllogs callback -> logs[0].transactionHash
-                    // call unwatch
-                    const relayTimer = setTimeout(() => {
-                        const bridgeTxHash = receipt.transactionHash;
-                        setTransactionHashes((prev) => ({ ...prev, bridge: bridgeTxHash }));
-
-                        updateTransactionStep({ id: "transfer", status: "success" });
-                        toast({
-                            title: "Transaction Complete",
-                            description: "Your swap and bridge has been completed successfully",
-                            variant: "default",
-                        });
-                    }, 10000);
-
-                    return () => clearTimeout(relayTimer);
-                }, 5000);
-
-                return () => clearTimeout(bridgeTimer);
-            } else {
-                toast({
-                    title: "Swap Complete",
-                    description: "Your swap has been completed successfully",
-                    variant: "default",
-                });
-            }
-        } else if (receipt?.status === "reverted") {
+        if (receipt.status === "reverted") {
             updateTransactionStep({ id: "swap", status: "error" });
             toast({
                 title: "Transaction Failed",
                 description: "Your transaction has failed. Please try again.",
                 variant: "destructive",
             });
+
+            return;
         }
-    }, [receipt, swapType, toast, updateTransactionStep, setTransactionHashes, setHyperlaneMessageId]);
+
+        // Only update transaction step if it's not already success
+        updateTransactionStep({ id: "swap", status: "success" });
+
+        if (swapType === SwapType.SwapAndBridge) {
+            const messageId =
+                networkType === "superchain"
+                    ? getSuperchainMessageIdFromReceipt(receipt)
+                    : getHyperlaneMessageIdFromReceipt(receipt);
+            setMessageId(messageId);
+            setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
+            updateTransactionStep({ id: "bridge", status: "processing" });
+
+            // remoteTransactionHash
+            // TODO: fix this
+            const bridgeTimer = setTimeout(() => {
+                updateTransactionStep({ id: "bridge", status: "success" });
+                updateTransactionStep({ id: "transfer", status: "processing" });
+
+                // watchContractEvent (address mailbox, event ProcessId, arg:{messageId})
+                // onllogs callback -> logs[0].transactionHash
+                // call unwatch
+                const relayTimer = setTimeout(() => {
+                    const bridgeTxHash = receipt.transactionHash;
+                    setTransactionHashes((prev) => ({ ...prev, bridge: bridgeTxHash }));
+
+                    updateTransactionStep({ id: "transfer", status: "success" });
+                    toast({
+                        title: "Transaction Complete",
+                        description: "Your swap and bridge has been completed successfully",
+                        variant: "default",
+                    });
+                }, 10000);
+
+                return () => clearTimeout(relayTimer);
+            }, 5000);
+
+            return () => clearTimeout(bridgeTimer);
+        } else {
+            toast({
+                title: "Swap Complete",
+                description: "Your swap has been completed successfully",
+                variant: "default",
+            });
+        }
+    }, [receipt, swapType, toast, updateTransactionStep, setTransactionHashes, setMessageId, networkType]);
 
     return (
         <div className="max-w-xl mx-auto px-4">
@@ -386,6 +425,7 @@ function Index() {
                 currentStepId={currentTransactionStepId}
                 hashes={transactionHashes}
                 chains={{ source: chainIn ?? undefined, destination: chainOut ?? undefined }}
+                networkType={networkType}
             />
         </div>
     );

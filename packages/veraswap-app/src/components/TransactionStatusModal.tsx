@@ -18,6 +18,7 @@ type TransactionStatusModalProps = {
     currentStepId?: string;
     hashes?: { swap?: string; bridge?: string; transfer?: string };
     chains?: { source?: Chain; destination?: Chain };
+    networkType: "mainnet" | "superchain" | "testnet";
 };
 
 export function TransactionStatusModal({
@@ -27,6 +28,7 @@ export function TransactionStatusModal({
     currentStepId,
     hashes,
     chains,
+    networkType,
 }: TransactionStatusModalProps) {
     const getExplorerUrl = (stepId: "swap" | "bridge" | "transfer") => {
         switch (stepId) {
@@ -35,7 +37,12 @@ export function TransactionStatusModal({
                     ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.swap}`
                     : undefined;
             case "bridge":
-                return hashes?.bridge ? `https://explorer.hyperlane.xyz/message/${hashes.bridge}` : undefined;
+                if (!hashes?.bridge) return undefined;
+
+                if (networkType === "superchain") {
+                    return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
+                }
+                return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "transfer":
                 return hashes?.transfer && chains?.destination
                     ? `${chains.destination.blockExplorers?.default?.url}/tx/${hashes.transfer}`

@@ -467,4 +467,4 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swa
     set(transactionModalOpenAtom, true);
 });
 
-export const hyperlaneMessageIdAtom = atom<Hash | undefined>(undefined);
+export const messageIdAtom = atom<Hash | undefined>(undefined);
