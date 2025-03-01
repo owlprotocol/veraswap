@@ -10,10 +10,18 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";
 
-abstract contract DeployTokensAndPools is DeployParameters {
+contract DeploySuperchainERC20 is DeployParameters {
+    function setUp() public override {}
+
+    function run() external {
+        vm.startBroadcast();
+        deploySuperTokens();
+        vm.stopBroadcast();
+    }
+
     function deploySuperTokens() internal {
-        tokensSuper.push(deploySuperToken("Super A", "A", 18));
-        tokensSuper.push(deploySuperToken("Super B", "B", 18));
+        deploySuperToken("Super A", "A", 18);
+        deploySuperToken("Super B", "B", 18);
     }
 
     function deploySuperToken(
@@ -39,12 +47,14 @@ abstract contract DeployTokensAndPools is DeployParameters {
             // Approve PositionManager using Permit2
             permit2.approve(address(token), params.v4PositionManager, type(uint160).max, type(uint48).max);
             // Approve UnversalRouter using Permit2
+            /*
             IAllowanceTransfer(params.permit2).approve(
                 address(token),
                 address(router),
                 type(uint160).max,
                 type(uint48).max
             );
+            */
         }
     }
 }

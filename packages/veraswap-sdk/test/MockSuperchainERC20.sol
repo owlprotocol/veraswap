@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.26;
+
 import {SuperchainERC20} from "@interop-lib/SuperchainERC20.sol";
 
 /// @notice Similar interface to MockERC20 for easy testing / demos
