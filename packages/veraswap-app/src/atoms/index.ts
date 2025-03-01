@@ -11,7 +11,7 @@ import {
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, parseUnits, zeroAddress } from "viem";
+import { Address, Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
     readContractQueryOptions,
@@ -23,8 +23,9 @@ import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotoc
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
 import { chains, config } from "@/config.js";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
-import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
+import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry";
+import { quoteGasPayment } from "@/abis/quoteGasPayment";
+import { TransactionStep } from "@/components/transaction-status-modal";
 
 /**
  * - networks
@@ -417,3 +418,53 @@ export const bridgeGasPaymentAtom = atomWithQuery((get) => {
         enabled: !!remoteInfo?.remoteBridgeAddress && !!chainOut,
     };
 });
+
+export const transactionModalOpenAtom = atom<boolean>(false);
+export const transactionStepsAtom = atom<TransactionStep[]>([]);
+export const currentTransactionStepIdAtom = atom<string | undefined>(undefined);
+export const transactionHashesAtom = atom<{ swap?: string; bridge?: string; transfer?: string }>({});
+export const updateTransactionStepAtom = atom(
+    null,
+    (get, set, update: { id: "swap" | "bridge" | "transfer"; status: TransactionStep["status"] }) => {
+        const steps = get(transactionStepsAtom);
+        const updatedSteps = steps.map((step) => (step.id === update.id ? { ...step, status: update.status } : step));
+        set(transactionStepsAtom, updatedSteps);
+
+        if (update.status === "processing") {
+            set(currentTransactionStepIdAtom, update.id);
+        }
+    },
+);
+
+export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swap" | "SwapAndBridge") => {
+    const steps: TransactionStep[] = [
+        {
+            id: "swap",
+            title: "🤝 Swap",
+            description: "Trading with your local Walmart 💵💵💵💵💵💵",
+            status: "pending",
+        },
+    ];
+
+    if (swapType === "SwapAndBridge") {
+        steps.push(
+            {
+                id: "bridge",
+                title: "🚀 Bridge",
+                description: "Your token is traveling...",
+                status: "pending",
+            },
+            {
+                id: "transfer",
+                title: "🕊️ Transfer Token",
+                description: "We're freeing your token. Don't be impatient!",
+                status: "pending",
+            },
+        );
+    }
+
+    set(transactionStepsAtom, steps);
+    set(transactionModalOpenAtom, true);
+});
+
+export const hyperlaneMessageIdAtom = atom<Hash | undefined>(undefined);

@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import { useAccount } from "wagmi";
+import { useAccount, useWatchContractEvent } from "wagmi";
 import {
     getSwapAndHyperlaneBridgeTransaction,
     getSwapExactInExecuteData,
@@ -10,10 +10,13 @@ import {
     PERMIT2_ADDRESS,
     SwapType,
     UNISWAP_CONTRACTS,
+    getMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hash, Hex } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
+import { useEffect, useState } from "react";
+import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import {
     bridgeGasPaymentAtom,
     chainInAtom,
@@ -35,6 +38,14 @@ import {
     tokensInAtom,
     tokensOutAtom,
     swapTypeAtom,
+    transactionModalOpenAtom,
+    transactionStepsAtom,
+    currentTransactionStepIdAtom,
+    transactionHashesAtom,
+    updateTransactionStepAtom,
+    initializeTransactionStepsAtom,
+    waitForReceiptQueryAtom,
+    hyperlaneMessageIdAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,13 +55,14 @@ import { TokenSelect } from "@/components/TokenSelect";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
+import { TransactionStatusModal } from "@/components/transaction-status-modal";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
 });
 
 function Index() {
-    const { isConnected, address: walletAddress } = useAccount();
+    const { address: walletAddress } = useAccount();
 
     const chains = useAtomValue(chainsAtom);
     const swapType = useAtomValue(swapTypeAtom);
@@ -70,6 +82,8 @@ function Index() {
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
     const { data: tokenOutBalance, refetch: refetchBalanceOut } = useAtomValue(tokenOutBalanceQueryAtom);
 
+    const [hyperlaneMessageId, setHyperlaneMessageId] = useAtom(hyperlaneMessageIdAtom);
+
     const poolKey = useAtomValue(poolKeyInAtom);
 
     const { data: bridgePayment } = useAtomValue(bridgeGasPaymentAtom);
@@ -79,26 +93,38 @@ function Index() {
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
-    // const [tokenOutAmount, setTokenOutAmount] = useAtom(tokenOutAmountAtom)
+
+    const [transactionModalOpen, setTransactionModalOpen] = useAtom(transactionModalOpenAtom);
+    const [transactionSteps] = useAtom(transactionStepsAtom);
+    const [currentTransactionStepId] = useAtom(currentTransactionStepIdAtom);
+    const [transactionHashes, setTransactionHashes] = useAtom(transactionHashesAtom);
+    const [, updateTransactionStep] = useAtom(updateTransactionStepAtom);
+    const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
     const { toast } = useToast();
 
-    const isNotConnected = !isConnected || !walletAddress;
-
-    // const { data: hyperlaneRegistry } = useAtomValue(hyperlaneRegistryQueryAtom);
+    const [{ data: receipt }] = useAtom(waitForReceiptQueryAtom);
 
     const tokenInBalanceFormatted =
         tokenInBalance != undefined ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}` : "-";
     const tokenOutBalanceFormatted =
-        tokenOutBalance != undefined
-            ? `
-     ${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}`
-            : "-";
+        tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
 
-    const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending }] =
+    const [{ mutate: sendTransaction, data: hash, isPending: transactionIsPending, error: transactionError }] =
         useAtom(sendTransactionMutationAtom);
 
-    console.log({ hash });
+    const [remoteTransactionHash, setRemoteTransactionHash] = useState<Hash | null>(null);
+
+    useWatchContractEvent({
+        abi: [ProcessId],
+        eventName: "ProcessId",
+        args: { messageId: hyperlaneMessageId ?? "0x" },
+        enabled: !!hyperlaneMessageId,
+        strict: true,
+        onLogs: (logs) => {
+            setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
@@ -133,6 +159,8 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
+            initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
+
             let transaction: { to: Address; data: Hex; value: bigint };
 
             const amountOutMinimum = quoterData![0];
@@ -177,26 +205,76 @@ function Index() {
                 throw new Error("Swap type not supported");
             }
 
-            sendTransaction({ chainId: chainIn!.id, ...transaction });
+            sendTransaction(
+                { chainId: chainIn!.id, ...transaction },
+                {
+                    onSuccess: (hash) => {
+                        setTransactionHashes((prev) => ({ ...prev, swap: hash }));
+                        updateTransactionStep({ id: "swap", status: "processing" });
+                    },
+                    onError: () => {
+                        updateTransactionStep({ id: "swap", status: "error" });
+                        //TODO: show in UI instead
+                        toast({
+                            title: "Transaction Failed",
+                            description: "Your transaction has failed. Please try again.",
+                            variant: "destructive",
+                        });
+                    },
+                },
+            );
         }
     };
+    useEffect(() => {
+        if (receipt?.status === "success") {
+            updateTransactionStep({ id: "swap", status: "success" });
 
-    /*
-  useEffect(() => {
-    if (receipt) {
-      refetchBalanceIn();
-      refetchBalanceOut();
+            if (swapType === SwapType.SwapAndBridge) {
+                const hyperlaneMessageId = getMessageIdFromReceipt(receipt);
+                setHyperlaneMessageId(hyperlaneMessageId);
+                setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneMessageId }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
 
-      setTokenInAmountInput("");
+                // TODO: fix this
+                const bridgeTimer = setTimeout(() => {
+                    updateTransactionStep({ id: "bridge", status: "success" });
+                    updateTransactionStep({ id: "transfer", status: "processing" });
 
-      toast({
-        title: "Swap Complete",
-        description: "Your swap has been completed successfully",
-        variant: "default",
-      });
-    }
-  }, [receipt, refetchBalanceIn, refetchBalanceOut]);
-  */
+                    // watchContractEvent (address mailbox, event ProcessId, arg:{messageId})
+                    // onllogs callback -> logs[0].transactionHash
+                    // call unwatch
+                    const relayTimer = setTimeout(() => {
+                        const bridgeTxHash = receipt.transactionHash;
+                        setTransactionHashes((prev) => ({ ...prev, bridge: bridgeTxHash }));
+
+                        updateTransactionStep({ id: "transfer", status: "success" });
+                        toast({
+                            title: "Transaction Complete",
+                            description: "Your swap and bridge has been completed successfully",
+                            variant: "default",
+                        });
+                    }, 10000);
+
+                    return () => clearTimeout(relayTimer);
+                }, 5000);
+
+                return () => clearTimeout(bridgeTimer);
+            } else {
+                toast({
+                    title: "Swap Complete",
+                    description: "Your swap has been completed successfully",
+                    variant: "default",
+                });
+            }
+        } else if (receipt?.status === "reverted") {
+            updateTransactionStep({ id: "swap", status: "error" });
+            toast({
+                title: "Transaction Failed",
+                description: "Your transaction has failed. Please try again.",
+                variant: "destructive",
+            });
+        }
+    }, [receipt, swapType, toast, updateTransactionStep, setTransactionHashes, setHyperlaneMessageId]);
 
     return (
         <div className="max-w-xl mx-auto px-4">
@@ -225,8 +303,6 @@ function Index() {
                                 <TokenSelect value={tokenIn} onChange={setTokenIn} tokens={tokensIn} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span> */}
                                 <div className="space-x-2">
                                     <span>Balance: {tokenInBalanceFormatted}</span>
                                     <Button
@@ -282,8 +358,6 @@ function Index() {
                                 <TokenSelect value={tokenOut} onChange={setTokenOut} tokens={tokensOut} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                {/* TODO: enable if we can get a dollar value <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>$0.00</span> */}
                                 <div className="space-x-2 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>
@@ -305,6 +379,14 @@ function Index() {
                     </Button>
                 </CardContent>
             </Card>
+            <TransactionStatusModal
+                isOpen={transactionModalOpen}
+                onOpenChange={setTransactionModalOpen}
+                steps={transactionSteps}
+                currentStepId={currentTransactionStepId}
+                hashes={transactionHashes}
+                chains={{ source: chainIn ?? undefined, destination: chainOut ?? undefined }}
+            />
         </div>
     );
 }
