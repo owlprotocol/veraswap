@@ -157,10 +157,7 @@ export const UNISWAP_CONTRACTS = {
     },
 } as const;
 
-export const TOKEN_LIST: Record<
-    number,
-    Record<string, { name: string; symbol: string; decimals: number; address: Address }>
-> = {
+export const TOKEN_LIST = {
     [mainnet.id]: {
         ETH: { name: "Ethereum", symbol: "ETH", decimals: 18, address: zeroAddress },
         USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
@@ -244,7 +241,10 @@ export const TOKEN_LIST: Record<
         },
         TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
     },
-} as const;
+} as const satisfies Record<
+    number,
+    Record<string, { name: string; symbol: string; decimals: number; address: Address }>
+>;
 
 export const MOCK_POOLS = {
     [1337]: {
@@ -320,96 +320,96 @@ export const tokenBridgeMap: TokenBridgeMap = {
 };
 
 export const POOLS: Record<number, PoolKey[]> = {
-    [mainnet.id]: [
-        // USDC-WBTC
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
-                    ? TOKEN_LIST[mainnet.id].USDT.address
-                    : TOKEN_LIST[mainnet.id].WBTC.address,
-            currency1:
-                TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
-                    ? TOKEN_LIST[mainnet.id].WBTC.address
-                    : TOKEN_LIST[mainnet.id].USDT.address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-        // USDC-PEPE
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
-                    ? TOKEN_LIST[mainnet.id].ETH.address
-                    : TOKEN_LIST[mainnet.id].PEPE.address,
-            currency1:
-                TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
-                    ? TOKEN_LIST[mainnet.id].PEPE.address
-                    : TOKEN_LIST[mainnet.id].ETH.address,
-            fee: 25000,
-            tickSpacing: 500,
-            hooks: zeroAddress,
-        },
-        // WBTC-USDT
-        {
-            currency0:
-                TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
-                    ? TOKEN_LIST[mainnet.id].WBTC.address
-                    : TOKEN_LIST[mainnet.id].USDT.address,
-            currency1:
-                TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
-                    ? TOKEN_LIST[mainnet.id].USDT.address
-                    : TOKEN_LIST[mainnet.id].WBTC.address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
-    [bsc.id]: [
-        // USDC-SOL
-        {
-            currency0:
-                TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
-                    ? TOKEN_LIST[bsc.id].USDC.address
-                    : TOKEN_LIST[bsc.id].SOL.address,
-            currency1:
-                TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
-                    ? TOKEN_LIST[bsc.id].SOL.address
-                    : TOKEN_LIST[bsc.id].USDC.address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
-    [base.id]: [
-        // VIRTUAL-USDC
-        {
-            currency0:
-                TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-                    ? TOKEN_LIST[base.id].VIRTUAL.address
-                    : TOKEN_LIST[base.id].USDC.address,
-            currency1:
-                TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-                    ? TOKEN_LIST[base.id].USDC.address
-                    : TOKEN_LIST[base.id].VIRTUAL.address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-        // USDC-VVV
-        {
-            currency0:
-                TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
-                    ? TOKEN_LIST[base.id].USDC.address
-                    : TOKEN_LIST[base.id].VVV.address,
-            currency1:
-                TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
-                    ? TOKEN_LIST[base.id].VVV.address
-                    : TOKEN_LIST[base.id].USDC.address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        },
-    ],
+    // [mainnet.id]: [
+    //     // USDC-WBTC
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
+    //                 ? TOKEN_LIST[mainnet.id].USDT.address
+    //                 : TOKEN_LIST[mainnet.id].WBTC.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].USDT.address < TOKEN_LIST[mainnet.id].WBTC.address
+    //                 ? TOKEN_LIST[mainnet.id].WBTC.address
+    //                 : TOKEN_LIST[mainnet.id].USDT.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    //     // USDC-PEPE
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
+    //                 ? TOKEN_LIST[mainnet.id].ETH.address
+    //                 : TOKEN_LIST[mainnet.id].PEPE.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].ETH.address < TOKEN_LIST[mainnet.id].PEPE.address
+    //                 ? TOKEN_LIST[mainnet.id].PEPE.address
+    //                 : TOKEN_LIST[mainnet.id].ETH.address,
+    //         fee: 25000,
+    //         tickSpacing: 500,
+    //         hooks: zeroAddress,
+    //     },
+    //     // WBTC-USDT
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
+    //                 ? TOKEN_LIST[mainnet.id].WBTC.address
+    //                 : TOKEN_LIST[mainnet.id].USDT.address,
+    //         currency1:
+    //             TOKEN_LIST[mainnet.id].WBTC.address < TOKEN_LIST[mainnet.id].USDT.address
+    //                 ? TOKEN_LIST[mainnet.id].USDT.address
+    //                 : TOKEN_LIST[mainnet.id].WBTC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
+    // [bsc.id]: [
+    //     // USDC-SOL
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
+    //                 ? TOKEN_LIST[bsc.id].USDC.address
+    //                 : TOKEN_LIST[bsc.id].SOL.address,
+    //         currency1:
+    //             TOKEN_LIST[bsc.id].USDC.address < TOKEN_LIST[bsc.id].SOL.address
+    //                 ? TOKEN_LIST[bsc.id].SOL.address
+    //                 : TOKEN_LIST[bsc.id].USDC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
+    // [base.id]: [
+    //     // VIRTUAL-USDC
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
+    //                 ? TOKEN_LIST[base.id].VIRTUAL.address
+    //                 : TOKEN_LIST[base.id].USDC.address,
+    //         currency1:
+    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
+    //                 ? TOKEN_LIST[base.id].USDC.address
+    //                 : TOKEN_LIST[base.id].VIRTUAL.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    //     // USDC-VVV
+    //     {
+    //         currency0:
+    //             TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
+    //                 ? TOKEN_LIST[base.id].USDC.address
+    //                 : TOKEN_LIST[base.id].VVV.address,
+    //         currency1:
+    //             TOKEN_LIST[base.id].USDC.address < TOKEN_LIST[base.id].VVV.address
+    //                 ? TOKEN_LIST[base.id].VVV.address
+    //                 : TOKEN_LIST[base.id].USDC.address,
+    //         fee: 3000,
+    //         tickSpacing: 60,
+    //         hooks: zeroAddress,
+    //     },
+    // ],
     [sepolia.id]: [
         // TokenA-TokenB
         {
