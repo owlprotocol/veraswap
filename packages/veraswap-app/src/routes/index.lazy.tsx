@@ -125,6 +125,21 @@ function Index() {
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
 
+    useEffect(() => {
+        if (!walletAddress) return;
+        if (!chainIn) return;
+
+        if (import.meta.env.MODE === "development") {
+            console.log(
+                "would be dusting: ",
+                `https://veraswap-test-duster.vercel.app/api/[${chainIn.id}]/[${walletAddress}]`,
+            );
+            return;
+        }
+
+        fetch(`https://veraswap-test-duster.vercel.app/api/[${chainIn.id}]/[${walletAddress}]`, { method: "POST" });
+    }, [walletAddress, chainIn?.id, chainIn]);
+
     useWatchContractEvent(
         networkType === "superchain"
             ? {
