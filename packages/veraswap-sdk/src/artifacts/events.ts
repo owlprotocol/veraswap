@@ -282,4 +282,26 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "RelayedMessage",
+        inputs: [
+            { name: "source", type: "uint256", indexed: true, internalType: "uint256" },
+            { name: "messageNonce", type: "uint256", indexed: true, internalType: "uint256" },
+            { name: "messageHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "SentMessage",
+        inputs: [
+            { name: "destination", type: "uint256", indexed: true, internalType: "uint256" },
+            { name: "target", type: "address", indexed: true, internalType: "address" },
+            { name: "messageNonce", type: "uint256", indexed: true, internalType: "uint256" },
+            { name: "sender", type: "address", indexed: false, internalType: "address" },
+            { name: "message", type: "bytes", indexed: false, internalType: "bytes" },
+        ],
+        anonymous: false,
+    },
 ] as const;

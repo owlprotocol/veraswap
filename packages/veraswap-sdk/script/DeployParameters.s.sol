@@ -34,7 +34,7 @@ import {DeployParameters, HyperlaneParameters} from "./DeployParameters.s.sol";
 import {DeployRouter} from "./DeployRouter.s.sol";
 
 import {HypERC20FlashCollateral} from "../contracts/token/HypERC20FlashCollateral.sol";
-import {MockSuperchainERC20} from "../../test/MockSuperchainERC20.sol";
+import {MockSuperchainERC20} from "../test/MockSuperchainERC20.sol";
 
 struct HyperlaneParameters {
     address mailbox;
