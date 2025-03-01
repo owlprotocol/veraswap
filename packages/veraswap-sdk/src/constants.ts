@@ -389,19 +389,14 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
 
 // TODO: Fix values
 export const tokenBridgeMap: TokenBridgeMap = {
-    [1]: {
-        "0x0000000000000000000000000000000000000001": {
-            bridgeAddress: "0x0000000000000000000000000000000000000001",
-            remotes: { [2]: "0x0000000000000000000000000000000000000002" },
-        },
-    },
-    // Token A
     [arbitrumSepolia.id]: {
+        // Token A
         "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900": {
             remotes: { [sepolia.id]: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
         },
     },
     [sepolia.id]: {
+        // Token A
         "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280": {
             bridgeAddress: "0x2078763224e3C8Fc0cDe40C29a98e8d6b2a540F1",
             remotes: { [arbitrumSepolia.id]: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
