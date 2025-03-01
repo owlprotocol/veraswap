@@ -200,13 +200,11 @@ export const UNISWAP_CONTRACTS = {
         STATE_VIEW,
     },
     [sepolia.id]: {
-        POOL_MANAGER: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
-        // UNIVERSAL_ROUTER: "0x3a9d48ab9751398bbfa63ad67599bb04e4bdf98b",
-        // UNIVERSAL_ROUTER: "0xa14895f23a3a5a4d76799e02ebebc6df3cbe61d6",
-        UNIVERSAL_ROUTER: "0x014e726ccf986e05e5b6f98931e770f0d682385a",
-        POSITION_MANAGER: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
-        STATE_VIEW: "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
-        QUOTER: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
+        POOL_MANAGER: "0x6aa638fe70021cf4a9ce34c2e7718b99d4360efd",
+        UNIVERSAL_ROUTER: "0x8c082e9cba8b2f1171ef12a31e02a8fe99f1db43",
+        POSITION_MANAGER: "0x97b4242a6cde1437e7c8b3e79f3f2e99cf90899a",
+        STATE_VIEW: "0xc3e8977ebab56512e16194ee84a895b15987fb22",
+        QUOTER: "0x97a52483ebc89e1e5ef69df01f3f01142e03e192",
     },
     [arbitrumSepolia.id]: {
         POOL_MANAGER: "0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317",
@@ -299,15 +297,8 @@ export const TOKEN_LIST = {
         },
     },
     [sepolia.id]: {
-        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
-        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x500a80035829572e8E637dC654AE32bC2560968F" },
-        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e" },
-        testUSDC: {
-            name: "testUSDC",
-            symbol: "tUSDC",
-            decimals: 6,
-            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        },
+        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0xfa306dfde7632a6c74bdabbbb19fa59c7a78d73b" },
+        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0xf79509e6fadc7254d59d49bcd976d5523177ec4f" },
     },
     [arbitrumSepolia.id]: {
         testUSDC: {

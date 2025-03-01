@@ -17,4 +17,8 @@ library HypERC20FlashCollateralUtils {
             HypERC20FlashCollateral(addr).initialize(address(0), address(0), msg.sender);
         }
     }
+
+    function getAddress(address token, address mailbox) internal pure returns (address addr) {
+        addr = Create2Utils.getAddress(getDeployBytecode(token, mailbox));
+    }
 }
