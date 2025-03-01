@@ -151,8 +151,7 @@ function Index() {
                     amountOutMinimum,
                 });
             } else if (swapType === SwapType.SwapAndBridge) {
-                // assuning it's a collateral token\
-                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress;
+                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo;
 
                 if (!bridgeAddress) {
                     throw new Error("Bridge address not found");
