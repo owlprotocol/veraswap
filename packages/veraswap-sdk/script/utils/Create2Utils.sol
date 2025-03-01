@@ -3,8 +3,10 @@ pragma solidity ^0.8.26;
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 
+//TODO: Use forge cheatcode to get the configured deterministic deployer
 library Create2Utils {
     bytes32 constant BYTES32_ZERO = bytes32(0);
+    //Default salt deployer
     address DETERMINISTIC_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
     /// @notice Get or deploy with Create2 using BYTES32_ZERO, DETERMINISTIC_DEPLOYER

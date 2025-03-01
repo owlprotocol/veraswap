@@ -5,8 +5,6 @@ import {V4Quoter} from "@uniswap/universal-router/lib/v4-periphery/src/lens/V4Qu
 import {Create2Utils} from "./Create2Utils.sol";
 
 library V4QuoterUtils {
-    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
-
     function getDeployBytecode(address poolManager) internal returns (bytes memory) {
         return abi.encodePacked(type(V4Quoter).creationCode, poolManager);
     }
