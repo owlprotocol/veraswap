@@ -358,7 +358,12 @@ export const TOKEN_LIST = {
             decimals: 6,
             address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
         },
-        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
+        TokenA: {
+            name: "Token A For Arbi",
+            symbol: "Aarbi",
+            decimals: 18,
+            address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900",
+        },
     },
     [baseSepolia.id]: {
         TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x05cad57113cb3fa213982dc9553498018c1d08b7" },
@@ -497,14 +502,14 @@ export const tokenBridgeMap: TokenBridgeMap = {
     [baseSepolia.id]: {
         "0x05cad57113cb3fa213982dc9553498018c1d08b7": {
             remotes: {
-                [sepolia.id]: "0xE3664722A685de10B27460D9097767813B5E0459",
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
                 [unichainSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
                 [inkSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
             },
         },
         "0x3744d204595af66329b325a7651b005fbdcd77a4": {
             remotes: {
-                [sepolia.id]: "0x5F2785F8C06fff20F44E7D1c4940694Cd271343b",
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
                 [inkSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
             },
@@ -513,14 +518,14 @@ export const tokenBridgeMap: TokenBridgeMap = {
     [unichainSepolia.id]: {
         "0x274d622afa517251bdf73ea08377b78dd9f49f2b": {
             remotes: {
-                [sepolia.id]: "0xE3664722A685de10B27460D9097767813B5E0459",
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
                 [baseSepolia.id]: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
                 [inkSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
             },
         },
         "0x5983458d6d58b80257744872a778ece9e82ceec0": {
             remotes: {
-                [sepolia.id]: "0x5F2785F8C06fff20F44E7D1c4940694Cd271343b",
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
                 [inkSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
             },
@@ -529,14 +534,14 @@ export const tokenBridgeMap: TokenBridgeMap = {
     [inkSepolia.id]: {
         "0x274d622afa517251bdf73ea08377b78dd9f49f2b": {
             remotes: {
-                [sepolia.id]: "0xE3664722A685de10B27460D9097767813B5E0459",
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
                 [baseSepolia.id]: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
                 [unichainSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
             },
         },
         "0x5983458d6d58b80257744872a778ece9e82ceec0": {
             remotes: {
-                [sepolia.id]: "0x5F2785F8C06fff20F44E7D1c4940694Cd271343b",
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
                 [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
             },
