@@ -27,7 +27,7 @@ op-interop-0 = "https://interop-alpha-0.optimism.io"
 op-interop-1 = "https://interop-alpha-1.optimism.io"
 story = "https://mainnet.storyrpc.io"
 story-aenid = "https://aeneid.storyrpc.io"
-somnia-testnet = "https://dream-rpc.somnia.network/"
+somnia-testnet = "https://dream-rpc.somnia.network"
 
 # https://docs.blockscout.com/devs/verification/foundry-verification
 

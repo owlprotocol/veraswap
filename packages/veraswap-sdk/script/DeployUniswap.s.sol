@@ -5,6 +5,7 @@ import "forge-std/console2.sol";
 import "forge-std/Script.sol";
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
 import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
@@ -50,14 +51,15 @@ contract DeployParameters is Script {
         console2.log("v4Quoter:", v4Quoter);
         console2.log("router:", router);
 
-        /*
-        IERC20 tokenA = IERC20(0x48824f0345964D1002bF4Ddd1F72BA99B5dbE5d5);
-        IERC20 tokenB = IERC20(0x5710586e8D18F2e1c54c7a2247c1977578B11809);
+        (address tokenAAddr, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
+        (address tokenBAddr, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
+        IERC20 tokenA = IERC20(tokenAAddr);
+        IERC20 tokenB = IERC20(tokenBAddr);
 
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
-        */
+
         vm.stopBroadcast();
     }
 }
