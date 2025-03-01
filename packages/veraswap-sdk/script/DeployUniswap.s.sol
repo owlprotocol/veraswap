@@ -5,6 +5,7 @@ import "forge-std/console2.sol";
 import "forge-std/Script.sol";
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
 import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
@@ -19,9 +20,19 @@ import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/I
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 import {PoolUtils} from "./utils/PoolUtils.sol";
 
+import {HypERC20FlashCollateral} from "contracts/token/HypERC20FlashCollateral.sol";
+import {HypERC20FlashCollateralUtils} from "./utils/HypERC20FlashCollateralUtils.sol";
+
+import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
+
 contract DeployParameters is Script {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
+    // Hyperlane
+    function getMailboxAddress() internal returns (address) {
+        address output = vm.envAddress("MAILBOX");
+    }
 
     function run() external virtual {
         vm.startBroadcast();
@@ -51,6 +62,7 @@ contract DeployParameters is Script {
         console2.log("v4Quoter:", v4Quoter);
         console2.log("router:", router);
 
+        // Deploy canonical tokens
         (address tokenAAddr, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
         (address tokenBAddr, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
         IERC20 tokenA = IERC20(tokenAAddr);
@@ -59,6 +71,23 @@ contract DeployParameters is Script {
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+
+        // Hyperlane
+        address mailbox = getMailboxAddress();
+
+        if (mailbox != address(0)) {
+            if (block.chainid == 11_155_111) {
+                // Deploy collateral tokens on sepolia
+                HypERC20FlashCollateralUtils.getOrCreate2(tokenAAddr, mailbox);
+                HypERC20FlashCollateralUtils.getOrCreate2(tokenBAddr, mailbox);
+            } else {
+                // Deploy wrapped tokens
+                HypERC20Utils.getOrCreate2(18, mailbox, 0, "Token A", "A");
+                HypERC20Utils.getOrCreate2(18, mailbox, 0, "Token B", "B");
+                // Enroll Remote Router
+                // tokenACollateral.enrollRemoteRouter(1, bytes32(uint256(1)));
+            }
+        }
 
         vm.stopBroadcast();
     }
