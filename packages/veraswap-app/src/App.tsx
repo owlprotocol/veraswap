@@ -31,7 +31,7 @@ function App() {
         <>
             <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
                 <WagmiProvider config={config}>
-                    {/* TODO: use switch chain */}
+                    {/* TODO: use config active chain */}
                     <OnchainKitProvider
                         apiKey={import.meta.env.VITE_PUBLIC_ONCHAINKIT_API_KEY}
                         projectId={import.meta.env.NEXT_PUBLIC_CDP_PROJECT_ID}
