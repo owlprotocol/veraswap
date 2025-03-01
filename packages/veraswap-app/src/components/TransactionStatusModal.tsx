@@ -37,7 +37,7 @@ export function TransactionStatusModal({
                     ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.swap}`
                     : undefined;
             case "bridge":
-                if (!hashes?.bridge) return undefined;
+                if (!hashes?.swap) return undefined;
 
                 if (networkType === "superchain") {
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.swap}`;
