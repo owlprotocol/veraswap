@@ -18,7 +18,7 @@ contract DeployParameters is Script {
 
     function run() external virtual {
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
-        (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2();
+        (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
         (address v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
         (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);

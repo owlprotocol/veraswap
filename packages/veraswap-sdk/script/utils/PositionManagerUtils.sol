@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import {IWETH9} from "@uniswap/v4-periphery/src/interfaces/external/IWETH9.sol";
+import {IPositionDescriptor} from "@uniswap/v4-periphery/src/interfaces/IPositionDescriptor.sol";
 import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
 import {Create2Utils} from "./Create2Utils.sol";
 
@@ -24,11 +28,11 @@ library PositionManagerUtils {
         if (!exists) {
             addr = address(
                 new PositionManager{salt: Create2Utils.BYTES32_ZERO}(
-                    poolManager,
-                    PERMIT2,
+                    IPoolManager(poolManager),
+                    IAllowanceTransfer(PERMIT2),
                     uint256(300_000),
-                    address(0),
-                    address(0)
+                    IPositionDescriptor(address(0)),
+                    IWETH9(address(0))
                 )
             );
         }
