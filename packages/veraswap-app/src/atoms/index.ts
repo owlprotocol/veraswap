@@ -92,6 +92,22 @@ export const chainInAtom = atom<null | Chain>(null);
 // Selected chain out
 export const chainOutAtom = atom<null | Chain>(null);
 
+export const chainInWithResetAtom = atom(
+    (get) => get(chainInAtom),
+    (_, set, newChainIn: Chain | null) => {
+        set(chainInAtom, newChainIn);
+        set(tokenInAtom, null);
+    },
+);
+
+export const chainOutWithResetAtom = atom(
+    (get) => get(chainOutAtom),
+    (_, set, newChainOut: Chain | null) => {
+        set(chainOutAtom, newChainOut);
+        set(tokenOutAtom, null);
+    },
+);
+
 //Temporary
 export interface TokenAtomData {
     chainId: number;

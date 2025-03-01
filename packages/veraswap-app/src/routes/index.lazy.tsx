@@ -23,8 +23,8 @@ import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
     hyperlaneGasPaymentAtom,
-    chainInAtom,
-    chainOutAtom,
+    chainInWithResetAtom,
+    chainOutWithResetAtom,
     chainsAtom,
     poolKeyInAtom,
     quoteInAtom,
@@ -75,8 +75,8 @@ function Index() {
     const swapType = useAtomValue(swapTypeAtom);
     const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
 
-    const [chainIn, setChainIn] = useAtom(chainInAtom);
-    const [chainOut, setChainOut] = useAtom(chainOutAtom);
+    const [chainIn, setChainIn] = useAtom(chainInWithResetAtom);
+    const [chainOut, setChainOut] = useAtom(chainOutWithResetAtom);
 
     const tokensIn = useAtomValue(tokensInAtom);
     const tokensOut = useAtomValue(tokensOutAtom);
