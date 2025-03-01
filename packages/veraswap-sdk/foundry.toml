@@ -10,4 +10,8 @@ via_ir = true
 optimizer = true
 optimizer_runs = 200
 
+[rpc_endpoints]
+op-interop-0 = "https://interop-alpha-0.optimism.io"
+op-interop-1 = "https://interop-alpha-1.optimism.io"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

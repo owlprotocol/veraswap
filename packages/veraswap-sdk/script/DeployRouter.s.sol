@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+/*
 import "forge-std/Script.sol";
 import "forge-std/console2.sol";
 import "forge-std/Test.sol";
@@ -9,11 +10,14 @@ import {VmSafe} from "forge-std/Vm.sol";
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
-import {UniversalRouterApprovedReentrant} from "../contracts/UniversalRouterApprovedReentrant.sol";
-import {DeployParameters} from "./DeployParameters.s.sol";
 
-abstract contract DeployRouter is DeployParameters {
+import {DeployParameters} from "./DeployParameters.s.sol";
+import {UniversalRouterApprovedReentrant} from "../contracts/UniversalRouterApprovedReentrant.sol";
+*/
+
+abstract contract DeployRouter {
     function deployRouter() internal {
+        /*
         address routerAddress = Create2.computeAddress(
             BYTES32_ZERO,
             keccak256(abi.encodePacked(type(UniversalRouterApprovedReentrant).creationCode, abi.encode(params))),
@@ -25,5 +29,6 @@ abstract contract DeployRouter is DeployParameters {
             address deployed = address(new UniversalRouterApprovedReentrant{salt: BYTES32_ZERO}(params));
             assertEq(deployed, routerAddress);
         }
+        */
     }
 }

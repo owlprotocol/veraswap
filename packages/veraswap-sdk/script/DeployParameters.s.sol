@@ -34,6 +34,7 @@ import {DeployParameters, HyperlaneParameters} from "./DeployParameters.s.sol";
 import {DeployRouter} from "./DeployRouter.s.sol";
 
 import {HypERC20FlashCollateral} from "../contracts/token/HypERC20FlashCollateral.sol";
+import {MockSuperchainERC20} from "../../test/MockSuperchainERC20.sol";
 
 struct HyperlaneParameters {
     address mailbox;
@@ -49,6 +50,7 @@ abstract contract DeployParameters is Script, Test, DeployPermit2 {
 
     MockERC20[] tokens;
     HypERC20FlashCollateral[] tokenCollaterals;
+    MockSuperchainERC20[] tokensSuper;
 
     HyperlaneParameters internal hyperlaneParams;
     address internal unsupported;

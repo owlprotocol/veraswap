@@ -94,6 +94,66 @@ export const MOCK_B = getDeployDeterministicAddress({
     salt: zeroHash,
 });
 
+// Superchains
+
+export const interopDevnet0 = defineChain({
+    id: 420120000,
+    name: "Interop Devnet 0",
+    network: "interop-alpha-0",
+    nativeCurrency: {
+        name: "Ether",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: ["https://interop-alpha-0.optimism.io"],
+        },
+        public: {
+            http: ["https://interop-alpha-0.optimism.io"],
+        },
+    },
+    blockExplorers: {
+        default: { name: "Blockscout", url: "https://optimism-interop-alpha-0.blockscout.com/" },
+        routescan: { name: "RouteScan", url: "https://420120000.testnet.routescan.io/" },
+    },
+    contracts: {
+        OptimismPortal: {
+            address: "0x7385d89d38ab79984e7c84fab9ce5e6f4815468a",
+        },
+    },
+    testnet: true,
+});
+
+export const interopDevnet1 = defineChain({
+    id: 420120001,
+    name: "Interop Devnet 1",
+    network: "interop-alpha-1",
+    nativeCurrency: {
+        name: "Ether",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: ["https://interop-alpha-1.optimism.io"],
+        },
+        public: {
+            http: ["https://interop-alpha-1.optimism.io"],
+        },
+    },
+    blockExplorers: {
+        default: { name: "Blockscout", url: "https://optimism-interop-alpha-1.blockscout.com/" },
+        routescan: { name: "RouteScan", url: "https://420120001.testnet.routescan.io/" },
+    },
+    contracts: {
+        OptimismPortal: {
+            address: "0x55f5c4653dbcde7d1254f9c690a5d761b315500c",
+        },
+    },
+    testnet: true,
+});
+
 export const UNISWAP_CONTRACTS = {
     [mainnet.id]: {
         POOL_MANAGER: "0x000000000004444c5dc75cB358380D2e3dE08A90",
@@ -156,6 +216,8 @@ export const UNISWAP_CONTRACTS = {
         QUOTER: "0x7de51022d70a725b508085468052e25e22b5c4c9",
     },
 } as const;
+
+export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4"
 
 export const TOKEN_LIST = {
     [mainnet.id]: {
@@ -241,6 +303,34 @@ export const TOKEN_LIST = {
         },
         TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
     },
+    [interopDevnet0.id]: {
+        superA: {
+            name: "Super A",
+            symbol: "A",
+            decimals: 18,
+            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5"
+        },
+        superB: {
+            name: "Super B",
+            symbol: "B",
+            decimals: 18,
+            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809"
+        }
+    },
+    [interopDevnet1.id]: {
+        superA: {
+            name: "Super A",
+            symbol: "A",
+            decimals: 18,
+            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5"
+        },
+        superB: {
+            name: "Super B",
+            symbol: "B",
+            decimals: 18,
+            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809"
+        }
+    }
 } as const satisfies Record<
     number,
     Record<string, { name: string; symbol: string; decimals: number; address: Address }>
@@ -427,63 +517,3 @@ export const POOLS: Record<number, PoolKey[]> = {
         },
     ],
 } as const;
-
-// Superchains
-
-export const interopDevnet0 = defineChain({
-    id: 420120000,
-    name: "Interop Devnet 0",
-    network: "interop-alpha-0",
-    nativeCurrency: {
-        name: "Ether",
-        symbol: "ETH",
-        decimals: 18,
-    },
-    rpcUrls: {
-        default: {
-            http: ["https://interop-alpha-0.optimism.io"],
-        },
-        public: {
-            http: ["https://interop-alpha-0.optimism.io"],
-        },
-    },
-    blockExplorers: {
-        default: { name: "Blockscout", url: "https://optimism-interop-alpha-0.blockscout.com/" },
-        routescan: { name: "RouteScan", url: "https://420120000.testnet.routescan.io/" },
-    },
-    contracts: {
-        OptimismPortal: {
-            address: "0x7385d89d38ab79984e7c84fab9ce5e6f4815468a",
-        },
-    },
-    testnet: true,
-});
-
-export const interopDevnet1 = defineChain({
-    id: 420120001,
-    name: "Interop Devnet 1",
-    network: "interop-alpha-1",
-    nativeCurrency: {
-        name: "Ether",
-        symbol: "ETH",
-        decimals: 18,
-    },
-    rpcUrls: {
-        default: {
-            http: ["https://interop-alpha-1.optimism.io"],
-        },
-        public: {
-            http: ["https://interop-alpha-1.optimism.io"],
-        },
-    },
-    blockExplorers: {
-        default: { name: "Blockscout", url: "https://optimism-interop-alpha-1.blockscout.com/" },
-        routescan: { name: "RouteScan", url: "https://420120001.testnet.routescan.io/" },
-    },
-    contracts: {
-        OptimismPortal: {
-            address: "0x55f5c4653dbcde7d1254f9c690a5d761b315500c",
-        },
-    },
-    testnet: true,
-});
