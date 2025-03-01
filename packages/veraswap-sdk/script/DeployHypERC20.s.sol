@@ -7,7 +7,7 @@ import "forge-std/Script.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 
-contract DeployParameters is Script {
+contract DeployHypERC20 is Script {
     function run() external virtual {
         vm.startBroadcast();
 
