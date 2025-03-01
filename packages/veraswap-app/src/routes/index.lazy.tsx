@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
-import { useAccount, useSwitchChain, useWatchContractEvent } from "wagmi";
+import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, useWriteContract } from "wagmi";
 import {
     getSwapAndHyperlaneBridgeTransaction,
     getSwapExactInExecuteData,
@@ -14,13 +14,15 @@ import {
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
     SUPERCHAIN_TOKEN_BRIDGE,
+    DIVVI_BASE_REGISTRY,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hex, parseUnits, stringToHex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
+import { base } from "viem/chains";
 import {
     hyperlaneGasPaymentAtom,
     chainInWithResetAtom,
@@ -63,6 +65,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
+import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
+import { registerReferrals } from "@/abis/registerReferrals.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
@@ -121,9 +125,21 @@ function Index() {
 
     const [{ mutate: sendTransaction, isPending: transactionIsPending }] = useAtom(sendTransactionMutationAtom);
 
+    const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
+    if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
+
     const networkType = useAtomValue(networkTypeAtom);
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
+
+    const { data: isUserRegisteredArr } = useReadContract({
+        abi: [isUserRegisteredAbi],
+        chainId: chainIn?.id ?? 0,
+        address: DIVVI_BASE_REGISTRY,
+        functionName: "isUserRegistered",
+        args: [walletAddress ?? zeroAddress, [stringToHex("beefy", { size: 32 })]],
+        query: { enabled: chainIn?.id === base.id && !!walletAddress && swapType === SwapType.Swap },
+    });
 
     const { switchChain } = useSwitchChain();
     useEffect(() => {
@@ -200,7 +216,8 @@ function Index() {
                     args: [
                         tokenIn!.address,
                         UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                        MAX_UINT_160,
+                        // TODO: better check on main
+                        chainIn?.id === base.id ? parseUnits("10", 6) : MAX_UINT_160,
                         MAX_UINT_48,
                     ],
                 }),
@@ -215,6 +232,17 @@ function Index() {
             const amountOutMinimum = quoterData![0];
             const zeroForOne = tokenIn!.address === poolKey!.currency0;
             if (swapType === SwapType.Swap) {
+                const isUserRegistered = isUserRegisteredArr?.[0] as boolean | undefined;
+                if (isUserRegistered === false && chainIn?.id === base.id) {
+                    writeContractRegisterUser({
+                        abi: [registerReferrals],
+                        address: DIVVI_BASE_REGISTRY,
+                        functionName: "registerReferrals",
+                        chainId: chainIn?.id ?? 0,
+                        args: [stringToHex("investor", { size: 32 }), [stringToHex("beefy", { size: 32 })]],
+                    });
+                }
+
                 if (!tokenOut) {
                     throw new Error("Token out not selected for swap");
                 }
