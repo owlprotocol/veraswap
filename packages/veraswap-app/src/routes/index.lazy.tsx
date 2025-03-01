@@ -151,7 +151,7 @@ function Index() {
                     amountOutMinimum,
                 });
             } else if (swapType === SwapType.SwapAndBridge) {
-                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo;
+                const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
 
                 if (!bridgeAddress) {
                     throw new Error("Bridge address not found");
