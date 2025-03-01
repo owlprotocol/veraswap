@@ -19,14 +19,12 @@ export function TokenSelect({
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredTokens = !!tokens
-        ? tokens.filter(
-              (token) =>
-                  token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  token.address.toLowerCase().includes(searchQuery.toLowerCase()),
-          )
-        : [];
+    const filteredTokens = tokens.filter(
+        (token) =>
+            token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            token.address.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.src = "/placeholder.jpg";

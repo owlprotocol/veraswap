@@ -14,6 +14,7 @@ const fetchGithubRegistryData = async () => {
 };
 
 export function hyperlaneRegistryOptions() {
+    // TODO: if !isProduction, merge testHyperlaneRegistry with fetched data
     const isProduction = true; // TODO: Replace with actual production check
 
     return {
