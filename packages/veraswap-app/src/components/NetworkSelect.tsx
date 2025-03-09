@@ -60,7 +60,7 @@ export function NetworkSelect({
             </DialogTrigger>
 
             <DialogContent
-                className="max-w-xs max-h-[80vh] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
+                className="max-w-xs h-[400px] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
                 aria-describedby={undefined}
             >
                 <DialogHeader className="px-2">

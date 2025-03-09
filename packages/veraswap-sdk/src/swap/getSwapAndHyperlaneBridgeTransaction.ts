@@ -42,7 +42,7 @@ export function getSwapAndHyperlaneBridgeTransaction({
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
     tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, bridgeAddress, amountOutMinimum]);
+    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, bridgeAddress, 0]);
 
     const swapInput = tradePlan.finalize() as Hex;
 

@@ -92,6 +92,22 @@ export const chainInAtom = atom<null | Chain>(null);
 // Selected chain out
 export const chainOutAtom = atom<null | Chain>(null);
 
+export const chainInWithResetAtom = atom(
+    (get) => get(chainInAtom),
+    (_, set, newChainIn: Chain | null) => {
+        set(chainInAtom, newChainIn);
+        set(tokenInAtom, null);
+    },
+);
+
+export const chainOutWithResetAtom = atom(
+    (get) => get(chainOutAtom),
+    (_, set, newChainOut: Chain | null) => {
+        set(chainOutAtom, newChainOut);
+        set(tokenOutAtom, null);
+    },
+);
+
 //Temporary
 export interface TokenAtomData {
     chainId: number;
@@ -417,17 +433,19 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
 
 export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
+    const chainIn = get(chainInAtom);
     const remoteInfo = get(remoteTokenInfoAtom);
     const networkType = get(networkTypeAtom);
 
     return {
         ...readContractQueryOptions(config, {
+            chainId: chainIn?.id ?? 0,
             address: remoteInfo?.remoteBridgeAddress ?? zeroAddress,
             abi: [quoteGasPayment],
             functionName: "quoteGasPayment",
             args: [chainOut?.id ?? 0],
         }),
-        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut,
+        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut && !!chainIn,
     };
 }) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 

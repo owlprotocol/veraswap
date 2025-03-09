@@ -64,7 +64,7 @@ export function TokenSelect({
             </DialogTrigger>
 
             <DialogContent
-                className="max-w-md max-h-[40vh] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
+                className="max-w-md h-[400px] rounded-2xl border-0 bg-background shadow-xl backdrop-blur-sm dark:backdrop-blur-lg flex flex-col"
                 aria-describedby={undefined}
             >
                 <DialogHeader className="px-2">

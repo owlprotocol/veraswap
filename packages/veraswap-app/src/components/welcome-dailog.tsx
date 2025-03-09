@@ -67,7 +67,7 @@ export function WelcomeDialog() {
                                                 Fund your wallet
                                             </a>{" "}
                                             with{" "}
-                                            <span className="bg-purple-600 border border-purple-700 hover:bg-purple-900 h-[40px] px-2 py-1 rounded-md">
+                                            <span className="bg-purple-600 border border-purple-700 hover:bg-purple-900 px-1 py-0.5 rounded-md">
                                                 + Fund
                                             </span>{" "}
                                             button once connected

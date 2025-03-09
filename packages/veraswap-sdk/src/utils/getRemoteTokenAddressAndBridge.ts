@@ -10,9 +10,11 @@ export const getRemoteTokenAddressAndBridge = (chainId: number, address: Address
     if (!tokenBridgeInfo) return null;
 
     const remoteTokenAddress = tokenBridgeInfo.remotes[remoteChainId];
+
     if (remoteTokenAddress) {
         const remoteToken = tokenBridgeMap[remoteChainId][remoteTokenAddress];
         const remoteBridgeAddress = remoteToken.bridgeAddress;
+
         return { remoteTokenAddress, remoteBridgeAddress };
     }
     return null;

@@ -45,6 +45,7 @@ export const MainnetTestnetButtons = () => {
                 {["mainnet", "testnet", "superchain"].map((type) => (
                     <Button
                         key={type}
+                        type="button"
                         className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${
                             networkType === type ? buttonStyles[type] : buttonStyles.default
                         }`}

@@ -1,10 +1,11 @@
 import { zeroAddress, zeroHash, encodeDeployData, Address, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
-import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia } from "viem/chains";
+import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
 import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
+import { unichainSepolia, inkSepolia } from "./chains.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -16,6 +17,8 @@ export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
     bytecode: UnsupportedProtocol.bytecode,
     salt: zeroHash,
 });
+
+export const DIVVI_BASE_REGISTRY = "0xba9655677f4e42dd289f5b7888170bc0c7da8cdc";
 
 export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
 export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
@@ -227,6 +230,33 @@ export const UNISWAP_CONTRACTS = {
         STATE_VIEW: "0xc3e8977ebab56512e16194ee84a895b15987fb22",
         QUOTER: "0x97a52483ebc89e1e5ef69df01f3f01142e03e192",
     },
+    // TODO: FIX
+    [baseSepolia.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    // TODO: FIX
+    [unichainSepolia.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    // TODO: FIX
+    [inkSepolia.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
 } as const;
 
 export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
@@ -299,6 +329,18 @@ export const TOKEN_LIST = {
     [sepolia.id]: {
         TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0xfa306dfde7632a6c74bdabbbb19fa59c7a78d73b" },
         TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0xf79509e6fadc7254d59d49bcd976d5523177ec4f" },
+        TokenAForArbi: {
+            name: "Token A For Arbi",
+            symbol: "Aarbi",
+            decimals: 18,
+            address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280",
+        },
+        TokenBForArbi: {
+            name: "Token B For Arbi",
+            symbol: "Barbi",
+            decimals: 18,
+            address: "0x500a80035829572e8E637dC654AE32bC2560968F",
+        },
     },
     [arbitrumSepolia.id]: {
         testUSDC: {
@@ -307,7 +349,29 @@ export const TOKEN_LIST = {
             decimals: 6,
             address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
         },
-        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
+        TokenA: {
+            name: "Token A For Arbi",
+            symbol: "Aarbi",
+            decimals: 18,
+            address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900",
+        },
+    },
+    [baseSepolia.id]: {
+        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x05cad57113cb3fa213982dc9553498018c1d08b7" },
+        TokenB: { name: "Token B", symbol: "B", decimals: 18, address: "0x3744d204595af66329b325a7651b005fbdcd77a4" },
+    },
+    [unichainSepolia.id]: {
+        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b" },
+        TokenB: { name: "Token B", symbol: "B", decimals: 18, address: "0x5983458d6d58b80257744872a778ece9e82ceec0" },
+    },
+    [inkSepolia.id]: {
+        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b" },
+        TokenB: {
+            name: "Token B",
+            symbol: "B",
+            decimals: 18,
+            address: "0x5980x5983458d6d58b80257744872a778ece9e82ceec0",
+        },
     },
     [interopDevnet0.id]: {
         superA: {
@@ -402,10 +466,76 @@ export const tokenBridgeMap: TokenBridgeMap = {
         },
     },
     [sepolia.id]: {
-        // Token A
+        // Token A For Arbi
         "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280": {
             bridgeAddress: "0x2078763224e3C8Fc0cDe40C29a98e8d6b2a540F1",
             remotes: { [arbitrumSepolia.id]: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900" },
+        },
+        // Token A
+        "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B": {
+            bridgeAddress: "0xE3664722A685de10B27460D9097767813B5E0459",
+            remotes: {
+                [baseSepolia.id]: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
+                [unichainSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+                [inkSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+            },
+        },
+        // Token B
+        "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f": {
+            bridgeAddress: "0x5F2785F8C06fff20F44E7D1c4940694Cd271343b",
+            remotes: {
+                [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
+                [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+                [inkSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
+        },
+    },
+    [baseSepolia.id]: {
+        "0x05cad57113cb3fa213982dc9553498018c1d08b7": {
+            remotes: {
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
+                [unichainSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+                [inkSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+            },
+        },
+        "0x3744d204595af66329b325a7651b005fbdcd77a4": {
+            remotes: {
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
+                [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+                [inkSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
+        },
+    },
+    [unichainSepolia.id]: {
+        "0x274d622afa517251bdf73ea08377b78dd9f49f2b": {
+            remotes: {
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
+                [baseSepolia.id]: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
+                [inkSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+            },
+        },
+        "0x5983458d6d58b80257744872a778ece9e82ceec0": {
+            remotes: {
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
+                [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
+                [inkSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
+        },
+    },
+    [inkSepolia.id]: {
+        "0x274d622afa517251bdf73ea08377b78dd9f49f2b": {
+            remotes: {
+                [sepolia.id]: "0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B",
+                [baseSepolia.id]: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
+                [unichainSepolia.id]: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+            },
+        },
+        "0x5983458d6d58b80257744872a778ece9e82ceec0": {
+            remotes: {
+                [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
+                [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
+                [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
         },
     },
 };
@@ -471,21 +601,22 @@ export const POOLS: Record<number, PoolKey[]> = {
     //         hooks: zeroAddress,
     //     },
     // ],
-    // [base.id]: [
-    //     // VIRTUAL-USDC
-    //     {
-    //         currency0:
-    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-    //                 ? TOKEN_LIST[base.id].VIRTUAL.address
-    //                 : TOKEN_LIST[base.id].USDC.address,
-    //         currency1:
-    //             TOKEN_LIST[base.id].VIRTUAL.address < TOKEN_LIST[base.id].USDC.address
-    //                 ? TOKEN_LIST[base.id].USDC.address
-    //                 : TOKEN_LIST[base.id].VIRTUAL.address,
-    //         fee: 3000,
-    //         tickSpacing: 60,
-    //         hooks: zeroAddress,
-    //     },
+    [base.id]: [
+        // VIRTUAL-USDC
+        {
+            currency0:
+                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
+                    ? TOKEN_LIST[base.id].Virtual.address
+                    : TOKEN_LIST[base.id].USDC.address,
+            currency1:
+                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
+                    ? TOKEN_LIST[base.id].USDC.address
+                    : TOKEN_LIST[base.id].Virtual.address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        },
+    ],
     //     // USDC-VVV
     //     {
     //         currency0:
