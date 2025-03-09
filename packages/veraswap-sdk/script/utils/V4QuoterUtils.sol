@@ -7,7 +7,7 @@ import {Create2Utils} from "./Create2Utils.sol";
 
 library V4QuoterUtils {
     function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
-        return abi.encodePacked(type(V4Quoter).creationCode, poolManager);
+        return abi.encodePacked(type(V4Quoter).creationCode, abi.encode(poolManager));
     }
 
     function getOrCreate2(address poolManager) internal returns (address addr, bool exists) {

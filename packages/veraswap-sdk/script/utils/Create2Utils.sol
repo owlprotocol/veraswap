@@ -24,7 +24,7 @@ library Create2Utils {
     */
 
     /// @notice Get Create2 address, exists with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
-    function getAddressExists(bytes memory bytecode) internal pure returns (address expected, bool contractExists) {
+    function getAddressExists(bytes memory bytecode) internal view returns (address expected, bool contractExists) {
         expected = getAddress(bytecode);
         contractExists = expected.code.length > 0;
     }
@@ -35,7 +35,7 @@ library Create2Utils {
     }
 
     /// @notice Create2 address deployed with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
-    function exists(bytes memory bytecode) internal returns (bool contractExists) {
+    function exists(bytes memory bytecode) internal view returns (bool contractExists) {
         (, contractExists) = getAddressExists(bytecode);
     }
 }

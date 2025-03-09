@@ -6,7 +6,7 @@ import {Create2Utils} from "./Create2Utils.sol";
 
 library PoolManagerUtils {
     function getDeployBytecode(address owner) internal pure returns (bytes memory) {
-        return abi.encodePacked(type(PoolManager).creationCode, owner);
+        return abi.encodePacked(type(PoolManager).creationCode, abi.encode(owner));
     }
 
     function getOrCreate2(address owner) internal returns (address addr, bool exists) {
