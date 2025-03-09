@@ -26,48 +26,26 @@ contract DeployUniswap is Script {
 
     function run() external virtual {
         vm.startBroadcast();
-
-        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
-        (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
-        (address v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
-        (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
-
-        RouterParameters memory routerParams = RouterParameters({
-            permit2: PERMIT2,
-            weth9: 0x4200000000000000000000000000000000000006,
-            v2Factory: unsupported,
-            v3Factory: unsupported,
-            pairInitCodeHash: BYTES32_ZERO,
-            poolInitCodeHash: BYTES32_ZERO,
-            v4PoolManager: v4PoolManager,
-            v3NFTPositionManager: unsupported,
-            v4PositionManager: v4PositionManager
-        });
-        // (address router, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
-
-        console2.log("unsupported:", unsupported);
-        console2.log("v4PoolManager:", v4PoolManager);
-        console2.log("v4PositionManager:", v4PositionManager);
-        console2.log("v4StateView:", v4StateView);
-        console2.log("v4Quoter:", v4Quoter);
-
-        // console2.log("router:", router);
-        // address router = 0x6aa638Fe70021Cf4A9Ce34c2E7718b99d4360efD;
+        address router = 0x6aa638Fe70021Cf4A9Ce34c2E7718b99d4360efD;
 
         // Deploy canonical tokens
         // (address tokenAAddr, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
         // (address tokenBAddr, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
-        /*
-        address tokenAAddr = 0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B;
-        address tokenBAddr = 0xf79509E6faDC7254D59d49Bcd976d5523177ec4f;
+        address v4PositionManager = 0x97b4242a6CDe1437E7C8B3e79F3F2e99Cf90899A;
+        address v4StateView = 0xC3E8977ebaB56512E16194ee84A895b15987fb22;
+        // MockERC20
+        // address tokenAAddr = 0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B;
+        // address tokenBAddr = 0xf79509E6faDC7254D59d49Bcd976d5523177ec4f;
+        // SuperchainERC20
+        address tokenAAddr = 0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5;
+        address tokenBAddr = 0x5710586e8d18f2e1c54c7a2247c1977578b11809;
         IERC20 tokenA = IERC20(tokenAAddr);
         IERC20 tokenB = IERC20(tokenBAddr);
 
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
-        */
+
         vm.stopBroadcast();
     }
 }

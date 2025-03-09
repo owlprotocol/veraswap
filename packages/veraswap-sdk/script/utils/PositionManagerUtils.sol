@@ -15,11 +15,7 @@ library PositionManagerUtils {
         return
             abi.encodePacked(
                 type(PositionManager).creationCode,
-                poolManager,
-                PERMIT2,
-                uint256(300_000),
-                address(0),
-                address(0)
+                abi.encode(poolManager, PERMIT2, uint256(300_000), address(0), address(0))
             );
     }
 

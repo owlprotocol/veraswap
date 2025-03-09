@@ -7,7 +7,7 @@ import {Create2Utils} from "./Create2Utils.sol";
 
 library StateViewUtils {
     function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
-        return abi.encodePacked(type(StateView).creationCode, poolManager);
+        return abi.encodePacked(type(StateView).creationCode, abi.encode(poolManager));
     }
 
     function getOrCreate2(address poolManager) internal returns (address addr, bool exists) {
