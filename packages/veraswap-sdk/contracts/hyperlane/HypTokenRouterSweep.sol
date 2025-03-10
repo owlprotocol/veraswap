@@ -19,7 +19,7 @@ contract HypTokenRouterSweep {
     /// @param token The token
     /// @param spender The spender
     /// @return bool if succeeded
-    function approveAll(address token, address spender) public returns (bool) {
+    function approveAll(address token, address spender) external returns (bool) {
         // Approve infinite balance to router
         return IERC20(token).approve(address(spender), MAX_INT);
     }
