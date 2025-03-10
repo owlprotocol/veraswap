@@ -16,11 +16,11 @@ permit2/=lib/permit2/
 lib/uniswap-hooks:v4-periphery/=lib/v4-periphery/
 lib/uniswap-hooks:v4-core/=lib/v4-core/
 
-lib/hyperlane-monorepo/:@arbitrum/=lib/hyperlane-monorepo/node_modules/@arbitrum/
-lib/hyperlane-monorepo/:@eth-optimism/=lib/hyperlane-monorepo/node_modules/@eth-optimism/
-lib/hyperlane-monorepo/:@layerzerolabs/=lib/hyperlane-monorepo/node_modules/@layerzerolabs/
-lib/hyperlane-monorepo/:@openzeppelin/=lib/hyperlane-monorepo/node_modules/@openzeppelin/
-lib/hyperlane-monorepo/:@openzeppelin/contracts/=lib/hyperlane-monorepo/node_modules/@openzeppelin/contracts/
+lib/hyperlane-monorepo/:@arbitrum/=node_modules/@arbitrum/
+lib/hyperlane-monorepo/:@eth-optimism/=node_modules/@eth-optimism/
+lib/hyperlane-monorepo/:@layerzerolabs/=node_modules/@layerzerolabs/
+lib/hyperlane-monorepo/:@openzeppelin/=node_modules/@openzeppelin/
+lib/hyperlane-monorepo/:@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
 
 lib/hyperlane-monorepo/:ds-test/=lib/hyperlane-monorepo/solidity/lib/forge-std/lib/ds-test/src/
 lib/hyperlane-monorepo/:forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
