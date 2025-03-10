@@ -13,9 +13,8 @@ contract SuperchainTokenBridgeSweep {
 
     error BalanceZero();
 
-    // TODO: Technically we could use any account address IF we handle approvals/Permit2 approvals
     /// @notice Call ISuperchainTokenBridge with `sendERC20` using this contract's full balance.
-    /// @dev Contract balance MUST be > 0 to work. Do keep balance on this contract between transactions as they can be taken by anyone
+    /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
     function sendAllERC20(address _token, address _to, uint256 _chainId) external returns (bytes32 msgHash_) {
         uint256 balance = IERC20(_token).balanceOf(address(this));
         if (balance == 0) revert BalanceZero();
