@@ -386,6 +386,30 @@ export const TOKEN_LIST = {
             decimals: 18,
             address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
         },
+        superC: {
+            name: "Super C",
+            symbol: "C",
+            decimals: 18,
+            address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
+        },
+        superD: {
+            name: "Super D",
+            symbol: "D",
+            decimals: 18,
+            address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
+        },
+        superE: {
+            name: "Super E",
+            symbol: "E",
+            decimals: 18,
+            address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
+        },
+        superF: {
+            name: "Super F",
+            symbol: "F",
+            decimals: 18,
+            address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
+        },
     },
     [interopDevnet1.id]: {
         superA: {
@@ -399,6 +423,30 @@ export const TOKEN_LIST = {
             symbol: "B",
             decimals: 18,
             address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
+        },
+        superC: {
+            name: "Super C",
+            symbol: "C",
+            decimals: 18,
+            address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
+        },
+        superD: {
+            name: "Super D",
+            symbol: "D",
+            decimals: 18,
+            address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
+        },
+        superE: {
+            name: "Super E",
+            symbol: "E",
+            decimals: 18,
+            address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
+        },
+        superF: {
+            name: "Super F",
+            symbol: "F",
+            decimals: 18,
+            address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
         },
     },
 } as const satisfies Record<
