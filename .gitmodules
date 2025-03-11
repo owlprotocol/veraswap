@@ -56,3 +56,6 @@
 [submodule "packages/veraswap-sdk/lib/interop-lib"]
 	path = packages/veraswap-sdk/lib/interop-lib
 	url = https://github.com/ethereum-optimism/interop-lib
+[submodule "packages/veraswap-sdk/lib/rhinestone-core-modules"]
+	path = packages/veraswap-sdk/lib/rhinestone-core-modules
+	url = https://github.com/owlprotocol/rhinestone-core-modules
