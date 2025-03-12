@@ -57,7 +57,7 @@ export function TransactionStatusModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>{allComplete ? "Transaction Complete" : "Transaction in Progress"}</DialogTitle>
                 </DialogHeader>

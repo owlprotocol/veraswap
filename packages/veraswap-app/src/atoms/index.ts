@@ -27,6 +27,7 @@ import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
+import { TokenWithChainId } from "@/types";
 
 /**
  * - networks
@@ -78,8 +79,6 @@ export const networkTypeWithResetAtom = atom(
 );
 
 const resetNetworkDependentAtoms = (set: any) => {
-    set(chainInAtom, null);
-    set(chainOutAtom, null);
     set(tokenInAtom, null);
     set(tokenOutAtom, null);
     set(tokenInAmountInputAtom, "");
@@ -87,87 +86,48 @@ const resetNetworkDependentAtoms = (set: any) => {
 
 export const tokensAtom = atom(TOKEN_LIST);
 
-// Selected chain in
-export const chainInAtom = atom<null | Chain>(null);
-// Selected chain out
-export const chainOutAtom = atom<null | Chain>(null);
-
-export const chainInWithResetAtom = atom(
-    (get) => get(chainInAtom),
-    (_, set, newChainIn: Chain | null) => {
-        set(chainInAtom, newChainIn);
-        set(tokenInAtom, null);
-    },
-);
-
-export const chainOutWithResetAtom = atom(
-    (get) => get(chainOutAtom),
-    (_, set, newChainOut: Chain | null) => {
-        set(chainOutAtom, newChainOut);
-        set(tokenOutAtom, null);
-    },
-);
-
-//Temporary
-export interface TokenAtomData {
-    chainId: number;
-    address: Address;
-    name: string;
-    symbol: string;
-    decimals: number;
-    logo?: string;
-}
-export interface TokenAmountAtomData extends TokenAtomData {
-    amount: bigint;
-}
-
-/***** Tokens *****/
-// List of supported tokens
-//TODO: Add intermediate atom to fetch metadata, for now hardcode
-// export const tokensAtom = atom<TokenAtomData[]>([
-//     { chainId: localhost.id, address: MOCK_A, name: "Mock A", symbol: "A", decimals: 18 },
-//     { chainId: localhost.id, address: MOCK_B, name: "Mock B", symbol: "B", decimals: 18 }
-// ])
-
-// List of supported tokens on networkIn
-export const tokensInAtom = atom((get) => {
-    const chainIn = get(chainInAtom);
-    if (!chainIn) return [];
-
-    const tokensMap = get(tokensAtom);
-    const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
-
-    if (!tokens) return [];
-
-    const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
-        chainId: chainIn.id,
-        ...value,
-    }));
-
-    return formattedTokens;
+export const chainInAtom = atom<Chain | null>((get) => {
+    const tokenIn = get(tokenInAtom);
+    const availableChains = get(chainsAtom);
+    return tokenIn ? availableChains.find((chain) => chain.id === tokenIn.chainId) || null : null;
 });
-// List of supported tokens on networkOut
-//TODO: Use pool info in addition to network
+
+export const chainOutAtom = atom<Chain | null>((get) => {
+    const tokenOut = get(tokenOutAtom);
+    const availableChains = get(chainsAtom);
+    return tokenOut ? availableChains.find((chain) => chain.id === tokenOut.chainId) || null : null;
+});
+
+export const tokensInAtom = atom((get) => {
+    const networkChains = get(chainsAtom);
+
+    return networkChains.flatMap((chain) =>
+        Object.entries(TOKEN_LIST)
+            .filter(([_, token]) => token.chainId === chain.id)
+            .map(([key, token]) => ({
+                key,
+                ...token,
+            })),
+    );
+});
+
 export const tokensOutAtom = atom((get) => {
-    const chainOut = get(chainOutAtom);
-    if (!chainOut) return [];
-
+    const networkChains = get(chainsAtom);
     const tokensMap = get(tokensAtom);
-    const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
 
-    if (!tokens) return [];
-
-    const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
-        chainId: chainOut.id,
-        ...value,
-    }));
-    // TODO: filter out tokenIn
-    return formattedTokens;
+    return networkChains.flatMap((chain) =>
+        Object.entries(tokensMap)
+            .filter(([_, token]) => token.chainId === chain.id)
+            .map(([key, token]) => ({
+                key,
+                ...token,
+            })),
+    );
 });
 // Selected tokenIn
-export const tokenInAtom = atom<TokenAtomData | null>(null);
+export const tokenInAtom = atom<TokenWithChainId | null>(null);
 // Selected tokenOut
-export const tokenOutAtom = atom<TokenAtomData | null>(null);
+export const tokenOutAtom = atom<TokenWithChainId | null>(null);
 
 export const remoteTokenInfoAtom = atom((get) => {
     const tokenOut = get(tokenOutAtom);
@@ -285,7 +245,7 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenInAmountInput = get(tokenInAmountInputAtom);
     if (!tokenIn || tokenInAmountInput === "") return null;
-    return parseUnits(tokenInAmountInput, tokenIn.decimals);
+    return parseUnits(tokenInAmountInput, tokenIn.decimals!);
 });
 
 // Selected tokenOutAmount
@@ -356,13 +316,8 @@ export const quoteInAtom = atomWithQuery((get) => {
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {
-    const currentChainIn = get(chainInAtom);
-    const currentChainOut = get(chainOutAtom);
     const currentTokenIn = get(tokenInAtom);
     const currentTokenOut = get(tokenOutAtom);
-
-    set(chainInAtom, currentChainOut);
-    set(chainOutAtom, currentChainIn);
 
     set(tokenInAtom, currentTokenOut);
     set(tokenOutAtom, currentTokenIn);
