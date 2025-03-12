@@ -1,4 +1,4 @@
-import { Hex } from "viem";
+import { Hex, Address } from "viem";
 
 export const approveAll = {
     type: "function",
