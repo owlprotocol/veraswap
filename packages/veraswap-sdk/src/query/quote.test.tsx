@@ -28,8 +28,8 @@ describe("quote.test.tsx", () => {
         },
     });
 
-    const currencyA = new Token(chain.id, TOKEN_LIST[chainId].TokenA.address, 18, "A");
-    const currencyB = new Token(chain.id, TOKEN_LIST[chainId].TokenB.address, 18, "B");
+    const currencyA = new Token(chain.id, TOKEN_LIST["TokenA_1337"].address, 18, "A");
+    const currencyB = new Token(chain.id, TOKEN_LIST["TokenB_1337"].address, 18, "B");
 
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;
