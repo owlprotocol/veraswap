@@ -182,6 +182,8 @@ async function addLiquidity(chains: Chain[]) {
             args: [walletClient.account.address, currency1Address, positionManager],
         });
 
+        console.log({ currency0Allowance, currency1Allowance, currencyAPermit2Allowance, currencyBPermit2Allowance });
+
         // if (currencyBPermit2Allowance < MAX_UINT_160 / 2n) {
         const currencyBApprovePOSMHash = await walletClient.writeContract({
             address: PERMIT2_ADDRESS,
