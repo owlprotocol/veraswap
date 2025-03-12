@@ -259,6 +259,7 @@ export const UNISWAP_CONTRACTS = {
     },
 } as const;
 
+//TODO: Derive these from bytecode instead of hard-coding?
 //TODO: forge simulation suggests SUPERCHAIN_SWEEP_ADDRESS=0x447311458A14F3890Dbab5Ff1Bca94074214F501?
 // Maybe from different forge config in past?
 export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
