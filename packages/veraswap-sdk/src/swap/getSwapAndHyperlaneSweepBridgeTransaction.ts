@@ -4,6 +4,7 @@ import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
 
 /**
  * getSwapAndHyperlaneSweepBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
@@ -11,8 +12,6 @@ import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
 export function getSwapAndHyperlaneSweepBridgeTransaction({
     universalRouter,
     bridgeAddress,
-    // TODO: remove if same across chains
-    hypTokenRouterSweepAddress,
     destinationChain,
     receiver,
     amountIn,
@@ -23,7 +22,6 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
-    hypTokenRouterSweepAddress: Address;
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
@@ -38,14 +36,14 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
     tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, hypTokenRouterSweepAddress, 0]);
+    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, HYPERLANE_ROUTER_SWEEP_ADDRESS, 0]);
 
     const swapInput = tradePlan.finalize() as Hex;
 
     routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
 
     routePlanner.addCommand(CommandType.CALL_TARGET, [
-        hypTokenRouterSweepAddress,
+        HYPERLANE_ROUTER_SWEEP_ADDRESS,
         0n,
         encodeFunctionData({
             abi: HypTokenRouterSweep.abi,
