@@ -14,6 +14,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
     error InvalidRemoteRouter(address account, uint32 domain, address router);
+    error InvalidOriginSender(address account, address originSender);
     error InvalidExecutorMode();
 
     // ============ Public Storage ============
@@ -156,7 +157,9 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 revert InvalidRemoteRouter(account, origin, router);
             }
             // Check Origin Sender (on Executor)
-            //TODO: CRITICAL CHECK ORIGIN SENDER LOGIC
+            if (!executor.isOwner(account, originSender)) {
+                revert InvalidOriginSender(account, originSender);
+            }
 
             if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE) {
                 executor.executeOnOwnedAccount{value: msg.value}(account, callData);
