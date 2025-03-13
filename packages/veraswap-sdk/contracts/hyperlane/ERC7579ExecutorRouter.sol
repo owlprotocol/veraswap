@@ -11,6 +11,18 @@ import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
 /// @title ERC7579ExecutorRouter
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
 contract ERC7579ExecutorRouter is MailboxClientStatic {
+    // ============ Structs ============
+    struct RouterInfo {
+        uint32 domain;
+        address addr;
+    }
+
+    struct OwnerInfo {
+        uint32 domain;
+        address addr;
+        bool enabled;
+    }
+
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
     error InvalidRemoteRouter(address account, uint32 domain, address router);
@@ -21,6 +33,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     OwnableSignatureExecutor immutable executor;
     IAccountFactory immutable factory;
     mapping(address account => mapping(uint32 domain => address router)) public routers;
+    mapping(address account => mapping(uint32 domain => mapping(address owner => bool))) public owners;
 
     // ============ Constructor ============
     constructor(
@@ -34,12 +47,19 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     }
     // =========== Remote Router Management =======
     /**
-     * @notice Enroll remote router for account
-     * @param domain remote domain to enroll
-     * @param router remote router to enroll
+     * @notice Set remote routers and owners for account
+     * @param _routers remote routers to set
+     * @param _owners remote owners to set
      */
-    function enrollRemoteRouter(uint32 domain, address router) external {
-        routers[msg.sender][domain] = router;
+    function setAccountInfo(RouterInfo[] memory _routers, OwnerInfo[] memory _owners) external {
+        // Set Approved Remote Routers
+        for (uint256 i = 0; i < _routers.length; i++) {
+            routers[msg.sender][_routers[i].domain] = _routers[i].addr;
+        }
+        // Set Approved Remote Owners
+        for (uint256 i = 0; i < _owners.length; i++) {
+            owners[msg.sender][_owners[i].domain][_owners[i].addr] = _owners[i].enabled;
+        }
     }
 
     // ============ Dispatch Outgoing Messages ============
@@ -157,7 +177,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 revert InvalidRemoteRouter(account, origin, router);
             }
             // Check Origin Sender (on Executor)
-            if (!executor.isOwner(account, originSender)) {
+            if (!owners[account][origin][originSender]) {
                 revert InvalidOriginSender(account, originSender);
             }
 
