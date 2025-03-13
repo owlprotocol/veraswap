@@ -12,16 +12,22 @@ import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
 contract ERC7579ExecutorRouter is MailboxClientStatic {
     // ============ Structs ============
-    struct RouterInfo {
+
+    // Remote Router, only 1 per account per domain
+    struct RemoteRouter {
         uint32 domain;
         address addr;
     }
-
-    struct OwnerInfo {
+    // Remote Owner, N per account per domain
+    struct RemoteOwner {
         uint32 domain;
         address addr;
         bool enabled;
     }
+
+    // ============ Events ============
+    event AccountRemoteRouterSet(address indexed account, uint32 domain, address addr);
+    event AccountRemoteOwnerSet(address indexed account, uint32 domain, address addr, bool enabled);
 
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
@@ -51,14 +57,16 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
      * @param _routers remote routers to set
      * @param _owners remote owners to set
      */
-    function setAccountInfo(RouterInfo[] memory _routers, OwnerInfo[] memory _owners) external {
+    function setAccountInfo(RemoteRouter[] memory _routers, RemoteOwner[] memory _owners) external {
         // Set Approved Remote Routers
         for (uint256 i = 0; i < _routers.length; i++) {
             routers[msg.sender][_routers[i].domain] = _routers[i].addr;
+            emit AccountRemoteRouterSet(msg.sender, _routers[i].domain, _routers[i].addr);
         }
         // Set Approved Remote Owners
         for (uint256 i = 0; i < _owners.length; i++) {
             owners[msg.sender][_owners[i].domain][_owners[i].addr] = _owners[i].enabled;
+            emit AccountRemoteOwnerSet(msg.sender, _owners[i].domain, _owners[i].addr, _owners[i].enabled);
         }
     }
 
