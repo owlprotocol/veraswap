@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {IPostDispatchHook} from "@hyperlane-xyz/core/interfaces/hooks/IPostDispatchHook.sol";
+import {TypeCasts} from "@hyperlane-xyz/core/libs/TypeCasts.sol";
 import {OwnableSignatureExecutor} from "@rhinestone/core-modules/OwnableSignatureExecutor/OwnableSignatureExecutor.sol";
 import {MailboxClientStatic} from "./MailboxClientStatic.sol";
 import {IAccountFactory} from "./IAccountFactory.sol";
@@ -10,10 +11,15 @@ import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
 /// @title ERC7579ExecutorRouter
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
 contract ERC7579ExecutorRouter is MailboxClientStatic {
+    // ============ Errors ============
+    error AccountDeploymentFailed(address account);
+    error InvalidRemoteRouter(address account, uint32 domain, address router);
+    error InvalidExecutorMode();
+
     // ============ Public Storage ============
     OwnableSignatureExecutor immutable executor;
     IAccountFactory immutable factory;
-    mapping(address account => mapping(uint32 domain => bytes32 router)) public routers;
+    mapping(address account => mapping(uint32 domain => address router)) public routers;
 
     // ============ Constructor ============
     constructor(
@@ -31,7 +37,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
      * @param domain remote domain to enroll
      * @param router remote router to enroll
      */
-    function enrollRemoteRouter(uint32 domain, bytes32 router) external {
+    function enrollRemoteRouter(uint32 domain, address router) external {
         routers[msg.sender][domain] = router;
     }
 
@@ -83,30 +89,82 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             validUntil,
             signature
         );
-        return _dispatch(destination, bytes32(uint256(uint160(router))), msg.value, msgBody, hookMetadata, hook);
+        return _dispatch(destination, TypeCasts.addressToBytes32(router), msg.value, msgBody, hookMetadata, hook);
     }
 
     // ============ Handle Incoming Messages ============
     /**
      * @notice Handles dispatched messages by relaying calls to the interchain account
-     * @param _origin The origin domain of the interchain account
-     * @param _sender The sender of the interchain message
-     * @param _message The InterchainAccountMessage containing the account
+     * @param origin The origin domain of the interchain account
+     * @param sender The sender of the interchain message
+     * @param message The InterchainAccountMessage containing the account
      * owner, ISM, and sequence of calls to be relayed
      * @dev Does not need to be onlyRemoteRouter, as this application is designed
      * to receive messages from untrusted remote contracts.
      */
-    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMailbox {
-        /*
-        (bytes32 _owner, bytes32 _ism, CallLib.Call[] memory _calls) = InterchainAccountMessage.decode(_message);
+    function handle(uint32 origin, bytes32 sender, bytes calldata message) external payable onlyMailbox {
+        (
+            address originSender,
+            address account,
+            bytes memory initData,
+            bytes32 initSalt,
+            ERC7579ExecutorMessage.ExecutionMode executionMode,
+            bytes memory callData,
+            uint256 nonce,
+            uint48 validAfter,
+            uint48 validUntil,
+            bytes memory signature
+        ) = ERC7579ExecutorMessage.decode(message);
 
-        OwnableMulticall _interchainAccount = getDeployedInterchainAccount(
-            _origin,
-            _owner,
-            _sender,
-            _ism.bytes32ToAddress()
-        );
-        _interchainAccount.multicall{value: msg.value}(_calls);
-        */
+        if (initData.length > 0) {
+            // Check account exists and deploy if not
+            if (account.code.length == 0) {
+                // Deploy
+                factory.createAccount(initData, initSalt);
+                if (account.code.length == 0) {
+                    revert AccountDeploymentFailed(account);
+                }
+            }
+        }
+
+        // Assume account exists beyond this point
+        if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE_SIGNATURE) {
+            // Execute with signature, no checks on origin/router/originSender
+            executor.executeOnOwnedAccount{value: msg.value}(
+                account,
+                nonce,
+                validAfter,
+                validUntil,
+                callData,
+                signature
+            );
+        } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.BATCH_SIGNATURE) {
+            // Execute with signature, no checks on origin/router/originSender
+            executor.executeBatchOnOwnedAccount{value: msg.value}(
+                account,
+                nonce,
+                validAfter,
+                validUntil,
+                callData,
+                signature
+            );
+        } else {
+            // Assumes Router has been set as owner on Executor
+            // Check Router
+            address router = TypeCasts.bytes32ToAddress(sender);
+            if (routers[account][origin] != router) {
+                revert InvalidRemoteRouter(account, origin, router);
+            }
+            // Check Origin Sender (on Executor)
+            //TODO: CRITICAL CHECK ORIGIN SENDER LOGIC
+
+            if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE) {
+                executor.executeOnOwnedAccount{value: msg.value}(account, callData);
+            } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.BATCH) {
+                executor.executeBatchOnOwnedAccount{value: msg.value}(account, callData);
+            } else {
+                revert InvalidExecutorMode();
+            }
+        }
     }
 }
