@@ -4,6 +4,7 @@ import * as chains from "viem/chains";
 
 import { tokenRegistryData } from "./tokenRegistryData.js";
 import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
+import { inkSepolia, unichainSepolia } from "../chains.js";
 
 //TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {
@@ -13,9 +14,13 @@ export const chainIdToBlockchain: Record<number, string> = {
     43114: "avalanche",
     1337: "localhost",
 };
-export const getChainById = (chainId: number) => {
-    //@ts-expect-error
-    return Object.values(chains).find((chain) => chain.id === chainId) as Chain;
+export const getChainById = (chainId: number): Chain | undefined => {
+    // @ts-expect-error
+    const chain = Object.values(chains).find((chain) => chain.id === chainId) as Chain | undefined;
+    if (chain) return chain;
+
+    if (inkSepolia.id === chainId) return inkSepolia;
+    if (unichainSepolia.id === chainId) return unichainSepolia;
 };
 
 export function tokenDataQueryOptions(
