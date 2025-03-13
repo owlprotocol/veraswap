@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IMailbox} from "@hyperlane-xyz/core/interfaces/IMailbox.sol";
+import {IPostDispatchHook} from "@hyperlane-xyz/core/interfaces/hooks/IPostDispatchHook.sol";
 import {IInterchainSecurityModule} from "@hyperlane-xyz/core/interfaces/IInterchainSecurityModule.sol";
 
 /// @title MailboxClientStatic
@@ -38,5 +39,23 @@ abstract contract MailboxClientStatic {
 
     function _isDelivered(bytes32 id) internal view returns (bool) {
         return mailbox.delivered(id);
+    }
+
+    /// @notice Dispatch message to Maibolx
+    /// @param domain Target domain
+    /// @param recipient Target recipient
+    /// @param value Relay payment value
+    /// @param messageBody Message body
+    /// @param hookMetadata Hook metadata, useful for gas overrides and post-dispatch logic (default zero bytes)
+    /// @param hook Hook (address(0) default hook)
+    function _dispatch(
+        uint32 domain,
+        bytes32 recipient,
+        uint256 value,
+        bytes memory messageBody,
+        bytes memory hookMetadata,
+        address hook
+    ) internal returns (bytes32) {
+        return mailbox.dispatch{value: value}(domain, recipient, messageBody, hookMetadata, IPostDispatchHook(hook));
     }
 }
