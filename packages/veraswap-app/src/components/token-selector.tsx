@@ -72,7 +72,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                     {currentToken ? (
                         <>
                             <img
-                                src={currentToken.logo || "https://etherscan.io/images/main/empty-token.png"}
+                                src={currentToken.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                                 alt={currentToken.symbol}
                                 className="h-7 w-7 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
                                 onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
@@ -163,7 +163,7 @@ const PopularTokens = ({
                     >
                         <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                             <img
-                                src={token.logo || "/placeholder.svg"}
+                                src={token.logoURI || "/placeholder.svg"}
                                 alt={token.symbol}
                                 className="w-full h-full object-cover"
                                 onError={(e) =>
@@ -219,7 +219,7 @@ const TokenGroup = ({
                 <div className="flex-1 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                         <img
-                            src={tokenList[0].logo || "/placeholder.svg"}
+                            src={tokenList[0].logoURI || "/placeholder.svg"}
                             alt={symbol}
                             className="w-full h-full object-cover"
                             onError={(e) => (e.currentTarget.src = "https://etherscan.io/images/main/empty-token.png")}

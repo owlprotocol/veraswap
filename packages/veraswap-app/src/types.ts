@@ -14,7 +14,7 @@ export interface TokenWithChainId {
     name: string;
     symbol: string;
     decimals: number;
-    logo?: string;
+    logoURI?: string;
 }
 
 export interface Network {

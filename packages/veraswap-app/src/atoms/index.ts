@@ -84,7 +84,39 @@ const resetNetworkDependentAtoms = (set: any) => {
     set(tokenInAmountInputAtom, "");
 };
 
-export const tokensAtom = atom(TOKEN_LIST);
+const fetchTokens = async () => {
+    const response = await fetch(
+      "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refs/heads/main/tokens-list.json"
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch tokens");
+    }
+    return response.json();
+  };
+
+  export const fetchedTokensAtom = atomWithQuery(() => ({
+    queryKey: ["tokens"],
+    queryFn: fetchTokens,
+  }));
+
+  export const tokensAtom = atom((get) => {
+    const fetchedTokensState = get(fetchedTokensAtom);
+  
+    const fetchedTokens = fetchedTokensState.data ?? [];
+    const localTokens = Object.values(TOKEN_LIST);
+  
+    const combinedTokens = Array.from(
+      new Map(
+        [...localTokens, ...fetchedTokens].map((token) => 
+            // ensures no duplicate tokens on same chain
+          [`${token.chainId}-${token.address.toLowerCase()}`, token]
+        )
+      ).values()
+    );
+
+    return combinedTokens;
+});
+
 
 export const chainInAtom = atom<Chain | null>((get) => {
     const tokenIn = get(tokenInAtom);
@@ -100,26 +132,32 @@ export const chainOutAtom = atom<Chain | null>((get) => {
 
 export const tokensInAtom = atom((get) => {
     const networkChains = get(chainsAtom);
+    const combinedTokens = get(tokensAtom); 
+
+    if (!combinedTokens) return []
 
     return networkChains.flatMap((chain) =>
-        Object.entries(TOKEN_LIST)
-            .filter(([_, token]) => token.chainId === chain.id)
-            .map(([key, token]) => ({
-                key,
+        combinedTokens
+            .filter((token) => token.chainId === chain.id)
+            .map((token) => ({
+                key: `${token.chainId}-${token.address}`,
                 ...token,
             })),
     );
+
+
 });
 
 export const tokensOutAtom = atom((get) => {
     const networkChains = get(chainsAtom);
-    const tokensMap = get(tokensAtom);
+    const combinedTokens = get(tokensAtom); 
+    if (!combinedTokens) return []
 
     return networkChains.flatMap((chain) =>
-        Object.entries(tokensMap)
-            .filter(([_, token]) => token.chainId === chain.id)
-            .map(([key, token]) => ({
-                key,
+        combinedTokens
+            .filter((token) => token.chainId === chain.id)
+            .map((token) => ({
+                key: `${token.chainId}-${token.address}`,
                 ...token,
             })),
     );
