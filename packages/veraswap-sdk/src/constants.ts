@@ -263,29 +263,6 @@ export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
 
 export const TOKEN_LIST = {
-    // 1
-    ETH: { name: "Ethereum", symbol: "ETH", decimals: 18, address: zeroAddress, chainId: mainnet.id },
-    USDC_MAINNET: {
-        name: "USDC",
-        symbol: "USDC",
-        decimals: 6,
-        address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        chainId: mainnet.id,
-    },
-    VIRTUAL_MAINNET: {
-        name: "Virtual",
-        symbol: "VIRTUAL",
-        decimals: 18,
-        address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
-        chainId: mainnet.id,
-    },
-    WBTC: {
-        name: "Wrapped Bitcoin",
-        symbol: "WBTC",
-        decimals: 8,
-        address: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
-        chainId: mainnet.id,
-    },
     // 56
     BNB: { name: "BNB", symbol: "BNB", decimals: 8, address: zeroAddress, chainId: bsc.id },
     USDC_BSC: {
