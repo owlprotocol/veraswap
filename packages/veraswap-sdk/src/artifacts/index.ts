@@ -1,4 +1,5 @@
 export { HypERC20FlashCollateral } from "./HypERC20FlashCollateral.js";
+export { HypTokenRouterSweep } from "./HypTokenRouterSweep.js";
 export { IAllowanceTransfer } from "./IAllowanceTransfer.js";
 export { IERC20 } from "./IERC20.js";
 export { IL2ToL2CrossDomainMessenger } from "./IL2ToL2CrossDomainMessenger.js";

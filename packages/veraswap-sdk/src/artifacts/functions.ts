@@ -1880,4 +1880,38 @@ export const functions = [
         outputs: [{ name: "msgHash_", type: "bytes32", internalType: "bytes32" }],
         stateMutability: "nonpayable",
     },
+    {
+        type: "function",
+        name: "approveAll",
+        inputs: [
+            { name: "token", type: "address", internalType: "address" },
+            { name: "spender", type: "address", internalType: "address" },
+        ],
+        outputs: [{ name: "", type: "bool", internalType: "bool" }],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "transferRemote",
+        inputs: [
+            { name: "router", type: "address", internalType: "address" },
+            { name: "destination", type: "uint32", internalType: "uint32" },
+            { name: "recipient", type: "bytes32", internalType: "bytes32" },
+        ],
+        outputs: [{ name: "messageId", type: "bytes32", internalType: "bytes32" }],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "transferRemote",
+        inputs: [
+            { name: "router", type: "address", internalType: "address" },
+            { name: "destination", type: "uint32", internalType: "uint32" },
+            { name: "recipient", type: "bytes32", internalType: "bytes32" },
+            { name: "hookMetadata", type: "bytes", internalType: "bytes" },
+            { name: "hook", type: "address", internalType: "address" },
+        ],
+        outputs: [{ name: "messageId", type: "bytes32", internalType: "bytes32" }],
+        stateMutability: "payable",
+    },
 ] as const;

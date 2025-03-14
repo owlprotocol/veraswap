@@ -1,4 +1,4 @@
-import { Hex } from "viem";
+import { Hex, Address } from "viem";
 
 export const fallback = { type: "fallback", stateMutability: "nonpayable" } as const;
 export const UnsupportedProtocolError = { type: "error", name: "UnsupportedProtocolError", inputs: [] } as const;

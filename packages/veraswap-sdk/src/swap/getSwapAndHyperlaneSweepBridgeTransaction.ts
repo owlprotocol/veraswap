@@ -3,14 +3,15 @@ import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { SUPERCHAIN_SWEEP_ADDRESS } from "../constants.js";
-import { SuperchainTokenBridgeSweep } from "../artifacts/SuperchainTokenBridgeSweep.js";
+import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
 
 /**
- * getSwapAndSuperchainBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Superchain Interop
+ * getSwapAndHyperlaneSweepBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
  */
-export function getSwapAndSuperchainBridgeTransaction({
+export function getSwapAndHyperlaneSweepBridgeTransaction({
     universalRouter,
+    bridgeAddress,
     destinationChain,
     receiver,
     amountIn,
@@ -20,6 +21,7 @@ export function getSwapAndSuperchainBridgeTransaction({
     hookData = "0x",
 }: {
     universalRouter: Address;
+    bridgeAddress: Address;
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
@@ -34,19 +36,19 @@ export function getSwapAndSuperchainBridgeTransaction({
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
     tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, SUPERCHAIN_SWEEP_ADDRESS, 0]);
+    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, HYPERLANE_ROUTER_SWEEP_ADDRESS, 0]);
 
     const swapInput = tradePlan.finalize() as Hex;
 
     routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
 
     routePlanner.addCommand(CommandType.CALL_TARGET, [
-        SUPERCHAIN_SWEEP_ADDRESS,
+        HYPERLANE_ROUTER_SWEEP_ADDRESS,
         0n,
         encodeFunctionData({
-            abi: SuperchainTokenBridgeSweep.abi,
-            functionName: "sendAllERC20",
-            args: [poolKey.currency1, receiver, BigInt(destinationChain)],
+            abi: HypTokenRouterSweep.abi,
+            functionName: "transferRemote",
+            args: [bridgeAddress, destinationChain, receiver],
         }),
     ]);
 
