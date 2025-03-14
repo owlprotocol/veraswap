@@ -16,12 +16,12 @@
     "viem": "2.21.19"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "typescript": "5.8.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^9.22.0",
     "eslint-config-next": "15.2.0",
-    "@eslint/eslintrc": "^3"
+    "@eslint/eslintrc": "^3.3.0"
   }
 }
