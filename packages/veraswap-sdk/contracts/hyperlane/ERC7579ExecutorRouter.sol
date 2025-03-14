@@ -12,28 +12,26 @@ import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
 contract ERC7579ExecutorRouter is MailboxClientStatic {
     // ============ Structs ============
-    // Remote Router, only 1 per account per domain
-    struct RemoteRouter {
+    // Remote Router Owner stores an approved owner, allowed to execute on an account from a specific router on a remote domain
+    struct RemoteRouterOwner {
         uint32 domain;
-        address addr;
-    }
-    // Remote Owner, N per account per domain
-    struct RemoteOwner {
-        uint32 domain;
-        address addr;
+        address router;
+        address owner;
         bool enabled;
     }
 
     // ============ Events ============
     event AccountCreated(address indexed account);
 
-    /// @notice Emitted when account remote router is set
-    /// @dev Useful to reconstruct current/historical set of remote routers for an account
-    event AccountRemoteRouterSet(address indexed account, uint32 indexed domain, address addr);
-
     /// @notice Emitted when an account owner is set
     /// @dev Useful to reconstruct current/historical set of owners for an account
-    event AccountRemoteOwnerSet(address indexed account, uint32 indexed domain, address addr, bool enabled);
+    event AccountRemoteRouterOwnerSet(
+        address indexed account,
+        uint32 indexed domain,
+        address router,
+        address owner,
+        bool enabled
+    );
 
     /// @notice Emitted when a call is dispatched to a remote domain
     /// @dev Useful to watch pending/historical messages dispatched to an account
@@ -57,15 +55,14 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
 
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
-    error InvalidRemoteRouter(address account, uint32 domain, address router);
-    error InvalidOriginSender(address account, address originSender);
+    error InvalidRemoteRouterOwner(address account, uint32 domain, address router, address owner);
     error InvalidExecutorMode();
 
     // ============ Public Storage ============
     OwnableSignatureExecutor immutable executor;
     IAccountFactory immutable factory;
-    mapping(address account => mapping(uint32 domain => address router)) public routers;
-    mapping(address account => mapping(uint32 domain => mapping(address owner => bool))) public owners;
+    mapping(address account => mapping(uint32 domain => mapping(address router => mapping(address owner => bool))))
+        public owners;
 
     // ============ Constructor ============
     constructor(
@@ -80,19 +77,19 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     // =========== Remote Router Management =======
     /**
      * @notice Set remote routers and owners for account
-     * @param _routers remote routers to set
-     * @param _owners remote owners to set
+     * @param _owners remote router owners to set
      */
-    function setAccountInfo(RemoteRouter[] memory _routers, RemoteOwner[] memory _owners) external {
-        // Set Approved Remote Routers
-        for (uint256 i = 0; i < _routers.length; i++) {
-            routers[msg.sender][_routers[i].domain] = _routers[i].addr;
-            emit AccountRemoteRouterSet(msg.sender, _routers[i].domain, _routers[i].addr);
-        }
-        // Set Approved Remote Owners
+    function setAccountInfo(RemoteRouterOwner[] memory _owners) external {
+        // Set Approved Remote Router Owners
         for (uint256 i = 0; i < _owners.length; i++) {
-            owners[msg.sender][_owners[i].domain][_owners[i].addr] = _owners[i].enabled;
-            emit AccountRemoteOwnerSet(msg.sender, _owners[i].domain, _owners[i].addr, _owners[i].enabled);
+            owners[msg.sender][_owners[i].domain][_owners[i].router][_owners[i].owner] = _owners[i].enabled;
+            emit AccountRemoteRouterOwnerSet(
+                msg.sender,
+                _owners[i].domain,
+                _owners[i].router,
+                _owners[i].owner,
+                _owners[i].enabled
+            );
         }
     }
 
@@ -145,7 +142,14 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             signature
         );
 
-        bytes32 messageId = _dispatch(destination, bytes32(router), msg.value, msgBody, hookMetadata, hook);
+        bytes32 messageId = _dispatch(
+            destination,
+            TypeCasts.addressToBytes32(router),
+            msg.value,
+            msgBody,
+            hookMetadata,
+            hook
+        );
         emit RemoteCallDispatched(destination, router, account, executionMode, messageId);
 
         return messageId;
@@ -211,13 +215,9 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             );
         } else {
             // Assumes Router has been set as owner on Executor
-            // Check Router
-            if (routers[account][origin] != router) {
-                revert InvalidRemoteRouter(account, origin, router);
-            }
-            // Check Origin Sender (on Executor)
-            if (!owners[account][origin][originSender]) {
-                revert InvalidOriginSender(account, originSender);
+            // Check Router Owner
+            if (!owners[account][origin][router][originSender]) {
+                revert InvalidRemoteRouterOwner(account, origin, router, originSender);
             }
 
             if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE) {
