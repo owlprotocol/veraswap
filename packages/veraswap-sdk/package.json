@@ -91,6 +91,7 @@
     "@owlprotocol/anvil-account": "latest",
     "@owlprotocol/artifacts-export": "latest",
     "@owlprotocol/create-deterministic": "latest",
+    "@owlprotocol/esbuild-config": "latest",
     "@owlprotocol/tsconfig": "latest",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/node": "^20.11.10",

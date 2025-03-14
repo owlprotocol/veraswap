@@ -1,11 +1,11 @@
 import { ChevronDown, Search, Check } from "lucide-react";
 import { useState } from "react";
 import { Chain } from "viem";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { ScrollArea } from "./ui/scroll-area";
-import { Input } from "./ui/input";
-import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog.js";
+import { Button } from "./ui/button.js";
+import { ScrollArea } from "./ui/scroll-area.js";
+import { Input } from "./ui/input.js";
+import { cn } from "@/lib/utils.js";
 
 export function NetworkSelect({
     value,
