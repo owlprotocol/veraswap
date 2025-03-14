@@ -15,6 +15,9 @@ export interface TokenWithChainId {
     symbol: string;
     decimals: number;
     logoURI?: string;
+    standard?: string;
+    collateralAddress?: string;
+    connections?: { vm: string; chain: string; address: string }[];
 }
 
 export interface Network {
