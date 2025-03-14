@@ -418,9 +418,6 @@ importers:
         specifier: ^2.14.2
         version: 2.14.12(@tanstack/query-core@5.24.8)(@tanstack/react-query@5.24.8(react@18.3.1))(@types/react@18.3.18)(bufferutil@4.0.9)(react@18.3.1)(typescript@5.8.2)(utf-8-validate@5.0.10)(viem@2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))(zod@3.24.2)
     devDependencies:
-      '@eslint/compat':
-        specifier: ^1.2.7
-        version: 1.2.7(eslint@9.22.0(jiti@1.21.7))
       '@owlprotocol/anvil-account':
         specifier: latest
         version: 3.2.0(viem@2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))
@@ -448,12 +445,6 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.17
         version: 18.3.5(@types/react@18.3.18)
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.26.1
-        version: 8.26.1(@typescript-eslint/parser@8.26.1(eslint@9.22.0(jiti@1.21.7))(typescript@5.8.2))(eslint@9.22.0(jiti@1.21.7))(typescript@5.8.2)
-      '@typescript-eslint/parser':
-        specifier: ^8.26.1
-        version: 8.26.1(eslint@9.22.0(jiti@1.21.7))(typescript@5.8.2)
       '@typescript/analyze-trace':
         specifier: ^0.10.1
         version: 0.10.1
@@ -469,21 +460,6 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.22.0(jiti@1.21.7)
-      eslint-config-prettier:
-        specifier: ^8.5.0
-        version: 8.10.0(eslint@9.22.0(jiti@1.21.7))
-      eslint-import-resolver-typescript:
-        specifier: ^2.5.0
-        version: 2.7.1(eslint-plugin-import@2.31.0)(eslint@9.22.0(jiti@1.21.7))
-      eslint-plugin-import:
-        specifier: ^2.25.4
-        version: 2.31.0(@typescript-eslint/parser@8.26.1(eslint@9.22.0(jiti@1.21.7))(typescript@5.8.2))(eslint-import-resolver-typescript@2.7.1)(eslint@9.22.0(jiti@1.21.7))
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@9.22.0(jiti@1.21.7))
-      eslint-plugin-prettier:
-        specifier: ^5.0.0
-        version: 5.2.3(eslint-config-prettier@8.10.0(eslint@9.22.0(jiti@1.21.7)))(eslint@9.22.0(jiti@1.21.7))(prettier@3.5.3)
       lint-staged:
         specifier: ^11.2.6
         version: 11.2.6
@@ -493,9 +469,6 @@ importers:
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
-      prettier:
-        specifier: ^3.5.3
-        version: 3.5.3
       prool:
         specifier: ^0.0.15
         version: 0.0.15
