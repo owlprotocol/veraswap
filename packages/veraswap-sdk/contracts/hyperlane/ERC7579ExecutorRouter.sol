@@ -21,6 +21,8 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     }
 
     // ============ Events ============
+    /// @notice Emitted when an account is created
+    /// @dev Useful to get lower-bound for additional event filtering
     event AccountCreated(address indexed account);
 
     /// @notice Emitted when an account owner is set
