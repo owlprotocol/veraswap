@@ -12,7 +12,6 @@ import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
 contract ERC7579ExecutorRouter is MailboxClientStatic {
     // ============ Structs ============
-
     // Remote Router, only 1 per account per domain
     struct RemoteRouter {
         uint32 domain;
@@ -26,8 +25,35 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     }
 
     // ============ Events ============
-    event AccountRemoteRouterSet(address indexed account, uint32 domain, address addr);
-    event AccountRemoteOwnerSet(address indexed account, uint32 domain, address addr, bool enabled);
+    event AccountCreated(address indexed account);
+
+    /// @notice Emitted when account remote router is set
+    /// @dev Useful to reconstruct current/historical set of remote routers for an account
+    event AccountRemoteRouterSet(address indexed account, uint32 indexed domain, address addr);
+
+    /// @notice Emitted when an account owner is set
+    /// @dev Useful to reconstruct current/historical set of owners for an account
+    event AccountRemoteOwnerSet(address indexed account, uint32 indexed domain, address addr, bool enabled);
+
+    /// @notice Emitted when a call is dispatched to a remote domain
+    /// @dev Useful to watch pending/historical messages dispatched to an account
+    event RemoteCallDispatched(
+        uint32 indexed destination,
+        address indexed router,
+        address indexed account,
+        ERC7579ExecutorMessage.ExecutionMode executionMode,
+        bytes32 messageId
+    );
+
+    /// @notice Emitted when a call is processed on an account
+    /// @dev Useful to watch pending/historical calls processed on an account
+    // TODO: Future Mailbox version could pass the messageId in the handler for optimized indexing
+    event RemoteCallProcessed(
+        uint32 indexed origin,
+        address indexed router,
+        address indexed account,
+        ERC7579ExecutorMessage.ExecutionMode executionMode
+    );
 
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
@@ -118,7 +144,11 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             validUntil,
             signature
         );
-        return _dispatch(destination, TypeCasts.addressToBytes32(router), msg.value, msgBody, hookMetadata, hook);
+
+        bytes32 messageId = _dispatch(destination, bytes32(router), msg.value, msgBody, hookMetadata, hook);
+        emit RemoteCallDispatched(destination, router, account, executionMode, messageId);
+
+        return messageId;
     }
 
     // ============ Handle Incoming Messages ============
@@ -144,6 +174,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             uint48 validUntil,
             bytes memory signature
         ) = ERC7579ExecutorMessage.decode(message);
+        address router = TypeCasts.bytes32ToAddress(sender);
 
         if (initData.length > 0) {
             // Check account exists and deploy if not
@@ -153,6 +184,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 if (account.code.length == 0) {
                     revert AccountDeploymentFailed(account);
                 }
+                emit AccountCreated(account);
             }
         }
 
@@ -180,7 +212,6 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
         } else {
             // Assumes Router has been set as owner on Executor
             // Check Router
-            address router = TypeCasts.bytes32ToAddress(sender);
             if (routers[account][origin] != router) {
                 revert InvalidRemoteRouter(account, origin, router);
             }
@@ -197,5 +228,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 revert InvalidExecutorMode();
             }
         }
+
+        emit RemoteCallProcessed(origin, router, account, executionMode);
     }
 }
