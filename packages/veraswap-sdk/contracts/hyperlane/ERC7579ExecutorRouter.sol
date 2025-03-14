@@ -169,7 +169,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
      */
     function handle(uint32 origin, bytes32 sender, bytes calldata message) external payable onlyMailbox {
         (
-            address originSender,
+            address owner,
             address account,
             bytes memory initData,
             bytes32 initSalt,
@@ -196,7 +196,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
 
         // Assume account exists beyond this point
         if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE_SIGNATURE) {
-            // Execute with signature, no checks on origin/router/originSender
+            // Execute with signature, no checks on origin/router/owner
             executor.executeOnOwnedAccount{value: msg.value}(
                 account,
                 nonce,
@@ -206,7 +206,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 signature
             );
         } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.BATCH_SIGNATURE) {
-            // Execute with signature, no checks on origin/router/originSender
+            // Execute with signature, no checks on origin/router/owner
             executor.executeBatchOnOwnedAccount{value: msg.value}(
                 account,
                 nonce,
@@ -218,8 +218,8 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
         } else {
             // Assumes Router has been set as owner on Executor
             // Check Router Owner
-            if (!owners[account][origin][router][originSender]) {
-                revert InvalidRemoteRouterOwner(account, origin, router, originSender);
+            if (!owners[account][origin][router][owner]) {
+                revert InvalidRemoteRouterOwner(account, origin, router, owner);
             }
 
             if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE) {
