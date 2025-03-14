@@ -8,6 +8,7 @@
 @openzeppelin/uniswap-hooks=lib/uniswap-hooks/
 @hyperlane-xyz/core=lib/hyperlane-monorepo/solidity/contracts/
 @interop-lib/=lib/interop-lib/src/
+@rhinestone/core-modules/=lib/rhinestone-core-modules/src/
 
 forge-std/=lib/forge-std/src/
 solmate/=lib/permit2/lib/solmate/
@@ -25,3 +26,22 @@ lib/hyperlane-monorepo/:@openzeppelin/contracts/=node_modules/@openzeppelin/cont
 lib/hyperlane-monorepo/:ds-test/=lib/hyperlane-monorepo/solidity/lib/forge-std/lib/ds-test/src/
 lib/hyperlane-monorepo/:forge-std/=lib/hyperlane-monorepo/solidity/lib/forge-std/src/
 lib/hyperlane-monorepo/:fx-portal/=lib/hyperlane-monorepo/solidity/lib/fx-portal/
+
+lib/rhinestone-core-modules/:@rhinestone/=lib/rhinestone-core-modules/node_modules/@rhinestone/
+lib/rhinestone-core-modules/:sentinellist/=lib/rhinestone-core-modules/node_modules/@rhinestone/sentinellist/src/
+lib/rhinestone-core-modules/:erc4337-validation/=lib/rhinestone-core-modules/node_modules/@rhinestone/erc4337-validation/src/
+lib/rhinestone-core-modules/:modulekit/=lib/rhinestone-core-modules/node_modules/@rhinestone/modulekit/src/
+lib/rhinestone-core-modules/:checknsignatures/=lib/rhinestone-core-modules/node_modules/@rhinestone/checknsignatures/src/
+lib/rhinestone-core-modules/:flatbytes/=lib/rhinestone-core-modules/node_modules/@rhinestone/flatbytes/src/
+lib/rhinestone-core-modules/:@ERC4337/=lib/rhinestone-core-modules/node_modules/@ERC4337/
+lib/rhinestone-core-modules/:account-abstraction/=lib/rhinestone-core-modules/node_modules/@ERC4337/account-abstraction/contracts/
+lib/rhinestone-core-modules/:account-abstraction-v0.6/=lib/rhinestone-core-modules/node_modules/@ERC4337/account-abstraction-v0.6/contracts/
+lib/rhinestone-core-modules/:@openzeppelin/=lib/rhinestone-core-modules/node_modules/@openzeppelin/
+lib/rhinestone-core-modules/:@safe-global/=lib/rhinestone-core-modules/node_modules/@safe-global/
+lib/rhinestone-core-modules/:ds-test/=lib/rhinestone-core-modules/node_modules/ds-test/src/
+lib/rhinestone-core-modules/:forge-std/=lib/rhinestone-core-modules/node_modules/forge-std/src/
+lib/rhinestone-core-modules/:solady/=lib/rhinestone-core-modules/node_modules/solady/src/
+lib/rhinestone-core-modules/:solarray/=lib/rhinestone-core-modules/node_modules/solarray/src/
+lib/rhinestone-core-modules/:@prb/math/=lib/rhinestone-core-modules/node_modules/@prb/math/src/
+lib/rhinestone-core-modules/:solmate/=lib/rhinestone-core-modules/node_modules/solmate/src/
+lib/rhinestone-core-modules/:ExcessivelySafeCall/=lib/rhinestone-core-modules/node_modules/excessively-safe-call/src/

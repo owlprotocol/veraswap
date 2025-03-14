@@ -9,7 +9,7 @@ This is the monorepo for the VeraSwap project. It contains the following package
 ### Install dependencies and build
 
 ```bash
-pnpm install
+pnpm install && cd packages/veraswap-sdk/lib/rhinestone-core-modules && pnpm i --ignore-workspace # uses shameful hoisting :(
 pnpm build
 ```
 
