@@ -151,9 +151,12 @@ function getClassicTradeDetails(
         return {};
     }
 
+    const gasUseEstimate = classicQuote.gasUseEstimate ? parseFloat(classicQuote.gasUseEstimate) : undefined;
+    const gasUseEstimateUSD = classicQuote.gasFeeUSD ? parseFloat(classicQuote.gasFeeUSD) : undefined;
+
     return {
-        gasUseEstimate: classicQuote.gasUseEstimate ? parseFloat(classicQuote.gasUseEstimate) : undefined,
-        gasUseEstimateUSD: classicQuote.gasUseEstimateUSD ? parseFloat(classicQuote.gasUseEstimateUSD) : undefined,
+        gasUseEstimate,
+        gasUseEstimateUSD,
         blockNumber: classicQuote.blockNumber,
         routes: computeRoutes(args, classicQuote.route),
         swapFee: getSwapFee(classicQuote),

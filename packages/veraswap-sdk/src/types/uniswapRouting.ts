@@ -31,17 +31,14 @@ export interface GetQuoteArgs {
     tokenOutDecimals: number;
     tokenOutSymbol?: string;
     amount: string;
-    account?: string;
+    account: string;
     routerPreference: RouterPreference | typeof INTERNAL_ROUTER_PREFERENCE_PRICE;
     protocolPreferences?: Protocol[];
     tradeType: TradeType;
-    needsWrapIfUniswapX: boolean;
-    uniswapXForceSyntheticQuotes: boolean;
-    sendPortionEnabled: boolean;
     routingType: URAQuoteType;
 }
 
-export declare enum Protocol {
+export enum Protocol {
     V2 = "V2",
     V3 = "V3",
     V4 = "V4",
@@ -109,7 +106,9 @@ export interface ClassicQuoteData {
     gasUseEstimate?: string;
     gasUseEstimateQuote?: string;
     gasUseEstimateQuoteDecimals?: string;
-    gasUseEstimateUSD?: string;
+    // TODO: check, seems like interface has changed
+    // gasUseEstimateUSD?: string;
+    gasFeeUSD?: string;
     methodParameters?: { calldata: string; value: string };
     quote: string;
     quoteDecimals: string;

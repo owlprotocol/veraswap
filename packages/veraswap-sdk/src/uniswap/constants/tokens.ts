@@ -1,7 +1,5 @@
 // https://github.com/Uniswap/interface/blob/e069322d8afd898185c1177947cc02c5e9919b7/packages/uniswap/src/constants/tokens.ts
 // Replaced UnivesreChainId with viem chains ids
-//
-/* eslint-disable max-lines */
 import { Currency, NativeCurrency, Token, UNI_ADDRESSES, WETH9 } from "@uniswap/sdk-core";
 import invariant from "tiny-invariant";
 import {
