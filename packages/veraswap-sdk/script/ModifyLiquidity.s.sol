@@ -37,8 +37,8 @@ contract DeployUniswap is Script {
         // address tokenAAddr = 0xFA306dFDe7632a6c74bdaBbBB19fA59c7A78D73B;
         // address tokenBAddr = 0xf79509E6faDC7254D59d49Bcd976d5523177ec4f;
         // SuperchainERC20
-        address tokenAAddr = 0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5;
-        address tokenBAddr = 0x5710586e8d18f2e1c54c7a2247c1977578b11809;
+        address tokenAAddr = 0x48824f0345964D1002bF4Ddd1F72BA99B5dbE5d5;
+        address tokenBAddr = 0x5710586e8D18F2e1c54c7a2247c1977578B11809;
         IERC20 tokenA = IERC20(tokenAAddr);
         IERC20 tokenB = IERC20(tokenBAddr);
 
