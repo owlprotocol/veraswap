@@ -81,7 +81,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
      * @notice Set remote routers and owners for account
      * @param _owners remote router owners to set
      */
-    function setAccountInfo(RemoteRouterOwner[] memory _owners) external {
+    function setAccountOwners(RemoteRouterOwner[] memory _owners) external {
         // Set Approved Remote Router Owners
         for (uint256 i = 0; i < _owners.length; i++) {
             owners[msg.sender][_owners[i].domain][_owners[i].router][_owners[i].owner] = _owners[i].enabled;
