@@ -1,8 +1,8 @@
 import { CheckCircle, Loader2, XCircle, ArrowUpRight } from "lucide-react";
 import { Chain } from "viem";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
+import { cn } from "@/lib/utils.js";
 
 export type TransactionStep = {
     id: "swap" | "bridge" | "transfer";

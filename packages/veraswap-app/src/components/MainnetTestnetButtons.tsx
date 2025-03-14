@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
-import { Button } from "./ui/button";
-import { networkTypeWithResetAtom } from "@/atoms";
+import { Button } from "./ui/button.js";
+import { networkTypeWithResetAtom } from "@/atoms/index.js";
 
 const buttonStyles: Record<string, string> = {
     mainnet: `

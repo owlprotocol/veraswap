@@ -56,13 +56,13 @@ import {
     remoteTransactionHashAtom,
     hyperlaneMailboxChainOut,
 } from "../atoms/index.js";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button.js";
+import { Card, CardContent } from "@/components/ui/card.js";
+import { Input } from "@/components/ui/input.js";
 import { NetworkSelect } from "@/components/NetworkSelect.js";
 import { TokenSelect } from "@/components/TokenSelect.js";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils.js";
+import { useToast } from "@/components/ui/use-toast.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
@@ -109,7 +109,8 @@ function Index() {
     const [transactionSteps] = useAtom(transactionStepsAtom);
     const [currentTransactionStepId] = useAtom(currentTransactionStepIdAtom);
     const [transactionHashes, setTransactionHashes] = useAtom(transactionHashesAtom);
-    const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
+    // const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
+    const [_, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
     const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);

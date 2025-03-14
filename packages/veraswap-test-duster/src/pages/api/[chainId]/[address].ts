@@ -7,7 +7,6 @@ import {
 } from "@owlprotocol/veraswap-sdk";
 import { MockERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { parseEnv } from "util";
 import {
   Address,
   createPublicClient,
@@ -122,7 +121,7 @@ export default async function handler(
     address: receiver,
   });
 
-  let min = parseEther("0.0005");
+  const min = parseEther("0.0005");
 
   if (balance < min) {
     const hash = await walletClient.sendTransaction({
@@ -162,7 +161,12 @@ export default async function handler(
       await publicClient.waitForTransactionReceipt({ hash });
 
       console.log(`Minted 100 ${token.symbol} to ${address}`);
-    } catch (e) {}
+    } catch (e) {
+      console.log(`Failed to mint ${token.symbol} to ${address}: ${e}`);
+      return res
+        .status(500)
+        .end(`Failed to mint ${token.symbol} to ${address}`);
+    }
   }
 
   res.end(`Successfully dusted ${address}`);
