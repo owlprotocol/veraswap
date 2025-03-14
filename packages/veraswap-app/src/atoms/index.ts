@@ -12,7 +12,7 @@ import {
     getRemoteTokenAddressAndBridge,
     getChainNameAndMailbox,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, Hash, parseUnits, zeroAddress } from "viem";
+import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
     readContractQueryOptions,
@@ -84,39 +84,45 @@ const resetNetworkDependentAtoms = (set: any) => {
     set(tokenInAmountInputAtom, "");
 };
 
+// TODO: move it all in one file?
 const fetchTokens = async () => {
-    const response = await fetch(
-      "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refs/heads/main/tokens-list.json"
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch tokens");
-    }
-    return response.json();
-  };
+    const [tokensResponse, bridgedTokensResponse] = await Promise.all([
+        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens-list.json"),
+        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/bridged-tokens.json"),
+    ]);
 
-  export const fetchedTokensAtom = atomWithQuery(() => ({
+    if (!tokensResponse.ok || !bridgedTokensResponse.ok) {
+        throw new Error("Failed to fetch tokens");
+    }
+
+    const standardTokens = await tokensResponse.json();
+    const bridgedTokens = await bridgedTokensResponse.json();
+
+    return [...standardTokens, ...bridgedTokens];
+};
+
+export const fetchedTokensAtom = atomWithQuery(() => ({
     queryKey: ["tokens"],
     queryFn: fetchTokens,
-  }));
+}));
 
-  export const tokensAtom = atom((get) => {
+export const tokensAtom = atom((get) => {
     const fetchedTokensState = get(fetchedTokensAtom);
-  
+
     const fetchedTokens = fetchedTokensState.data ?? [];
     const localTokens = Object.values(TOKEN_LIST);
-  
+
     const combinedTokens = Array.from(
-      new Map(
-        [...localTokens, ...fetchedTokens].map((token) => 
-            // ensures no duplicate tokens on same chain
-          [`${token.chainId}-${token.address.toLowerCase()}`, token]
-        )
-      ).values()
+        new Map(
+            [...localTokens, ...fetchedTokens].map((token) =>
+                // ensures no duplicate tokens on same chain
+                [`${token.chainId}-${token.address.toLowerCase()}`, token],
+            ),
+        ).values(),
     );
 
     return combinedTokens;
 });
-
 
 export const chainInAtom = atom<Chain | null>((get) => {
     const tokenIn = get(tokenInAtom);
@@ -132,9 +138,9 @@ export const chainOutAtom = atom<Chain | null>((get) => {
 
 export const tokensInAtom = atom((get) => {
     const networkChains = get(chainsAtom);
-    const combinedTokens = get(tokensAtom); 
+    const combinedTokens = get(tokensAtom);
 
-    if (!combinedTokens) return []
+    if (!combinedTokens) return [];
 
     return networkChains.flatMap((chain) =>
         combinedTokens
@@ -144,14 +150,12 @@ export const tokensInAtom = atom((get) => {
                 ...token,
             })),
     );
-
-
 });
 
 export const tokensOutAtom = atom((get) => {
     const networkChains = get(chainsAtom);
-    const combinedTokens = get(tokensAtom); 
-    if (!combinedTokens) return []
+    const combinedTokens = get(tokensAtom);
+    if (!combinedTokens) return [];
 
     return networkChains.flatMap((chain) =>
         combinedTokens

@@ -443,7 +443,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
         chainId: interopDevnet0.id,
-
     },
     superD_DEV0: {
         name: "Super D",
@@ -451,7 +450,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
         chainId: interopDevnet0.id,
-
     },
     superE_DEV0: {
         name: "Super E",
@@ -459,7 +457,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
         chainId: interopDevnet0.id,
-
     },
     superF_DEV0: {
         name: "Super F",
@@ -467,7 +464,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
         chainId: interopDevnet0.id,
-
     },
     // 420120001
     SuperA_DEV1: {
@@ -490,7 +486,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
         chainId: interopDevnet1.id,
-
     },
     superD_DEV1: {
         name: "Super D",
@@ -498,15 +493,13 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
         chainId: interopDevnet1.id,
-
     },
     superE_DEV1: {
         name: "Super E",
         symbol: "E",
         decimals: 18,
         address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
-       chainId: interopDevnet1.id,
-
+        chainId: interopDevnet1.id,
     },
     superF_DEV1: {
         name: "Super F",
@@ -514,7 +507,6 @@ export const TOKEN_LIST = {
         decimals: 18,
         address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
         chainId: interopDevnet1.id,
-
     },
 } as const;
 
