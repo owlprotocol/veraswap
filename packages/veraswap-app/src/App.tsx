@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
-import { base, Chain } from "wagmi/chains";
+import { base } from "wagmi/chains";
 import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
@@ -35,7 +35,8 @@ function App() {
                     <OnchainKitProvider
                         apiKey={import.meta.env.VITE_PUBLIC_ONCHAINKIT_API_KEY}
                         projectId={import.meta.env.NEXT_PUBLIC_CDP_PROJECT_ID}
-                        chain={base as Chain}
+                        // @ts-expect-error wagmi / viem version mistmatch
+                        chain={base}
                     >
                         <QueryClientProvider client={queryClient}>
                             <RainbowKitProvider theme={customTheme}>
