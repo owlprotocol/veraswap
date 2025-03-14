@@ -2,10 +2,10 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { VeraFundButton } from "@/components/VeraFundButton";
-import { WelcomeDialog } from "@/components/welcome-dailog";
-import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/theme-switcher.js";
+import { VeraFundButton } from "@/components/VeraFundButton.js";
+import { WelcomeDialog } from "@/components/welcome-dialog.js";
+import { Button } from "@/components/ui/button.js";
 
 export const Route = createRootRoute({
     component: RootComponent,

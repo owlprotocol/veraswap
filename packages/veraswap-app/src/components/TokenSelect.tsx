@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { ChevronDown, Search, Check } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { cn } from "@/lib/utils";
-import { TokenAtomData } from "@/atoms";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog.js";
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { cn } from "@/lib/utils.js";
+import { TokenAtomData } from "@/atoms/index.js";
 
 export function TokenSelect({
     value,
