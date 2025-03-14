@@ -22,4 +22,6 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IL2ToL2CrossDomainMessenger.sol/*.json",
     "out/SuperchainTokenBridgeSweep.sol/*.json",
     "out/HypTokenRouterSweep.sol/*.json",
+    "out/Kernel.sol/*.json",
+    "out/KernelFactory.sol/*.json"
 ]);
