@@ -17,6 +17,7 @@ import {
     TradeType,
     TradeResult,
     ClassicTrade,
+    quoteQueryOptions,
 } from "@owlprotocol/veraswap-sdk";
 import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -362,6 +363,19 @@ export const quoteInAtom = atomWithQuery((get) => {
 
     console.log({ account: account.address });
 
+    if (chainIn?.testnet) {
+        return {
+            ...quoteQueryOptions(config, {
+                chainId,
+                poolKey: poolKey ?? emptyPoolKey,
+                exactCurrencyAmount: exactCurrencyAmount,
+                quoteType: "quoteExactInputSingle",
+                quoterAddress,
+            }),
+            enabled,
+        };
+    }
+
     // TODO: return swap too to plug get router transactions
     // Also, fallback to using the quoter if it fails?
     return queryOptions({
@@ -400,7 +414,7 @@ export const quoteInAtom = atomWithQuery((get) => {
                     BigInt(trade.outputAmount.quotient.toString()),
                     trade.gasUseEstimate ? BigInt(trade.gasUseEstimate) : 0n,
                 ];
-            }),
+            }) as Promise<[bigint, bigint]>,
         retry: 1,
         enabled,
     });
