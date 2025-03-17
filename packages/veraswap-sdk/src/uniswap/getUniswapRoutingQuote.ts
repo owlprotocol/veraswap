@@ -1,5 +1,4 @@
 import { isExactInput, transformQuoteToTrade } from "./routing/utils.js";
-import { UNISWAP_API_KEY } from "../swap/uniswap.test.js";
 import {
     Protocol,
     GetQuoteArgs,
@@ -41,7 +40,7 @@ function getRoutingAPIConfig(args: GetQuoteArgs) {
     };
 }
 
-export async function getUniswapRoutingQuote(args: GetQuoteArgs) {
+export async function getUniswapRoutingQuote(args: GetQuoteArgs, uniswapApiKey: string) {
     const {
         tokenInAddress: tokenIn,
         tokenInChainId,
@@ -71,7 +70,7 @@ export async function getUniswapRoutingQuote(args: GetQuoteArgs) {
             body: JSON.stringify(requestBody),
             headers: {
                 "x-request-source": "uniswap-web",
-                "x-api-key": UNISWAP_API_KEY!,
+                "x-api-key": uniswapApiKey,
             },
         });
 

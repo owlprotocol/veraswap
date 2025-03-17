@@ -3,7 +3,6 @@ import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tans
 import { Chain } from "viem/chains";
 import {
     PERMIT2_ADDRESS,
-    quoteQueryOptions,
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
     getPoolKey,
@@ -11,6 +10,13 @@ import {
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
     getChainNameAndMailbox,
+    quoteQueryKey,
+    getUniswapRoutingQuote,
+    RouterPreference,
+    URAQuoteType,
+    TradeType,
+    TradeResult,
+    ClassicTrade,
 } from "@owlprotocol/veraswap-sdk";
 import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -23,6 +29,7 @@ import { getAccount } from "@wagmi/core";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
+import { queryOptions } from "@tanstack/react-query";
 import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
@@ -42,6 +49,8 @@ import { TokenWithChainId } from "@/types";
  *
  *
  */
+
+const UNISWAP_API_KEY: string = import.meta.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
 
 //TODO: Add additional atom write logic to clear values when certain atoms are written (eg. when network is changed, tokenIn should be cleared), for now this can be done manually
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
@@ -331,11 +340,17 @@ const emptyPoolKey = {
 // Uniswap Quote
 // type inference fails?
 export const quoteInAtom = atomWithQuery((get) => {
+    const account = getAccount(config);
+
     const poolKey = get(poolKeyInAtom);
     const chainIn = get(chainInAtom);
     const tokenIn = get(tokenInAtom);
     const tokenInAmount = get(tokenInAmountAtom);
+
     const enabled = !!poolKey && !!chainIn && !!tokenInAmount;
+
+    const tokenOut = get(tokenOutAtom);
+
     //TODO: Should we create these classes in the atoms? => Might pose challenge if we add custom fields
     const chainId = chainIn?.id ?? 0;
     const currencyIn = tokenIn ? new Token(tokenIn.chainId, tokenIn.address, tokenIn.decimals) : emptyToken;
@@ -345,16 +360,60 @@ export const quoteInAtom = atomWithQuery((get) => {
             : emptyCurrencyAmount;
     const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].QUOTER : zeroAddress;
 
-    return {
-        ...quoteQueryOptions(config, {
+    console.log({ account: account.address });
+
+    // TODO: return swap too to plug get router transactions
+    // Also, fallback to using the quoter if it fails?
+    return queryOptions({
+        queryKey: quoteQueryKey({
             chainId,
+            exactCurrencyAmount,
             poolKey: poolKey ?? emptyPoolKey,
-            exactCurrencyAmount: exactCurrencyAmount,
             quoteType: "quoteExactInputSingle",
             quoterAddress,
         }),
+        queryFn: () =>
+            getUniswapRoutingQuote(
+                {
+                    account: account.address ?? "0x0000000000000000000000000000000000000002",
+                    amount: tokenInAmount ? tokenInAmount.toString() : "0",
+                    routerPreference: RouterPreference.API,
+                    routingType: URAQuoteType.CLASSIC,
+                    tokenInAddress: tokenIn?.address ?? zeroAddress,
+                    tokenOutAddress: tokenOut?.address ?? zeroAddress,
+                    tokenInChainId: chainId,
+                    tokenOutChainId: chainId,
+                    tokenInDecimals: tokenIn?.decimals ?? 18,
+                    tokenOutDecimals: tokenOut?.decimals ?? 18,
+                    tradeType: TradeType.EXACT_INPUT,
+                    tokenInSymbol: tokenIn?.symbol ?? "",
+                    tokenOutSymbol: tokenOut?.symbol ?? "",
+                },
+                UNISWAP_API_KEY,
+            ).then((res) => {
+                const data = res.data as TradeResult;
+                const trade = data.trade as ClassicTrade;
+
+                console.log({ swaps: trade.swaps });
+
+                return [
+                    BigInt(trade.outputAmount.quotient.toString()),
+                    trade.gasUseEstimate ? BigInt(trade.gasUseEstimate) : 0n,
+                ];
+            }),
+        retry: 1,
         enabled,
-    };
+    });
+    // return {
+    //     ...quoteQueryOptions(config, {
+    //         chainId,
+    //         poolKey: poolKey ?? emptyPoolKey,
+    //         exactCurrencyAmount: exactCurrencyAmount,
+    //         quoteType: "quoteExactInputSingle",
+    //         quoterAddress,
+    //     }),
+    //     enabled,
+    // };
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {

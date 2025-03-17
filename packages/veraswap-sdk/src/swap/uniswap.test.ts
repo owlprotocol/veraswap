@@ -15,11 +15,11 @@ import {
 import { WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
 import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
 
-export const UNISWAP_API_KEY: string =
+const addressOne = "0x0000000000000000000000000000000000000001";
+
+const UNISWAP_API_KEY: string =
     // @ts-expect-error env is an attribute
     import.meta?.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
-
-const addressOne = "0x0000000000000000000000000000000000000001";
 
 describe("uniswap.test.ts", function () {
     test("Get quote", async () => {
@@ -38,7 +38,7 @@ describe("uniswap.test.ts", function () {
             tradeType: TradeType.EXACT_INPUT,
             account: addressOne,
         };
-        const { data } = await getUniswapRoutingQuote(quoteArgs);
+        const { data } = await getUniswapRoutingQuote(quoteArgs, UNISWAP_API_KEY);
 
         expect(data).toHaveProperty("trade");
         const trade = (data as TradeResult).trade as ClassicTrade;
