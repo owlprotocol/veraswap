@@ -20,20 +20,24 @@ import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 import {PoolUtils} from "./utils/PoolUtils.sol";
-import {HyperlaneUtils} from "./utils/HyperlaneUtils.sol";
+import {HyperlanePausableHookUtils} from "./utils/HyperlanePausableHookUtils.sol";
+import {HyperlaneNoopIsmUtils} from "./utils/HyperlaneNoopIsmUtils.sol";
+import {HyperlaneMailboxUtils} from "./utils/HyperlaneMailboxUtils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
 import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
+import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
+import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 
 contract DeployAll is Script, Test {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function run() external {
-        string[2] memory chainRPCs = ["http://127.0.0.1:8545", "http://127.0.0.1:9545"];
+        string[2] memory chains = ["localhost", "OPChainA"];
         uint32[2] memory chainIds = [uint32(900), uint32(901)];
 
-        uint mainFork = vm.createSelectFork(chainRPCs[0]);
+        uint mainFork = vm.createSelectFork(chains[0]);
         vm.startBroadcast();
 
         (
@@ -41,37 +45,57 @@ contract DeployAll is Script, Test {
             address routerMain,
             address v4PositionManagerMain,
             address v4StateViewMain
-        ) = deployCoreContracts(chainIds[0]);
+        ) = deployCoreContracts();
         (address tokenA, address tokenB) = deployTokensAndPools(routerMain, v4PositionManagerMain, v4StateViewMain);
 
-        (address hypERC20Collateral, ) = HypERC20CollateralUtils.getOrCreate2(tokenA, mailboxMain);
-        console2.log("HypERC20Collateral:", hypERC20Collateral);
+        // Create HypERC20Collateral for token A and B
+        (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(tokenA, mailboxMain);
+        console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
+
+        (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(tokenB, mailboxMain);
+        console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
 
         vm.stopBroadcast();
 
-        uint remoteFork = vm.createSelectFork(chainRPCs[1]);
+        // Create HypERC20 for token A and B
+        uint remoteFork = vm.createSelectFork(chains[1]);
         vm.startBroadcast();
 
-        (address mailboxRemote, , , ) = deployCoreContracts(chainIds[1]);
-        (address hypERC20, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token A", "sA");
-        console2.log("HypERC20:", hypERC20);
+        (address mailboxRemote, , , ) = deployCoreContracts();
+        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token A", "sA");
+        console2.log("hypERC20TokenA:", hypERC20TokenA);
+        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token B", "sB");
+        console2.log("hypERC20TokenB:", hypERC20TokenB);
 
         vm.stopBroadcast();
 
+        // Enroll
         vm.selectFork(mainFork);
         vm.startBroadcast();
-        HypERC20CollateralUtils.enrollRemoteRouter(hypERC20Collateral, chainIds[1], hypERC20);
+        HypERC20Collateral(hypERC20CollateralTokenA).enrollRemoteRouter(
+            chainIds[1],
+            bytes32(uint256(uint160(hypERC20TokenA)))
+        );
+        HypERC20Collateral(hypERC20CollateralTokenB).enrollRemoteRouter(
+            chainIds[1],
+            bytes32(uint256(uint160(hypERC20TokenB)))
+        );
         vm.stopBroadcast();
 
         vm.selectFork(remoteFork);
         vm.startBroadcast();
-        HypERC20Utils.enrollRemoteRouter(hypERC20, chainIds[0], hypERC20Collateral);
+        HypERC20(hypERC20TokenA).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenA))));
+        HypERC20(hypERC20TokenB).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenB))));
         vm.stopBroadcast();
     }
 
-    function deployCoreContracts(
-        uint32 chainId
-    ) internal returns (address mailbox, address router, address v4PositionManager, address v4StateView) {
+    function deployCoreContracts()
+        internal
+        returns (address mailbox, address router, address v4PositionManager, address v4StateView)
+    {
+        uint32 chainId = uint32(block.chainid);
+
+        // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         (v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
@@ -91,10 +115,12 @@ contract DeployAll is Script, Test {
         });
 
         (router, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
+
+        // HYPERLANE CONTRACTS
         (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
-        (address ism, ) = HyperlaneUtils.getOrCreateISM();
-        (address hook, ) = HyperlaneUtils.getOrCreateHook();
-        (mailbox, ) = HyperlaneUtils.getOrCreateMailbox(chainId);
+        (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
+        (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
+        (mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
 
         console2.log("Mailbox:", mailbox);
         console2.log("Router:", router);
