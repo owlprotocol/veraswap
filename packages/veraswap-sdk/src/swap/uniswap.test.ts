@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { UniswapTrade, RoutePlanner as UniswapRoutePlanner } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
-import { parseUnits } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { polygon } from "viem/chains";
+import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../constants.js";
 import {
     RouterPreference,
@@ -12,7 +13,7 @@ import {
     TradeResult,
     ClassicTrade,
 } from "../types/uniswapRouting.js";
-import { WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
+import { CommandType, WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
 import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
 import { RoutePlanner } from "../uniswap/index.js";
 
@@ -70,6 +71,24 @@ describe("uniswap.test.ts", function () {
         });
 
         const { inputs, commands } = routePlanner;
+        const inputsLength = inputs.length;
         console.log({ inputs, commands });
+
+        const outputTokenBridgeAddress = zeroAddress;
+        const receiver = zeroAddress;
+        routePlanner.addCommand(
+            CommandType.CALL_TARGET,
+            getHyperlaneSweepBridgeCallTargetParams({
+                bridgeAddress: outputTokenBridgeAddress,
+                receiver,
+                destinationChain: 1338,
+            }),
+        );
+
+        const { inputs: inputs2, commands: commands2 } = routePlanner;
+        console.log({ inputs2, commands2 });
+
+        const newInputs = inputs2.length - inputsLength;
+        expect(newInputs).toBe(1);
     });
 });
