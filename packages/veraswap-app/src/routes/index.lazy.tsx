@@ -24,14 +24,9 @@ import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import { base } from "viem/chains";
 import {
-    hyperlaneGasPaymentAtom,
     poolKeyInAtom,
     quoteInAtom,
     remoteTokenInfoAtom,
-    sendTransactionMutationAtom,
-    swapInvertAtom,
-    SwapStep,
-    swapStepAtom,
     tokenInAmountAtom,
     tokenInAmountInputAtom,
     tokenInAtom,
@@ -45,7 +40,6 @@ import {
     transactionHashesAtom,
     updateTransactionStepAtom,
     initializeTransactionStepsAtom,
-    waitForReceiptQueryAtom,
     messageIdAtom,
     networkTypeAtom,
     remoteTransactionHashAtom,
@@ -63,6 +57,8 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
 import { registerReferrals } from "@/abis/registerReferrals.js";
 import { TokenSelector } from "@/components/token-selector.js";
+import { hyperlaneGasPaymentAtom, sendTransactionMutationAtom, waitForReceiptQueryAtom } from "@/atoms/transaction.js";
+import { swapInvertAtom, SwapStep, swapStepAtom } from "@/atoms/step.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
@@ -96,7 +92,6 @@ function Index() {
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
 
-    const [transactionModalOpen, setTransactionModalOpen] = useAtom(transactionModalOpenAtom);
     const [transactionSteps] = useAtom(transactionStepsAtom);
     const [currentTransactionStepId] = useAtom(currentTransactionStepIdAtom);
     const [transactionHashes, setTransactionHashes] = useAtom(transactionHashesAtom);
@@ -469,8 +464,6 @@ function Index() {
                 </CardContent>
             </Card>
             <TransactionStatusModal
-                isOpen={transactionModalOpen}
-                onOpenChange={setTransactionModalOpen}
                 steps={transactionSteps}
                 currentStepId={currentTransactionStepId}
                 hashes={transactionHashes}

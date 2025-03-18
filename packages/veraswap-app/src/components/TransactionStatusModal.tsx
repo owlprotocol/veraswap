@@ -1,8 +1,10 @@
 import { CheckCircle, Loader2, XCircle, ArrowUpRight } from "lucide-react";
 import { Chain } from "viem";
+import { useAtom } from "jotai";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { cn } from "@/lib/utils.js";
+import { transactionModalOpenAtom } from "@/atoms/index.js";
 
 export type TransactionStep = {
     id: "swap" | "bridge" | "transfer";
@@ -12,8 +14,6 @@ export type TransactionStep = {
 };
 
 type TransactionStatusModalProps = {
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
     steps: TransactionStep[];
     currentStepId?: string;
     hashes?: { swap?: string; bridge?: string; transfer?: string };
@@ -22,14 +22,13 @@ type TransactionStatusModalProps = {
 };
 
 export function TransactionStatusModal({
-    isOpen,
-    onOpenChange,
     steps,
     currentStepId,
     hashes,
     chains,
     networkType,
 }: TransactionStatusModalProps) {
+    const [transactionModalOpen, setTransactionModalOpen] = useAtom(transactionModalOpenAtom);
     const getExplorerUrl = (stepId: "swap" | "bridge" | "transfer") => {
         switch (stepId) {
             case "swap":
@@ -56,7 +55,7 @@ export function TransactionStatusModal({
     const allComplete = steps.every((step) => step.status === "success");
 
     return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <Dialog open={transactionModalOpen} onOpenChange={setTransactionModalOpen}>
             <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>{allComplete ? "Transaction Complete" : "Transaction in Progress"}</DialogTitle>
