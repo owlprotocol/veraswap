@@ -1,10 +1,10 @@
 import { encodeFunctionData, Address, Hex } from "viem";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
+import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../constants.js";
-import { SuperchainTokenBridgeSweep } from "../artifacts/SuperchainTokenBridgeSweep.js";
 
 /**
  * getSwapAndSuperchainBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Superchain Interop
@@ -40,15 +40,14 @@ export function getSwapAndSuperchainBridgeTransaction({
 
     routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
 
-    routePlanner.addCommand(CommandType.CALL_TARGET, [
-        SUPERCHAIN_SWEEP_ADDRESS,
-        0n,
-        encodeFunctionData({
-            abi: SuperchainTokenBridgeSweep.abi,
-            functionName: "sendAllERC20",
-            args: [poolKey.currency1, receiver, BigInt(destinationChain)],
+    routePlanner.addCommand(
+        CommandType.CALL_TARGET,
+        getSuperchainBridgeCallTargetParams({
+            destinationChain,
+            receiver,
+            outputTokenAddress: poolKey.currency1,
         }),
-    ]);
+    );
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
