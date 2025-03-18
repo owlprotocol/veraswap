@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils.js";
 import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom, chainsTypeAtom } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
+import { tokenBalancesAtom } from "@/atoms/token-balance.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const search = useSearch({ from: "/" });
@@ -235,6 +236,12 @@ const TokenGroup = ({
     onSelect: (token: Token) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
+    const balances = useAtomValue(tokenBalancesAtom);
+
+    const totalBalance = useMemo(
+        () => balances.filter((b) => b.token.symbol === symbol).reduce((sum, b) => sum + (b.balance ?? 0), 0),
+        [balances, symbol],
+    );
 
     useEffect(() => {
         if (isExpanded && ref.current) {
@@ -272,7 +279,9 @@ const TokenGroup = ({
                 <div className="flex items-center gap-1">
                     <div className="text-right">
                         <div className="font-medium">$0.00</div>
-                        <div className="text-sm text-muted-foreground">0 {symbol}</div>
+                        <div className="text-sm text-muted-foreground">
+                            {totalBalance.toFixed(4)} {symbol}
+                        </div>
                     </div>
                     {isExpanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground ml-2" />
@@ -286,6 +295,9 @@ const TokenGroup = ({
                 <div className="bg-muted/20 px-4 py-2 grid grid-cols-2 gap-2 animate-in slide-in-from-top duration-200">
                     {tokenList.map((token) => {
                         const chain = chains.find((c) => c.id === token.chainId);
+                        const balance =
+                            balances.find((b) => b.token.chainId === token.chainId && b.token.address === token.address)
+                                ?.balance ?? 0;
                         return (
                             <button
                                 key={token.chainId}
@@ -294,6 +306,9 @@ const TokenGroup = ({
                             >
                                 <div className="flex-1">
                                     <div className="font-medium">{chain?.name || `Chain ${token.chainId}`}</div>
+                                    <div className="text-xs text-muted-foreground truncate">
+                                        {balance.toFixed(4)} {symbol}
+                                    </div>
                                     <div className="text-xs text-muted-foreground truncate">
                                         {token.address.substring(0, 6)}...
                                         {token.address.substring(token.address.length - 4)}
