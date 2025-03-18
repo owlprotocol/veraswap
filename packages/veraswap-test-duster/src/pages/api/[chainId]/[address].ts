@@ -132,13 +132,11 @@ export default async function handler(
     console.log(`Sent 0.00075 ETH to ${address}`);
   }
 
-  for (const token of Object.values(
-    TOKEN_LIST[chainIdParsed as keyof typeof TOKEN_LIST]
-  ) as {
-    address: Address;
-    decimals: number;
-    symbol: string;
-  }[]) {
+  const tokensForChain = Object.values(TOKEN_LIST).filter(
+    (token) => token.chainId === chainIdParsed
+) as Array<{ address: Address; decimals: number; symbol: string }>;
+
+for (const token of tokensForChain) {
     const balance = await publicClient.readContract({
       address: token.address,
       abi: MockERC20.abi,

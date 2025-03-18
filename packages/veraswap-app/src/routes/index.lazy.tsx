@@ -25,9 +25,6 @@ import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2Cross
 import { base } from "viem/chains";
 import {
     hyperlaneGasPaymentAtom,
-    chainInWithResetAtom,
-    chainOutWithResetAtom,
-    chainsAtom,
     poolKeyInAtom,
     quoteInAtom,
     remoteTokenInfoAtom,
@@ -41,8 +38,6 @@ import {
     tokenInBalanceQueryAtom,
     tokenOutAtom,
     tokenOutBalanceQueryAtom,
-    tokensInAtom,
-    tokensOutAtom,
     swapTypeAtom,
     transactionModalOpenAtom,
     transactionStepsAtom,
@@ -55,18 +50,19 @@ import {
     networkTypeAtom,
     remoteTransactionHashAtom,
     hyperlaneMailboxChainOut,
+    chainInAtom,
+    chainOutAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
 import { Input } from "@/components/ui/input.js";
-import { NetworkSelect } from "@/components/NetworkSelect.js";
-import { TokenSelect } from "@/components/TokenSelect.js";
 import { cn } from "@/lib/utils.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
 import { registerReferrals } from "@/abis/registerReferrals.js";
+import { TokenSelector } from "@/components/token-selector.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
@@ -75,22 +71,17 @@ export const Route = createLazyFileRoute("/")({
 function Index() {
     const { address: walletAddress } = useAccount();
 
-    const chains = useAtomValue(chainsAtom);
     const swapType = useAtomValue(swapTypeAtom);
     const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
 
-    const [chainIn, setChainIn] = useAtom(chainInWithResetAtom);
-    const [chainOut, setChainOut] = useAtom(chainOutWithResetAtom);
-
-    const tokensIn = useAtomValue(tokensInAtom);
-    const tokensOut = useAtomValue(tokensOutAtom);
-
-    const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
+    const chainIn = useAtomValue(chainInAtom);
+    const chainOut = useAtomValue(chainOutAtom);
+    const tokenIn = useAtomValue(tokenInAtom);
+    const tokenOut = useAtomValue(tokenOutAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
 
-    const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
     const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
 
     const [messageId, setMessageId] = useAtom(messageIdAtom);
@@ -385,7 +376,6 @@ function Index() {
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
                             <div className="mb-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
-                                <NetworkSelect value={chainIn} onChange={setChainIn} networks={chains} />
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
@@ -400,7 +390,7 @@ function Index() {
                                     placeholder="0.0"
                                     disabled={!tokenIn}
                                 />
-                                <TokenSelect value={tokenIn} onChange={setTokenIn} tokens={tokensIn} />
+                                <TokenSelector selectingTokenIn={true} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
                                 <div className="space-x-2">
@@ -434,7 +424,6 @@ function Index() {
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
                             <div className="mb-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">To</span>
-                                <NetworkSelect value={chainOut} onChange={setChainOut} networks={chains} />
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
@@ -454,8 +443,7 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
-
-                                <TokenSelect value={tokenOut} onChange={setTokenOut} tokens={tokensOut} />
+                                <TokenSelector />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
                                 <div className="space-x-2 align-right">

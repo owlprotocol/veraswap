@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData, Address, defineChain } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
@@ -267,207 +267,263 @@ export const SUPERCHAIN_TOKEN_BRIDGE = "0x42000000000000000000000000000000000000
 export const HYPERLANE_ROUTER_SWEEP_ADDRESS = "0xCDE47C48F8b0Ea9d57eB4e03C9435aA23Cf0Fb87";
 
 export const TOKEN_LIST = {
-    [mainnet.id]: {
-        ETH: { name: "Ethereum", symbol: "ETH", decimals: 18, address: zeroAddress },
-        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
-        Virtual: {
-            name: "Virtual",
-            symbol: "VIRTUAL",
-            decimals: 18,
-            address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
-        },
-        WBTC: {
-            name: "Wrapped Bitcoin",
-            symbol: "WBTC",
-            decimals: 8,
-            address: "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
-        },
+    // 56
+    BNB: { name: "BNB", symbol: "BNB", decimals: 8, address: zeroAddress, chainId: bsc.id },
+    USDC_BSC: {
+        name: "USDC",
+        symbol: "USDC",
+        decimals: 6,
+        address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+        chainId: bsc.id,
     },
-    [bsc.id]: {
-        BNB: { name: "BNB", symbol: "BNB", decimals: 8, address: zeroAddress },
-        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
-        SOL: {
-            name: "Solana",
-            symbol: "SOL",
-            decimals: 18,
-            address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
-        },
+    SOL: {
+        name: "Solana",
+        symbol: "SOL",
+        decimals: 18,
+        address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
+        chainId: bsc.id,
     },
-    [base.id]: {
-        // ETH: zeroAddress,
-        // VVV: "0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf",
-        USDC: { name: "USDC", symbol: "USDC", decimals: 6, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-        Virtual: {
-            name: "Virtual",
-            symbol: "VIRTUAL",
-            decimals: 18,
-            address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
-        },
+    // 8453
+    USDC_BASE: {
+        name: "USDC",
+        symbol: "USDC",
+        decimals: 6,
+        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        chainId: base.id,
     },
-    [1337]: {
-        // TokenA: {name: "TokenA", symbol: "A", decimals: 18, address: "0x61e9C0F278A8eF734a0DDA0120268F59e8073d42"},
-        // TokenB:{name: "TokenB", symbol: "B", decimals: 18, address: "0x7C40Fa89B2887738563a88da36b60221861C64d6"},
-        // TokenC:{name: "TokenC", symbol: "C", decimals: 18, address: "0x30E704A9DcCd40Dd70e2c01b4eb6ac74A6810327"},
-        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
-        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280" },
-        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0x500a80035829572e8E637dC654AE32bC2560968F" },
-        TokenC: { name: "TokenC", symbol: "C", decimals: 18, address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e" },
-        MOCK_A: { name: "MockA", symbol: "A", decimals: 18, address: MOCK_A },
-        MOCK_B: { name: "MockB", symbol: "B", decimals: 18, address: MOCK_B },
-        testUSDC: {
-            name: "testUSDC",
-            symbol: "tUSDC",
-            decimals: 6,
-            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        },
+    VIRTUAL_BASE: {
+        name: "Virtual",
+        symbol: "VIRTUAL",
+        decimals: 18,
+        address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        chainId: base.id,
     },
-    [1338]: {
-        // testUSDC: {name: "testUSDC", symbol: "tUSDC", decimals: 6, address: "0x9CDde7E2B11BAb707B935b1E12b090005B2939F8"},
-        testUSDC: {
-            name: "testUSDC",
-            symbol: "tUSDC",
-            decimals: 6,
-            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        },
+    // 1337
+    TokenA_1337: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280",
+        chainId: 1337,
     },
-    [sepolia.id]: {
-        TokenA: { name: "TokenA", symbol: "A", decimals: 18, address: "0xfa306dfde7632a6c74bdabbbb19fa59c7a78d73b" },
-        TokenB: { name: "TokenB", symbol: "B", decimals: 18, address: "0xf79509e6fadc7254d59d49bcd976d5523177ec4f" },
-        TokenAForArbi: {
-            name: "Token A For Arbi",
-            symbol: "Aarbi",
-            decimals: 18,
-            address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280",
-        },
-        TokenBForArbi: {
-            name: "Token B For Arbi",
-            symbol: "Barbi",
-            decimals: 18,
-            address: "0x500a80035829572e8E637dC654AE32bC2560968F",
-        },
+    TokenB_1337: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x500a80035829572e8E637dC654AE32bC2560968F",
+        chainId: 1337,
     },
-    [arbitrumSepolia.id]: {
-        testUSDC: {
-            name: "testUSDC",
-            symbol: "tUSDC",
-            decimals: 6,
-            address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        },
-        TokenA: {
-            name: "Token A For Arbi",
-            symbol: "Aarbi",
-            decimals: 18,
-            address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900",
-        },
+    TokenC_1337: {
+        name: "Token C",
+        symbol: "C",
+        decimals: 18,
+        address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e",
+        chainId: 1337,
     },
-    [baseSepolia.id]: {
-        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x05cad57113cb3fa213982dc9553498018c1d08b7" },
-        TokenB: { name: "Token B", symbol: "B", decimals: 18, address: "0x3744d204595af66329b325a7651b005fbdcd77a4" },
+    MOCK_A_1337: { name: "Mock A", symbol: "MockA", decimals: 18, address: MOCK_A, chainId: 1337 },
+    MOCK_B_1337: { name: "Mock B", symbol: "MockB", decimals: 18, address: MOCK_B, chainId: 1337 },
+    testUSDC_1337: {
+        name: "test USDC",
+        symbol: "tUSDC",
+        decimals: 6,
+        address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        chainId: 1337,
     },
-    [unichainSepolia.id]: {
-        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b" },
-        TokenB: { name: "Token B", symbol: "B", decimals: 18, address: "0x5983458d6d58b80257744872a778ece9e82ceec0" },
+    // 1338
+    testUSDC_1338: {
+        name: "test USDC",
+        symbol: "tUSDC",
+        decimals: 6,
+        address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        chainId: 1338,
     },
-    [inkSepolia.id]: {
-        TokenA: { name: "Token A", symbol: "A", decimals: 18, address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b" },
-        TokenB: {
-            name: "Token B",
-            symbol: "B",
-            decimals: 18,
-            address: "0x5980x5983458d6d58b80257744872a778ece9e82ceec0",
-        },
+    // 11155111
+    TokenA_SEPOLIA: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: "0xfa306dfde7632a6c74bdabbbb19fa59c7a78d73b",
+        chainId: sepolia.id,
     },
-    [interopDevnet0.id]: {
-        superA: {
-            name: "Super A",
-            symbol: "A",
-            decimals: 18,
-            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
-        },
-        superB: {
-            name: "Super B",
-            symbol: "B",
-            decimals: 18,
-            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
-        },
-        superC: {
-            name: "Super C",
-            symbol: "C",
-            decimals: 18,
-            address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
-        },
-        superD: {
-            name: "Super D",
-            symbol: "D",
-            decimals: 18,
-            address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
-        },
-        superE: {
-            name: "Super E",
-            symbol: "E",
-            decimals: 18,
-            address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
-        },
-        superF: {
-            name: "Super F",
-            symbol: "F",
-            decimals: 18,
-            address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
-        },
+    TokenB_SEPOLIA: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: "0xf79509e6fadc7254d59d49bcd976d5523177ec4f",
+        chainId: sepolia.id,
     },
-    [interopDevnet1.id]: {
-        superA: {
-            name: "Super A",
-            symbol: "A",
-            decimals: 18,
-            address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
-        },
-        superB: {
-            name: "Super B",
-            symbol: "B",
-            decimals: 18,
-            address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
-        },
-        superC: {
-            name: "Super C",
-            symbol: "C",
-            decimals: 18,
-            address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
-        },
-        superD: {
-            name: "Super D",
-            symbol: "D",
-            decimals: 18,
-            address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
-        },
-        superE: {
-            name: "Super E",
-            symbol: "E",
-            decimals: 18,
-            address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
-        },
-        superF: {
-            name: "Super F",
-            symbol: "F",
-            decimals: 18,
-            address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
-        },
+    TokenA_ARBI_SEPOLIA: {
+        name: "Token A For Arbi",
+        symbol: "Aarbi",
+        decimals: 18,
+        address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280",
+        chainId: sepolia.id,
     },
-} as const satisfies Record<
-    number,
-    Record<string, { name: string; symbol: string; decimals: number; address: Address }>
->;
+    TokenB_ARBI_SEPOLIA: {
+        name: "Token B For Arbi",
+        symbol: "Barbi",
+        decimals: 18,
+        address: "0x500a80035829572e8E637dC654AE32bC2560968F",
+        chainId: sepolia.id,
+    },
+    // 421614
+    testUSDC_ARBITRUM: {
+        name: "test USDC",
+        symbol: "tUSDC",
+        decimals: 6,
+        address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
+        chainId: arbitrumSepolia.id,
+    },
+    TokenA_ARBITRUM: {
+        name: "Token A For Arbi",
+        symbol: "Aarbi",
+        decimals: 18,
+        address: "0x070b1315bc9fCBD8F784f6556257e7D5c4c11900",
+        chainId: arbitrumSepolia.id,
+    },
+    // 84532
+    TokenA_BASE_SEPOLIA: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x05cad57113cb3fa213982dc9553498018c1d08b7",
+        chainId: baseSepolia.id,
+    },
+    TokenB_BASE_SEPOLIA: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x3744d204595af66329b325a7651b005fbdcd77a4",
+        chainId: baseSepolia.id,
+    },
+    // 1301
+    TokenA_UNICHAIN_SEPOLIA: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+        chainId: unichainSepolia.id,
+    },
+    TokenB_UNICHAIN_SEPOLIA: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+        chainId: unichainSepolia.id,
+    },
+    // 763373
+    TokenA_INK_SEPOLIA: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x274d622afa517251bdf73ea08377b78dd9f49f2b",
+        chainId: inkSepolia.id,
+    },
+    TokenB_INK_SEPOLIA: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x5980x5983458d6d58b80257744872a778ece9e82ceec0",
+        chainId: inkSepolia.id,
+    },
+    // 420120000
+    SuperA_DEV0: {
+        name: "Super A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
+        chainId: interopDevnet0.id,
+    },
+    SuperB_DEV0: {
+        name: "Super B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
+        chainId: interopDevnet0.id,
+    },
+    superC_DEV0: {
+        name: "Super C",
+        symbol: "C",
+        decimals: 18,
+        address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
+        chainId: interopDevnet0.id,
+    },
+    superD_DEV0: {
+        name: "Super D",
+        symbol: "D",
+        decimals: 18,
+        address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
+        chainId: interopDevnet0.id,
+    },
+    superE_DEV0: {
+        name: "Super E",
+        symbol: "E",
+        decimals: 18,
+        address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
+        chainId: interopDevnet0.id,
+    },
+    superF_DEV0: {
+        name: "Super F",
+        symbol: "F",
+        decimals: 18,
+        address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
+        chainId: interopDevnet0.id,
+    },
+    // 420120001
+    SuperA_DEV1: {
+        name: "Super A",
+        symbol: "A",
+        decimals: 18,
+        address: "0x48824f0345964d1002bf4ddd1f72ba99b5dbe5d5",
+        chainId: interopDevnet1.id,
+    },
+    SuperB_DEV1: {
+        name: "Super B",
+        symbol: "B",
+        decimals: 18,
+        address: "0x5710586e8d18f2e1c54c7a2247c1977578b11809",
+        chainId: interopDevnet1.id,
+    },
+    superC_DEV1: {
+        name: "Super C",
+        symbol: "C",
+        decimals: 18,
+        address: "0x41e797a36be6636c7b07a3c829817d6ac019ac55",
+        chainId: interopDevnet1.id,
+    },
+    superD_DEV1: {
+        name: "Super D",
+        symbol: "D",
+        decimals: 18,
+        address: "0xe236a0959dc8d2dbeb0496d40df0cc112e43adc5",
+        chainId: interopDevnet1.id,
+    },
+    superE_DEV1: {
+        name: "Super E",
+        symbol: "E",
+        decimals: 18,
+        address: "0x323ca01033701674011505da2d9958ce33fd7b7c",
+        chainId: interopDevnet1.id,
+    },
+    superF_DEV1: {
+        name: "Super F",
+        symbol: "F",
+        decimals: 18,
+        address: "0x0afb6bd539a527dae4fee019cb7d5de946b10eee",
+        chainId: interopDevnet1.id,
+    },
+} as const;
 
 export const MOCK_POOLS = {
     [1337]: {
         currency0:
-            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
-                ? TOKEN_LIST[1337].TokenA.address
-                : TOKEN_LIST[1337].testUSDC.address,
+            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
+                ? TOKEN_LIST["TokenA_1337"].address
+                : TOKEN_LIST["testUSDC_1337"].address,
         currency1:
-            TOKEN_LIST[1337].TokenA.address < TOKEN_LIST[1337].testUSDC.address
-                ? TOKEN_LIST[1337].testUSDC.address
-                : TOKEN_LIST[1337].TokenA.address,
+            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
+                ? TOKEN_LIST["testUSDC_1337"].address
+                : TOKEN_LIST["TokenA_1337"].address,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
@@ -657,18 +713,19 @@ export const POOLS: Record<number, PoolKey[]> = {
         // VIRTUAL-USDC
         {
             currency0:
-                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
-                    ? TOKEN_LIST[base.id].Virtual.address
-                    : TOKEN_LIST[base.id].USDC.address,
+                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
+                    ? TOKEN_LIST["VIRTUAL_BASE"].address
+                    : TOKEN_LIST["USDC_BASE"].address,
             currency1:
-                TOKEN_LIST[base.id].Virtual.address < TOKEN_LIST[base.id].USDC.address
-                    ? TOKEN_LIST[base.id].USDC.address
-                    : TOKEN_LIST[base.id].Virtual.address,
+                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
+                    ? TOKEN_LIST["USDC_BASE"].address
+                    : TOKEN_LIST["VIRTUAL_BASE"].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
         },
     ],
+
     //     // USDC-VVV
     //     {
     //         currency0:
@@ -688,13 +745,13 @@ export const POOLS: Record<number, PoolKey[]> = {
         // TokenA-TokenB
         {
             currency0:
-                TOKEN_LIST[sepolia.id].TokenA.address < TOKEN_LIST[sepolia.id].TokenB.address
-                    ? TOKEN_LIST[sepolia.id].TokenA.address
-                    : TOKEN_LIST[sepolia.id].TokenB.address,
+                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
+                    ? TOKEN_LIST["TokenA_SEPOLIA"].address
+                    : TOKEN_LIST["TokenB_SEPOLIA"].address,
             currency1:
-                TOKEN_LIST[sepolia.id].TokenA.address < TOKEN_LIST[sepolia.id].TokenB.address
-                    ? TOKEN_LIST[sepolia.id].TokenB.address
-                    : TOKEN_LIST[sepolia.id].TokenA.address,
+                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
+                    ? TOKEN_LIST["TokenB_SEPOLIA"].address
+                    : TOKEN_LIST["TokenA_SEPOLIA"].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
