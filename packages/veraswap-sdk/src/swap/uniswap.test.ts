@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { UniswapTrade } from "@uniswap/universal-router-sdk";
+import { UniswapTrade, RoutePlanner as UniswapRoutePlanner } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
 import { parseUnits } from "viem";
 import { polygon } from "viem/chains";
@@ -14,12 +14,11 @@ import {
 } from "../types/uniswapRouting.js";
 import { WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
 import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
+import { RoutePlanner } from "../uniswap/index.js";
 
 export const UNISWAP_API_KEY: string =
     // @ts-expect-error env is an attribute
     import.meta?.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
-
-const addressOne = "0x0000000000000000000000000000000000000001";
 
 describe("uniswap.test.ts", function () {
     test("Get quote", async () => {
@@ -36,7 +35,6 @@ describe("uniswap.test.ts", function () {
             routerPreference: RouterPreference.API,
             routingType: URAQuoteType.CLASSIC,
             tradeType: TradeType.EXACT_INPUT,
-            account: addressOne,
         };
         const { data } = await getUniswapRoutingQuote(quoteArgs);
 
@@ -59,10 +57,19 @@ describe("uniswap.test.ts", function () {
         expect(trade.gasUseEstimate).toBeGreaterThan(0);
         expect(trade.gasUseEstimateUSD).toBeGreaterThan(0);
 
+        const routePlanner = new RoutePlanner();
+        // Note config is currently unused in their sdk
+        const _config = { allowRevert: true };
+
+        uniswapTrade.encode(routePlanner as UniswapRoutePlanner, _config);
+
         console.log({
             outputAmountStr,
             gasUseEstimate: trade.gasUseEstimate,
             gasUseEstimateUSD: "$" + trade.gasUseEstimateUSD,
         });
+
+        const { inputs, commands } = routePlanner;
+        console.log({ inputs, commands });
     });
 });

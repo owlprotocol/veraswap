@@ -1,9 +1,9 @@
 import { encodeFunctionData, Address, Hex } from "viem";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
+import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
 
 /**
@@ -42,15 +42,10 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 
     routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
 
-    routePlanner.addCommand(CommandType.CALL_TARGET, [
-        HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        0n,
-        encodeFunctionData({
-            abi: HypTokenRouterSweep.abi,
-            functionName: "transferRemote",
-            args: [bridgeAddress, destinationChain, receiver],
-        }),
-    ]);
+    routePlanner.addCommand(
+        CommandType.CALL_TARGET,
+        getHyperlaneSweepBridgeCallTargetParams({ bridgeAddress, destinationChain, receiver }),
+    );
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
