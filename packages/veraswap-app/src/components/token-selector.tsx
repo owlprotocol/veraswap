@@ -4,12 +4,12 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { TokenWithChainId } from "@/types";
-import { chainsAtom, tokensInAtom, tokenInAtom, tokenOutAtom } from "@/atoms";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
+import { Button } from "@/components/ui/button.js";
+import { Input } from "@/components/ui/input.js";
+import { cn } from "@/lib/utils.js";
+import { TokenWithChainId } from "@/types.js";
+import { chainsAtom, tokensInAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
