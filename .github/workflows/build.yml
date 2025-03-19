@@ -28,7 +28,7 @@ jobs:
       # Git Checkout
       - uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
       # Node Setup
       - uses: actions/setup-node@v3
         with:
@@ -73,8 +73,6 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: "stable"
-      - run: cd packages/veraswap-sdk && forge install
-        name: Install veraswap-sdk dependencies
       # Build
       - run: pnpm run build
         name: Build All
