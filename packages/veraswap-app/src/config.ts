@@ -1,5 +1,5 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
-import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, localhost, mainnet, sepolia } from "wagmi/chains";
+import { arbitrum, arbitrumSepolia, base, baseSepolia, bsc, Chain, localhost, mainnet, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
 import { inkSepolia, interopDevnet0, interopDevnet1, unichainSepolia } from "@owlprotocol/veraswap-sdk";
@@ -63,6 +63,7 @@ export const prodChains = [
         },
     },
     arbitrum,
+    bsc,
     inkSepolia,
     unichainSepolia,
 ] as const;

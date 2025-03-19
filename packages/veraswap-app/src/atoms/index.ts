@@ -3,7 +3,6 @@ import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tans
 import { Chain } from "viem/chains";
 import {
     PERMIT2_ADDRESS,
-    quoteQueryOptions,
     TOKEN_LIST,
     UNISWAP_CONTRACTS,
     getPoolKey,
@@ -11,6 +10,15 @@ import {
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
     getChainNameAndMailbox,
+    quoteQueryKey,
+    getUniswapRoutingQuote,
+    RouterPreference,
+    URAQuoteType,
+    TradeType,
+    TradeResult,
+    ClassicTrade,
+    quoteQueryOptions,
+    apiQuoteQueryOptions,
 } from "@owlprotocol/veraswap-sdk";
 import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -23,6 +31,7 @@ import { getAccount } from "@wagmi/core";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { interopDevnet0, interopDevnet1 } from "@owlprotocol/veraswap-sdk";
+import { queryOptions } from "@tanstack/react-query";
 import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
@@ -42,6 +51,8 @@ import { TokenWithChainId } from "@/types.js";
  *
  *
  */
+
+const UNISWAP_API_KEY: string = import.meta.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
 
 //TODO: Add additional atom write logic to clear values when certain atoms are written (eg. when network is changed, tokenIn should be cleared), for now this can be done manually
 export const networkTypeAtom = atom<"mainnet" | "testnet" | "superchain">("mainnet");
@@ -353,6 +364,39 @@ export const quoteInAtom = atomWithQuery((get) => {
             quoteType: "quoteExactInputSingle",
             quoterAddress,
         }),
+        enabled,
+    };
+}) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
+
+export const apiQuoteAtom = atomWithQuery((get) => {
+    const account = getAccount(config);
+    const tokenIn = get(tokenInAtom);
+    const tokenOut = get(tokenOutAtom);
+    const tokenInAmount = get(tokenInAmountAtom);
+    const chainIn = get(chainInAtom);
+
+    const enabled = !!tokenIn && !!tokenOut && !!tokenInAmount && !!chainIn;
+    const chainId = chainIn?.id ?? 0;
+
+    return {
+        ...apiQuoteQueryOptions(
+            {
+                account: account.address ?? "0x0000000000000000000000000000000000000002",
+                amount: tokenInAmount?.toString() ?? "0",
+                routerPreference: RouterPreference.API,
+                routingType: URAQuoteType.CLASSIC,
+                tokenInAddress: tokenIn?.address || zeroAddress,
+                tokenOutAddress: tokenOut?.address || zeroAddress,
+                tokenInChainId: chainId,
+                tokenOutChainId: chainId,
+                tokenInDecimals: tokenIn?.decimals || 0,
+                tokenOutDecimals: tokenOut?.decimals || 0,
+                tradeType: TradeType.EXACT_INPUT,
+                tokenInSymbol: tokenIn?.symbol || "",
+                tokenOutSymbol: tokenOut?.symbol || "",
+            },
+            UNISWAP_API_KEY,
+        ),
         enabled,
     };
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
