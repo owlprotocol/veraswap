@@ -63,7 +63,8 @@ export async function getUniswapRoutingQuote(args: GetQuoteArgs) {
         intent: args.routerPreference === INTERNAL_ROUTER_PREFERENCE_PRICE ? QuoteIntent.Pricing : QuoteIntent.Quote,
         configs: getRoutingAPIConfig(args),
         useUniswapX: args.routerPreference === RouterPreference.X,
-        swapper: args.account,
+        // Address used on uniswap when wallet is not connected
+        swapper: args.account ?? "0xAAAA44272dc658575Ba38f43C438447dDED45358",
     };
 
     try {

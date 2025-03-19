@@ -31,7 +31,7 @@ export interface GetQuoteArgs {
     tokenOutDecimals: number;
     tokenOutSymbol?: string;
     amount: string;
-    account: string;
+    account?: string;
     routerPreference: RouterPreference | typeof INTERNAL_ROUTER_PREFERENCE_PRICE;
     protocolPreferences?: Protocol[];
     tradeType: TradeType;

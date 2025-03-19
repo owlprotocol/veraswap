@@ -1,3 +1,3 @@
 import { buildLib } from "@veraswap/esbuild-config";
 
-await buildLib();
+await buildLib({});

@@ -12,7 +12,7 @@ import {
     getRemoteTokenAddressAndBridge,
     getChainNameAndMailbox,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, Hash, parseUnits, zeroAddress } from "viem";
+import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import {
     readContractQueryOptions,
@@ -27,6 +27,7 @@ import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
+import { TokenWithChainId } from "@/types.js";
 
 /**
  * - networks
@@ -78,96 +79,97 @@ export const networkTypeWithResetAtom = atom(
 );
 
 const resetNetworkDependentAtoms = (set: any) => {
-    set(chainInAtom, null);
-    set(chainOutAtom, null);
     set(tokenInAtom, null);
     set(tokenOutAtom, null);
     set(tokenInAmountInputAtom, "");
 };
 
-export const tokensAtom = atom(TOKEN_LIST);
+// TODO: move it all in one file?
+const fetchTokens = async () => {
+    const [tokensResponse, bridgedTokensResponse] = await Promise.all([
+        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens-list.json"),
+        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/bridged-tokens.json"),
+    ]);
 
-// Selected chain in
-export const chainInAtom = atom<null | Chain>(null);
-// Selected chain out
-export const chainOutAtom = atom<null | Chain>(null);
+    if (!tokensResponse.ok || !bridgedTokensResponse.ok) {
+        throw new Error("Failed to fetch tokens");
+    }
 
-export const chainInWithResetAtom = atom(
-    (get) => get(chainInAtom),
-    (_, set, newChainIn: Chain | null) => {
-        set(chainInAtom, newChainIn);
-        set(tokenInAtom, null);
-    },
-);
+    const standardTokens = await tokensResponse.json();
+    const bridgedTokens = await bridgedTokensResponse.json();
 
-export const chainOutWithResetAtom = atom(
-    (get) => get(chainOutAtom),
-    (_, set, newChainOut: Chain | null) => {
-        set(chainOutAtom, newChainOut);
-        set(tokenOutAtom, null);
-    },
-);
+    return [...standardTokens, ...bridgedTokens];
+};
 
-//Temporary
-export interface TokenAtomData {
-    chainId: number;
-    address: Address;
-    name: string;
-    symbol: string;
-    decimals: number;
-    logo?: string;
-}
-export interface TokenAmountAtomData extends TokenAtomData {
-    amount: bigint;
-}
+export const fetchedTokensAtom = atomWithQuery(() => ({
+    queryKey: ["tokens"],
+    queryFn: fetchTokens,
+}));
 
-/***** Tokens *****/
-// List of supported tokens
-//TODO: Add intermediate atom to fetch metadata, for now hardcode
-// export const tokensAtom = atom<TokenAtomData[]>([
-//     { chainId: localhost.id, address: MOCK_A, name: "Mock A", symbol: "A", decimals: 18 },
-//     { chainId: localhost.id, address: MOCK_B, name: "Mock B", symbol: "B", decimals: 18 }
-// ])
+export const tokensAtom = atom((get) => {
+    const fetchedTokensState = get(fetchedTokensAtom);
 
-// List of supported tokens on networkIn
-export const tokensInAtom = atom((get) => {
-    const chainIn = get(chainInAtom);
-    if (!chainIn) return [];
+    const fetchedTokens = fetchedTokensState.data ?? [];
+    const localTokens = Object.values(TOKEN_LIST);
 
-    const tokensMap = get(tokensAtom);
-    const tokens = tokensMap[chainIn.id as keyof typeof tokensMap];
+    const combinedTokens = Array.from(
+        new Map(
+            [...localTokens, ...fetchedTokens].map((token) =>
+                // ensures no duplicate tokens on same chain
+                [`${token.chainId}-${token.address.toLowerCase()}`, token],
+            ),
+        ).values(),
+    );
 
-    if (!tokens) return [];
-
-    const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
-        chainId: chainIn.id,
-        ...value,
-    }));
-
-    return formattedTokens;
+    return combinedTokens;
 });
-// List of supported tokens on networkOut
-//TODO: Use pool info in addition to network
+
+export const chainInAtom = atom<Chain | null>((get) => {
+    const tokenIn = get(tokenInAtom);
+    const availableChains = get(chainsAtom);
+    return tokenIn ? availableChains.find((chain) => chain.id === tokenIn.chainId) || null : null;
+});
+
+export const chainOutAtom = atom<Chain | null>((get) => {
+    const tokenOut = get(tokenOutAtom);
+    const availableChains = get(chainsAtom);
+    return tokenOut ? availableChains.find((chain) => chain.id === tokenOut.chainId) || null : null;
+});
+
+export const tokensInAtom = atom((get) => {
+    const networkChains = get(chainsAtom);
+    const combinedTokens = get(tokensAtom);
+
+    if (!combinedTokens) return [];
+
+    return networkChains.flatMap((chain) =>
+        combinedTokens
+            .filter((token) => token.chainId === chain.id)
+            .map((token) => ({
+                key: `${token.chainId}-${token.address}`,
+                ...token,
+            })),
+    );
+});
+
 export const tokensOutAtom = atom((get) => {
-    const chainOut = get(chainOutAtom);
-    if (!chainOut) return [];
+    const networkChains = get(chainsAtom);
+    const combinedTokens = get(tokensAtom);
+    if (!combinedTokens) return [];
 
-    const tokensMap = get(tokensAtom);
-    const tokens = tokensMap[chainOut.id as keyof typeof tokensMap];
-
-    if (!tokens) return [];
-
-    const formattedTokens = Object.entries(tokens).map(([_, value]) => ({
-        chainId: chainOut.id,
-        ...value,
-    }));
-    // TODO: filter out tokenIn
-    return formattedTokens;
+    return networkChains.flatMap((chain) =>
+        combinedTokens
+            .filter((token) => token.chainId === chain.id)
+            .map((token) => ({
+                key: `${token.chainId}-${token.address}`,
+                ...token,
+            })),
+    );
 });
 // Selected tokenIn
-export const tokenInAtom = atom<TokenAtomData | null>(null);
+export const tokenInAtom = atom<TokenWithChainId | null>(null);
 // Selected tokenOut
-export const tokenOutAtom = atom<TokenAtomData | null>(null);
+export const tokenOutAtom = atom<TokenWithChainId | null>(null);
 
 export const remoteTokenInfoAtom = atom((get) => {
     const tokenOut = get(tokenOutAtom);
@@ -285,7 +287,7 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenInAmountInput = get(tokenInAmountInputAtom);
     if (!tokenIn || tokenInAmountInput === "") return null;
-    return parseUnits(tokenInAmountInput, tokenIn.decimals);
+    return parseUnits(tokenInAmountInput, tokenIn.decimals!);
 });
 
 // Selected tokenOutAmount
@@ -356,13 +358,8 @@ export const quoteInAtom = atomWithQuery((get) => {
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {
-    const currentChainIn = get(chainInAtom);
-    const currentChainOut = get(chainOutAtom);
     const currentTokenIn = get(tokenInAtom);
     const currentTokenOut = get(tokenOutAtom);
-
-    set(chainInAtom, currentChainOut);
-    set(chainOutAtom, currentChainIn);
 
     set(tokenInAtom, currentTokenOut);
     set(tokenOutAtom, currentTokenIn);

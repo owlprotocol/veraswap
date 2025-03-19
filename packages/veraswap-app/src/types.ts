@@ -8,6 +8,18 @@ export interface Token {
     logo?: string;
 }
 
+export interface TokenWithChainId {
+    chainId: number;
+    address: Address;
+    name: string;
+    symbol: string;
+    decimals: number;
+    logoURI?: string;
+    standard?: string;
+    collateralAddress?: string;
+    connections?: { vm: string; chain: string; address: string }[];
+}
+
 export interface Network {
     id: string;
     name: string;

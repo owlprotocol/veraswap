@@ -104,6 +104,7 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "core-js": "^3.37.1",
     "depcheck": "^1.4.7",
+    "esbuild-plugin-ignoretests": "^0.0.7",
     "eslint": "^9.22.0",
     "lint-staged": "^11.2.6",
     "madge": "^5.0.2",
