@@ -58,6 +58,9 @@ jobs:
       # Install
       - run: pnpm i
         name: Install dependencies
+      # Install Rhinestone (seems like only way to install for now)
+      - run: cd packages/veraswap-sdk/lib/rhinestone-core-modules && pnpm i --ignore-workspace
+        name: Install Rhinestone dependencies
       # Dependencies
       - run: pnpm run depcheck
         name: Dependency Check
