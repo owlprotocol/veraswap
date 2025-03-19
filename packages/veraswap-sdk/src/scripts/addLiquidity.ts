@@ -19,8 +19,6 @@ import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { Pool, V4PositionPlanner, priceToClosestTick, Position } from "@uniswap/v4-sdk";
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import {
-    interopDevnet0,
-    interopDevnet1,
     MAX_UINT_160,
     MAX_UINT_256,
     MAX_UINT_48,

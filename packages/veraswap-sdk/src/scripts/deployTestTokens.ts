@@ -17,7 +17,6 @@ import {
     encodeAbiParameters,
     keccak256,
 } from "viem";
-import { localhost } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { GithubRegistry } from "@hyperlane-xyz/registry";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
@@ -33,7 +32,6 @@ import {
     UNISWAP_CONTRACTS,
 } from "../constants.js";
 import { getChainNameAndMailbox } from "../utils/getChainNameAndMailbox.js";
-import { localhost2 } from "../test/constants.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { IPositionManager } from "../artifacts/IPositionManager.js";
 import { IMulticall_v4 } from "../artifacts/IMulticall_v4.js";
@@ -60,7 +58,7 @@ const fetchGithubRegistryData = async () => {
  * - LPs on chains[0] between testUSDC and test tokens.
  * Also, mints to self 1 eth of each token
  */
-async function deployTestTokens(chains: Chain[]) {
+export async function deployTestTokens(chains: Chain[]) {
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) throw new Error("PRIVATE_KEY not set");
 

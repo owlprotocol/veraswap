@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData, Address, defineChain } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
