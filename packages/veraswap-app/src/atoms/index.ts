@@ -18,6 +18,7 @@ import {
     TradeResult,
     ClassicTrade,
     quoteQueryOptions,
+    apiQuoteQueryOptions,
 } from "@owlprotocol/veraswap-sdk";
 import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -341,17 +342,11 @@ const emptyPoolKey = {
 // Uniswap Quote
 // type inference fails?
 export const quoteInAtom = atomWithQuery((get) => {
-    const account = getAccount(config);
-
     const poolKey = get(poolKeyInAtom);
     const chainIn = get(chainInAtom);
     const tokenIn = get(tokenInAtom);
     const tokenInAmount = get(tokenInAmountAtom);
-
     const enabled = !!poolKey && !!chainIn && !!tokenInAmount;
-
-    const tokenOut = get(tokenOutAtom);
-
     //TODO: Should we create these classes in the atoms? => Might pose challenge if we add custom fields
     const chainId = chainIn?.id ?? 0;
     const currencyIn = tokenIn ? new Token(tokenIn.chainId, tokenIn.address, tokenIn.decimals) : emptyToken;
@@ -361,73 +356,49 @@ export const quoteInAtom = atomWithQuery((get) => {
             : emptyCurrencyAmount;
     const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].QUOTER : zeroAddress;
 
-    console.log({ account: account.address });
-
-    if (chainIn?.testnet) {
-        return {
-            ...quoteQueryOptions(config, {
-                chainId,
-                poolKey: poolKey ?? emptyPoolKey,
-                exactCurrencyAmount: exactCurrencyAmount,
-                quoteType: "quoteExactInputSingle",
-                quoterAddress,
-            }),
-            enabled,
-        };
-    }
-
-    // TODO: return swap too to plug get router transactions
-    // Also, fallback to using the quoter if it fails?
-    return queryOptions({
-        queryKey: quoteQueryKey({
+    return {
+        ...quoteQueryOptions(config, {
             chainId,
-            exactCurrencyAmount,
             poolKey: poolKey ?? emptyPoolKey,
+            exactCurrencyAmount: exactCurrencyAmount,
             quoteType: "quoteExactInputSingle",
             quoterAddress,
         }),
-        queryFn: () =>
-            getUniswapRoutingQuote(
-                {
-                    account: account.address ?? "0x0000000000000000000000000000000000000002",
-                    amount: tokenInAmount ? tokenInAmount.toString() : "0",
-                    routerPreference: RouterPreference.API,
-                    routingType: URAQuoteType.CLASSIC,
-                    tokenInAddress: tokenIn?.address ?? zeroAddress,
-                    tokenOutAddress: tokenOut?.address ?? zeroAddress,
-                    tokenInChainId: chainId,
-                    tokenOutChainId: chainId,
-                    tokenInDecimals: tokenIn?.decimals ?? 18,
-                    tokenOutDecimals: tokenOut?.decimals ?? 18,
-                    tradeType: TradeType.EXACT_INPUT,
-                    tokenInSymbol: tokenIn?.symbol ?? "",
-                    tokenOutSymbol: tokenOut?.symbol ?? "",
-                },
-                UNISWAP_API_KEY,
-            ).then((res) => {
-                const data = res.data as TradeResult;
-                const trade = data.trade as ClassicTrade;
-
-                console.log({ swaps: trade.swaps });
-
-                return [
-                    BigInt(trade.outputAmount.quotient.toString()),
-                    trade.gasUseEstimate ? BigInt(trade.gasUseEstimate) : 0n,
-                ];
-            }) as Promise<[bigint, bigint]>,
-        retry: 1,
         enabled,
-    });
-    // return {
-    //     ...quoteQueryOptions(config, {
-    //         chainId,
-    //         poolKey: poolKey ?? emptyPoolKey,
-    //         exactCurrencyAmount: exactCurrencyAmount,
-    //         quoteType: "quoteExactInputSingle",
-    //         quoterAddress,
-    //     }),
-    //     enabled,
-    // };
+    };
+}) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
+
+export const apiQuoteAtom = atomWithQuery((get) => {
+    const account = getAccount(config);
+    const tokenIn = get(tokenInAtom);
+    const tokenOut = get(tokenOutAtom);
+    const tokenInAmount = get(tokenInAmountAtom);
+    const chainIn = get(chainInAtom);
+
+    const enabled = !!tokenIn && !!tokenOut && !!tokenInAmount && !!chainIn;
+    const chainId = chainIn?.id ?? 0;
+
+    return {
+        ...apiQuoteQueryOptions(
+            {
+                account: account.address ?? "0x0000000000000000000000000000000000000002",
+                amount: tokenInAmount?.toString() ?? "0",
+                routerPreference: RouterPreference.API,
+                routingType: URAQuoteType.CLASSIC,
+                tokenInAddress: tokenIn?.address || zeroAddress,
+                tokenOutAddress: tokenOut?.address || zeroAddress,
+                tokenInChainId: chainId,
+                tokenOutChainId: chainId,
+                tokenInDecimals: tokenIn?.decimals || 0,
+                tokenOutDecimals: tokenOut?.decimals || 0,
+                tradeType: TradeType.EXACT_INPUT,
+                tokenInSymbol: tokenIn?.symbol || "",
+                tokenOutSymbol: tokenOut?.symbol || "",
+            },
+            UNISWAP_API_KEY,
+        ),
+        enabled,
+    };
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
 
 export const swapInvertAtom = atom(null, (get, set) => {

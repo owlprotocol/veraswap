@@ -10,6 +10,8 @@ import {
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { PoolKey } from "../types/PoolKey.js";
+import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
+import { ClassicTrade, GetQuoteArgs, TradeResult } from "../types/uniswapRouting.js";
 
 export type QuoteType = "quoteExactInputSingle" | "quoteExactOutputSingle";
 
@@ -78,4 +80,62 @@ export function quote(
             },
         ],
     }) as Promise<[bigint, bigint]>;
+}
+
+// UNISWAP API QUOTE
+
+export function apiQuoteQueryKey(params: GetQuoteArgs) {
+    return [
+        "apiQuote",
+        params.account,
+        params.amount,
+        params.tokenInAddress,
+        params.tokenOutAddress,
+        params.tokenInChainId,
+        params.tokenOutChainId,
+        params.tokenInDecimals,
+        params.tokenOutDecimals,
+        params.tokenInSymbol,
+        params.tokenOutSymbol,
+        params.routerPreference,
+        params.routingType,
+        params.tradeType,
+    ];
+}
+
+export function apiQuote(params: GetQuoteArgs, apiKey: string): Promise<[bigint, bigint]> {
+    return getUniswapRoutingQuote(
+        {
+            account: params.account,
+            amount: params.amount,
+            routerPreference: params.routerPreference,
+            routingType: params.routingType,
+            tokenInAddress: params.tokenInAddress,
+            tokenOutAddress: params.tokenOutAddress,
+            tokenInChainId: params.tokenInChainId,
+            tokenOutChainId: params.tokenOutChainId,
+            tokenInDecimals: params.tokenInDecimals,
+            tokenOutDecimals: params.tokenOutDecimals,
+            tradeType: params.tradeType,
+            tokenInSymbol: params.tokenInSymbol,
+            tokenOutSymbol: params.tokenOutSymbol,
+        },
+        apiKey,
+    ).then((res) => {
+        const data = res.data as TradeResult;
+        const trade = data.trade as ClassicTrade;
+
+        return [
+            BigInt(trade.outputAmount.quotient.toString()),
+            trade.gasUseEstimate ? BigInt(trade.gasUseEstimate) : 0n,
+        ];
+    });
+}
+
+export function apiQuoteQueryOptions(params: GetQuoteArgs, apiKey: string) {
+    return queryOptions({
+        queryKey: apiQuoteQueryKey(params),
+        queryFn: () => apiQuote(params, apiKey),
+        retry: 1,
+    });
 }
