@@ -79,6 +79,7 @@ describe("uniswap.test.ts", function () {
         routePlanner.addCommand(
             CommandType.CALL_TARGET,
             getHyperlaneSweepBridgeCallTargetParams({
+                bridgePayment: 1n,
                 bridgeAddress: outputTokenBridgeAddress,
                 receiver,
                 destinationChain: 1338,

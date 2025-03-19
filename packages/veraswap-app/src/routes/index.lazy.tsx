@@ -2,7 +2,7 @@ import { createLazyFileRoute } from "@tanstack/react-router";
 import { ArrowUpDown } from "lucide-react";
 import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, useWriteContract } from "wagmi";
 import {
-    getSwapAndHyperlaneBridgeTransaction,
+    getSwapAndHyperlaneSweepBridgeTransaction,
     getSwapExactInExecuteData,
     MAX_UINT_160,
     MAX_UINT_256,
@@ -241,8 +241,6 @@ function Index() {
                 transaction = getSwapExactInExecuteData({
                     universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                     poolKey: poolKey!,
-                    currencyIn: tokenIn!.address,
-                    currencyOut: tokenOut!.address,
                     zeroForOne,
                     amountIn: tokenInAmount!,
                     amountOutMinimum,
@@ -270,7 +268,7 @@ function Index() {
                         throw new Error("Bridge payment not found");
                     }
 
-                    transaction = getSwapAndHyperlaneBridgeTransaction({
+                    transaction = getSwapAndHyperlaneSweepBridgeTransaction({
                         universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                         bridgeAddress,
                         bridgePayment,
