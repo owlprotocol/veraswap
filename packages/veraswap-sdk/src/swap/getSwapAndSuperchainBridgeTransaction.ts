@@ -1,6 +1,6 @@
 import { encodeFunctionData, Address, Hex } from "viem";
-import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
+import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
@@ -30,15 +30,15 @@ export function getSwapAndSuperchainBridgeTransaction({
 }) {
     const routePlanner = new RoutePlanner();
 
-    // planner data: use take instead of take all to set receive to  bridge
-    const tradePlan = new V4Planner();
-    tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
-    tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, SUPERCHAIN_SWEEP_ADDRESS, 0]);
-
-    const swapInput = tradePlan.finalize() as Hex;
-
-    routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
+    const v4SwapParams = getV4SwapCommandParams({
+        receiver: SUPERCHAIN_SWEEP_ADDRESS,
+        amountIn,
+        amountOutMinimum,
+        poolKey,
+        zeroForOne,
+        hookData,
+    });
+    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,

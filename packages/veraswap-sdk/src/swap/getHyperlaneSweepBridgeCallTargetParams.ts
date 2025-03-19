@@ -4,16 +4,18 @@ import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
 
 export function getHyperlaneSweepBridgeCallTargetParams({
     bridgeAddress,
+    bridgePayment,
     destinationChain,
     receiver,
 }: {
     bridgeAddress: Address;
+    bridgePayment: bigint;
     destinationChain: number;
     receiver: Address;
 }) {
     return [
         HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        0n,
+        bridgePayment,
         encodeFunctionData({
             abi: HypTokenRouterSweep.abi,
             functionName: "transferRemote",

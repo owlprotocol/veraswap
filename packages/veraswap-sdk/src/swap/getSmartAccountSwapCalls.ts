@@ -25,7 +25,6 @@ export function getSmartAccountSwapCalls({
     approvePermit2?: boolean;
 }): { to: Address; data: Hex; value: bigint }[] {
     const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
-    const currencyOut = (zeroForOne ? poolKey.currency1 : poolKey.currency0) as Address;
 
     const permitTransferFromDataFormatted = {
         to: permitTransferFromData.dest,
@@ -59,8 +58,6 @@ export function getSmartAccountSwapCalls({
     const routerExecuteData = getSwapExactInExecuteData({
         universalRouter,
         poolKey,
-        currencyIn,
-        currencyOut,
         zeroForOne,
         amountIn,
         amountOutMinimum,

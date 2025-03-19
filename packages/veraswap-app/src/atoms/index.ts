@@ -27,7 +27,7 @@ import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
-import { TokenWithChainId } from "@/types";
+import { TokenWithChainId } from "@/types.js";
 
 /**
  * - networks

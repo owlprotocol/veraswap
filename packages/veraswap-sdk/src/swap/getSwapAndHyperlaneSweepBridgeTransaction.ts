@@ -1,6 +1,6 @@
 import { encodeFunctionData, Address, Hex } from "viem";
-import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
+import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
@@ -12,6 +12,7 @@ import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
 export function getSwapAndHyperlaneSweepBridgeTransaction({
     universalRouter,
     bridgeAddress,
+    bridgePayment,
     destinationChain,
     receiver,
     amountIn,
@@ -22,6 +23,7 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
+    bridgePayment: bigint;
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
@@ -32,26 +34,26 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 }) {
     const routePlanner = new RoutePlanner();
 
-    // planner data: use take instead of take all to set receive to  bridge
-    const tradePlan = new V4Planner();
-    tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
-    tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
-    tradePlan.addAction(Actions.TAKE, [poolKey.currency1, HYPERLANE_ROUTER_SWEEP_ADDRESS, 0]);
-
-    const swapInput = tradePlan.finalize() as Hex;
-
-    routePlanner.addCommand(CommandType.V4_SWAP, [swapInput]);
+    const v4SwapParams = getV4SwapCommandParams({
+        receiver: HYPERLANE_ROUTER_SWEEP_ADDRESS,
+        amountIn,
+        amountOutMinimum,
+        poolKey,
+        zeroForOne,
+        hookData,
+    });
+    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,
-        getHyperlaneSweepBridgeCallTargetParams({ bridgeAddress, destinationChain, receiver }),
+        getHyperlaneSweepBridgeCallTargetParams({ bridgeAddress, bridgePayment, destinationChain, receiver }),
     );
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
     return {
         to: universalRouter,
-        value: 0n,
+        value: bridgePayment,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",
