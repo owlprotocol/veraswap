@@ -1,4 +1,4 @@
-import { Hex, Address } from "viem";
+import { Hex } from "viem";
 
 export const _constructor = {
     type: "constructor",

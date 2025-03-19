@@ -17,8 +17,9 @@
     "url": "https://github.com/leovigna"
   },
   "files": [
-    "dist/*",
-    "lib/*",
+    "_cjs/*",
+    "_esm/*",
+    "_types/*",
     "src/*",
     "LICENSE",
     "README.md"
@@ -89,16 +90,17 @@
     "wagmi": "^2.14.2"
   },
   "devDependencies": {
-    "@owlprotocol/anvil-account": "latest",
-    "@owlprotocol/artifacts-export": "latest",
-    "@owlprotocol/create-deterministic": "latest",
-    "@owlprotocol/esbuild-config": "latest",
-    "@owlprotocol/tsconfig": "latest",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/node": "^20.11.10",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript/analyze-trace": "^0.10.1",
+    "@veraswap/anvil-account": "latest",
+    "@veraswap/artifacts-export": "latest",
+    "@veraswap/create-deterministic": "latest",
+    "@veraswap/esbuild-config": "latest",
+    "@veraswap/eslint-config": "latest",
+    "@veraswap/tsconfig": "latest",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "core-js": "^3.37.1",
     "depcheck": "^1.4.7",

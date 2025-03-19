@@ -1,4 +1,4 @@
-import { hardhatArtifactsExport } from "@owlprotocol/artifacts-export";
+import { hardhatArtifactsExport } from "@veraswap/artifacts-export";
 
 hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IMulticall_v4.sol/*.json",

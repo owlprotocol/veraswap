@@ -5,7 +5,7 @@ import { Route as V3Route } from "@uniswap/v3-sdk";
 
 // This is excluded from `RouterPreference` enum because it's only used
 // internally for token -> USDC trades to get a USD value.
-export const INTERNAL_ROUTER_PREFERENCE_PRICE = "price" as const;
+export const INTERNAL_ROUTER_PREFERENCE_PRICE = "price";
 
 // Buffer to add to the gas estimate to account for potential underestimation
 const GAS_ESTIMATE_BUFFER = 1.15;
@@ -114,7 +114,7 @@ export interface ClassicQuoteData {
     quoteDecimals: string;
     quoteGasAdjusted: string;
     quoteGasAdjustedDecimals: string;
-    route: Array<(V3PoolInRoute | V2PoolInRoute)[]>;
+    route: (V3PoolInRoute | V2PoolInRoute)[][];
     routeString: string;
     portionBips?: number;
     portionRecipient?: string;
@@ -124,11 +124,11 @@ export interface ClassicQuoteData {
     quoteGasAndPortionAdjustedDecimals?: string;
 }
 
-type URAClassicQuoteResponse = {
+interface URAClassicQuoteResponse {
     routing: URAQuoteType.CLASSIC;
     quote: ClassicQuoteData;
-    allQuotes: Array<URAQuoteResponse>;
-};
+    allQuotes: URAQuoteResponse[];
+}
 export type URAQuoteResponse = URAClassicQuoteResponse;
 
 export function isClassicQuoteResponse(data: URAQuoteResponse): data is URAClassicQuoteResponse {
@@ -146,7 +146,11 @@ export enum TradeFillType {
 export type ApproveInfo = { needsApprove: true; approveGasEstimateUSD: number } | { needsApprove: false };
 export type WrapInfo = { needsWrap: true; wrapGasEstimateUSD: number } | { needsWrap: false };
 
-export type SwapFeeInfo = { recipient: string; percent: Percent; amount: string /* raw amount of output token */ };
+export interface SwapFeeInfo {
+    recipient: string;
+    percent: Percent;
+    amount: string;
+}
 
 export class ClassicTrade extends Trade<Currency, Currency, TradeType> {
     public readonly fillType = TradeFillType.Classic;
@@ -241,7 +245,7 @@ export type TokenInRoute = Pick<Token, "address" | "chainId" | "symbol" | "decim
     sellFeeBps?: string;
 };
 
-export type V3PoolInRoute = {
+export interface V3PoolInRoute {
     type: "v3-pool";
     tokenIn: TokenInRoute;
     tokenOut: TokenInRoute;
@@ -254,14 +258,14 @@ export type V3PoolInRoute = {
 
     // not used in the interface
     address?: string;
-};
+}
 
-type V2Reserve = {
+interface V2Reserve {
     token: TokenInRoute;
     quotient: string;
-};
+}
 
-export type V2PoolInRoute = {
+export interface V2PoolInRoute {
     type: "v2-pool";
     tokenIn: TokenInRoute;
     tokenOut: TokenInRoute;
@@ -273,4 +277,4 @@ export type V2PoolInRoute = {
     // not used in the interface
     // avoid returning it from the client-side smart-order-router
     address?: string;
-};
+}

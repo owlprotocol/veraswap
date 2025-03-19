@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     Chain,
     createPublicClient,
@@ -39,7 +40,7 @@ import { IStateView } from "../artifacts/IStateView.js";
  * - LPs on chains[0] between testUSDC and test tokens.
  * Also, mints to self 1 eth of each token
  */
-async function addLiquidity(chains: Chain[]) {
+export async function addLiquidity(chains: Chain[]) {
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) throw new Error("PRIVATE_KEY not set");
 
@@ -194,7 +195,7 @@ async function addLiquidity(chains: Chain[]) {
         await publicClient.waitForTransactionReceipt({ hash: currencyBApprovePOSMHash });
         // }
 
-        /***** Create Pool Key *****/
+        /** *** Create Pool Key *****/
         // Create Pool Key (0.30%/60)
         const lpFee = 3000; // ticks 3000 = 0.30% (1 thousandth percent)
         const tickSpacing = 60;
@@ -209,7 +210,7 @@ async function addLiquidity(chains: Chain[]) {
             hooks,
         };
 
-        /***** Get Pool Liquidity *****/
+        /** *** Get Pool Liquidity *****/
         const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 
         const currentLiquidity = await publicClients[0].readContract({
@@ -228,7 +229,7 @@ async function addLiquidity(chains: Chain[]) {
             functionName: "initializePool",
         });
 
-        /***** Create Pool Liquidity *****/
+        /** *** Create Pool Liquidity *****/
         const pool = new Pool(currency0, currency1, lpFee, tickSpacing, hooks, sqrtRatioX96.toString(), 0, 0);
         // Create Pool Liquidity Data
         // Understanding ticks https://blog.uniswap.org/uniswap-v3-math-primer#ticks-vs-tickspacing
@@ -282,7 +283,7 @@ async function addLiquidity(chains: Chain[]) {
             functionName: "modifyLiquidities",
         });
 
-        /***** Execute Multicall *****/
+        /** *** Execute Multicall *****/
         const multicallHash = await walletClient.writeContract({
             address: UNISWAP_CONTRACTS[chainId0Str].POSITION_MANAGER,
             abi: IMulticall_v4.abi,
@@ -305,9 +306,11 @@ async function addLiquidity(chains: Chain[]) {
 
 // baseSepolia, sepolia, arbitrumSepolia, optimismSepolia fail
 // const chains: Chain[] = [{ ...sepolia, rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } } }, arbitrumSepolia];
+/*
 const chains: Chain[] = [interopDevnet0, interopDevnet1];
 addLiquidity(chains).then(() => {
     console.log("Test tokens deployed successfully");
-    // eslint-disable-next-line no-process-exit
+
     process.exit();
 });
+*/

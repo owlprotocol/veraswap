@@ -1,4 +1,6 @@
-import { getOrDeployDeterministicContract } from "@owlprotocol/create-deterministic";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 import {
     Chain,
     createPublicClient,
@@ -81,7 +83,7 @@ async function deployTestTokens(chains: Chain[]) {
     );
 
     if (chainMailboxesAndNames.some((elem) => !elem.mailbox)) {
-        throw new Error(`Mailbox missing for some chain: ${chainMailboxesAndNames}`);
+        throw new Error(`Mailbox missing for some chain: ${JSON.stringify(chainMailboxesAndNames)}`);
     }
 
     const publicClients = chains.map((chain) =>
@@ -378,7 +380,7 @@ async function deployTestTokens(chains: Chain[]) {
             await publicClient.waitForTransactionReceipt({ hash: currencyBApprovePOSMHash });
         }
 
-        /***** Create Pool Key *****/
+        /** *** Create Pool Key *****/
         // Create Pool Key (0.30%/60)
         const lpFee = 3000; // ticks 3000 = 0.30% (1 thousandth percent)
         const tickSpacing = 60;
@@ -399,7 +401,7 @@ async function deployTestTokens(chains: Chain[]) {
             functionName: "initializePool",
         });
 
-        /***** Create Pool Liquidity *****/
+        /** *** Create Pool Liquidity *****/
         const pool = new Pool(currency0, currency1, lpFee, tickSpacing, hooks, sqrtRatioX96.toString(), 0, 0);
         // Create Pool Liquidity Data
         // Understanding ticks https://blog.uniswap.org/uniswap-v3-math-primer#ticks-vs-tickspacing
@@ -452,7 +454,7 @@ async function deployTestTokens(chains: Chain[]) {
             functionName: "modifyLiquidities",
         });
 
-        /***** Execute Multicall *****/
+        /** *** Execute Multicall *****/
         const multicallHash = await walletClient.writeContract({
             address: UNISWAP_CONTRACTS[chainId0Str].POSITION_MANAGER,
             abi: IMulticall_v4.abi,
@@ -462,7 +464,7 @@ async function deployTestTokens(chains: Chain[]) {
         console.log({ multicallHash });
         await publicClient.waitForTransactionReceipt({ hash: multicallHash });
 
-        /***** Get Pool Liquidity *****/
+        /** *** Get Pool Liquidity *****/
         const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 
         const currentLiquidity = await publicClient.readContract({
@@ -584,7 +586,7 @@ async function deployTestTokens(chains: Chain[]) {
             await publicClient.waitForTransactionReceipt({ hash: currencyBApprovePOSMHash });
         }
 
-        /***** Create Pool Key *****/
+        /** *** Create Pool Key *****/
         // Create Pool Key (0.30%/60)
         const lpFee = 3000; // ticks 3000 = 0.30% (1 thousandth percent)
         const tickSpacing = 60;
@@ -605,7 +607,7 @@ async function deployTestTokens(chains: Chain[]) {
             functionName: "initializePool",
         });
 
-        /***** Create Pool Liquidity *****/
+        /** *** Create Pool Liquidity *****/
         const pool = new Pool(currency0, currency1, lpFee, tickSpacing, hooks, sqrtRatioX96.toString(), 0, 0);
         // Create Pool Liquidity Data
         // Understanding ticks https://blog.uniswap.org/uniswap-v3-math-primer#ticks-vs-tickspacing
@@ -659,7 +661,7 @@ async function deployTestTokens(chains: Chain[]) {
             functionName: "modifyLiquidities",
         });
 
-        /***** Execute Multicall *****/
+        /** *** Execute Multicall *****/
         const multicallHash = await walletClient.writeContract({
             address: UNISWAP_CONTRACTS[chainId0Str].POSITION_MANAGER,
             abi: IMulticall_v4.abi,
@@ -670,7 +672,7 @@ async function deployTestTokens(chains: Chain[]) {
 
         console.log({ multicallHash, testTokenAddress, token: testTokenDefs[i].name });
 
-        /***** Get Pool Liquidity *****/
+        /** *** Get Pool Liquidity *****/
         const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 
         const currentLiquidity = await publicClient.readContract({
@@ -686,9 +688,11 @@ async function deployTestTokens(chains: Chain[]) {
 
 // baseSepolia, sepolia, arbitrumSepolia, optimismSepolia fail
 // const chains: Chain[] = [{ ...sepolia, rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } } }, arbitrumSepolia];
+/*
 const chains: Chain[] = [localhost, localhost2];
 deployTestTokens(chains).then(() => {
     console.log("Test tokens deployed successfully");
-    // eslint-disable-next-line no-process-exit
+
     process.exit();
 });
+*/

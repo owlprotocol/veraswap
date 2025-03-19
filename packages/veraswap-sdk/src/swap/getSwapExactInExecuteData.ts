@@ -38,7 +38,7 @@ export function getSwapExactInExecuteData({
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
     return {
-        to: universalRouter as Address,
+        to: universalRouter,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",

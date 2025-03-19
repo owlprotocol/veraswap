@@ -47,8 +47,7 @@ export async function getApproveInfo(
         if (allowance >= BigInt(amount)) {
             return { needsApprove: false };
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_) {
+    } catch {
         // If contract lookup fails (eg if Infura goes down), then don't show gas info for approving the token
         return { needsApprove: false };
     }
@@ -66,8 +65,7 @@ export async function getApproveInfo(
         });
 
         approveGasUseEstimate = Number(gasEstimate);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_) {
+    } catch {
         // estimateGas will error if the account doesn't have sufficient token balance, but we should show an estimated cost anyway
         approveGasUseEstimate = APPROVE_FALLBACK_GAS_LIMIT_IN_GWEI;
     }

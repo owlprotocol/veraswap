@@ -17,8 +17,8 @@ import {
     padHex,
 } from "viem";
 import { localhost } from "viem/chains";
-import { getOrDeployDeterministicContract, getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
-import { getAnvilAccount } from "@owlprotocol/anvil-account";
+import { getOrDeployDeterministicContract, getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import { getAnvilAccount } from "@veraswap/anvil-account";
 import { Actions, Pool, Position, V4Planner, V4PositionPlanner, priceToClosestTick } from "@uniswap/v4-sdk";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
@@ -101,7 +101,7 @@ describe("index.test.ts", function () {
         beforeEach(async () => {
             const salt = padHex(numberToHex(saltNonce++), { size: 32 });
             saltNonce++;
-            /***** Create Tokens *****/
+            /** *** Create Tokens *****/
             const tokenADeployBytecode = encodeDeployData({
                 abi: ERC20.abi,
                 bytecode: ERC20.bytecode,
@@ -153,7 +153,7 @@ describe("index.test.ts", function () {
             currency0 = new Token(chainId, currency0Address, 0);
             currency1 = new Token(chainId, currency1Address, 0);
 
-            /***** Token Permit2 Approvals ******/
+            /** *** Token Permit2 Approvals ******/
             // Aprove tokens to Permit2
             const currency0ApprovePermit2Hash = await walletClient.writeContract({
                 address: currency0Address,
@@ -188,7 +188,7 @@ describe("index.test.ts", function () {
             });
             await publicClient.waitForTransactionReceipt({ hash: currencyBApprovePOSMHash });
 
-            /***** Create Pool Key *****/
+            /** *** Create Pool Key *****/
             // Create Pool Key (0.30%/60)
             const lpFee = 3000; // ticks 3000 = 0.30% (1 thousandth percent)
             const tickSpacing = 60;
@@ -209,7 +209,7 @@ describe("index.test.ts", function () {
                 functionName: "initializePool",
             });
 
-            /***** Create Pool Liquidity *****/
+            /** *** Create Pool Liquidity *****/
             const pool = new Pool(currency0, currency1, lpFee, tickSpacing, hooks, sqrtRatioX96.toString(), 0, 0);
             // Create Pool Liquidity Data
             // Understanding ticks https://blog.uniswap.org/uniswap-v3-math-primer#ticks-vs-tickspacing
@@ -262,7 +262,7 @@ describe("index.test.ts", function () {
                 functionName: "modifyLiquidities",
             });
 
-            /***** Execute Multicall *****/
+            /** *** Execute Multicall *****/
             const multicallHash = await walletClient.writeContract({
                 address: UNISWAP_CONTRACTS[chainId].POSITION_MANAGER,
                 abi: IMulticall.abi,
@@ -271,7 +271,7 @@ describe("index.test.ts", function () {
             });
             await publicClient.waitForTransactionReceipt({ hash: multicallHash });
 
-            /***** Get Pool Liquidity *****/
+            /** *** Get Pool Liquidity *****/
             const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
             const currentLiquidity = await publicClient.readContract({
                 address: UNISWAP_CONTRACTS[chainId].STATE_VIEW,
@@ -297,7 +297,7 @@ describe("index.test.ts", function () {
                 args: [walletClient.account.address],
             });
 
-            /***** Get Quote *****/
+            /** *** Get Quote *****/
             const amountIn = 1_000_000n;
             const [amountOutQuoted] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
@@ -361,7 +361,7 @@ describe("index.test.ts", function () {
                 args: [walletClient.account.address],
             });
 
-            /***** Create Smart Account *****/
+            /** *** Create Smart Account *****/
             // deploy SimpleAccount (separate TX, limitation from factory and not using a bundler / entrypoint
             const salt = 0n;
             const simpleAccountHash = await walletClient.writeContract({
@@ -375,12 +375,12 @@ describe("index.test.ts", function () {
                 await publicClient.waitForTransactionReceipt({ hash: simpleAccountHash });
             }
 
-            const simpleAccountAddress = (await publicClient.readContract({
+            const simpleAccountAddress = await publicClient.readContract({
                 abi: SimpleAccountFactory.abi,
                 address: simpleAccountFactoryAddress,
                 functionName: "getAddress",
                 args: [walletClient.account.address, salt],
-            })) as Address;
+            });
 
             const balance1PreTrade = await publicClient.readContract({
                 address: poolKey.currency1,
@@ -389,7 +389,7 @@ describe("index.test.ts", function () {
                 args: [simpleAccountAddress],
             });
 
-            /***** Permit2 Signature Transfer EOA to Smart Wallet *****/
+            /** *** Permit2 Signature Transfer EOA to Smart Wallet *****/
             const amountIn = 1_000_000n;
 
             const currencyInAddress = currency0Address;
@@ -400,7 +400,7 @@ describe("index.test.ts", function () {
                 amountIn,
             });
 
-            /***** Get Quote *****/
+            /** *** Get Quote *****/
             const [amountOutQuoted] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
                 address: UNISWAP_CONTRACTS[chainId].QUOTER,
@@ -523,7 +523,7 @@ describe("index.test.ts", function () {
         });
         expect(positionLiquidity).toBeGreaterThan(0n);
 
-        /***** Execute swap *****/
+        /** *** Execute swap *****/
         // Permit2 Universal Router
         // Set tokens Permit2 Allowance
         const currency0ApproveRouterHash = await walletClient.writeContract({
@@ -542,7 +542,7 @@ describe("index.test.ts", function () {
         });
         await publicClient.waitForTransactionReceipt({ hash: currency1ApproveRouterHash });
 
-        const amountIn = 1_000_000n; //this was issue
+        const amountIn = 1_000_000n; // this was issue
 
         const [amountOutQuoted, gasEstimate] = (await publicClient.readContract({
             abi: [quoteExactInputSingleAbi],

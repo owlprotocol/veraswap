@@ -45,5 +45,4 @@ export async function enrollRemoteRouter() {
     console.log(`Bridge at address ${address} now has domains: ${domains}`);
 }
 
-// eslint-disable-next-line no-process-exit
-enrollRemoteRouter().then(() => process.exit());
+// enrollRemoteRouter().then(() => process.exit());

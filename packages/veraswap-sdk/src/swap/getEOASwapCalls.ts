@@ -24,7 +24,7 @@ export function getEOASwapCalls({
     const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
     const currencyOut = (zeroForOne ? poolKey.currency1 : poolKey.currency0) as Address;
 
-    /***** Permit2 Approve universalRouter *****/
+    /** *** Permit2 Approve universalRouter *****/
     // approve Permit2 to spend Token A
     const approvePermit2Data = {
         to: currencyIn,

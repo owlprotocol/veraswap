@@ -22,16 +22,16 @@ export function useCheckApprovals({ poolKey, walletAddress, PERMIT2_ADDRESS, POS
         contracts: isValid
             ? [
                   {
-                      address: poolKey!.currency0,
+                      address: poolKey.currency0,
                       abi: MockERC20.abi,
                       functionName: "allowance",
                       args: [walletAddress, PERMIT2_ADDRESS],
                   },
                   {
-                      address: poolKey!.currency1,
+                      address: poolKey.currency1,
                       abi: MockERC20.abi,
                       functionName: "allowance",
-                      args: [walletAddress!, PERMIT2_ADDRESS],
+                      args: [walletAddress, PERMIT2_ADDRESS],
                   },
                   {
                       address: PERMIT2_ADDRESS,
@@ -50,7 +50,7 @@ export function useCheckApprovals({ poolKey, walletAddress, PERMIT2_ADDRESS, POS
         query: { enabled: isValid },
     });
 
-    //TODO: Fix type
+    // TODO: Fix type
     const token0Allowance = data?.[0]?.result ?? 0n;
     const token1Allowance = data?.[1]?.result ?? 0n;
     const permit2Allowance0 = data?.[2]?.result ? data[2].result[0] : 0n;
