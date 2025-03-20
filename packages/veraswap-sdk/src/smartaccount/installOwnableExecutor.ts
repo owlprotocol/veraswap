@@ -1,4 +1,12 @@
-import { Address, concatHex, encodeAbiParameters, encodeFunctionData, Hex, parseAbiParameters, zeroAddress } from "viem";
+import {
+    Address,
+    concatHex,
+    encodeAbiParameters,
+    encodeFunctionData,
+    Hex,
+    parseAbiParameters,
+    zeroAddress,
+} from "viem";
 import { KernelV3_1AccountAbi } from "@zerodev/sdk";
 
 export enum ERC7579_MODULE_TYPE {
@@ -34,23 +42,24 @@ export function installOwnableExecutor({ owner, executor }: { owner: Address; ex
 }
 
 /**
- * 
+ *
  * @param accountAddress ERC7579 Smart Account Address
  * @param owner Account owner
  * @param executor ERC7579 executor (defaults to official)
  * @returns Transaction data to call `installModule` on the smart account
  */
 export function getInstallOwnableExecutorCall({
-  accountAddress,
-  owner,
-  executor
+    accountAddress,
+    owner,
+    executor,
 }: {
-  accountAddress: Address;
-  owner: Address; executor?: Address;
+    accountAddress: Address;
+    owner: Address;
+    executor?: Address;
 }) {
-  return {
-    to: accountAddress,
-    data: installOwnableExecutor({ owner, executor }),
-    value: 0n,
-  };
-};
+    return {
+        to: accountAddress,
+        data: installOwnableExecutor({ owner, executor }),
+        value: 0n,
+    };
+}

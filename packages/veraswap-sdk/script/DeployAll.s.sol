@@ -37,6 +37,7 @@ import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
 
 // Hyperlane Kernel Interchain Account Infra
+import {ECDSAValidatorUtils} from "./utils/ECDSAValidatorUtils.sol";
 import {KernelUtils} from "./utils/KernelUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
@@ -155,9 +156,12 @@ contract DeployAll is Script, Test {
         console2.log("v4StateView:", v4StateView);
 
         // KERNEL CONTRACTS
-        (address executor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
         (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
         (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
+
+        (address ecdsaValidator, ) = ECDSAValidatorUtils.getOrCreate2();
+        (address executor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
+
         (address executorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
             mailbox,
             address(0),
