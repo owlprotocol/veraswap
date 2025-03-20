@@ -6,6 +6,9 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 
+import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {Create2Utils} from "./utils/Create2Utils.sol";
+
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
@@ -28,6 +31,7 @@ import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
 import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
+import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 
 contract DeployAll is Script, Test {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
@@ -86,6 +90,15 @@ contract DeployAll is Script, Test {
         vm.startBroadcast();
         HypERC20(hypERC20TokenA).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenA))));
         HypERC20(hypERC20TokenB).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenB))));
+
+        // Deploy TestRecipient on remote
+        address testRecipientAddr = Create2.computeAddress(BYTES32_ZERO, keccak256(type(TestRecipient).creationCode), Create2Utils.DETERMINISTIC_DEPLOYER);
+        bool testRecipientExists = address(testRecipientAddr).code.length > 0;
+
+        if (!testRecipientExists) {
+            new TestRecipient{salt: BYTES32_ZERO}();
+        }
+        console2.log("testRecipient: ", testRecipientAddr);
         vm.stopBroadcast();
     }
 
