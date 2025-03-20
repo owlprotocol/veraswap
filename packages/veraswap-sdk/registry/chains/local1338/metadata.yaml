@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../schema.json
+chainId: 31338
+displayName: Local 1338
+domainId: 31338
+isTestnet: true
+name: local1338
+nativeToken:
+    decimals: 18
+    name: Ether
+    symbol: ETH
+protocol: ethereum
+rpcUrls:
+    - http: http://localhost:8546
