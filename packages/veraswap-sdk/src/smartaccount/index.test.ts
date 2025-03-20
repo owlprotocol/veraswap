@@ -1,7 +1,22 @@
 import { describe, test } from "vitest";
+import { Account } from "viem";
+import { entryPoint07Address } from "viem/account-abstraction";
+
+import { getAnvilAccount } from "@veraswap/anvil-account";
+
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
+import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
+
+import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
+import { opChainL1Client } from "../constants/chains.js";
+import { getKernelInitData } from "./getKernelInitData.js";
+import { installOwnableExecutor } from "./installOwnableExecutor.js";
+import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 
 describe("smartaccount/index.test.ts", function () {
     // Test ZeroDev SDK & Custom SDK Tooling
+    const entryPoint = { address: entryPoint07Address, version: "0.7" } as const;
+    const kernelVersion = KERNEL_V3_1;
 
     /**
      * TODO
@@ -14,7 +29,34 @@ describe("smartaccount/index.test.ts", function () {
      */
 
     describe("OwnableExecutor", () => {
-        test("installOwnableExecutor", () => { });
+        test("installOwnableExecutor", async () => {
+            const signer: Account = getAnvilAccount(1);
+
+            const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
+                entryPoint,
+                kernelVersion,
+                signer,
+                validatorAddress: LOCAL_KERNEL_CONTRACTS.ecdsaValidator,
+            });
+            const kernelPluginManager = await toKernelPluginManager<"0.7">(opChainL1Client, {
+                entryPoint,
+                kernelVersion,
+                sudo: ecdsaValidator,
+                chainId: opChainL1Client.chain.id,
+            });
+            const initData = await getKernelInitData({
+                kernelPluginManager,
+                initHook: false,
+                initConfig: [
+                    installOwnableExecutor({
+                        owner: signer.address,
+                        executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    }),
+                ],
+            });
+
+            console.debug({ initData });
+        });
 
         test("OwnableExecutor.executeOnOwnedAccount - direct", () => { });
 

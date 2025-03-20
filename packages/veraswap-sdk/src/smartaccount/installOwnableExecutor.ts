@@ -16,17 +16,13 @@ export enum ERC7579_MODULE_TYPE {
     HOOK = 4,
 }
 
-// OwnableSignaturExecutor
-// TODO: Add better logic for default address config
-export const DEFAULT_EXECUTOR = zeroAddress;
-
 /**
  * Get OwnableExecutor installation function data
  * @param owner Account owner
  * @param executor ERC7579 executor (defaults to official)
  * @returns Encoded ERC7579 `installModule` function data to install OwnableExecutor on a ERC7579 Smart Account
  */
-export function installOwnableExecutor({ owner, executor }: { owner: Address; executor?: Address }): Hex {
+export function installOwnableExecutor({ owner, executor }: { owner: Address; executor: Address }): Hex {
     const hook = zeroAddress; // no hook
     const hookData = "0x"; // no hook data
     const executorData = encodeAbiParameters([{ type: "address" }], [owner]);
@@ -35,7 +31,7 @@ export function installOwnableExecutor({ owner, executor }: { owner: Address; ex
         functionName: "installModule",
         args: [
             BigInt(ERC7579_MODULE_TYPE.EXECUTOR),
-            executor ?? DEFAULT_EXECUTOR,
+            executor,
             concatHex([hook, encodeAbiParameters(parseAbiParameters(["bytes", "bytes"]), [executorData, hookData])]),
         ],
     });
@@ -55,7 +51,7 @@ export function getInstallOwnableExecutorCall({
 }: {
     accountAddress: Address;
     owner: Address;
-    executor?: Address;
+    executor: Address;
 }) {
     return {
         to: accountAddress,

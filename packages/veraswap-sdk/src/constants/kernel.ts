@@ -3,6 +3,7 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Kernel } from "../artifacts/Kernel.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { ECDSAValidator } from "../artifacts/ECDSAValidator.js";
+import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 
 /*** Kernel Constants ***/
 
@@ -32,10 +33,16 @@ export function getKernelContracts() {
         salt: zeroHash,
     });
 
+    const ownableSignatureExecutor = getDeployDeterministicAddress({
+        bytecode: OwnableSignatureExecutor.bytecode,
+        salt: zeroHash,
+    });
+
     return {
         kernel,
         kernelFactory,
         ecdsaValidator,
+        ownableSignatureExecutor,
     };
 }
 
