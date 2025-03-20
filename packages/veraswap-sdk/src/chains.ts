@@ -108,19 +108,29 @@ export const localOp = {
     ...localhost,
     id: chainIdLocalOp,
     name: "Local OP",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOp}`] } },
+    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOp}`], webSocket: [`ws://127.0.0.1:${portLocalOp}`] } },
 };
 
 export const localOpChainA = {
     ...localhost,
     id: chainIdLocalOpChainA,
     name: "OP Chain A",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOpChainA}`] } },
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${portLocalOpChainA}`],
+            // webSocket: [`ws://127.0.0.1:${portLocalOpChainA}`],
+        },
+    },
 };
 
 export const localOpChainB = {
     ...localhost,
     id: chainIdLocalOpChainB,
     name: "OP Chain B",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOpChainB}`] } },
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${portLocalOpChainB}`],
+            // webSocket: [`ws://127.0.0.1:${portLocalOpChainB}`],
+        },
+    },
 };

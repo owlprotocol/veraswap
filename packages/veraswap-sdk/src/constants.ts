@@ -15,6 +15,7 @@ import {
     Mailbox,
     NoopIsm,
     PausableHook,
+    HypTokenRouterSweep,
 } from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
@@ -382,7 +383,10 @@ export const UNISWAP_CONTRACTS = {
 // Maybe from different forge config in past?
 export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
-export const HYPERLANE_ROUTER_SWEEP_ADDRESS = "0xCDE47C48F8b0Ea9d57eB4e03C9435aA23Cf0Fb87";
+export const HYPERLANE_ROUTER_SWEEP_ADDRESS = getDeployDeterministicAddress({
+    bytecode: HypTokenRouterSweep.bytecode,
+    salt: zeroHash,
+});
 
 export const TOKEN_LIST = {
     // 56
@@ -700,6 +704,14 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
             chainId: 1338,
             name: "localhost-1338",
         } as ChainMetadata,
+        "localhost-op": {
+            chainId: 900,
+            name: "localhost-op",
+        } as ChainMetadata,
+        "localhost-op-chain-a": {
+            chainId: 901,
+            name: "localhost-op-chain-a",
+        } as ChainMetadata,
     } as ChainMap<ChainMetadata>,
     addresses: {
         "localhost-1337": {
@@ -707,6 +719,12 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
         },
         "localhost-1338": {
             mailbox: "0x1e8fC27Af09d117Df6B931433e29fCF6463f3a95",
+        },
+        "localhost-op": {
+            mailbox: getMailboxAddress(900),
+        },
+        "localhost-op-chain-a": {
+            mailbox: getMailboxAddress(901),
         },
     },
 };
