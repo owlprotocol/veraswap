@@ -29,4 +29,7 @@ library HypERC20Utils {
             HypERC20(addr).initialize(0, name, symbol, address(0), address(0), msg.sender);
         }
     }
+    function enrollRemoteRouter(address hypERC20, uint32 remoteChainId, address remoteCollateral) internal {
+        HypERC20(hypERC20).enrollRemoteRouter(remoteChainId, bytes32(uint256(uint160(remoteCollateral))));
+    }
 }
