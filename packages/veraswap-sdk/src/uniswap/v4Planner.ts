@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { encodeAbiParameters, Hex } from "viem";
 import { AbiParametersToPrimitiveTypes } from "abitype";
 /**
@@ -204,10 +206,10 @@ export class V4Planner {
     }
 }
 
-type RouterAction = {
+interface RouterAction {
     action: Actions;
     encodedInput: Hex;
-};
+}
 
 function createAction<T extends Actions>(
     action: T,

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Config, readContract } from "@wagmi/core";
 import { Address, Chain, zeroAddress } from "viem";
 import * as chains from "viem/chains";
@@ -6,7 +8,7 @@ import { tokenRegistryData } from "./tokenRegistryData.js";
 import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
 import { inkSepolia, unichainSepolia } from "../chains.js";
 
-//TODO: use viem registry?
+// TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {
     1: "ethereum",
     56: "smartchain",
@@ -15,8 +17,7 @@ export const chainIdToBlockchain: Record<number, string> = {
     1337: "localhost",
 };
 export const getChainById = (chainId: number): Chain | undefined => {
-    // @ts-expect-error
-    const chain = Object.values(chains).find((chain) => chain.id === chainId) as Chain | undefined;
+    const chain = (Object.values(chains) as Chain[]).find((chain) => chain.id === chainId);
     if (chain) return chain;
 
     if (inkSepolia.id === chainId) return inkSepolia;

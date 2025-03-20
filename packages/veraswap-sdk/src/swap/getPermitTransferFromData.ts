@@ -28,6 +28,7 @@ export async function getPermitTransferFromData(
     };
 
     const permitData = SignatureTransfer.getPermitData(permitTransferFrom, PERMIT2_ADDRESS, chainId);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const permitTransferSignature = await walletClient.signTypedData({
         domain: permitData.domain,
         types: permitData.types,

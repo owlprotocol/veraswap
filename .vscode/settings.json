@@ -1,71 +1,72 @@
 {
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "always"
-    },
-    "editor.formatOnPaste": false, // required
-    "editor.formatOnType": false, // required
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file",
-    "files.watcherExclude": {
-        "**/dist/**": true,
-        "**/dist-ssr/**": true,
-        "**/build/**": true,
-        "**/lib/**": true,
-        "**/storybook-static/**": true,
-        "**/node_modules/**": true,
-        "**/coverage/**": true,
-        ".turbo": true,
-        "packages-archived/**": true,
-        "starters/**": true
-    },
-    "search.exclude": {
-        "**/dist/**": true,
-        "**/dist-ssr/**": true,
-        "**/build/**": true,
-        "**/lib/**": true,
-        "**/storybook-static/**": true,
-        "**/node_modules/**": true,
-        "**/coverage/**": true,
-        ".turbo": true,
-        "packages-archived/**": true,
-        "starters/**": false,
-    },
-    "vim.statusBarColorControl": false,
-    "search.followSymlinks": false,
-    "[json]": {
-        "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
-    },
-    "[solidity]": {
-        "editor.defaultFormatter": "JuanBlanco.solidity"
-    },
-    "[handlebars]": {
-        "editor.formatOnSave": false
-    },
-    "[markdown]": {
-        "editor.formatOnSave": false,
-        "editor.unicodeHighlight.ambiguousCharacters": false,
-        "editor.unicodeHighlight.invisibleCharacters": false,
-        "diffEditor.ignoreTrimWhitespace": false,
-        "editor.wordWrap": "on",
-        "editor.quickSuggestions": {
-            "comments": "off",
-            "strings": "off",
-            "other": "off"
-        }
-    },
-    "solidity.remappings": [
-        "ds-test/=packages/contracts/packages/owlprotocol-contracts/lib/forge-std/lib/ds-test/src/",
-        "forge-std/=packages/contracts/packages/owlprotocol-contracts/lib/forge-std/src/",
-        "contracts/=packages/contracts/packages/owlprotocol-contracts/contracts/"
-    ],
-    "typescript.updateImportsOnFileMove.enabled": "always",
-    "javascript.updateImportsOnFileMove.enabled": "always",
-    "typescript.tsdk": "./node_modules/typescript/lib",
-    "git.ignoreLimitWarning": true
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "editor.formatOnPaste": false, // required
+  "editor.formatOnType": false, // required
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.fontSize": 18,
+  "editor.detectIndentation": true,
+  "terminal.integrated.fontSize": 20,
+  "files.watcherExclude": {
+    "**/_cjs/**": true,
+    "**/_esm/**": true,
+    "**/_types/**": true,
+    "**/dist/**": true,
+    "**/dist-ssr/**": true,
+    "**/build/**": true,
+    "**/lib/**": true,
+    "**/node_modules/**": true,
+    "**/coverage/**": true,
+    "**/cache/**": true,
+    "**/out/**": true,
+    ".turbo": true,
+  },
+  "search.exclude": {
+    "**/_cjs/**": true,
+    "**/_esm/**": true,
+    "**/_types/**": true,
+    "**/dist/**": true,
+    "**/dist-ssr/**": true,
+    "**/build/**": true,
+    "**/lib/**": true,
+    "**/node_modules/**": true,
+    "**/coverage/**": true,
+    "**/cache/**": true,
+    "**/out/**": true,
+    ".turbo": true,
+  },
+  "search.followSymlinks": false,
+  "[json]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "[handlebars]": {
+    "editor.formatOnSave": false
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  "solidity.remappings": [],
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "git.ignoreLimitWarning": true
 }

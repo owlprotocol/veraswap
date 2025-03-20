@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { isExactInput, transformQuoteToTrade } from "./routing/utils.js";
 import { UNISWAP_API_KEY } from "../swap/uniswap.test.js";
 import {
@@ -72,7 +74,7 @@ export async function getUniswapRoutingQuote(args: GetQuoteArgs) {
             body: JSON.stringify(requestBody),
             headers: {
                 "x-request-source": "uniswap-web",
-                "x-api-key": UNISWAP_API_KEY!,
+                "x-api-key": UNISWAP_API_KEY,
             },
         });
 

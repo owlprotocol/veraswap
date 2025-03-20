@@ -28,7 +28,7 @@ jobs:
       # Git Checkout
       - uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
       # Node Setup
       - uses: actions/setup-node@v3
         with:
@@ -58,6 +58,9 @@ jobs:
       # Install
       - run: pnpm i
         name: Install dependencies
+      # Install Rhinestone (seems like only way to install for now)
+      - run: cd packages/veraswap-sdk/lib/rhinestone-core-modules && pnpm i --ignore-workspace
+        name: Install Rhinestone dependencies
       # Dependencies
       - run: pnpm run depcheck
         name: Dependency Check
@@ -65,15 +68,14 @@ jobs:
         name: Dependency Synced Versioning Check
       - run: pnpm run madge
         name: Circular dependency check
+      # Foundry Install
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: "stable"
       # Build
       - run: pnpm run build
         name: Build All
-      ### Testing ###
-      ## Foundry Setup (anvil)
-      #- name: Install Foundry
-      #  uses: foundry-rs/foundry-toolchain@v1
-      #  with:
-      #    version: "nightly-09fe3e041369a816365a020f715ad6f94dbce9f2"
       ## Java Setup (firebase)
       #- uses: actions/setup-java@v4
       #  with:
@@ -99,13 +101,13 @@ jobs:
       - run: pnpm run lint
         name: Lint All
       ### Release ###
-      #- if: ${{ github.ref == 'refs/heads/main' }}
+      #- if: ${{ github.ref == 'refs/heads/develop' }}
       #  name: Set publishing config
       #  run: pnpm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
       #  env:
       #    NPM_TOKEN: ${{secrets.NPM_TOKEN}}
       ## Create Release PR
-      #- if: ${{ github.ref == 'refs/heads/main' }}
+      #- if: ${{ github.ref == 'refs/heads/develop' }}
       #  name: Create and publish versions
       #  uses: changesets/action@v1
       #  with:

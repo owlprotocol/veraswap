@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable no-case-declarations */
 import { encodeAbiParameters, Hex } from "viem";
 import type { AbiParametersToPrimitiveTypes } from "abitype";
 
@@ -47,11 +51,11 @@ export enum Parser {
     V3Actions,
 }
 
-export type ParamType = {
+export interface ParamType {
     readonly name: string;
     readonly type: string;
     readonly subparser?: Subparser;
-};
+}
 
 export type CommandDefinition =
     | {
@@ -281,10 +285,10 @@ export class RoutePlanner {
     }
 }
 
-export type RouterCommand = {
+export interface RouterCommand {
     type: CommandType;
     encodedInput: Hex;
-};
+}
 
 export function createCommand<T extends CommandType>(
     type: T,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, expect, test } from "vitest";
 import { UniswapTrade, RoutePlanner as UniswapRoutePlanner } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";

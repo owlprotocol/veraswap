@@ -1,5 +1,5 @@
 import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
-import { getDeployDeterministicAddress } from "@owlprotocol/create-deterministic";
+import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
 import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
@@ -259,8 +259,8 @@ export const UNISWAP_CONTRACTS = {
     },
 } as const;
 
-//TODO: Derive these from bytecode instead of hard-coding?
-//TODO: forge simulation suggests SUPERCHAIN_SWEEP_ADDRESS=0x447311458A14F3890Dbab5Ff1Bca94074214F501?
+// TODO: Derive these from bytecode instead of hard-coding?
+// TODO: forge simulation suggests SUPERCHAIN_SWEEP_ADDRESS=0x447311458A14F3890Dbab5Ff1Bca94074214F501?
 // Maybe from different forge config in past?
 export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
@@ -517,13 +517,13 @@ export const TOKEN_LIST = {
 export const MOCK_POOLS = {
     [1337]: {
         currency0:
-            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
-                ? TOKEN_LIST["TokenA_1337"].address
-                : TOKEN_LIST["testUSDC_1337"].address,
+            TOKEN_LIST.TokenA_1337.address < TOKEN_LIST.testUSDC_1337.address
+                ? TOKEN_LIST.TokenA_1337.address
+                : TOKEN_LIST.testUSDC_1337.address,
         currency1:
-            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
-                ? TOKEN_LIST["testUSDC_1337"].address
-                : TOKEN_LIST["TokenA_1337"].address,
+            TOKEN_LIST.TokenA_1337.address < TOKEN_LIST.testUSDC_1337.address
+                ? TOKEN_LIST.testUSDC_1337.address
+                : TOKEN_LIST.TokenA_1337.address,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
@@ -713,13 +713,13 @@ export const POOLS: Record<number, PoolKey[]> = {
         // VIRTUAL-USDC
         {
             currency0:
-                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
-                    ? TOKEN_LIST["VIRTUAL_BASE"].address
-                    : TOKEN_LIST["USDC_BASE"].address,
+                TOKEN_LIST.VIRTUAL_BASE.address < TOKEN_LIST.USDC_BASE.address
+                    ? TOKEN_LIST.VIRTUAL_BASE.address
+                    : TOKEN_LIST.USDC_BASE.address,
             currency1:
-                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
-                    ? TOKEN_LIST["USDC_BASE"].address
-                    : TOKEN_LIST["VIRTUAL_BASE"].address,
+                TOKEN_LIST.VIRTUAL_BASE.address < TOKEN_LIST.USDC_BASE.address
+                    ? TOKEN_LIST.USDC_BASE.address
+                    : TOKEN_LIST.VIRTUAL_BASE.address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
@@ -745,13 +745,13 @@ export const POOLS: Record<number, PoolKey[]> = {
         // TokenA-TokenB
         {
             currency0:
-                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
-                    ? TOKEN_LIST["TokenA_SEPOLIA"].address
-                    : TOKEN_LIST["TokenB_SEPOLIA"].address,
+                TOKEN_LIST.TokenA_SEPOLIA.address < TOKEN_LIST.TokenB_SEPOLIA.address
+                    ? TOKEN_LIST.TokenA_SEPOLIA.address
+                    : TOKEN_LIST.TokenB_SEPOLIA.address,
             currency1:
-                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
-                    ? TOKEN_LIST["TokenB_SEPOLIA"].address
-                    : TOKEN_LIST["TokenA_SEPOLIA"].address,
+                TOKEN_LIST.TokenA_SEPOLIA.address < TOKEN_LIST.TokenB_SEPOLIA.address
+                    ? TOKEN_LIST.TokenB_SEPOLIA.address
+                    : TOKEN_LIST.TokenA_SEPOLIA.address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

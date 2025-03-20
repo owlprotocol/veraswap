@@ -1,7 +1,7 @@
 import type { Address, Hex } from "viem";
 
-export type PermitTransferFromData = {
+export interface PermitTransferFromData {
     dest: Address;
     func: Hex;
     value: bigint;
-};
+}

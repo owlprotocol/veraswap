@@ -32,7 +32,7 @@ export function getSmartAccountSwapCalls({
         value: permitTransferFromData.value,
     };
 
-    /***** Permit2 Approve universalRouter *****/
+    /** *** Permit2 Approve universalRouter *****/
     // approve Permit2 to spend Token A
     const approvePermit2Data = {
         to: currencyIn,

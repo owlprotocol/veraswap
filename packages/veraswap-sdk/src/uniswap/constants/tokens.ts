@@ -223,9 +223,9 @@ export const MATIC_MAINNET = new Token(
 );
 
 export const UNI = {
-    [mainnet.id]: new Token(mainnet.id, UNI_ADDRESSES[mainnet.id] as string, 18, "UNI", "Uniswap"),
-    [optimism.id]: new Token(optimism.id, UNI_ADDRESSES[optimism.id] as string, 18, "UNI", "Uniswap"),
-    [sepolia.id]: new Token(sepolia.id, UNI_ADDRESSES[sepolia.id] as string, 18, "UNI", "Uniswap"),
+    [mainnet.id]: new Token(mainnet.id, UNI_ADDRESSES[mainnet.id], 18, "UNI", "Uniswap"),
+    [optimism.id]: new Token(optimism.id, UNI_ADDRESSES[optimism.id], 18, "UNI", "Uniswap"),
+    [sepolia.id]: new Token(sepolia.id, UNI_ADDRESSES[sepolia.id], 18, "UNI", "Uniswap"),
 };
 
 export const OP = new Token(optimism.id, "0x4200000000000000000000000000000000000042", 18, "OP", "Optimism");
@@ -234,7 +234,7 @@ export const LDO = new Token(mainnet.id, "0x5A98FcBEA516Cf06857215779Fd812CA3beF
 export const NMR = new Token(mainnet.id, "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671", 18, "NMR", "Numeraire");
 export const MNW = new Token(mainnet.id, "0xd3E4Ba569045546D09CF021ECC5dFe42b1d7f6E4", 18, "MNW", "Morpheus.Network");
 
-export const WRAPPED_NATIVE_CURRENCY: { [chainId: number]: Token } = {
+export const WRAPPED_NATIVE_CURRENCY: Record<number, Token> = {
     ...(WETH9 as Record<number, Token>),
     [arbitrum.id]: new Token(arbitrum.id, "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", 18, "WETH", "Wrapped Ether"),
     [avalanche.id]: new Token(avalanche.id, "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7", 18, "WAVAX", "Wrapped AVAX"),
@@ -406,7 +406,7 @@ class ExtendedEther extends NativeCurrency {
         super(chainId, 18, "ETH", "Ethereum");
     }
 
-    private static _cachedExtendedEther: { [chainId: number]: NativeCurrency } = {};
+    private static _cachedExtendedEther: Record<number, NativeCurrency> = {};
 
     public static onChain(chainId: number): ExtendedEther {
         return this._cachedExtendedEther[chainId] ?? (this._cachedExtendedEther[chainId] = new ExtendedEther(chainId));
@@ -417,7 +417,7 @@ class ExtendedEther extends NativeCurrency {
     }
 }
 
-const cachedNativeCurrency: { [chainId: number]: NativeCurrency | Token } = {};
+const cachedNativeCurrency: Record<number, NativeCurrency | Token> = {};
 export function nativeOnChain(chainId: number): NativeCurrency | Token {
     if (cachedNativeCurrency[chainId]) {
         return cachedNativeCurrency[chainId] as NativeCurrency;

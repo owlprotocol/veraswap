@@ -3,7 +3,7 @@ import { defineChain } from "viem";
 
 const sourceId = 11_155_111; // sepolia
 
-export const inkSepolia = /*#__PURE__*/ defineChain({
+export const inkSepolia = /* #__PURE__ */ defineChain({
     ...chainConfig,
     id: 763373,
     name: "Ink Sepolia",
@@ -43,7 +43,7 @@ export const inkSepolia = /*#__PURE__*/ defineChain({
     sourceId,
 });
 
-export const unichainSepolia = /*#__PURE__*/ defineChain({
+export const unichainSepolia = /* #__PURE__ */ defineChain({
     ...chainConfig,
     id: 1301,
     name: "Unichain Sepolia",

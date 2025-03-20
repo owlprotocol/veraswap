@@ -23,7 +23,7 @@ export function getEOASwapCalls({
 }): { to: Address; data: Hex; value: bigint }[] {
     const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
 
-    /***** Permit2 Approve universalRouter *****/
+    /** *** Permit2 Approve universalRouter *****/
     // approve Permit2 to spend Token A
     const approvePermit2Data = {
         to: currencyIn,

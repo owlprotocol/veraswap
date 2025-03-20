@@ -5,7 +5,7 @@ import { anvil } from "prool/instances";
 import { createWalletClient, http } from "viem";
 import { localhost } from "viem/chains";
 // import { setupTestMailboxContracts } from "@owlprotocol/contracts-hyperlane";
-import { getAnvilAccount } from "@owlprotocol/anvil-account";
+import { getAnvilAccount } from "@veraswap/anvil-account";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 

@@ -67,5 +67,4 @@ export async function mintToAddress() {
     console.log(`New balance for ${receiver} is ${formatUnits(balance, decimals)} ${symbol}`);
 }
 
-// eslint-disable-next-line no-process-exit
-mintToAddress().then(() => process.exit());
+// mintToAddress().then(() => process.exit());
