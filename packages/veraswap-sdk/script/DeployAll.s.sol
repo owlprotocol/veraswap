@@ -33,6 +33,9 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 
+// Permit2
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
+
 // Hyperlane Kernel Interchain Account Infra
 import {KernelUtils} from "./utils/KernelUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
@@ -40,7 +43,6 @@ import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUti
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 
 contract DeployAll is Script, Test {
-    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function run() external {
@@ -118,6 +120,8 @@ contract DeployAll is Script, Test {
     {
         uint32 chainId = uint32(block.chainid);
 
+        // Permit2
+        (address permit2, bool exists) = Permit2Utils.getOrCreate2();
         // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
@@ -126,7 +130,7 @@ contract DeployAll is Script, Test {
         (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
 
         RouterParameters memory routerParams = RouterParameters({
-            permit2: PERMIT2,
+            permit2: permit2,
             weth9: 0x4200000000000000000000000000000000000006,
             v2Factory: unsupported,
             v3Factory: unsupported,
