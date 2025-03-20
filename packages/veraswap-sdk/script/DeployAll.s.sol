@@ -158,8 +158,8 @@ contract DeployAll is Script, Test {
             IStateView(v4StateView)
         );
 
-        console2.log("Token A", tokenA);
-        console2.log("Token B", tokenB);
+        console2.log("Token A:", tokenA);
+        console2.log("Token B:", tokenB);
         console2.log("Deployed Tokens and pool");
     }
 }
