@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Account, createWalletClient, encodeFunctionData, http, zeroHash } from "viem";
+import { Account, createWalletClient, http, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
@@ -11,9 +11,10 @@ import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { opChainL1Client } from "../constants/chains.js";
 import { getKernelInitData } from "./getKernelInitData.js";
-import { installOwnableExecutor } from "./installOwnableExecutor.js";
+import { ERC7579_MODULE_TYPE, installOwnableExecutor } from "./installOwnableExecutor.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { getKernelAddress } from "./getKernelAddress.js";
+import { Kernel } from "../artifacts/Kernel.js";
 
 describe("smartaccount/index.test.ts", function () {
     // Test ZeroDev SDK & Custom SDK Tooling
@@ -59,7 +60,7 @@ describe("smartaccount/index.test.ts", function () {
                 ],
             });
             // KernelFactory `createAccount` call
-            const kernalAddressPredicted = getKernelAddress({
+            const kernelAddressPredicted = getKernelAddress({
                 data: initData,
                 salt: zeroHash,
                 implementation: LOCAL_KERNEL_CONTRACTS.kernel,
@@ -74,8 +75,16 @@ describe("smartaccount/index.test.ts", function () {
             });
             await opChainL1Client.waitForTransactionReceipt({ hash });
 
-            const bytecode = await opChainL1Client.getCode({ address: kernalAddressPredicted });
+            const bytecode = await opChainL1Client.getCode({ address: kernelAddressPredicted });
             expect(bytecode).toBeDefined();
+
+            const isModuleInstalled = await opChainL1Client.readContract({
+                address: kernelAddressPredicted,
+                abi: Kernel.abi,
+                functionName: "isModuleInstalled",
+                args: [BigInt(ERC7579_MODULE_TYPE.EXECUTOR), LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor, "0x"],
+            });
+            expect(isModuleInstalled).toBe(true);
         });
 
         test("OwnableExecutor.executeOnOwnedAccount - direct", () => { });
