@@ -68,4 +68,6 @@ export async function mintToAddress() {
     console.log(`New balance for ${receiver} is ${formatUnits(balance, decimals)} ${symbol}`);
 }
 
-mintToAddress().then(() => process.exit());
+mintToAddress()
+    .then(() => process.exit())
+    .catch(console.error);
