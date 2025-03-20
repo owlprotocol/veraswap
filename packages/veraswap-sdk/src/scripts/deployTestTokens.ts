@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 import {
     Chain,

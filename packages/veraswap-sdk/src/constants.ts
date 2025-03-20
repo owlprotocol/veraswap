@@ -517,13 +517,13 @@ export const TOKEN_LIST = {
 export const MOCK_POOLS = {
     [1337]: {
         currency0:
-            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
-                ? TOKEN_LIST["TokenA_1337"].address
-                : TOKEN_LIST["testUSDC_1337"].address,
+            TOKEN_LIST.TokenA_1337.address < TOKEN_LIST.testUSDC_1337.address
+                ? TOKEN_LIST.TokenA_1337.address
+                : TOKEN_LIST.testUSDC_1337.address,
         currency1:
-            TOKEN_LIST["TokenA_1337"].address < TOKEN_LIST["testUSDC_1337"].address
-                ? TOKEN_LIST["testUSDC_1337"].address
-                : TOKEN_LIST["TokenA_1337"].address,
+            TOKEN_LIST.TokenA_1337.address < TOKEN_LIST.testUSDC_1337.address
+                ? TOKEN_LIST.testUSDC_1337.address
+                : TOKEN_LIST.TokenA_1337.address,
         fee: 3000,
         tickSpacing: 60,
         hooks: zeroAddress,
@@ -713,13 +713,13 @@ export const POOLS: Record<number, PoolKey[]> = {
         // VIRTUAL-USDC
         {
             currency0:
-                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
-                    ? TOKEN_LIST["VIRTUAL_BASE"].address
-                    : TOKEN_LIST["USDC_BASE"].address,
+                TOKEN_LIST.VIRTUAL_BASE.address < TOKEN_LIST.USDC_BASE.address
+                    ? TOKEN_LIST.VIRTUAL_BASE.address
+                    : TOKEN_LIST.USDC_BASE.address,
             currency1:
-                TOKEN_LIST["VIRTUAL_BASE"].address < TOKEN_LIST["USDC_BASE"].address
-                    ? TOKEN_LIST["USDC_BASE"].address
-                    : TOKEN_LIST["VIRTUAL_BASE"].address,
+                TOKEN_LIST.VIRTUAL_BASE.address < TOKEN_LIST.USDC_BASE.address
+                    ? TOKEN_LIST.USDC_BASE.address
+                    : TOKEN_LIST.VIRTUAL_BASE.address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
@@ -745,13 +745,13 @@ export const POOLS: Record<number, PoolKey[]> = {
         // TokenA-TokenB
         {
             currency0:
-                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
-                    ? TOKEN_LIST["TokenA_SEPOLIA"].address
-                    : TOKEN_LIST["TokenB_SEPOLIA"].address,
+                TOKEN_LIST.TokenA_SEPOLIA.address < TOKEN_LIST.TokenB_SEPOLIA.address
+                    ? TOKEN_LIST.TokenA_SEPOLIA.address
+                    : TOKEN_LIST.TokenB_SEPOLIA.address,
             currency1:
-                TOKEN_LIST["TokenA_SEPOLIA"].address < TOKEN_LIST["TokenB_SEPOLIA"].address
-                    ? TOKEN_LIST["TokenB_SEPOLIA"].address
-                    : TOKEN_LIST["TokenA_SEPOLIA"].address,
+                TOKEN_LIST.TokenA_SEPOLIA.address < TOKEN_LIST.TokenB_SEPOLIA.address
+                    ? TOKEN_LIST.TokenB_SEPOLIA.address
+                    : TOKEN_LIST.TokenA_SEPOLIA.address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

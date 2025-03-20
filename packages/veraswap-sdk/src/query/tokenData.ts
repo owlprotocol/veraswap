@@ -17,7 +17,7 @@ export const chainIdToBlockchain: Record<number, string> = {
     1337: "localhost",
 };
 export const getChainById = (chainId: number): Chain | undefined => {
-    const chain = (Object.values(chains) as Chain[]).find((chain) => chain.id === chainId) as Chain | undefined;
+    const chain = (Object.values(chains) as Chain[]).find((chain) => chain.id === chainId);
     if (chain) return chain;
 
     if (inkSepolia.id === chainId) return inkSepolia;

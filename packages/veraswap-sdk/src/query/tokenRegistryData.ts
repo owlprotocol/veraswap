@@ -53,6 +53,5 @@ export async function tokenRegistryData({
 }): Promise<TokenRegistryData> {
     const response = await fetch(`${registry}/blockchains/${blockchain}/assets/${address}/info.json`);
     if (!response.ok) throw new Error("Registry fetch failed");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return response.json();
+    return response.json() as TokenRegistryData;
 }
