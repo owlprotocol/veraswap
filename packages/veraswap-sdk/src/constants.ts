@@ -2,10 +2,19 @@ import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
-import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
+import {
+    UnsupportedProtocol,
+    MockERC20,
+    PoolManager,
+    PositionManager,
+    StateView,
+    UniversalRouterApprovedReentrant,
+    V4Quoter,
+} from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
 import { unichainSepolia, inkSepolia } from "./chains.js";
+import { localOp, localOpChainA, localOpChainB } from "./test/constants.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -20,65 +29,66 @@ export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
 
 export const DIVVI_BASE_REGISTRY = "0xba9655677f4e42dd289f5b7888170bc0c7da8cdc";
 
-export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
-export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
-export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
-export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
-export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
+// export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
+// export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
+// export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
+// export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
+// export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
 
-// export const POOL_MANAGER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: PoolManager.bytecode,
-//         abi: PoolManager.abi,
-//         args: [zeroAddress],
-//     }),
-//     salt: zeroHash,
-// });
-// export const POSITION_MANAGER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: PositionManager.bytecode,
-//         abi: PositionManager.abi,
-//         args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
-//     }),
-//     salt: zeroHash,
-// });
-// export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: UniversalRouter.bytecode,
-//         abi: UniversalRouter.abi,
-//         args: [
-//             {
-//                 permit2: PERMIT2_ADDRESS,
-//                 weth9: zeroAddress,
-//                 v2Factory: zeroAddress,
-//                 v3Factory: zeroAddress,
-//                 pairInitCodeHash: zeroHash,
-//                 poolInitCodeHash: zeroHash,
-//                 v4PoolManager: POOL_MANAGER,
-//                 v3NFTPositionManager: zeroAddress,
-//                 v4PositionManager: POSITION_MANAGER,
-//             },
-//         ],
-//     }),
-//     salt: zeroHash,
-// });
+export const POOL_MANAGER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: PoolManager.bytecode,
+        abi: PoolManager.abi,
+        args: [zeroAddress],
+    }),
+    salt: zeroHash,
+});
+export const POSITION_MANAGER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: PositionManager.bytecode,
+        abi: PositionManager.abi,
+        args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
+    }),
+    salt: zeroHash,
+});
 
-// export const QUOTER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: V4Quoter.bytecode,
-//         abi: V4Quoter.abi,
-//         args: [POOL_MANAGER],
-//     }),
-//     salt: zeroHash,
-// });
-// export const STATE_VIEW = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: StateView.bytecode,
-//         abi: StateView.abi,
-//         args: [POOL_MANAGER],
-//     }),
-//     salt: zeroHash,
-// });
+export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: UniversalRouterApprovedReentrant.bytecode,
+        abi: UniversalRouterApprovedReentrant.abi,
+        args: [
+            {
+                permit2: PERMIT2_ADDRESS,
+                weth9: "0x4200000000000000000000000000000000000006",
+                v2Factory: UNSUPPORTED_PROTOCOL,
+                v3Factory: UNSUPPORTED_PROTOCOL,
+                pairInitCodeHash: zeroHash,
+                poolInitCodeHash: zeroHash,
+                v4PoolManager: POOL_MANAGER,
+                v3NFTPositionManager: UNSUPPORTED_PROTOCOL,
+                v4PositionManager: POSITION_MANAGER,
+            },
+        ],
+    }),
+    salt: zeroHash,
+});
+
+export const QUOTER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: V4Quoter.bytecode,
+        abi: V4Quoter.abi,
+        args: [POOL_MANAGER],
+    }),
+    salt: zeroHash,
+});
+export const STATE_VIEW = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: StateView.bytecode,
+        abi: StateView.abi,
+        args: [POOL_MANAGER],
+    }),
+    salt: zeroHash,
+});
 
 export const MOCK_A = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
@@ -250,6 +260,30 @@ export const UNISWAP_CONTRACTS = {
     },
     // TODO: FIX
     [inkSepolia.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    [localOp.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    [localOpChainA.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    [localOpChainB.id]: {
         UNSUPPORTED_PROTOCOL,
         POOL_MANAGER,
         POSITION_MANAGER,

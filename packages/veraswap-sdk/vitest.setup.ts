@@ -22,22 +22,22 @@ let instance2: Instance;
 export async function setup() {
     const host = "127.0.0.1";
     const codeSizeLimit = 393216; //10x normal size
-    instance = anvil({
-        host,
-        port,
-        chainId: localhost.id,
-        codeSizeLimit,
-    });
-
-    instance2 = anvil({
-        host,
-        port: port2,
-        chainId: chainId2,
-        codeSizeLimit,
-    });
-
-    await instance.start();
-    await instance2.start();
+    // instance = anvil({
+    //     host,
+    //     port,
+    //     chainId: localhost.id,
+    //     codeSizeLimit,
+    // });
+    //
+    // instance2 = anvil({
+    //     host,
+    //     port: port2,
+    //     chainId: chainId2,
+    //     codeSizeLimit,
+    // });
+    //
+    // await instance.start();
+    // await instance2.start();
 
     const transport = http(`http://${host}:${port}`);
     const transport2 = http(`http://${host}:${port2}`);
@@ -86,6 +86,6 @@ export async function setup() {
  * Run once `vitest` process has exited. NOT on test re-runs
  */
 export async function teardown() {
-    await instance.stop();
-    await instance2.stop();
+    // await instance.stop();
+    // await instance2.stop();
 }
