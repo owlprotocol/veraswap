@@ -33,6 +33,12 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 
+// Hyperlane Kernel Interchain Account Infra
+import {KernelUtils} from "./utils/KernelUtils.sol";
+import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
+import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
+import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
+
 contract DeployAll is Script, Test {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     bytes32 constant BYTES32_ZERO = bytes32(0);
@@ -92,7 +98,11 @@ contract DeployAll is Script, Test {
         HypERC20(hypERC20TokenB).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenB))));
 
         // Deploy TestRecipient on remote
-        address testRecipientAddr = Create2.computeAddress(BYTES32_ZERO, keccak256(type(TestRecipient).creationCode), Create2Utils.DETERMINISTIC_DEPLOYER);
+        address testRecipientAddr = Create2.computeAddress(
+            BYTES32_ZERO,
+            keccak256(type(TestRecipient).creationCode),
+            Create2Utils.DETERMINISTIC_DEPLOYER
+        );
         bool testRecipientExists = address(testRecipientAddr).code.length > 0;
 
         if (!testRecipientExists) {
@@ -139,6 +149,17 @@ contract DeployAll is Script, Test {
         console2.log("Router:", router);
         console2.log("v4PositionManager:", v4PositionManager);
         console2.log("v4StateView:", v4StateView);
+
+        // KERNEL CONTRACTS
+        (address executor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
+        (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
+        (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
+        (address executorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+            mailbox,
+            address(0),
+            executor,
+            kernelFactory
+        );
     }
 
     function deployTokensAndPools(
