@@ -5,7 +5,7 @@ import { anvil } from "prool/instances";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 
-import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort } from "./src/test/constants.js";
+import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort } from "./src/constants/chains.js";
 
 const execPromise = promisify(exec);
 
