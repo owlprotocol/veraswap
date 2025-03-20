@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain, encodeAbiParameters, Address } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
@@ -13,8 +13,8 @@ import {
 } from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
-import { unichainSepolia, inkSepolia } from "./chains.js";
-import { localOp, localOpChainA, localOpChainB } from "./test/constants.js";
+import { unichainSepolia, inkSepolia, localOp, localOpChainA, localOpChainB } from "./chains.js";
+import { HypERC20, HypERC20Collateral, Mailbox, NoopIsm, PausableHook } from "@owlprotocol/contracts-hyperlane";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -34,6 +34,61 @@ export const DIVVI_BASE_REGISTRY = "0xba9655677f4e42dd289f5b7888170bc0c7da8cdc";
 // export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
 // export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
 // export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
+
+export const HYPERLANE_NOOP_ISM = getDeployDeterministicAddress({
+    bytecode: NoopIsm.bytecode,
+    salt: zeroHash,
+});
+export const HYPERLANE_PAUSABLE_HOOK = getDeployDeterministicAddress({
+    bytecode: PausableHook.bytecode,
+    salt: zeroHash,
+});
+
+export const getMailboxAddress = (chainId: number) =>
+    getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: Mailbox.bytecode,
+            abi: Mailbox.abi,
+            args: [chainId],
+        }),
+        salt: zeroHash,
+    });
+
+export const getSyntheticTokenAddress = (
+    chainId: number,
+    totalSupply: bigint,
+    decimals: number,
+    name: string,
+    symbol: string,
+    msgSender: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+) => {
+    const mailbox = getMailboxAddress(chainId);
+
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20.bytecode,
+            abi: HypERC20.abi,
+            args: [decimals, mailbox],
+        }),
+        salt: encodeAbiParameters(
+            [{ type: "uint256" }, { type: "string" }, { type: "string" }, { type: "address" }],
+            [totalSupply, name, symbol, msgSender],
+        ),
+    });
+};
+
+export const getCollateralTokenAddress = (chainId: number, tokenAddress: Address) => {
+    const mailbox = getMailboxAddress(chainId);
+
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20Collateral.bytecode,
+            abi: HypERC20Collateral.abi,
+            args: [tokenAddress, mailbox],
+        }),
+        salt: zeroHash,
+    });
+};
 
 export const POOL_MANAGER = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
@@ -106,6 +161,29 @@ export const MOCK_B = getDeployDeterministicAddress({
     }),
     salt: zeroHash,
 });
+
+export const TOKEN_A = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: MockERC20.bytecode,
+        abi: MockERC20.abi,
+        args: ["Token A", "A", 18],
+    }),
+    salt: zeroHash,
+});
+export const TOKEN_B = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: MockERC20.bytecode,
+        abi: MockERC20.abi,
+        args: ["Token B", "B", 18],
+    }),
+    salt: zeroHash,
+});
+
+export const COLLATERAL_TOKEN_A_900 = getCollateralTokenAddress(900, TOKEN_A);
+export const COLLATERAL_TOKEN_B_900 = getCollateralTokenAddress(900, TOKEN_B);
+
+export const SYNTH_TOKEN_A_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token A", "sA");
+export const SYNTH_TOKEN_B_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token B", "sB");
 
 // Superchains
 
@@ -370,6 +448,34 @@ export const TOKEN_LIST = {
         decimals: 6,
         address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
         chainId: 1338,
+    },
+    tokenA_LOCAL_OP: {
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+        address: TOKEN_A,
+        chainId: localOp.id,
+    },
+    tokenB_LOCAL_OP: {
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+        address: TOKEN_A,
+        chainId: localOp.id,
+    },
+    synthTokenA_LOCAL_OP_CHAIN_A: {
+        name: "Synth Token A",
+        symbol: "sA",
+        decimals: 18,
+        address: SYNTH_TOKEN_A_901,
+        chainId: localOpChainA.id,
+    },
+    synthTokenB_LOCAL_OP_CHAIN_A: {
+        name: "Synth Token B",
+        symbol: "sB",
+        decimals: 18,
+        address: SYNTH_TOKEN_B_901,
+        chainId: localOpChainA.id,
     },
     // 11155111
     TokenA_SEPOLIA: {
@@ -677,6 +783,32 @@ export const tokenBridgeMap: TokenBridgeMap = {
                 [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
                 [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
+        },
+    },
+    [localOp.id]: {
+        [TOKEN_A]: {
+            bridgeAddress: COLLATERAL_TOKEN_A_900,
+            remotes: {
+                [localOpChainA.id]: SYNTH_TOKEN_A_901,
+            },
+        },
+        [TOKEN_B]: {
+            bridgeAddress: COLLATERAL_TOKEN_B_900,
+            remotes: {
+                [localOpChainA.id]: SYNTH_TOKEN_B_901,
+            },
+        },
+    },
+    [localOpChainA.id]: {
+        [SYNTH_TOKEN_A_901]: {
+            remotes: {
+                [localOp.id]: TOKEN_A,
+            },
+        },
+        [SYNTH_TOKEN_B_901]: {
+            remotes: {
+                [localOp.id]: TOKEN_B,
             },
         },
     },

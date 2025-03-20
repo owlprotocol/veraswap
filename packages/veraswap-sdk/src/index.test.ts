@@ -25,7 +25,7 @@ import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 import { encodeFunctionData } from "viem";
 import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
 
-import { localOp } from "./test/constants.js";
+import { localOp } from "./chains.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { IERC20 } from "./artifacts/IERC20.js";
 import { IPositionManager } from "./artifacts/IPositionManager.js";
