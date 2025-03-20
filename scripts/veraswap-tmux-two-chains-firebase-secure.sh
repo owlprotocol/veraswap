@@ -15,7 +15,7 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
     # Start blockchain
-    tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim" ENTER
+    tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
 #     tmux send-keys -t $session:deploy \
 # "cd $VERASWAP/packages/veraswap-sdk && \
 # forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \

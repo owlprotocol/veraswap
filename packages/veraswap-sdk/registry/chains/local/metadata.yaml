@@ -10,4 +10,4 @@ nativeToken:
     symbol: ETH
 protocol: ethereum
 rpcUrls:
-    - http: http://localhost:8545
+    - http: http://localhost:8547

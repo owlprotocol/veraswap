@@ -1,4 +1,4 @@
-import { zeroAddress, zeroHash, encodeDeployData, defineChain, encodeAbiParameters, Address } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain, encodeAbiParameters, Address, keccak256 } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
 import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
@@ -10,11 +10,15 @@ import {
     StateView,
     UniversalRouterApprovedReentrant,
     V4Quoter,
+    HypERC20,
+    HypERC20Collateral,
+    Mailbox,
+    NoopIsm,
+    PausableHook,
 } from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
 import { unichainSepolia, inkSepolia, localOp, localOpChainA, localOpChainB } from "./chains.js";
-import { HypERC20, HypERC20Collateral, Mailbox, NoopIsm, PausableHook } from "@owlprotocol/contracts-hyperlane";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -70,9 +74,11 @@ export const getSyntheticTokenAddress = (
             abi: HypERC20.abi,
             args: [decimals, mailbox],
         }),
-        salt: encodeAbiParameters(
-            [{ type: "uint256" }, { type: "string" }, { type: "string" }, { type: "address" }],
-            [totalSupply, name, symbol, msgSender],
+        salt: keccak256(
+            encodeAbiParameters(
+                [{ type: "uint256" }, { type: "string" }, { type: "string" }, { type: "address" }],
+                [totalSupply, name, symbol, msgSender],
+            ),
         ),
     });
 };
@@ -450,17 +456,17 @@ export const TOKEN_LIST = {
         chainId: 1338,
     },
     tokenA_LOCAL_OP: {
-        name: "Token A",
-        symbol: "A",
+        name: "OP Token A",
+        symbol: "opA",
         decimals: 18,
         address: TOKEN_A,
         chainId: localOp.id,
     },
     tokenB_LOCAL_OP: {
-        name: "Token B",
-        symbol: "B",
+        name: "OP Token B",
+        symbol: "opB",
         decimals: 18,
-        address: TOKEN_A,
+        address: TOKEN_B,
         chainId: localOp.id,
     },
     synthTokenA_LOCAL_OP_CHAIN_A: {

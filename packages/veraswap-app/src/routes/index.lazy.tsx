@@ -264,14 +264,15 @@ function Index() {
                     }
 
                     // TODO: check why it can't infer type
-                    if (!bridgePayment) {
+                    if (!bridgePayment && import.meta.env.MODE !== "development") {
                         throw new Error("Bridge payment not found");
                     }
 
                     transaction = getSwapAndHyperlaneSweepBridgeTransaction({
                         universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                         bridgeAddress,
-                        bridgePayment,
+                        // Default for local env
+                        bridgePayment: bridgePayment ?? 1n,
                         destinationChain: chainOut!.id,
                         receiver: walletAddress!,
                         poolKey: poolKey!,

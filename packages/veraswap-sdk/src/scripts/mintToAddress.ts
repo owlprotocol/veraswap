@@ -10,8 +10,8 @@ import {
     parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
 import { MockERC20 } from "../artifacts/MockERC20.js";
+import { localOp } from "../chains.js";
 
 export async function mintToAddress() {
     if (process.argv.length < 5) {
@@ -26,7 +26,8 @@ export async function mintToAddress() {
     const privateKey = process.env.PRIVATE_KEY;
     if (!privateKey) throw new Error("PRIVATE_KEY is required");
 
-    const chain = { ...sepolia, rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } } };
+    // const chain = { ...sepolia, rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } } };
+    const chain = localOp;
 
     const walletClient = createWalletClient({
         chain,
@@ -67,4 +68,4 @@ export async function mintToAddress() {
     console.log(`New balance for ${receiver} is ${formatUnits(balance, decimals)} ${symbol}`);
 }
 
-// mintToAddress().then(() => process.exit());
+mintToAddress().then(() => process.exit());

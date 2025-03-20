@@ -1,7 +1,6 @@
 import { chainConfig } from "viem/op-stack";
 import { defineChain } from "viem";
 import { localhost } from "viem/chains";
-import { port } from "./test/constants.js";
 
 const sourceId = 11_155_111; // sepolia
 
@@ -97,6 +96,7 @@ export const unichainSepolia = /* #__PURE__ */ defineChain({
     sourceId,
 });
 
+export const portLocalOp = 8547;
 export const portLocalOpChainA = 9545;
 export const portLocalOpChainB = 9546;
 
@@ -108,7 +108,7 @@ export const localOp = {
     ...localhost,
     id: chainIdLocalOp,
     name: "Local OP",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${port}`] } },
+    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOp}`] } },
 };
 
 export const localOpChainA = {
