@@ -70,16 +70,16 @@ export const prodChains = [
 ] as const;
 export const localChains = [
     ...prodChains,
-    {
-        ...localhost,
-        rpcUrls: {
-            default: {
-                http: ["http://127.0.0.1:8545"],
-                webSocket: ["ws://127.0.0.1:8545"],
-            },
-        },
-    },
-    localhost2,
+    // {
+    //     ...localhost,
+    //     rpcUrls: {
+    //         default: {
+    //             http: ["http://127.0.0.1:8545"],
+    //             webSocket: ["ws://127.0.0.1:8545"],
+    //         },
+    //     },
+    // },
+    // localhost2,
     localOp,
     localOpChainA,
     localOpChainB,

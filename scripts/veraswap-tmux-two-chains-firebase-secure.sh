@@ -18,13 +18,13 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
     # Start blockchains
-    tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil --chain-id 1337" ENTER
-    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 8546 --chain-id 1338" ENTER
+    tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900" ENTER
+    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 901" ENTER
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
 forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 393216 && \
-HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local1337,local1338" ENTER
+HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local,opchaina" ENTER
 # HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local,opchaina" ENTER
 
     # Start auth dev mode
