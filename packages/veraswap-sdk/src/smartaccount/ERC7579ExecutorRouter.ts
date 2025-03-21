@@ -13,8 +13,8 @@ export type ERC7579RouterMessage<T extends ERC7579ExecutionMode> = T extends
     | ERC7579ExecutionMode.BATCH_SIGNATURE
     ? ERC7579RouterSignedMessage<T>
     : T extends ERC7579ExecutionMode.SINGLE | ERC7579ExecutionMode.BATCH
-    ? ERC7579RouterDirectMessage<T>
-    : ERC7579RouterNoopMessage;
+      ? ERC7579RouterDirectMessage<T>
+      : ERC7579RouterNoopMessage;
 
 export interface ERC7579RouterBaseMessage {
     owner: Address;
@@ -40,8 +40,8 @@ export interface ERC7579RouterNoopMessage extends ERC7579RouterBaseMessage {
 
 export interface ERC7579RouterDirectMessage<
     T extends ERC7579ExecutionMode.SINGLE | ERC7579ExecutionMode.BATCH =
-    | ERC7579ExecutionMode.SINGLE
-    | ERC7579ExecutionMode.BATCH,
+        | ERC7579ExecutionMode.SINGLE
+        | ERC7579ExecutionMode.BATCH,
 > extends ERC7579RouterBaseMessage {
     executionMode: T;
     callData: Hex;
@@ -53,8 +53,8 @@ export interface ERC7579RouterDirectMessage<
 
 export interface ERC7579RouterSignedMessage<
     T extends ERC7579ExecutionMode.SINGLE_SIGNATURE | ERC7579ExecutionMode.BATCH_SIGNATURE =
-    | ERC7579ExecutionMode.SINGLE_SIGNATURE
-    | ERC7579ExecutionMode.BATCH_SIGNATURE,
+        | ERC7579ExecutionMode.SINGLE_SIGNATURE
+        | ERC7579ExecutionMode.BATCH_SIGNATURE,
 > extends ERC7579RouterBaseMessage {
     executionMode: T;
     callData: Hex;

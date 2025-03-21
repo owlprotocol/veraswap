@@ -44,5 +44,5 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/KernelFactory.sol/*.json",
     "out/ECDSAValidator.sol/*.json",
     // Kernel (custom)
-    "out/OwnableSignatureExecutor.sol/*.json"
+    "out/OwnableSignatureExecutor.sol/*.json",
 ]);
