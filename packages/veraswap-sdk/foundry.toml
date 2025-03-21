@@ -11,7 +11,8 @@ optimizer = true
 optimizer_runs = 200
 
 [rpc_endpoints]
-localhost = "http://127.0.0.1:8545"
+# Use local anvils
+localhost = "http://127.0.0.1:8547"
 OPChainA="http://127.0.0.1:9545"
 OPChainB="http://127.0.0.1:9546"
 mainnet = "https://lb.drpc.org/ogrpc?network=mainnet&dkey=${DRPC_API_KEY}"

@@ -34,6 +34,7 @@ export async function getPermitTransferFromData(
         types: permitData.types,
         primaryType: "PermitTransferFrom",
         message: permitData.values,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const permitTransferDetails = { to: spender, requestedAmount: amountIn };

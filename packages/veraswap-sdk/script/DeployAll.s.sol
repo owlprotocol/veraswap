@@ -122,13 +122,13 @@ contract DeployAll is Script, Test {
         uint32 chainId = uint32(block.chainid);
 
         // Permit2
-        (address permit2, bool exists) = Permit2Utils.getOrCreate2();
+        (address permit2, ) = Permit2Utils.getOrCreate2();
         // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         (v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
         (v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
-        (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
+        V4QuoterUtils.getOrCreate2(v4PoolManager);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
@@ -145,7 +145,7 @@ contract DeployAll is Script, Test {
         (router, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
 
         // HYPERLANE CONTRACTS
-        (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+        HypTokenRouterSweepUtils.getOrCreate2();
         (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
         (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
         (mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
@@ -187,6 +187,8 @@ contract DeployAll is Script, Test {
             IStateView(v4StateView)
         );
 
+        console2.log("Token A:", tokenA);
+        console2.log("Token B:", tokenB);
         console2.log("Deployed Tokens and pool");
     }
 }

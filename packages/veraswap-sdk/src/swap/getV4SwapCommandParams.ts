@@ -19,13 +19,16 @@ export function getV4SwapCommandParams({
     zeroForOne: boolean;
     hookData?: Hex;
 }) {
+    const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
+    const currencyOut = zeroForOne ? poolKey.currency1 : poolKey.currency0;
+
     const tradePlan = new V4Planner();
     tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [{ poolKey, zeroForOne, amountIn, amountOutMinimum, hookData }]);
-    tradePlan.addAction(Actions.SETTLE_ALL, [poolKey.currency0, amountIn]);
+    tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, amountIn]);
     if (receiver) {
-        tradePlan.addAction(Actions.TAKE, [poolKey.currency1, receiver, 0]);
+        tradePlan.addAction(Actions.TAKE, [currencyOut, receiver, 0]);
     } else {
-        tradePlan.addAction(Actions.TAKE_ALL, [poolKey.currency1, 0]);
+        tradePlan.addAction(Actions.TAKE_ALL, [currencyOut, 0]);
     }
 
     return tradePlan.finalize() as Hex;

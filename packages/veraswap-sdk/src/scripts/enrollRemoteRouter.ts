@@ -42,7 +42,7 @@ export async function enrollRemoteRouter() {
         functionName: "domains",
     });
 
-    console.log(`Bridge at address ${address} now has domains: ${domains}`);
+    console.log(`Bridge at address ${address} now has domains:`, domains);
 }
 
 // enrollRemoteRouter().then(() => process.exit());

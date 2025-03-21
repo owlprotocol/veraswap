@@ -18,6 +18,7 @@ import { CommandType, WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
 import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
 import { RoutePlanner } from "../uniswap/index.js";
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const UNISWAP_API_KEY: string =
     // @ts-expect-error env is an attribute
     import.meta?.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
