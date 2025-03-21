@@ -9,6 +9,7 @@ import {
     QuoteState,
     URAQuoteResponse,
     QuoteMethod,
+    TradeResult,
 } from "../types/uniswapRouting.js";
 
 const UNISWAP_GATEWAY_DNS_URL = "https://trading-api-labs.interface.gateway.uniswap.org/v1";
@@ -83,7 +84,7 @@ export async function getUniswapRoutingQuote(args: GetQuoteArgs, uniswapApiKey: 
                 (errorData?.errorCode === "NO_ROUTE" || errorData?.detail === "No quotes available")
             ) {
                 return {
-                    data: { state: QuoteState.NOT_FOUND },
+                    data: { state: QuoteState.NOT_FOUND } as TradeResult,
                 };
             }
 
@@ -108,6 +109,6 @@ export async function getUniswapRoutingQuote(args: GetQuoteArgs, uniswapApiKey: 
     }
 
     return {
-        data: { state: QuoteState.NOT_FOUND },
+        data: { state: QuoteState.NOT_FOUND } as TradeResult,
     };
 }
