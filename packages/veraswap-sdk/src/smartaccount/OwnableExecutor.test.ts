@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import { Account, Address, createWalletClient, encodeAbiParameters, http, zeroHash } from "viem";
+import { Account, Address, createWalletClient, http, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";

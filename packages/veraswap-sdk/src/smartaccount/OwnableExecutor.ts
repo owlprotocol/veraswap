@@ -1,13 +1,4 @@
-import {
-    Address,
-    concatHex,
-    encodeAbiParameters,
-    encodeFunctionData,
-    encodePacked,
-    Hex,
-    parseAbiParameters,
-    zeroAddress,
-} from "viem";
+import { Address, encodeAbiParameters, encodeFunctionData, encodePacked, Hex } from "viem";
 import { Kernel } from "../artifacts/Kernel.js";
 import { encodeInstallExecutorData, ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 

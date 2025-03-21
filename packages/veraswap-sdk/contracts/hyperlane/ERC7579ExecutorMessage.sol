@@ -6,7 +6,8 @@ library ERC7579ExecutorMessage {
         SINGLE,
         BATCH,
         SINGLE_SIGNATURE,
-        BATCH_SIGNATURE
+        BATCH_SIGNATURE,
+        NOOP
     }
 
     /**

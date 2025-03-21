@@ -23,6 +23,8 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/StateView.sol/*.json",
     // Uniswap (custom)
     "out/UniversalRouterApprovedReentrant.sol/*.json",
+    // Hyperlane
+    "out/MockMailbox.sol/*.json",
     // Hyperlane (custom)
     "out/HypERC20FlashCollateral.sol/*.json",
     "out/HypTokenRouterSweep.sol/*.json",
