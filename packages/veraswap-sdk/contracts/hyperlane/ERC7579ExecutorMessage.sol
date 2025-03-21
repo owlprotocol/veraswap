@@ -6,13 +6,14 @@ library ERC7579ExecutorMessage {
         SINGLE,
         BATCH,
         SINGLE_SIGNATURE,
-        BATCH_SIGNATURE
+        BATCH_SIGNATURE,
+        NOOP
     }
 
     /**
      * @notice Returns formatted ERC7579 ExecutorMessage
      * @dev This function should only be used in memory message construction.
-     * @param originSender msg.sender on origin chain
+     * @param owner msg.sender on origin chain
      * @param account Target ERC7570 smart account
      * @param initData Smart account init data that either configures Router as Executor or sets another owner that can then be used to execute via signature (if account does not exist)
      * @param initSalt Smart account init salt (if account does not exist)
@@ -25,7 +26,7 @@ library ERC7579ExecutorMessage {
      * @return message body encoded as bytes
      */
     function encode(
-        address originSender,
+        address owner,
         address account,
         bytes memory initData,
         bytes32 initSalt,
@@ -38,7 +39,7 @@ library ERC7579ExecutorMessage {
     ) internal pure returns (bytes memory) {
         return
             abi.encode(
-                originSender,
+                owner,
                 account,
                 initData,
                 initSalt,
@@ -61,7 +62,7 @@ library ERC7579ExecutorMessage {
         internal
         pure
         returns (
-            address originSender,
+            address owner,
             address account,
             bytes memory initData,
             bytes32 initSalt,

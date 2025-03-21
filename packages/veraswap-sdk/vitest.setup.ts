@@ -5,45 +5,51 @@ import { anvil } from "prool/instances";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 
-import { localOp, localOpChainA, portLocalOp, portLocalOpChainA } from "./src/chains.js";
+import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort } from "./src/constants/chains.js";
+
 const execPromise = promisify(exec);
 
-let instance: Instance;
-let instance2: Instance;
+let chainL1Instance: Instance;
+let chainAInstance: Instance;
+let chainBInstance: Instance;
 
+//TODO: Consider using https://github.com/wevm/prool/pull/29, for now just deploy same infra
 /**
  * Run once on `vitest` command. NOT on test re-runs
  */
 export async function setup() {
     const host = "127.0.0.1";
-    const codeSizeLimit = 393216; //10x normal size
-    instance = anvil({
+    chainL1Instance = anvil({
         host,
-        port: portLocalOp,
-        chainId: localOp.id,
-        codeSizeLimit,
+        port: opChainL1Port,
+        chainId: opChainL1.id,
+    });
+    chainAInstance = anvil({
+        host,
+        port: opChainAPort,
+        chainId: opChainA.id,
+    });
+    chainBInstance = anvil({
+        host,
+        port: opChainBPort,
+        chainId: opChainB.id,
     });
 
-    instance2 = anvil({
-        host,
-        port: portLocalOpChainA,
-        chainId: localOpChainA.id,
-        codeSizeLimit,
-    });
+    await chainL1Instance.start();
+    await chainAInstance.start();
+    await chainBInstance.start();
 
-    await instance.start();
-    await instance2.start();
-
-    // Forge scripts
+    // Forge script
     const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // anvil 0
-    const templateCommand = `forge script ./script/DeployAll.s.sol --private-key ${privateKey} --broadcast --via-ir --code-size-limit ${codeSizeLimit}`;
-    await execPromise(templateCommand);
+    const templateCommand = `forge script ./script/DeployAll.s.sol --private-key ${privateKey} --broadcast`;
+    const { stdout } = await execPromise(templateCommand);
 }
 
 /**
  * Run once `vitest` process has exited. NOT on test re-runs
  */
 export async function teardown() {
-    await instance.stop();
-    await instance2.stop();
+    await chainL1Instance.stop();
+    await chainAInstance.stop();
+    await chainBInstance.stop();
 }

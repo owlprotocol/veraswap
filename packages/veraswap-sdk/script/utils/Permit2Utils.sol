@@ -25,4 +25,3 @@ library Permit2Utils {
         }
     }
 }
-
