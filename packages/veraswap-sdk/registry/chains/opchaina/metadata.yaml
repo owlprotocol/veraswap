@@ -11,3 +11,4 @@ nativeToken:
 protocol: ethereum
 rpcUrls:
     - http: http://localhost:9545
+technicalStack: other

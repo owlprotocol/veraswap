@@ -18,7 +18,7 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n apps;
     # Start blockchains
     tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil --chain-id 1337" ENTER
-    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 1338" ENTER
+    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 8546 --chain-id 1338" ENTER
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \

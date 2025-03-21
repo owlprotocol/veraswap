@@ -134,3 +134,18 @@ export const localOpChainB = {
         },
     },
 };
+
+export const port2 = 8546;
+export const chainId2 = 1338;
+
+export const localhost2 = {
+    ...localhost,
+    id: chainId2,
+    name: "Localhost 2",
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${port2}`],
+            webSocket: [`ws://127.0.0.1:${port2}`],
+        },
+    },
+};

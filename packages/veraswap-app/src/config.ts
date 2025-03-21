@@ -7,6 +7,7 @@ import {
     interopDevnet0,
     interopDevnet1,
     unichainSepolia,
+    localhost2,
     localOp,
     localOpChainA,
     localOpChainB,
@@ -14,13 +15,6 @@ import {
 
 /***** Chains *****/
 // List of supported networks
-
-export const localhost2 = {
-    ...localhost,
-    id: 1338,
-    name: "Localhost 2",
-    rpcUrls: { default: { http: ["http://127.0.0.1:8546"] } },
-} as Chain;
 
 export const prodChains = [
     mainnet,

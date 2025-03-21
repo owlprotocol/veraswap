@@ -42,7 +42,8 @@ contract DeployAll is Script, Test {
 
     function run() external {
         string[2] memory chains = ["localhost", "OPChainA"];
-        uint32[2] memory chainIds = [uint32(900), uint32(901)];
+        // uint32[2] memory chainIds = [uint32(900), uint32(901)];
+        uint32[2] memory chainIds = [uint32(1337), uint32(1338)];
 
         uint mainFork = vm.createSelectFork(chains[0]);
         vm.startBroadcast();
