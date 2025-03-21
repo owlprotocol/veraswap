@@ -153,23 +153,6 @@ export const STATE_VIEW = getDeployDeterministicAddress({
     salt: zeroHash,
 });
 
-export const MOCK_A = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: MockERC20.bytecode,
-        abi: MockERC20.abi,
-        args: ["MockA", "A", 18],
-    }),
-    salt: zeroHash,
-});
-export const MOCK_B = getDeployDeterministicAddress({
-    bytecode: encodeDeployData({
-        bytecode: MockERC20.bytecode,
-        abi: MockERC20.abi,
-        args: ["MockB", "B", 18],
-    }),
-    salt: zeroHash,
-});
-
 export const TOKEN_A = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: MockERC20.bytecode,
@@ -192,12 +175,6 @@ export const COLLATERAL_TOKEN_B_900 = getCollateralTokenAddress(900, TOKEN_B);
 
 export const SYNTH_TOKEN_A_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token A", "sA");
 export const SYNTH_TOKEN_B_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token B", "sB");
-
-export const COLLATERAL_TOKEN_A_1337 = getCollateralTokenAddress(1337, TOKEN_A);
-export const COLLATERAL_TOKEN_B_1337 = getCollateralTokenAddress(1337, TOKEN_B);
-
-export const SYNTH_TOKEN_A_1338 = getSyntheticTokenAddress(1338, 0n, 18, "Synth Token A", "sA");
-export const SYNTH_TOKEN_B_1338 = getSyntheticTokenAddress(1338, 0n, 18, "Synth Token B", "sB");
 
 // Superchains
 
@@ -442,8 +419,6 @@ export const TOKEN_LIST = {
         address: TOKEN_B,
         chainId: 1337,
     },
-    MOCK_A_1337: { name: "Mock A", symbol: "MockA", decimals: 18, address: MOCK_A, chainId: 1337 },
-    MOCK_B_1337: { name: "Mock B", symbol: "MockB", decimals: 18, address: MOCK_B, chainId: 1337 },
     testUSDC_1337: {
         name: "test USDC",
         symbol: "tUSDC",
@@ -457,20 +432,6 @@ export const TOKEN_LIST = {
         symbol: "tUSDC",
         decimals: 6,
         address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        chainId: localhost2.id,
-    },
-    synthTokenA_1338: {
-        name: "Synth Token A",
-        symbol: "sA",
-        decimals: 18,
-        address: SYNTH_TOKEN_A_1338,
-        chainId: localhost2.id,
-    },
-    synthTokenB_1338: {
-        name: "Synth Token B",
-        symbol: "sB",
-        decimals: 18,
-        address: SYNTH_TOKEN_B_1338,
         chainId: localhost2.id,
     },
     tokenA_LOCAL_OP: {
@@ -821,32 +782,6 @@ export const tokenBridgeMap: TokenBridgeMap = {
                 [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
                 [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
-            },
-        },
-    },
-    [localhost.id]: {
-        [TOKEN_A]: {
-            bridgeAddress: COLLATERAL_TOKEN_A_1337,
-            remotes: {
-                [localhost2.id]: SYNTH_TOKEN_A_1338,
-            },
-        },
-        [TOKEN_B]: {
-            bridgeAddress: COLLATERAL_TOKEN_B_1337,
-            remotes: {
-                [localhost2.id]: SYNTH_TOKEN_B_1338,
-            },
-        },
-    },
-    [localhost2.id]: {
-        [SYNTH_TOKEN_A_1338]: {
-            remotes: {
-                [localhost.id]: TOKEN_A,
-            },
-        },
-        [SYNTH_TOKEN_B_1338]: {
-            remotes: {
-                [localhost.id]: TOKEN_B,
             },
         },
     },
