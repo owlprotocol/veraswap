@@ -1,20 +1,23 @@
-import { describe, expect, test } from "vitest";
-import { Account, createWalletClient, http, zeroHash } from "viem";
+import { beforeAll, describe, expect, test } from "vitest";
+import { Account, Address, createWalletClient, http, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
 
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
-import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { opChainL1Client } from "../constants/chains.js";
 import { getKernelInitData } from "./getKernelInitData.js";
-import { ERC7579_MODULE_TYPE, installOwnableExecutor } from "./installOwnableExecutor.js";
+import { installOwnableExecutor } from "./installOwnableExecutor.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { getKernelAddress } from "./getKernelAddress.js";
 import { Kernel } from "../artifacts/Kernel.js";
+import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
+import { encodeCallArgsSingle } from "./ExecLib.js";
+import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
+import { ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 
 describe("smartaccount/index.test.ts", function () {
     // Test ZeroDev SDK & Custom SDK Tooling
@@ -35,7 +38,9 @@ describe("smartaccount/index.test.ts", function () {
      */
 
     describe("OwnableExecutor", () => {
-        test("installOwnableExecutor", async () => {
+        let kernelAddress: Address;
+
+        beforeAll(async () => {
             const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
                 entryPoint,
                 kernelVersion,
@@ -60,7 +65,7 @@ describe("smartaccount/index.test.ts", function () {
                 ],
             });
             // KernelFactory `createAccount` call
-            const kernelAddressPredicted = getKernelAddress({
+            kernelAddress = getKernelAddress({
                 data: initData,
                 salt: zeroHash,
                 implementation: LOCAL_KERNEL_CONTRACTS.kernel,
@@ -75,19 +80,43 @@ describe("smartaccount/index.test.ts", function () {
             });
             await opChainL1Client.waitForTransactionReceipt({ hash });
 
-            const bytecode = await opChainL1Client.getCode({ address: kernelAddressPredicted });
+            const bytecode = await opChainL1Client.getCode({ address: kernelAddress });
             expect(bytecode).toBeDefined();
+        });
 
+        test("installOwnableExecutor", async () => {
             const isModuleInstalled = await opChainL1Client.readContract({
-                address: kernelAddressPredicted,
+                address: kernelAddress,
                 abi: Kernel.abi,
                 functionName: "isModuleInstalled",
                 args: [BigInt(ERC7579_MODULE_TYPE.EXECUTOR), LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor, "0x"],
             });
             expect(isModuleInstalled).toBe(true);
+            const owners = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getOwners",
+                args: [kernelAddress],
+            });
+            expect(owners).toStrictEqual([account.address]);
         });
 
-        test("OwnableExecutor.executeOnOwnedAccount - direct", () => { });
+        test("OwnableExecutor.executeOnOwnedAccount - direct", async () => {
+            const callData = encodeCallArgsSingle({
+                to: "0x0000000000000000000000000000000000000001",
+                value: 0n,
+                data: "0x1234",
+            });
+
+            const hash = await walletClient.writeContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "executeOnOwnedAccount",
+                args: [kernelAddress, callData],
+            });
+            const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
+            console.debug(receipt);
+        });
 
         test("OwnableExecutor.executeBatchOnOwnedAccount - direct", () => { });
 

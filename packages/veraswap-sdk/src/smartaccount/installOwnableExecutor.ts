@@ -3,18 +3,13 @@ import {
     concatHex,
     encodeAbiParameters,
     encodeFunctionData,
+    encodePacked,
     Hex,
     parseAbiParameters,
     zeroAddress,
 } from "viem";
-import { KernelV3_1AccountAbi } from "@zerodev/sdk";
-
-export enum ERC7579_MODULE_TYPE {
-    VALIDATOR = 1,
-    EXECUTOR = 2,
-    FALLBACK = 3,
-    HOOK = 4,
-}
+import { Kernel } from "../artifacts/Kernel.js";
+import { encodeInstallExecutorData, ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 
 /**
  * Get OwnableExecutor installation function data
@@ -23,17 +18,11 @@ export enum ERC7579_MODULE_TYPE {
  * @returns Encoded ERC7579 `installModule` function data to install OwnableExecutor on a ERC7579 Smart Account
  */
 export function installOwnableExecutor({ owner, executor }: { owner: Address; executor: Address }): Hex {
-    const hook = zeroAddress; // no hook
-    const hookData = "0x"; // no hook data
-    const executorData = encodeAbiParameters([{ type: "address" }], [owner]);
+    const executorData = encodePacked(["address"], [owner]);
     return encodeFunctionData({
-        abi: KernelV3_1AccountAbi,
+        abi: Kernel.abi,
         functionName: "installModule",
-        args: [
-            BigInt(ERC7579_MODULE_TYPE.EXECUTOR),
-            executor,
-            concatHex([hook, encodeAbiParameters(parseAbiParameters(["bytes", "bytes"]), [executorData, hookData])]),
-        ],
+        args: [BigInt(ERC7579_MODULE_TYPE.EXECUTOR), executor, encodeInstallExecutorData({ executorData })],
     });
 }
 
