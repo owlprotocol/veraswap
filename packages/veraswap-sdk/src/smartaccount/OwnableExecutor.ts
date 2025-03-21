@@ -48,3 +48,36 @@ export function getInstallOwnableExecutorCall({
         value: 0n,
     };
 }
+
+export interface SignedCallArgs {
+    chainId: bigint;
+    ownedAccount: Address;
+    nonce: bigint;
+    validAfter: number;
+    validUntil: number;
+    msgValue: bigint;
+    callData: Hex;
+}
+
+export function encodeExecuteSignature({
+    chainId,
+    ownedAccount,
+    nonce,
+    validAfter,
+    validUntil,
+    msgValue,
+    callData,
+}: SignedCallArgs): Hex {
+    return encodeAbiParameters(
+        [
+            { type: "uint256", name: "chainId" },
+            { type: "address", name: "ownedAccount" },
+            { type: "uint256", name: "nonce" },
+            { type: "uint48", name: "validAfter" },
+            { type: "uint48", name: "validUntil" },
+            { type: "uint256", name: "msgValue" },
+            { type: "bytes", name: "callData" },
+        ],
+        [chainId, ownedAccount, nonce, validAfter, validUntil, msgValue, callData],
+    );
+}

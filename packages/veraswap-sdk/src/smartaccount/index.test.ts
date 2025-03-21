@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import { Account, Address, createWalletClient, http, zeroHash } from "viem";
+import { Account, Address, createWalletClient, encodeAbiParameters, http, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
@@ -10,12 +10,12 @@ import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { opChainL1Client } from "../constants/chains.js";
 import { getKernelInitData } from "./getKernelInitData.js";
-import { installOwnableExecutor } from "./installOwnableExecutor.js";
+import { encodeExecuteSignature, installOwnableExecutor } from "./OwnableExecutor.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { getKernelAddress } from "./getKernelAddress.js";
 import { Kernel } from "../artifacts/Kernel.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { encodeCallArgsSingle } from "./ExecLib.js";
+import { encodeCallArgsBatch, encodeCallArgsSingle } from "./ExecLib.js";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 
@@ -104,7 +104,6 @@ describe("smartaccount/index.test.ts", function () {
         test("OwnableExecutor.executeOnOwnedAccount - direct", async () => {
             const callData = encodeCallArgsSingle({
                 to: "0x0000000000000000000000000000000000000001",
-                value: 0n,
                 data: "0x1234",
             });
 
@@ -114,15 +113,119 @@ describe("smartaccount/index.test.ts", function () {
                 functionName: "executeOnOwnedAccount",
                 args: [kernelAddress, callData],
             });
-            const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
-            console.debug(receipt);
+            await opChainL1Client.waitForTransactionReceipt({ hash });
         });
 
-        test("OwnableExecutor.executeBatchOnOwnedAccount - direct", () => { });
+        test("OwnableExecutor.executeBatchOnOwnedAccount - direct", async () => {
+            const callData = encodeCallArgsBatch([
+                {
+                    to: "0x0000000000000000000000000000000000000001",
+                    data: "0x1234",
+                },
+            ]);
 
-        test("OwnableExecutor.executeOnOwnedAccount - signature", () => { });
+            const hash = await walletClient.writeContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "executeBatchOnOwnedAccount",
+                args: [kernelAddress, callData],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+        });
 
-        test("OwnableExecutor.executeBatchOnOwnedAccount - signature", () => { });
+        test("OwnableExecutor.executeOnOwnedAccount - signature", async () => {
+            const walletClient2 = createWalletClient({
+                account: getAnvilAccount(2),
+                chain: opChainL1Client.chain,
+                transport: http(),
+            });
+
+            const callData = encodeCallArgsSingle({
+                to: "0x0000000000000000000000000000000000000001",
+                data: "0x1234",
+            });
+            // Get nonce key 0. We could also just generate a random key
+            const nonce = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getNonce",
+                args: [kernelAddress, 0n],
+            });
+            const signatureParams = {
+                chainId: BigInt(opChainL1Client.chain.id),
+                ownedAccount: kernelAddress,
+                nonce: nonce,
+                validAfter: 0,
+                validUntil: 2 ** 48 - 1,
+                msgValue: 0n,
+                callData,
+            };
+            const signatureData = encodeExecuteSignature(signatureParams);
+            const signature = await account.signMessage({ message: { raw: signatureData } });
+
+            const hash = await walletClient2.writeContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "executeOnOwnedAccount",
+                args: [
+                    signatureParams.ownedAccount,
+                    signatureParams.nonce,
+                    signatureParams.validAfter,
+                    signatureParams.validUntil,
+                    signatureParams.callData,
+                    signature,
+                ],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+        });
+
+        test("OwnableExecutor.executeBatchOnOwnedAccount - signature", async () => {
+            const walletClient2 = createWalletClient({
+                account: getAnvilAccount(2),
+                chain: opChainL1Client.chain,
+                transport: http(),
+            });
+
+            const callData = encodeCallArgsBatch([
+                {
+                    to: "0x0000000000000000000000000000000000000001",
+                    data: "0x1234",
+                },
+            ]);
+            // Get nonce key 0. We could also just generate a random key
+            const nonce = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getNonce",
+                args: [kernelAddress, 0n],
+            });
+            const signatureParams = {
+                chainId: BigInt(opChainL1Client.chain.id),
+                ownedAccount: kernelAddress,
+                nonce: nonce,
+                validAfter: 0,
+                validUntil: 2 ** 48 - 1,
+                msgValue: 0n,
+                callData,
+            };
+            const signatureData = encodeExecuteSignature(signatureParams);
+            const signature = await account.signMessage({ message: { raw: signatureData } });
+
+            const hash = await walletClient2.writeContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "executeBatchOnOwnedAccount",
+                args: [
+                    signatureParams.ownedAccount,
+                    signatureParams.nonce,
+                    signatureParams.validAfter,
+                    signatureParams.validUntil,
+                    signatureParams.callData,
+                    signature,
+                ],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+        });
     });
 
     describe("ERC7579Router", () => {
