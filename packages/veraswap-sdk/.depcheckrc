@@ -9,5 +9,7 @@ ignores: [
     "@eth-optimism/contracts",
     "@layerzerolabs/lz-evm-oapp-v2",
     "@openzeppelin/contracts",
-    "@openzeppelin/contracts-upgradeable"
+    "@openzeppelin/contracts-upgradeable",
+    "prool",
+    "core-js"
 ]
