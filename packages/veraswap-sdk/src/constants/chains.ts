@@ -3,7 +3,7 @@ import { createPublicClient, http } from "viem";
 
 /*** Supersim Constants ***/
 // Designed to mimic default supersim config, can still be used with prool/anvil (if no need for Interop predeploys)
-export const opChainL1Port = 8545;
+export const opChainL1Port = 8547;
 export const opChainL1 = {
     ...localhost,
     id: 900,

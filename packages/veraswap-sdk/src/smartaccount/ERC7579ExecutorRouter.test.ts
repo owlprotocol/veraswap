@@ -29,7 +29,7 @@ import { CallArgs, encodeCallArgsBatch } from "./ExecLib.js";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
-import { encodeERC7579RouterMessage, ERC7579ExecutionMode, ERC7579RouterMessage } from "./ERC7579ExecutorRouter.js";
+import { ERC7579ExecutionMode, ERC7579RouterMessage } from "./ERC7579ExecutorRouter.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 
 /**
@@ -51,7 +51,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
     let routerAddress: Address;
 
     beforeAll(async () => {
-        // Deploy Mock mailbox
+        // Deploy MockMailbox
         const mailboxDeployment = await getOrDeployDeterministicContract(walletClient, {
             bytecode: encodeDeployData({
                 abi: MockMailbox.abi,
@@ -73,7 +73,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         });
         await opChainL1Client.waitForTransactionReceipt({ hash: addRemoteMailboxHash });
 
-        // Deploy Router with fake Mailbox (so we can execute handle directly)
+        // Deploy Router with MockMailbox
         const routerDeployResult = await getOrDeployDeterministicContract(walletClient, {
             bytecode: encodeDeployData({
                 abi: ERC7579ExecutorRouter.abi,
@@ -127,21 +127,35 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
             factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
         });
 
-        const message = encodeERC7579RouterMessage({
+        const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.NOOP> = {
             owner: account.address,
             account: kernelAddress,
             executionMode: ERC7579ExecutionMode.NOOP,
             initData: initData,
             initSalt: salt,
+        };
+        // Dispatch Hyperlane Message
+        const hashCallRemote = await walletClient.writeContract({
+            address: routerAddress,
+            abi: ERC7579ExecutorRouter.abi,
+            functionName: "callRemote",
+            args: [
+                opChainL1Client.chain.id,
+                routerAddress,
+                messageParams.account,
+                messageParams.initData ?? "0x",
+                messageParams.initSalt ?? zeroHash,
+                messageParams.executionMode,
+                "0x",
+                0n,
+                0,
+                0,
+                "0x",
+                "0x",
+                zeroAddress,
+            ],
         });
-        // Dispatch Hyperlane Message to Mock
-        const hashDispatch = await walletClient.writeContract({
-            address: mockMailbox,
-            abi: MockMailbox.abi,
-            functionName: "dispatch",
-            args: [opChainL1Client.chain.id, padHex(routerAddress, { size: 32 }), message, "0x", zeroAddress],
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: hashDispatch });
+        await opChainL1Client.waitForTransactionReceipt({ hash: hashCallRemote });
         // Process Hyperlane Message
         const hashProcess = await walletClient.writeContract({
             address: mockMailbox,
@@ -265,7 +279,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
             validUntil: signatureParams.validUntil,
             signature,
         };
-        // Dispatch Hyperlane Message to Mock
+        // Dispatch Hyperlane Message
         const hashCallRemote = await walletClient.writeContract({
             address: routerAddress,
             abi: ERC7579ExecutorRouter.abi,
@@ -322,7 +336,6 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         });
         expect(owned).toBe(true);
 
-        //TODO: Dispatch from router!!!
         // Router is now owner OwnableExecutor & configured with owners
         // Execution can now be done directly WITHOUT signatures
         const callArgs1: CallArgs = {
