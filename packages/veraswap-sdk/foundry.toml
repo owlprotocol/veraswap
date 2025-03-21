@@ -13,7 +13,7 @@ optimizer_runs = 200
 [rpc_endpoints]
 # Use local anvils
 localhost = "http://127.0.0.1:8545"
-OPChainA="http://127.0.0.1:8546"
+localhost2="http://127.0.0.1:8546"
 # localhost = "http://127.0.0.1:8547"
 # OPChainA="http://127.0.0.1:9545"
 OPChainB="http://127.0.0.1:9546"

@@ -3,6 +3,7 @@ VERASWAP="$(dirname $WORKSPACE)/veraswap"
 
 session="vera"
 privateKeyAnvil0="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+privateKeyAnvil9="0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
 
 # Check if the session exists, discarding output
 # We can check $? for the exit status (zero for success, non-zero for failure)
@@ -22,7 +23,9 @@ if [ $? != 0 ]; then
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
-forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 393216" ENTER
+forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 393216 && \
+HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local1337,local1338" ENTER
+# HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local,opchaina" ENTER
 
     # Start auth dev mode
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
