@@ -11,19 +11,15 @@ tmux has-session -t $session 2>/dev/null
 if [ $? != 0 ]; then
     # Set up your session
     tmux new -s $session -d
-    tmux new-window  -t $session -n supersim;
+    # tmux new-window  -t $session -n supersim;
+    tmux new-window  -t $session -n anvil;
+    tmux split-window -t $session:anvil -h;
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
-    # Start blockchain
-    tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
-#     tmux send-keys -t $session:deploy \
-# "cd $VERASWAP/packages/veraswap-sdk && \
-# forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8545 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
-# forge script ./script/DeployAnvil.s.sol --rpc-url http://127.0.0.1:8546 --private-key ${privateKeyAnvil0} --broadcast --via-ir --code-size-limit 393216 && \
-# cd $WORKSPACE/packages-public/packages/contracts-hyperlane && \
-# tsx ./src/scripts/setupTestMailboxContractsWithProxy.ts && \
-# cd $VERASWAP/packages/veraswap-sdk && \
-# PRIVATE_KEY=${privateKeyAnvil0} tsx ./src/scripts/deployTestTokens.ts" ENTER
+    # Start blockchains
+    tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil --chain-id 1337" ENTER
+    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 1338" ENTER
+    # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
 forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 393216" ENTER

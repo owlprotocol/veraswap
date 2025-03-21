@@ -33,6 +33,9 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 
+// Permit2
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
+
 contract DeployAll is Script, Test {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     bytes32 constant BYTES32_ZERO = bytes32(0);
@@ -108,6 +111,8 @@ contract DeployAll is Script, Test {
     {
         uint32 chainId = uint32(block.chainid);
 
+        // Permit2
+        (address permit2, bool exists) = Permit2Utils.getOrCreate2();
         // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
