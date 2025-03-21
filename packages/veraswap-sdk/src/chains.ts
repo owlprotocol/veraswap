@@ -118,7 +118,7 @@ export const localOpChainA = {
     rpcUrls: {
         default: {
             http: [`http://127.0.0.1:${portLocalOpChainA}`],
-            // webSocket: [`ws://127.0.0.1:${portLocalOpChainA}`],
+            webSocket: [`ws://127.0.0.1:${portLocalOpChainA}`],
         },
     },
 };
