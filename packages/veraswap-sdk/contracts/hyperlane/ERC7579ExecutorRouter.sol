@@ -218,6 +218,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 signature
             );
         } else {
+            //TODO: Add additional checks on validAfter/validUntil?
             // Assumes Router has been set as owner on Executor
             // Check Router Owner
             if (!owners[account][origin][router][owner]) {

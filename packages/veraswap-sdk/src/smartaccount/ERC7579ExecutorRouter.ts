@@ -8,7 +8,15 @@ export enum ERC7579ExecutionMode {
     NOOP = 4,
 }
 
-export type ERC7579RouterMessage = {
+export type ERC7579RouterMessage<T extends ERC7579ExecutionMode> = T extends
+    | ERC7579ExecutionMode.SINGLE_SIGNATURE
+    | ERC7579ExecutionMode.BATCH_SIGNATURE
+    ? ERC7579RouterSignedMessage<T>
+    : T extends ERC7579ExecutionMode.SINGLE | ERC7579ExecutionMode.BATCH
+    ? ERC7579RouterDirectMessage<T>
+    : ERC7579RouterNoopMessage;
+
+export interface ERC7579RouterBaseMessage {
     owner: Address;
     account: Address;
     initData?: Hex;
@@ -19,9 +27,9 @@ export type ERC7579RouterMessage = {
     validAfter?: number;
     validUntil?: number;
     signature?: Hex;
-} & (ERC7579RouterNoopMessage | ERC7579RouterDirectMessage | ERC7579RouterSignedMessage);
+}
 
-export interface ERC7579RouterNoopMessage {
+export interface ERC7579RouterNoopMessage extends ERC7579RouterBaseMessage {
     executionMode: ERC7579ExecutionMode.NOOP;
     callData?: undefined;
     nonce?: undefined;
@@ -30,8 +38,12 @@ export interface ERC7579RouterNoopMessage {
     signature?: undefined;
 }
 
-export interface ERC7579RouterDirectMessage {
-    executionMode: ERC7579ExecutionMode.SINGLE | ERC7579ExecutionMode.BATCH;
+export interface ERC7579RouterDirectMessage<
+    T extends ERC7579ExecutionMode.SINGLE | ERC7579ExecutionMode.BATCH =
+    | ERC7579ExecutionMode.SINGLE
+    | ERC7579ExecutionMode.BATCH,
+> extends ERC7579RouterBaseMessage {
+    executionMode: T;
     callData: Hex;
     nonce?: undefined;
     validAfter?: undefined;
@@ -39,8 +51,12 @@ export interface ERC7579RouterDirectMessage {
     signature?: undefined;
 }
 
-export interface ERC7579RouterSignedMessage {
-    executionMode: ERC7579ExecutionMode.SINGLE_SIGNATURE | ERC7579ExecutionMode.BATCH_SIGNATURE;
+export interface ERC7579RouterSignedMessage<
+    T extends ERC7579ExecutionMode.SINGLE_SIGNATURE | ERC7579ExecutionMode.BATCH_SIGNATURE =
+    | ERC7579ExecutionMode.SINGLE_SIGNATURE
+    | ERC7579ExecutionMode.BATCH_SIGNATURE,
+> extends ERC7579RouterBaseMessage {
+    executionMode: T;
     callData: Hex;
     nonce: bigint;
     validAfter: number;
@@ -48,7 +64,7 @@ export interface ERC7579RouterSignedMessage {
     signature: Hex;
 }
 
-export function encodeERC7579RouterMessage(params: ERC7579RouterMessage): Hex {
+export function encodeERC7579RouterMessage(params: ERC7579RouterBaseMessage): Hex {
     return encodeAbiParameters(
         [
             { type: "address", name: "owner" },

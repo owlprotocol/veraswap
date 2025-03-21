@@ -3,7 +3,6 @@ import {
     Account,
     Address,
     createWalletClient,
-    encodeAbiParameters,
     encodeDeployData,
     encodeFunctionData,
     http,
@@ -26,11 +25,11 @@ import { encodeExecuteSignature, installOwnableExecutor } from "./OwnableExecuto
 import { getKernelAddress } from "./getKernelAddress.js";
 import { Kernel } from "../artifacts/Kernel.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { CallArgs, encodeCallArgsBatch, encodeCallArgsSingle } from "./ExecLib.js";
+import { CallArgs, encodeCallArgsBatch } from "./ExecLib.js";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
-import { encodeERC7579RouterMessage, ERC7579ExecutionMode } from "./ERC7579ExecutorRouter.js";
+import { encodeERC7579RouterMessage, ERC7579ExecutionMode, ERC7579RouterMessage } from "./ERC7579ExecutorRouter.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 
 /**
@@ -94,7 +93,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         routerAddress = routerDeployResult.address;
     });
 
-    test("Create account - NOOP", async () => {
+    test("Create account - Deploy NOOP", async () => {
         // Kernel default plugins (EOA Sudo Validator)
         const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
             entryPoint,
@@ -171,7 +170,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         expect(owners).toStrictEqual([account.address]);
     });
 
-    test("Create account - Execute Batch Signed", async () => {
+    test("Create account - Deploy w/BatchSigned + Batch", async () => {
         // Kernel default plugins (EOA Sudo Validator)
         const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
             entryPoint,
@@ -254,7 +253,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         };
         const signatureData = encodeExecuteSignature(signatureParams);
         const signature = await account.signMessage({ message: { raw: signatureData } });
-        const message = encodeERC7579RouterMessage({
+        const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH_SIGNATURE> = {
             owner: account.address,
             account: kernelAddress,
             executionMode: ERC7579ExecutionMode.BATCH_SIGNATURE,
@@ -265,15 +264,29 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
             validAfter: signatureParams.validAfter,
             validUntil: signatureParams.validUntil,
             signature,
-        });
+        };
         // Dispatch Hyperlane Message to Mock
-        const hashDispatch = await walletClient.writeContract({
-            address: mockMailbox,
-            abi: MockMailbox.abi,
-            functionName: "dispatch",
-            args: [opChainL1Client.chain.id, padHex(routerAddress, { size: 32 }), message, "0x", zeroAddress],
+        const hashCallRemote = await walletClient.writeContract({
+            address: routerAddress,
+            abi: ERC7579ExecutorRouter.abi,
+            functionName: "callRemote",
+            args: [
+                opChainL1Client.chain.id,
+                routerAddress,
+                messageParams.account,
+                messageParams.initData ?? "0x",
+                messageParams.initSalt ?? zeroHash,
+                messageParams.executionMode,
+                messageParams.callData,
+                messageParams.nonce,
+                messageParams.validAfter,
+                messageParams.validUntil,
+                messageParams.signature,
+                "0x",
+                zeroAddress,
+            ],
         });
-        await opChainL1Client.waitForTransactionReceipt({ hash: hashDispatch });
+        await opChainL1Client.waitForTransactionReceipt({ hash: hashCallRemote });
         // Process Hyperlane Message
         const hashProcess = await walletClient.writeContract({
             address: mockMailbox,
@@ -308,5 +321,47 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
             args: [kernelAddress, opChainL1Client.chain.id, routerAddress, account.address],
         });
         expect(owned).toBe(true);
+
+        //TODO: Dispatch from router!!!
+        // Router is now owner OwnableExecutor & configured with owners
+        // Execution can now be done directly WITHOUT signatures
+        const callArgs1: CallArgs = {
+            to: "0x0000000000000000000000000000000000000001",
+            data: "0x1234",
+        };
+        const callData1 = encodeCallArgsBatch([callArgs1]);
+        const messageParams1: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH> = {
+            owner: account.address,
+            account: kernelAddress,
+            executionMode: ERC7579ExecutionMode.BATCH,
+            callData: callData1,
+        };
+        const hashCallRemote1 = await walletClient.writeContract({
+            address: routerAddress,
+            abi: ERC7579ExecutorRouter.abi,
+            functionName: "callRemote",
+            args: [
+                opChainL1Client.chain.id,
+                routerAddress,
+                messageParams1.account,
+                messageParams1.initData ?? "0x",
+                messageParams1.initSalt ?? zeroHash,
+                messageParams1.executionMode,
+                messageParams1.callData,
+                messageParams1.nonce ?? 0n,
+                messageParams1.validAfter ?? 0,
+                messageParams1.validUntil ?? 0,
+                messageParams1.signature ?? "0x",
+                "0x",
+                zeroAddress,
+            ],
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: hashCallRemote1 });
+        const hashProcess1 = await walletClient.writeContract({
+            address: mockMailbox,
+            abi: MockMailbox.abi,
+            functionName: "processNextInboundMessage",
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: hashProcess1 });
     });
 });
