@@ -33,13 +33,18 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
 
+// Permit2
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
+
 contract DeployAll is Script, Test {
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function run() external {
-        string[2] memory chains = ["localhost", "OPChainA"];
-        uint32[2] memory chainIds = [uint32(900), uint32(901)];
+        // string[2] memory chains = ["localhost", "OPChainA"];
+        // uint32[2] memory chainIds = [uint32(900), uint32(901)];
+        string[2] memory chains = ["localhost", "localhost2"];
+        uint32[2] memory chainIds = [uint32(1337), uint32(1338)];
 
         uint mainFork = vm.createSelectFork(chains[0]);
         vm.startBroadcast();
@@ -108,12 +113,14 @@ contract DeployAll is Script, Test {
     {
         uint32 chainId = uint32(block.chainid);
 
+        // Permit2
+        Permit2Utils.getOrCreate2();
         // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         (v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
         (v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
-        (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
+        V4QuoterUtils.getOrCreate2(v4PoolManager);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: PERMIT2,
@@ -130,7 +137,7 @@ contract DeployAll is Script, Test {
         (router, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
 
         // HYPERLANE CONTRACTS
-        (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+        HypTokenRouterSweepUtils.getOrCreate2();
         (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
         (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
         (mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
@@ -158,6 +165,8 @@ contract DeployAll is Script, Test {
             IStateView(v4StateView)
         );
 
+        console2.log("Token A:", tokenA);
+        console2.log("Token B:", tokenB);
         console2.log("Deployed Tokens and pool");
     }
 }

@@ -1,4 +1,4 @@
-//polyfill Promise.withResolvers
+/* //polyfill Promise.withResolvers
 import "core-js/actual/promise";
 import { Instance } from "prool";
 import { anvil } from "prool/instances";
@@ -9,8 +9,7 @@ import { getAnvilAccount } from "@veraswap/anvil-account";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 
-import { chainId2, localhost2, port, port2 } from "./src/test/constants.js";
-
+import { localhost2 } from "./src/chains.js";
 const execPromise = promisify(exec);
 
 let instance: Instance;
@@ -18,41 +17,38 @@ let instance2: Instance;
 
 /**
  * Run once on `vitest` command. NOT on test re-runs
- */
+<]
 export async function setup() {
     const host = "127.0.0.1";
     const codeSizeLimit = 393216; //10x normal size
-    instance = anvil({
-        host,
-        port,
-        chainId: localhost.id,
-        codeSizeLimit,
-    });
-
-    instance2 = anvil({
-        host,
-        port: port2,
-        chainId: chainId2,
-        codeSizeLimit,
-    });
-
-    await instance.start();
-    await instance2.start();
-
-    const transport = http(`http://${host}:${port}`);
-    const transport2 = http(`http://${host}:${port2}`);
+    // instance = anvil({
+    //     host,
+    //     port,
+    //     chainId: localhost.id,
+    //     codeSizeLimit,
+    // });
+    //
+    // instance2 = anvil({
+    //     host,
+    //     port: port2,
+    //     chainId: chainId2,
+    //     codeSizeLimit,
+    // });
+    //
+    // await instance.start();
+    // await instance2.start();
 
     // Deploy Deterministic Deployer
     const walletClient = createWalletClient({
         account: getAnvilAccount(0),
         chain: localhost,
-        transport,
+        transport: http(),
     });
 
     const walletClient2 = createWalletClient({
         account: getAnvilAccount(0),
         chain: localhost2,
-        transport: transport2,
+        transport: http(),
     });
 
     // Forge scripts
@@ -79,13 +75,13 @@ export async function setup() {
     const mailboxAddress2 = mailboxContracts2.mailbox.address;
 
     console.log({ mailboxAddress, mailboxAddress2 });
-    */
+   <]
 }
 
 /**
  * Run once `vitest` process has exited. NOT on test re-runs
- */
+<]
 export async function teardown() {
-    await instance.stop();
-    await instance2.stop();
-}
+    // await instance.stop();
+    // await instance2.stop();
+} */

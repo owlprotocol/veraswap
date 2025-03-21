@@ -1,11 +1,26 @@
-import { zeroAddress, zeroHash, encodeDeployData, defineChain } from "viem";
+import { zeroAddress, zeroHash, encodeDeployData, defineChain, encodeAbiParameters, Address, keccak256 } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { type ChainMap, type ChainMetadata } from "@hyperlane-xyz/sdk";
-import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia } from "viem/chains";
-import { UnsupportedProtocol, MockERC20 } from "./artifacts/index.js";
+import { mainnet, bsc, base, arbitrum, arbitrumSepolia, sepolia, baseSepolia, localhost } from "viem/chains";
+import {
+    UnsupportedProtocol,
+    MockERC20,
+    PoolManager,
+    PositionManager,
+    StateView,
+    UniversalRouterApprovedReentrant,
+    V4Quoter,
+    HypERC20,
+    HypERC20Collateral,
+    Mailbox,
+    NoopIsm,
+    PausableHook,
+    HypTokenRouterSweep,
+} from "./artifacts/index.js";
 import { HyperlaneRegistry, PoolKey } from "./types/index.js";
 import { TokenBridgeMap } from "./types/TokenBridgeMap.js";
-import { unichainSepolia, inkSepolia } from "./chains.js";
+import { unichainSepolia, inkSepolia, localOp, localOpChainA, localOpChainB } from "./chains.js";
+import { localhost2 } from "./chains.js";
 
 export const MAX_UINT_256 = 2n ** 256n - 1n;
 export const MAX_UINT_160 = 2n ** 160n - 1n;
@@ -20,65 +35,123 @@ export const UNSUPPORTED_PROTOCOL = getDeployDeterministicAddress({
 
 export const DIVVI_BASE_REGISTRY = "0xba9655677f4e42dd289f5b7888170bc0c7da8cdc";
 
-export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
-export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
-export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
-export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
-export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
+// export const UNIVERSAL_ROUTER = "0x8C29321D10039d36dB8d084009761D79c2707B6d";
+// export const POOL_MANAGER = "0x9992a639900866aFDE75D714c8Ef76edA447A18c";
+// export const POSITION_MANAGER = "0x9737f068eb64a1328B7A323370DDf836d3a446BD";
+// export const QUOTER = "0x8B163bB00AE59d3c1b79F3e63798087C40ea7AE8";
+// export const STATE_VIEW = "0x3282543F6117a031a2a2c8Cf535Aebdd0Dde0887";
 
-// export const POOL_MANAGER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: PoolManager.bytecode,
-//         abi: PoolManager.abi,
-//         args: [zeroAddress],
-//     }),
-//     salt: zeroHash,
-// });
-// export const POSITION_MANAGER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: PositionManager.bytecode,
-//         abi: PositionManager.abi,
-//         args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
-//     }),
-//     salt: zeroHash,
-// });
-// export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: UniversalRouter.bytecode,
-//         abi: UniversalRouter.abi,
-//         args: [
-//             {
-//                 permit2: PERMIT2_ADDRESS,
-//                 weth9: zeroAddress,
-//                 v2Factory: zeroAddress,
-//                 v3Factory: zeroAddress,
-//                 pairInitCodeHash: zeroHash,
-//                 poolInitCodeHash: zeroHash,
-//                 v4PoolManager: POOL_MANAGER,
-//                 v3NFTPositionManager: zeroAddress,
-//                 v4PositionManager: POSITION_MANAGER,
-//             },
-//         ],
-//     }),
-//     salt: zeroHash,
-// });
+export const HYPERLANE_NOOP_ISM = getDeployDeterministicAddress({
+    bytecode: NoopIsm.bytecode,
+    salt: zeroHash,
+});
+export const HYPERLANE_PAUSABLE_HOOK = getDeployDeterministicAddress({
+    bytecode: PausableHook.bytecode,
+    salt: zeroHash,
+});
 
-// export const QUOTER = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: V4Quoter.bytecode,
-//         abi: V4Quoter.abi,
-//         args: [POOL_MANAGER],
-//     }),
-//     salt: zeroHash,
-// });
-// export const STATE_VIEW = getDeployDeterministicAddress({
-//     bytecode: encodeDeployData({
-//         bytecode: StateView.bytecode,
-//         abi: StateView.abi,
-//         args: [POOL_MANAGER],
-//     }),
-//     salt: zeroHash,
-// });
+export const getMailboxAddress = (chainId: number) =>
+    getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: Mailbox.bytecode,
+            abi: Mailbox.abi,
+            args: [chainId],
+        }),
+        salt: zeroHash,
+    });
+
+export const getSyntheticTokenAddress = (
+    chainId: number,
+    totalSupply: bigint,
+    decimals: number,
+    name: string,
+    symbol: string,
+    msgSender: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+) => {
+    const mailbox = getMailboxAddress(chainId);
+
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20.bytecode,
+            abi: HypERC20.abi,
+            args: [decimals, mailbox],
+        }),
+        salt: keccak256(
+            encodeAbiParameters(
+                [{ type: "uint256" }, { type: "string" }, { type: "string" }, { type: "address" }],
+                [totalSupply, name, symbol, msgSender],
+            ),
+        ),
+    });
+};
+
+export const getCollateralTokenAddress = (chainId: number, tokenAddress: Address) => {
+    const mailbox = getMailboxAddress(chainId);
+
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20Collateral.bytecode,
+            abi: HypERC20Collateral.abi,
+            args: [tokenAddress, mailbox],
+        }),
+        salt: zeroHash,
+    });
+};
+
+export const POOL_MANAGER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: PoolManager.bytecode,
+        abi: PoolManager.abi,
+        args: [zeroAddress],
+    }),
+    salt: zeroHash,
+});
+export const POSITION_MANAGER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: PositionManager.bytecode,
+        abi: PositionManager.abi,
+        args: [POOL_MANAGER, PERMIT2_ADDRESS, 300_000n, zeroAddress, zeroAddress],
+    }),
+    salt: zeroHash,
+});
+
+export const UNIVERSAL_ROUTER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: UniversalRouterApprovedReentrant.bytecode,
+        abi: UniversalRouterApprovedReentrant.abi,
+        args: [
+            {
+                permit2: PERMIT2_ADDRESS,
+                weth9: "0x4200000000000000000000000000000000000006",
+                v2Factory: UNSUPPORTED_PROTOCOL,
+                v3Factory: UNSUPPORTED_PROTOCOL,
+                pairInitCodeHash: zeroHash,
+                poolInitCodeHash: zeroHash,
+                v4PoolManager: POOL_MANAGER,
+                v3NFTPositionManager: UNSUPPORTED_PROTOCOL,
+                v4PositionManager: POSITION_MANAGER,
+            },
+        ],
+    }),
+    salt: zeroHash,
+});
+
+export const QUOTER = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: V4Quoter.bytecode,
+        abi: V4Quoter.abi,
+        args: [POOL_MANAGER],
+    }),
+    salt: zeroHash,
+});
+export const STATE_VIEW = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: StateView.bytecode,
+        abi: StateView.abi,
+        args: [POOL_MANAGER],
+    }),
+    salt: zeroHash,
+});
 
 export const MOCK_A = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
@@ -96,6 +169,35 @@ export const MOCK_B = getDeployDeterministicAddress({
     }),
     salt: zeroHash,
 });
+
+export const TOKEN_A = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: MockERC20.bytecode,
+        abi: MockERC20.abi,
+        args: ["Token A", "A", 18],
+    }),
+    salt: zeroHash,
+});
+export const TOKEN_B = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: MockERC20.bytecode,
+        abi: MockERC20.abi,
+        args: ["Token B", "B", 18],
+    }),
+    salt: zeroHash,
+});
+
+export const COLLATERAL_TOKEN_A_900 = getCollateralTokenAddress(900, TOKEN_A);
+export const COLLATERAL_TOKEN_B_900 = getCollateralTokenAddress(900, TOKEN_B);
+
+export const SYNTH_TOKEN_A_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token A", "sA");
+export const SYNTH_TOKEN_B_901 = getSyntheticTokenAddress(901, 0n, 18, "Synth Token B", "sB");
+
+export const COLLATERAL_TOKEN_A_1337 = getCollateralTokenAddress(1337, TOKEN_A);
+export const COLLATERAL_TOKEN_B_1337 = getCollateralTokenAddress(1337, TOKEN_B);
+
+export const SYNTH_TOKEN_A_1338 = getSyntheticTokenAddress(1338, 0n, 18, "Synth Token A", "sA");
+export const SYNTH_TOKEN_B_1338 = getSyntheticTokenAddress(1338, 0n, 18, "Synth Token B", "sB");
 
 // Superchains
 
@@ -257,6 +359,30 @@ export const UNISWAP_CONTRACTS = {
         QUOTER,
         STATE_VIEW,
     },
+    [localOp.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    [localOpChainA.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
+    [localOpChainB.id]: {
+        UNSUPPORTED_PROTOCOL,
+        POOL_MANAGER,
+        POSITION_MANAGER,
+        UNIVERSAL_ROUTER,
+        QUOTER,
+        STATE_VIEW,
+    },
 } as const;
 
 // TODO: Derive these from bytecode instead of hard-coding?
@@ -264,7 +390,10 @@ export const UNISWAP_CONTRACTS = {
 // Maybe from different forge config in past?
 export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
-export const HYPERLANE_ROUTER_SWEEP_ADDRESS = "0xCDE47C48F8b0Ea9d57eB4e03C9435aA23Cf0Fb87";
+export const HYPERLANE_ROUTER_SWEEP_ADDRESS = getDeployDeterministicAddress({
+    bytecode: HypTokenRouterSweep.bytecode,
+    salt: zeroHash,
+});
 
 export const TOKEN_LIST = {
     // 56
@@ -300,24 +429,17 @@ export const TOKEN_LIST = {
     },
     // 1337
     TokenA_1337: {
-        name: "Token A",
-        symbol: "A",
+        name: "Local Token A",
+        symbol: "lA",
         decimals: 18,
-        address: "0x6A9996e0aeB928820cFa1a1dB7C62bA61B473280",
+        address: TOKEN_A,
         chainId: 1337,
     },
     TokenB_1337: {
-        name: "Token B",
-        symbol: "B",
+        name: "Local Token B",
+        symbol: "lB",
         decimals: 18,
-        address: "0x500a80035829572e8E637dC654AE32bC2560968F",
-        chainId: 1337,
-    },
-    TokenC_1337: {
-        name: "Token C",
-        symbol: "C",
-        decimals: 18,
-        address: "0xBCe7609fC22e1aC5B256B2316166d3f8788ae69e",
+        address: TOKEN_B,
         chainId: 1337,
     },
     MOCK_A_1337: { name: "Mock A", symbol: "MockA", decimals: 18, address: MOCK_A, chainId: 1337 },
@@ -327,7 +449,7 @@ export const TOKEN_LIST = {
         symbol: "tUSDC",
         decimals: 6,
         address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        chainId: 1337,
+        chainId: localhost.id,
     },
     // 1338
     testUSDC_1338: {
@@ -335,7 +457,49 @@ export const TOKEN_LIST = {
         symbol: "tUSDC",
         decimals: 6,
         address: "0x7f3aa3c525A3CDBd09488BDa5e36D68977490c41",
-        chainId: 1338,
+        chainId: localhost2.id,
+    },
+    synthTokenA_1338: {
+        name: "Synth Token A",
+        symbol: "sA",
+        decimals: 18,
+        address: SYNTH_TOKEN_A_1338,
+        chainId: localhost2.id,
+    },
+    synthTokenB_1338: {
+        name: "Synth Token B",
+        symbol: "sB",
+        decimals: 18,
+        address: SYNTH_TOKEN_B_1338,
+        chainId: localhost2.id,
+    },
+    tokenA_LOCAL_OP: {
+        name: "OP Token A",
+        symbol: "opA",
+        decimals: 18,
+        address: TOKEN_A,
+        chainId: localOp.id,
+    },
+    tokenB_LOCAL_OP: {
+        name: "OP Token B",
+        symbol: "opB",
+        decimals: 18,
+        address: TOKEN_B,
+        chainId: localOp.id,
+    },
+    synthTokenA_LOCAL_OP_CHAIN_A: {
+        name: "Synth Token A",
+        symbol: "sA",
+        decimals: 18,
+        address: SYNTH_TOKEN_A_901,
+        chainId: localOpChainA.id,
+    },
+    synthTokenB_LOCAL_OP_CHAIN_A: {
+        name: "Synth Token B",
+        symbol: "sB",
+        decimals: 18,
+        address: SYNTH_TOKEN_B_901,
+        chainId: localOpChainA.id,
     },
     // 11155111
     TokenA_SEPOLIA: {
@@ -554,13 +718,27 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
             chainId: 1338,
             name: "localhost-1338",
         } as ChainMetadata,
+        "localhost-op": {
+            chainId: 900,
+            name: "localhost-op",
+        } as ChainMetadata,
+        "localhost-op-chain-a": {
+            chainId: 901,
+            name: "localhost-op-chain-a",
+        } as ChainMetadata,
     } as ChainMap<ChainMetadata>,
     addresses: {
         "localhost-1337": {
-            mailbox: "0x8794e76f46289f1F8C433cCe4259C455335346aa",
+            mailbox: getMailboxAddress(1337),
         },
         "localhost-1338": {
-            mailbox: "0x1e8fC27Af09d117Df6B931433e29fCF6463f3a95",
+            mailbox: getMailboxAddress(1338),
+        },
+        "localhost-op": {
+            mailbox: getMailboxAddress(900),
+        },
+        "localhost-op-chain-a": {
+            mailbox: getMailboxAddress(901),
         },
     },
 };
@@ -643,6 +821,58 @@ export const tokenBridgeMap: TokenBridgeMap = {
                 [sepolia.id]: "0xf79509E6faDC7254D59d49Bcd976d5523177ec4f",
                 [baseSepolia.id]: "0x3744d204595af66329b325a7651b005fbdcd77a4",
                 [unichainSepolia.id]: "0x5983458d6d58b80257744872a778ece9e82ceec0",
+            },
+        },
+    },
+    [localhost.id]: {
+        [TOKEN_A]: {
+            bridgeAddress: COLLATERAL_TOKEN_A_1337,
+            remotes: {
+                [localhost2.id]: SYNTH_TOKEN_A_1338,
+            },
+        },
+        [TOKEN_B]: {
+            bridgeAddress: COLLATERAL_TOKEN_B_1337,
+            remotes: {
+                [localhost2.id]: SYNTH_TOKEN_B_1338,
+            },
+        },
+    },
+    [localhost2.id]: {
+        [SYNTH_TOKEN_A_1338]: {
+            remotes: {
+                [localhost.id]: TOKEN_A,
+            },
+        },
+        [SYNTH_TOKEN_B_1338]: {
+            remotes: {
+                [localhost.id]: TOKEN_B,
+            },
+        },
+    },
+    [localOp.id]: {
+        [TOKEN_A]: {
+            bridgeAddress: COLLATERAL_TOKEN_A_900,
+            remotes: {
+                [localOpChainA.id]: SYNTH_TOKEN_A_901,
+            },
+        },
+        [TOKEN_B]: {
+            bridgeAddress: COLLATERAL_TOKEN_B_900,
+            remotes: {
+                [localOpChainA.id]: SYNTH_TOKEN_B_901,
+            },
+        },
+    },
+    [localOpChainA.id]: {
+        [SYNTH_TOKEN_A_901]: {
+            remotes: {
+                [localOp.id]: TOKEN_A,
+            },
+        },
+        [SYNTH_TOKEN_B_901]: {
+            remotes: {
+                [localOp.id]: TOKEN_B,
             },
         },
     },

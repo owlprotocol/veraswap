@@ -1,5 +1,6 @@
 import { chainConfig } from "viem/op-stack";
 import { defineChain } from "viem";
+import { localhost } from "viem/chains";
 
 const sourceId = 11_155_111; // sepolia
 
@@ -94,3 +95,57 @@ export const unichainSepolia = /* #__PURE__ */ defineChain({
     testnet: true,
     sourceId,
 });
+
+export const portLocalOp = 8547;
+export const portLocalOpChainA = 9545;
+export const portLocalOpChainB = 9546;
+
+export const chainIdLocalOp = 900;
+export const chainIdLocalOpChainA = 901;
+export const chainIdLocalOpChainB = 902;
+
+export const localOp = {
+    ...localhost,
+    id: chainIdLocalOp,
+    name: "Local OP",
+    rpcUrls: { default: { http: [`http://127.0.0.1:${portLocalOp}`], webSocket: [`ws://127.0.0.1:${portLocalOp}`] } },
+};
+
+export const localOpChainA = {
+    ...localhost,
+    id: chainIdLocalOpChainA,
+    name: "OP Chain A",
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${portLocalOpChainA}`],
+            // webSocket: [`ws://127.0.0.1:${portLocalOpChainA}`],
+        },
+    },
+};
+
+export const localOpChainB = {
+    ...localhost,
+    id: chainIdLocalOpChainB,
+    name: "OP Chain B",
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${portLocalOpChainB}`],
+            // webSocket: [`ws://127.0.0.1:${portLocalOpChainB}`],
+        },
+    },
+};
+
+export const port2 = 8546;
+export const chainId2 = 1338;
+
+export const localhost2 = {
+    ...localhost,
+    id: chainId2,
+    name: "Localhost 2",
+    rpcUrls: {
+        default: {
+            http: [`http://127.0.0.1:${port2}`],
+            webSocket: [`ws://127.0.0.1:${port2}`],
+        },
+    },
+};

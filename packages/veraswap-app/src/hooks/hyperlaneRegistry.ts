@@ -15,10 +15,19 @@ const fetchGithubRegistryData = async () => {
 
 export function hyperlaneRegistryOptions() {
     // TODO: if !isProduction, merge testHyperlaneRegistry with fetched data
-    const isProduction = true; // TODO: Replace with actual production check
+    const isProduction = import.meta.env.MODE !== "development"; // TODO: Replace with actual production check
+
+    // Merge testHyperlaneRegistry with fetched data
+    const fetchAndMergeRegistries = async () => {
+        const githubRegistryData = await fetchGithubRegistryData();
+        return {
+            metadata: { ...githubRegistryData.metadata, ...testHyperlaneRegistry.metadata },
+            addresses: { ...githubRegistryData.addresses, ...testHyperlaneRegistry.addresses },
+        };
+    };
 
     return {
         queryKey: ["hyperlaneRegistry"],
-        queryFn: isProduction ? fetchGithubRegistryData : async () => testHyperlaneRegistry,
+        queryFn: isProduction ? fetchGithubRegistryData : fetchAndMergeRegistries,
     };
 }

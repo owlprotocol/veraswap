@@ -50,7 +50,7 @@ export async function addLiquidity(chains: Chain[]) {
         }),
     );
 
-    const chainId0Str = chains[0].id as keyof typeof UNISWAP_CONTRACTS;
+    const chainId0Str = chains[0].id;
     if (!(chainId0Str in UNISWAP_CONTRACTS)) {
         throw new Error(`Chain ${chainId0Str} not supported`);
     }

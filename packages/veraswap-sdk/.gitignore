@@ -14,6 +14,7 @@ _types
 /broadcast/*/1337/
 /broadcast/*/1338/
 /broadcast/**/dry-run/
+/broadcast/multi/**
 src/artifacts
 
 
