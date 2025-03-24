@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {Create2Utils} from "./Create2Utils.sol";
 
 library HypERC20Utils {
+    Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+
     function getDeployBytecode(uint8 decimals, address mailbox) internal pure returns (bytes memory) {
         return abi.encodePacked(type(HypERC20).creationCode, abi.encode(decimals, mailbox));
     }
@@ -24,7 +28,8 @@ library HypERC20Utils {
         exists = address(addr).code.length > 0;
 
         if (!exists) {
-            addr = address(new HypERC20{salt: salt}(decimals, mailbox));
+            address deployed = address(new HypERC20{salt: salt}(decimals, mailbox));
+            vm.assertEq(deployed, addr);
             // initialize with msg.sender as owner
             HypERC20(addr).initialize(0, name, symbol, address(0), address(0), msg.sender);
         }
