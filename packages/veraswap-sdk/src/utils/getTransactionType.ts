@@ -1,22 +1,22 @@
 import { Address } from "viem";
 import { VeraSwapToken } from "../types/VeraSwapToken.js";
 
-type TransactionSwap = {
+interface TransactionSwap {
     type: "SWAP";
     chainId: number;
     fromToken: Address;
     toToken: Address;
-};
+}
 
-type TransactionBridge = {
+interface TransactionBridge {
     type: "BRIDGE";
     fromChainId: number;
     toChainId: number;
     fromToken: Address;
     toToken: Address;
-};
+}
 
-type TransactionSwapAndBridge = {
+interface TransactionSwapAndBridge {
     type: "SWAP_AND_BRIDGE";
     swap: {
         chainId: number;
@@ -29,9 +29,9 @@ type TransactionSwapAndBridge = {
         fromToken: Address;
         toToken: Address;
     };
-};
+}
 
-type TransactionBridgeAndSwap = {
+interface TransactionBridgeAndSwap {
     type: "BRIDGE_AND_SWAP";
     bridge: {
         fromChainId: number;
@@ -44,7 +44,7 @@ type TransactionBridgeAndSwap = {
         fromToken: string;
         toToken: string;
     };
-};
+}
 
 export type TransactionResult =
     | TransactionSwap
@@ -53,15 +53,12 @@ export type TransactionResult =
     | TransactionBridgeAndSwap
     | { type: "UNKNOWN" };
 
-const isHyperlaneStandard = (standard?: string) =>
-    standard === "EvmHypCollateral" || standard === "EvmHypSynthetic";
+const isHyperlaneStandard = (standard?: string) => standard === "EvmHypCollateral" || standard === "EvmHypSynthetic";
 
 function hasConnection(from: VeraSwapToken, to: VeraSwapToken): boolean {
     if (!from.connections) return false;
     return from.connections.some(
-        (c) =>
-            c.chainId === to.chainId &&
-            c.address.toLowerCase() === to.address.toLowerCase()
+        (c) => c.chainId === to.chainId && c.address.toLowerCase() === to.address.toLowerCase(),
     );
 }
 
@@ -84,9 +81,11 @@ export function getTransactionType({
         };
     }
 
-    if (isHyperlaneStandard(tokenIn.standard) &&
+    if (
+        isHyperlaneStandard(tokenIn.standard) &&
         isHyperlaneStandard(tokenOut.standard) &&
-        hasConnection(tokenIn, tokenOut)) {
+        hasConnection(tokenIn, tokenOut)
+    ) {
         return {
             type: "BRIDGE",
             fromChainId: tokenIn.chainId,
@@ -97,9 +96,7 @@ export function getTransactionType({
     }
 
     if (isHyperlaneStandard(tokenIn.standard)) {
-        const tokenInConnection = tokenIn.connections?.find(
-            (c) => c.chainId === tokenOut.chainId
-        );
+        const tokenInConnection = tokenIn.connections?.find((c) => c.chainId === tokenOut.chainId);
         if (tokenInConnection) {
             return {
                 type: "BRIDGE_AND_SWAP",
@@ -119,9 +116,7 @@ export function getTransactionType({
     }
 
     if (isHyperlaneStandard(tokenOut.standard)) {
-        const tokenOutConnection = tokenOut.connections?.find(
-            (c) => c.chainId === tokenIn.chainId
-        );
+        const tokenOutConnection = tokenOut.connections?.find((c) => c.chainId === tokenIn.chainId);
         if (tokenOutConnection) {
             return {
                 type: "SWAP_AND_BRIDGE",
