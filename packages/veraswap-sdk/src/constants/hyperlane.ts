@@ -1,4 +1,4 @@
-import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Mailbox } from "../artifacts/Mailbox.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
@@ -6,9 +6,11 @@ import { NoopIsm } from "../artifacts/NoopIsm.js";
 import { opChainA, opChainB, opChainL1 } from "./chains.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
+import { HypERC20 } from "../artifacts/HypERC20.js";
+import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 
-export function getHyperlaneContracts({ chainId }: { chainId: number }) {
-    const mailbox = getDeployDeterministicAddress({
+export function getMailboxAddress({ chainId }: { chainId: number }) {
+    return getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             bytecode: Mailbox.bytecode,
             abi: Mailbox.abi,
@@ -16,6 +18,10 @@ export function getHyperlaneContracts({ chainId }: { chainId: number }) {
         }),
         salt: zeroHash,
     });
+}
+
+export function getHyperlaneContracts({ chainId }: { chainId: number }) {
+    const mailbox = getMailboxAddress({ chainId });
 
     const noopISM = getDeployDeterministicAddress({
         bytecode: NoopIsm.bytecode,
@@ -90,3 +96,49 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
         }),
     },
 };
+
+/*** Hyperlane Tokens ***/
+
+/***
+ * Get HypERC20 Address as deployed by HypERC20Utils.sol
+ */
+export function getHypERC20Address({
+    decimals,
+    mailbox,
+    totalSupply,
+    name,
+    symbol,
+    msgSender,
+}: {
+    decimals: number;
+    mailbox: Address;
+    totalSupply: bigint;
+    name: string;
+    symbol: string;
+    msgSender: Address;
+}) {
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20.bytecode,
+            abi: HypERC20.abi,
+            args: [decimals, mailbox],
+        }),
+        salt: keccak256(
+            encodeAbiParameters(
+                [{ type: "uint256" }, { type: "string" }, { type: "string" }, { type: "address" }],
+                [totalSupply, name, symbol, msgSender],
+            ),
+        ),
+    });
+}
+
+export function getHypERC20CollateralAddress({ erc20, mailbox }: { erc20: Address; mailbox: Address }) {
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: HypERC20Collateral.bytecode,
+            abi: HypERC20Collateral.abi,
+            args: [erc20, mailbox],
+        }),
+        salt: zeroHash,
+    });
+}

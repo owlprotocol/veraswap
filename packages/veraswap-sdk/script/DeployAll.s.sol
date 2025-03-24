@@ -75,9 +75,9 @@ contract DeployAll is Script, Test {
         vm.startBroadcast();
 
         (address mailboxRemote, , , ) = deployCoreContracts();
-        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token A", "sA");
+        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token A", "A");
         console2.log("hypERC20TokenA:", hypERC20TokenA);
-        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token B", "sB");
+        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token B", "B");
         console2.log("hypERC20TokenB:", hypERC20TokenB);
 
         vm.stopBroadcast();
