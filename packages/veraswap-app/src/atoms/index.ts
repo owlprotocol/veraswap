@@ -463,31 +463,38 @@ export const updateTransactionStepAtom = atom(
     },
 );
 
-export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swap" | "SwapAndBridge") => {
-    const steps: TransactionStep[] = [
-        {
-            id: "swap",
-            title: "🤝 Swap",
-            description: "Trading with your local Walmart 💵💵💵💵💵💵",
-            status: "pending",
-        },
-    ];
+export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: SwapType) => {
+    const swapStep = {
+        id: "swap" as const,
+        title: "🤝 Swap",
+        description: "Trading with your local Walmart 💵💵💵💵💵💵",
+        status: "pending" as const,
+    };
 
-    if (swapType === "SwapAndBridge") {
-        steps.push(
-            {
-                id: "bridge",
-                title: "🚀 Bridge",
-                description: "Your token is traveling...",
-                status: "pending",
-            },
-            {
-                id: "transfer",
-                title: "🕊️ Transfer Token",
-                description: "We're freeing your token. Don't be impatient!",
-                status: "pending",
-            },
-        );
+    const bridgeStep = {
+        id: "bridge" as const,
+        title: "🚀 Bridge",
+        description: "Your token is traveling...",
+        status: "pending" as const,
+    };
+
+    const transferStep = {
+        id: "transfer" as const,
+        title: "🕊️ Transfer Token",
+        description: "We're freeing your token. Don't be impatient!",
+        status: "pending" as const,
+    };
+
+    let steps: TransactionStep[] = [];
+
+    if (swapType === SwapType.Swap) {
+        steps = [swapStep];
+    } else if (swapType === SwapType.SwapAndBridge) {
+        steps = [swapStep, bridgeStep, transferStep];
+    } else if (swapType === SwapType.Bridge) {
+        steps = [bridgeStep, transferStep];
+    } else if (swapType === SwapType.BridgeAndSwap) {
+        steps = [bridgeStep, transferStep, swapStep];
     }
 
     set(transactionStepsAtom, steps);

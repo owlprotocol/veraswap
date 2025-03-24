@@ -217,7 +217,7 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
+            initializeTransactionSteps(swapType!);
 
             let transaction: { to: Address; data: Hex; value: bigint };
 
@@ -245,6 +245,13 @@ function Index() {
                     amountIn: tokenInAmount!,
                     amountOutMinimum,
                 });
+            } else if (swapType === SwapType.Bridge) {
+                console.log("Bridge");
+                transaction = {
+                    to: zeroAddress,
+                    data: zeroAddress,
+                    value: BigInt(0),
+                };
             } else if (swapType === SwapType.SwapAndBridge) {
                 if (networkType === "superchain") {
                     transaction = getSwapAndSuperchainBridgeTransaction({
