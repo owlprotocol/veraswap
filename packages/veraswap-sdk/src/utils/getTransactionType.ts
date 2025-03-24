@@ -53,6 +53,9 @@ export type TransactionResult =
     | TransactionBridgeAndSwap
     | { type: "UNKNOWN" };
 
+const isHyperlaneStandard = (standard?: string) =>
+    standard === "EvmHypCollateral" || standard === "EvmHypSynthetic";
+
 function hasConnection(from: VeraSwapToken, to: VeraSwapToken): boolean {
     if (!from.connections) return false;
     return from.connections.some(
@@ -71,6 +74,7 @@ export function getTransactionType({
 }): TransactionResult {
     const sameChain = tokenIn.chainId === tokenOut.chainId;
 
+    // We assume that if the chain is the same, there is some liquidty and it's a swap. TODO: improve
     if (sameChain) {
         return {
             type: "SWAP",
@@ -80,7 +84,9 @@ export function getTransactionType({
         };
     }
 
-    if (hasConnection(tokenIn, tokenOut)) {
+    if (isHyperlaneStandard(tokenIn.standard) &&
+        isHyperlaneStandard(tokenOut.standard) &&
+        hasConnection(tokenIn, tokenOut)) {
         return {
             type: "BRIDGE",
             fromChainId: tokenIn.chainId,
@@ -90,41 +96,48 @@ export function getTransactionType({
         };
     }
 
-    const tokenInConnection = tokenIn.connections?.find(c => c.chainId === tokenOut.chainId);
-    if (tokenInConnection) {
-        return {
-            type: "BRIDGE_AND_SWAP",
-            bridge: {
-                fromChainId: tokenIn.chainId,
-                toChainId: tokenOut.chainId,
-                fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-                toToken: tokenInConnection.address,
-            },
-            swap: {
-                chainId: tokenOut.chainId,
-                fromToken: tokenInConnection.address,
-                toToken: tokenOut.collateralAddress ?? tokenOut.address,
-            },
-        };
+    if (isHyperlaneStandard(tokenIn.standard)) {
+        const tokenInConnection = tokenIn.connections?.find(
+            (c) => c.chainId === tokenOut.chainId
+        );
+        if (tokenInConnection) {
+            return {
+                type: "BRIDGE_AND_SWAP",
+                bridge: {
+                    fromChainId: tokenIn.chainId,
+                    toChainId: tokenOut.chainId,
+                    fromToken: tokenIn.collateralAddress ?? tokenIn.address,
+                    toToken: tokenInConnection.address,
+                },
+                swap: {
+                    chainId: tokenOut.chainId,
+                    fromToken: tokenInConnection.address,
+                    toToken: tokenOut.collateralAddress ?? tokenOut.address,
+                },
+            };
+        }
     }
 
-
-    const tokenOutConnection = tokenOut.connections?.find(c => c.chainId === tokenIn.chainId);
-    if (tokenOutConnection) {
-        return {
-            type: "SWAP_AND_BRIDGE",
-            swap: {
-                chainId: tokenIn.chainId,
-                fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-                toToken: tokenOutConnection.address,
-            },
-            bridge: {
-                fromChainId: tokenIn.chainId,
-                toChainId: tokenOut.chainId,
-                fromToken: tokenOutConnection.address,
-                toToken: tokenOut.collateralAddress ?? tokenOut.address,
-            },
-        };
+    if (isHyperlaneStandard(tokenOut.standard)) {
+        const tokenOutConnection = tokenOut.connections?.find(
+            (c) => c.chainId === tokenIn.chainId
+        );
+        if (tokenOutConnection) {
+            return {
+                type: "SWAP_AND_BRIDGE",
+                swap: {
+                    chainId: tokenIn.chainId,
+                    fromToken: tokenIn.collateralAddress ?? tokenIn.address,
+                    toToken: tokenOutConnection.address,
+                },
+                bridge: {
+                    fromChainId: tokenIn.chainId,
+                    toChainId: tokenOut.chainId,
+                    fromToken: tokenOutConnection.address,
+                    toToken: tokenOut.collateralAddress ?? tokenOut.address,
+                },
+            };
+        }
     }
 
     return { type: "UNKNOWN" };
