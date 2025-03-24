@@ -13,8 +13,8 @@
   "scripts": {
     "build": "turbo run build",
     "build:force": "turbo run build --force",
-    "dev": "turbo run dev",
-    "start": "turbo run start",
+    "dev": "mprocs",
+    "start": "mprocs",
     "clean": "turbo run clean",
     "clean:node_modules": "rimraf node_modules ./**/node_modules",
     "test": "turbo run test",

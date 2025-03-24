@@ -15,5 +15,6 @@ ignores: [
     "glob",
     "dotenv",
     "npm-run-all",
-    "husky"
+    "husky",
+    "mprocs"
 ]
