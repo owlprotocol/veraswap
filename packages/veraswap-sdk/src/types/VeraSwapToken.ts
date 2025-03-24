@@ -11,7 +11,7 @@ export interface VeraSwapToken {
     standard?: string; // TODO: replace with Hyperlane type
     connections?: {
         vm: string;
-        chain: string;
+        chainId: number;
         address: Address;
     }[];
     [key: string]: unknown;

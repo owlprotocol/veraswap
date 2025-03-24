@@ -21,7 +21,7 @@ const TOKEN_2: VeraSwapToken = {
     connections: [
         {
             vm: "ethereum",
-            chain: "form",
+            chainId: 478,
             address: "0x688da80Dfe2916c0a0Aa360323E52Aa5881AdB78"
         }
     ]
@@ -37,7 +37,7 @@ const TOKEN_3: VeraSwapToken = {
     connections: [
         {
             vm: "ethereum",
-            chain: "ethereum",
+            chainId: 1,
             address: "0xEa35E107fB64Ff8C3c8c37DB2d23A7179f31D8EC"
         }
     ]
@@ -82,17 +82,8 @@ const scenarios: {
     ];
 
 async function main() {
-    const res = await fetch(
-        "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/bridged-tokens.json"
-    );
-
-    if (!res.ok) throw new Error(`Failed to fetch tokens: ${res.status}`);
-    const allTokens: VeraSwapToken[] = await res.json();
-
-
-
     for (const { tokenIn, tokenOut, label } of scenarios) {
-        const result = getTransactionType({ allTokens, tokenIn, tokenOut });
+        const result = getTransactionType({ tokenIn, tokenOut });
         console.log(`🔹 ${label}`);
         console.dir(result, { depth: null });
         console.log();
