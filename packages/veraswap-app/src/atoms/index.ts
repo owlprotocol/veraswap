@@ -11,6 +11,7 @@ import {
     isSyntheticToken,
     getRemoteTokenAddressAndBridge,
     getChainNameAndMailbox,
+    VeraSwapToken,
 } from "@owlprotocol/veraswap-sdk";
 import { Hash, parseUnits, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
@@ -27,7 +28,6 @@ import { chains, config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
-import { TokenWithChainId } from "@/types.js";
 
 /**
  * - networks
@@ -167,9 +167,9 @@ export const tokensOutAtom = atom((get) => {
     );
 });
 // Selected tokenIn
-export const tokenInAtom = atom<TokenWithChainId | null>(null);
+export const tokenInAtom = atom<VeraSwapToken | null>(null);
 // Selected tokenOut
-export const tokenOutAtom = atom<TokenWithChainId | null>(null);
+export const tokenOutAtom = atom<VeraSwapToken | null>(null);
 
 export const remoteTokenInfoAtom = atom((get) => {
     const tokenOut = get(tokenOutAtom);
