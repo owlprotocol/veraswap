@@ -16,7 +16,9 @@ export function getMockERC20Address({ name, symbol, decimals }: { name: string; 
     });
 }
 
-export interface Token<T extends string = string> {
+export type TokenStandard = "ERC20" | "MockERC20" | "HypERC20" | "HypERC20Collateral" | "SuperchainERC20";
+
+export interface Token<T extends TokenStandard = TokenStandard> {
     standard: T;
     chainId: number;
     address: Address;
