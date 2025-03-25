@@ -1,8 +1,9 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { Address, encodeDeployData, zeroHash } from "viem";
+import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainL1 } from "./chains.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
+import { createPoolKey } from "../types/PoolKey.js";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -15,76 +16,73 @@ export function getMockERC20Address({ name, symbol, decimals }: { name: string; 
     });
 }
 
-export interface HypToken {
-    standard: "HypERC20" | "HypERC20Collateral";
+export interface Token<T extends string = string> {
+    standard: T;
     chainId: number;
-    symbol: string;
-    name: string;
     address: Address;
     decimals: number;
+    name: string;
+    symbol: string;
     logoURI?: string;
-    collateralAddress?: Address; // Actual token address
-    connections?: {
+}
+
+export interface HypERC20Token extends Token<"HypERC20"> {
+    connections: {
         vm: string;
         chainId: number;
         address: Address;
     }[];
-    [key: string]: unknown;
+}
+
+export interface HypERC20CollateralToken extends Token<"HypERC20Collateral"> {
+    collateralAddress: Address;
+    connections: {
+        vm: string;
+        chainId: number;
+        address: Address;
+    }[];
 }
 
 /**
  * Create a MockERC20, HypERC20Collateral, HypERC20Synthetic
  */
 export function createMockERC20WarpRoute({
-    name,
-    symbol,
-    decimals,
-    originChainId,
+    token,
     connectionChainIds,
     msgSender,
 }: {
-    name: string;
-    symbol: string;
-    decimals: number;
-    originChainId: number;
+    token: Token<"MockERC20">;
     connectionChainIds: number[];
     msgSender?: Address;
-}): HypToken[] {
-    const mockERC20 = getMockERC20Address({ name, symbol, decimals });
-
+}): [HypERC20CollateralToken, ...HypERC20Token[]] {
     const hypERC20CollateralAddress = getHypERC20CollateralAddress({
-        erc20: mockERC20,
-        mailbox: getMailboxAddress({ chainId: originChainId }),
+        erc20: token.address,
+        mailbox: getMailboxAddress({ chainId: token.chainId }),
     });
-    const hypERC20Collateral: HypToken = {
+    const hypERC20Collateral: HypERC20CollateralToken = {
+        ...token,
         standard: "HypERC20Collateral",
-        chainId: originChainId,
-        symbol,
-        name,
         address: hypERC20CollateralAddress,
-        decimals,
-        collateralAddress: mockERC20,
+        collateralAddress: token.address,
         connections: [],
     };
 
     const hypERC20s = connectionChainIds.map((chainId) => {
         const address = getHypERC20Address({
-            decimals,
+            decimals: token.decimals,
             mailbox: getMailboxAddress({ chainId }),
             totalSupply: 0n,
-            name,
-            symbol,
+            name: token.name,
+            symbol: token.symbol,
             msgSender: msgSender ?? "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         });
         return {
+            ...token,
             standard: "HypERC20",
             chainId,
-            symbol,
-            name,
             address,
-            decimals,
             connections: [],
-        } as HypToken;
+        } as HypERC20Token;
     });
 
     const tokens = [hypERC20Collateral, ...hypERC20s];
@@ -100,22 +98,47 @@ export function createMockERC20WarpRoute({
             });
     });
 
-    return tokens;
+    return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
 }
 
-export const LOCAL_TOKENS: HypToken[] = [
-    ...createMockERC20WarpRoute({
+const mockTokens: Token<"MockERC20">[] = [
+    {
+        standard: "MockERC20",
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Token A", symbol: "A", decimals: 18 }),
         name: "Token A",
         symbol: "A",
         decimals: 18,
-        originChainId: opChainL1.id,
-        connectionChainIds: [opChainA.id],
-    }),
-    ...createMockERC20WarpRoute({
+    },
+    {
+        standard: "MockERC20",
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Token B", symbol: "B", decimals: 18 }),
         name: "Token B",
         symbol: "B",
         decimals: 18,
-        originChainId: opChainL1.id,
+    },
+];
+
+export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
+    ...createMockERC20WarpRoute({
+        token: mockTokens[0],
+        connectionChainIds: [opChainA.id],
+    }),
+    ...createMockERC20WarpRoute({
+        token: mockTokens[1],
         connectionChainIds: [opChainA.id],
     }),
 ];
+
+export const LOCAL_POOLS = {
+    [opChainL1.id]: [
+        createPoolKey({
+            currency0: mockTokens[0].address,
+            currency1: mockTokens[1].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
+};
