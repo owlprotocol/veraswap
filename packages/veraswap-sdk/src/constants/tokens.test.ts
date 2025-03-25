@@ -18,7 +18,7 @@ describe("constants/tokens.test.ts", function () {
 
             if (token.standard === "HypERC20Collateral") {
                 await expect(
-                    client.getCode({ address: token.collateralAddress! }),
+                    client.getCode({ address: token.collateralAddress }),
                     `MockERC20(${token.name}, ${token.symbol}) at ${token.chainId},${token.collateralAddress}`,
                 ).resolves.toBeDefined();
             }
