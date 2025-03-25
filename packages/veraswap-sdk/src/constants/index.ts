@@ -1,4 +1,3 @@
-export * from "../chains/index.js";
 export * from "./hyperlane.js";
 export * from "./kernel.js";
 export * from "./tokens.js";

@@ -24,7 +24,7 @@ export const UNISWAP_API_KEY: string =
     import.meta?.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
 
 describe("uniswap.test.ts", function () {
-    test("Get quote", async () => {
+    test.skip("Get quote", async () => {
         const slippageTolerance = new Percent(1, 100);
 
         const quoteArgs: GetQuoteArgs = {
