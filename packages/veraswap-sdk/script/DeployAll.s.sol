@@ -120,6 +120,7 @@ contract DeployAll is Script, Test {
         returns (address mailbox, address router, address v4PositionManager, address v4StateView)
     {
         uint32 chainId = uint32(block.chainid);
+        console2.log("ChainId:", chainId);
 
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();

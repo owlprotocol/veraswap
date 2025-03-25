@@ -78,7 +78,7 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
         }),
     },
     [opChainA.id]: {
-        ...hyperlaneCoreContracts[opChainL1.id],
+        ...hyperlaneCoreContracts[opChainA.id],
         erc7579Router: getHypERC7570RouterAddress({
             mailbox: hyperlaneCoreContracts[opChainA.id].mailbox,
             ism: zeroAddress,
@@ -87,7 +87,7 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
         }),
     },
     [opChainB.id]: {
-        ...hyperlaneCoreContracts[opChainL1.id],
+        ...hyperlaneCoreContracts[opChainB.id],
         erc7579Router: getHypERC7570RouterAddress({
             mailbox: hyperlaneCoreContracts[opChainB.id].mailbox,
             ism: zeroAddress,
