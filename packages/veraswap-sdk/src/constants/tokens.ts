@@ -103,7 +103,7 @@ export function createMockERC20WarpRoute({
     return tokens;
 }
 
-export const tokens: HypToken[] = [
+export const LOCAL_TOKENS: HypToken[] = [
     ...createMockERC20WarpRoute({
         name: "Token A",
         symbol: "A",

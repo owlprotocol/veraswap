@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { tokens } from "./tokens.js";
+import { LOCAL_TOKENS } from "./tokens.js";
 import { opChainL1Client, opChainAClient, opChainBClient } from "./chains.js";
 
 describe("constants/tokens.test.ts", function () {
@@ -9,7 +9,7 @@ describe("constants/tokens.test.ts", function () {
         [opChainBClient.chain.id]: opChainBClient,
     };
     test("tokens exist", async () => {
-        for (const token of tokens) {
+        for (const token of LOCAL_TOKENS) {
             const client = clients[token.chainId as 900 | 901 | 902];
             await expect(
                 client.getCode({ address: token.address }),
