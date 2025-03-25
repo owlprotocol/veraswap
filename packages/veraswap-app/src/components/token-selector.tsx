@@ -6,6 +6,7 @@ import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Token } from "@owlprotocol/veraswap-sdk";
 import { useSearch } from "@tanstack/react-router";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -91,8 +92,27 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
         setExpandedSymbol((prev) => (prev === symbol ? null : symbol));
     };
 
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    const rowVirtualizer = useVirtualizer({
+        count: filteredTokens.length,
+        getScrollElement: () => scrollContainerRef.current,
+        estimateSize: () => 72,
+        overscan: 5,
+    });
+
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+            open={isOpen}
+            onOpenChange={(open) => {
+                requestAnimationFrame(() => {
+                    rowVirtualizer.scrollToIndex(0);
+                    rowVirtualizer.measure();
+                });
+                setIsOpen(open);
+                if (!open) setExpandedSymbol(null);
+            }}
+        >
             <DialogTrigger asChild>
                 <Button
                     variant="outline"
@@ -150,29 +170,61 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                 <PopularTokens
                     popularTokens={popularTokens}
                     uniqueTokens={uniqueTokens}
-                    onExpand={(symbol) => toggleSymbolExpansion(symbol)}
+                    onExpand={(symbol) => {
+                        const index = filteredTokens.findIndex(([s]) => s === symbol);
+                        if (index !== -1) {
+                            setExpandedSymbol(symbol);
+                            requestAnimationFrame(() => {
+                                rowVirtualizer.scrollToIndex(index, { align: "start" });
+                            });
+                        }
+                    }}
                 />
 
-                <div className="max-h-[350px] overflow-y-auto p-2">
-                    <div className="divide-y">
-                        {filteredTokens.map(([symbol, tokenList]) => {
-                            const isExpanded = expandedSymbol === symbol;
-                            const isSelected = currentTokenSymbol === symbol;
+                <div ref={scrollContainerRef} className="max-h-[350px] overflow-y-auto p-2">
+                    {filteredTokens.length === 0 ? (
+                        <div className="flex h-full items-center justify-center p-8">
+                            <span className="text-muted-foreground">
+                                {searchQuery ? "No matching tokens found" : "No tokens available"}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="relative divide-y" style={{ height: rowVirtualizer.getTotalSize() }}>
+                            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                                const [symbol, tokenList] = filteredTokens[virtualItem.index];
+                                const isExpanded = expandedSymbol === symbol;
+                                const isSelected = currentTokenSymbol === symbol;
 
-                            return (
-                                <TokenGroup
-                                    key={symbol}
-                                    tokenList={tokenList}
-                                    isExpanded={isExpanded}
-                                    isSelected={isSelected}
-                                    symbol={symbol}
-                                    chains={chains}
-                                    onToggle={() => toggleSymbolExpansion(symbol)}
-                                    onSelect={handleTokenSelect}
-                                />
-                            );
-                        })}
-                    </div>
+                                return (
+                                    <div
+                                        key={virtualItem.key}
+                                        className="absolute top-0 left-0 w-full"
+                                        style={{
+                                            transform: `translateY(${virtualItem.start}px)`,
+                                        }}
+                                        data-index={virtualItem.index}
+                                        ref={(el) => {
+                                            if (el) {
+                                                rowVirtualizer.measureElement(el);
+                                            }
+                                        }}
+                                    >
+                                        <TokenGroup
+                                            tokenList={tokenList}
+                                            isExpanded={isExpanded}
+                                            isSelected={isSelected}
+                                            symbol={symbol}
+                                            chains={chains}
+                                            onToggle={() => {
+                                                toggleSymbolExpansion(symbol);
+                                            }}
+                                            onSelect={handleTokenSelect}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
@@ -278,7 +330,6 @@ const TokenGroup = ({
 
                 <div className="flex items-center gap-1">
                     <div className="text-right">
-                        <div className="font-medium">$0.00</div>
                         <div className="text-sm text-muted-foreground">
                             {totalBalance.toFixed(4)} {symbol}
                         </div>
