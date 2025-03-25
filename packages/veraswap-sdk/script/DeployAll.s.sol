@@ -75,9 +75,9 @@ contract DeployAll is Script, Test {
         vm.startBroadcast();
 
         (address mailboxRemote, , , ) = deployCoreContracts();
-        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token A", "sA");
+        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token A", "A");
         console2.log("hypERC20TokenA:", hypERC20TokenA);
-        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Synth Token B", "sB");
+        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token B", "B");
         console2.log("hypERC20TokenB:", hypERC20TokenB);
 
         vm.stopBroadcast();
@@ -120,6 +120,7 @@ contract DeployAll is Script, Test {
         returns (address mailbox, address router, address v4PositionManager, address v4StateView)
     {
         uint32 chainId = uint32(block.chainid);
+        console2.log("ChainId:", chainId);
 
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();

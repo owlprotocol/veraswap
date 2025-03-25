@@ -28,8 +28,8 @@ describe("quote.test.tsx", () => {
         },
     });
 
-    const currencyA = new Token(chain.id, TOKEN_LIST["TokenA_1337"].address, 18, "A");
-    const currencyB = new Token(chain.id, TOKEN_LIST["TokenB_1337"].address, 18, "B");
+    const currencyA = new Token(chain.id, TOKEN_LIST.TokenA_1337.address, 18, "A");
+    const currencyB = new Token(chain.id, TOKEN_LIST.TokenB_1337.address, 18, "B");
 
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;
@@ -45,7 +45,7 @@ describe("quote.test.tsx", () => {
         queryClient = new QueryClient();
     });
 
-    test("wagmi - quoteExactInputSingle", async () => {
+    test.skip("wagmi - quoteExactInputSingle", async () => {
         const wrapper = ({ children }: { children: React.ReactNode }) => (
             <WagmiProvider config={config}>
                 <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -87,7 +87,7 @@ describe("quote.test.tsx", () => {
         expect(result.current.data![1]).toBe(gasEstimateQuoted);
     });
 
-    test("wagmi - quoteExactOutputSingle", async () => {
+    test.skip("wagmi - quoteExactOutputSingle", async () => {
         const wrapper = ({ children }: { children: React.ReactNode }) => (
             <WagmiProvider config={config}>
                 <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

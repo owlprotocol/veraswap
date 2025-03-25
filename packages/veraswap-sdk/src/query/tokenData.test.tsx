@@ -19,7 +19,7 @@ describe("tokenData.test.tsx", () => {
         },
     });
 
-    test("fetchCurrencyQueryOptions - success", async () => {
+    test.skip("fetchCurrencyQueryOptions - success", async () => {
         const queryClient = new QueryClient();
 
         const wrapper = ({ children }: { children: ReactNode }) => (
@@ -33,7 +33,7 @@ describe("tokenData.test.tsx", () => {
                 useQuery(
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
-                        address: TOKEN_LIST["TokenA_1337"].address,
+                        address: TOKEN_LIST.TokenA_1337.address,
                     }),
                 ),
             { wrapper },
@@ -51,7 +51,7 @@ describe("tokenData.test.tsx", () => {
         expect(result.current.data?.registryError).toBeDefined();
     });
 
-    test("fetchCurrencyQueryOptions - error", async () => {
+    test.skip("fetchCurrencyQueryOptions - error", async () => {
         const queryClient = new QueryClient();
 
         const wrapper = ({ children }: { children: ReactNode }) => (

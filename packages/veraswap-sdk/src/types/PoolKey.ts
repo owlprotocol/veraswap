@@ -23,3 +23,15 @@ export const PoolKeyAbi = {
 export function getPoolId(poolKey: PoolKey) {
     return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 }
+
+/**
+ * Create pool key with validation
+ * @param poolKey
+ */
+export function createPoolKey(poolKey: PoolKey) {
+    return {
+        ...poolKey,
+        currency0: poolKey.currency0 < poolKey.currency1 ? poolKey.currency0 : poolKey.currency1,
+        currency1: poolKey.currency0 < poolKey.currency1 ? poolKey.currency1 : poolKey.currency0,
+    };
+}

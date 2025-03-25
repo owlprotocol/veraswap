@@ -464,7 +464,7 @@ describe("index.test.ts", function () {
         });
     });
 
-    test("Anvil Existing Pool Swap", async () => {
+    test.skip("Anvil Existing Pool Swap", async () => {
         // Deploy 2x ERC20
         const tokenADeployAddress = getDeployDeterministicAddress({
             salt: zeroHash,

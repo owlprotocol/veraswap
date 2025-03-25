@@ -81,7 +81,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     return {
         permit2,
         unsupported,
-        poolManager: v4PoolManager,
+        v4PoolManager,
         v4PositionManager,
         v4StateView,
         v4Quoter,
