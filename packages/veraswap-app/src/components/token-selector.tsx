@@ -4,11 +4,11 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { VeraSwapToken } from "@owlprotocol/veraswap-sdk";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { TokenWithChainId } from "@/types.js";
 import { chainsAtom, tokensInAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
@@ -42,7 +42,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
     const popularTokens = ["AAVE", "USDT", "USDC"];
 
-    const handleTokenSelect = (token: TokenWithChainId) => {
+    const handleTokenSelect = (token: VeraSwapToken) => {
         if (selectingTokenIn) {
             setTokenIn(token);
         } else {
@@ -146,7 +146,7 @@ const PopularTokens = ({
     onExpand,
 }: {
     popularTokens: string[];
-    uniqueTokens: { [symbol: string]: TokenWithChainId[] };
+    uniqueTokens: { [symbol: string]: VeraSwapToken[] };
     onExpand: (symbol: string) => void;
 }) => {
     return (
@@ -188,13 +188,13 @@ const TokenGroup = ({
     onToggle,
     onSelect,
 }: {
-    tokenList: TokenWithChainId[];
+    tokenList: VeraSwapToken[];
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
     chains: Chain[];
     onToggle: () => void;
-    onSelect: (token: TokenWithChainId) => void;
+    onSelect: (token: VeraSwapToken) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
 
