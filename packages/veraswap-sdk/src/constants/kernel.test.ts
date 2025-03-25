@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
-import { opChainL1Client, opChainAClient } from "./chains.js";
+import { opChainL1Client, opChainAClient } from "../chains/index.js";
 
 describe("constants/kernel.test.ts", function () {
     const clients = {

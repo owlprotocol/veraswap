@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { LOCAL_UNISWAP_CONTRACTS } from "./uniswap.js";
-import { opChainL1Client, opChainAClient } from "./chains.js";
+import { opChainL1Client, opChainAClient } from "../chains/index.js";
 
 describe("constants/uniswap.test.ts", function () {
     const clients = {

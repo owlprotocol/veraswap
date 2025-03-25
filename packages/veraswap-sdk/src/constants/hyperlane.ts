@@ -3,7 +3,7 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Mailbox } from "../artifacts/Mailbox.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
 import { NoopIsm } from "../artifacts/NoopIsm.js";
-import { opChainA, opChainB, opChainL1 } from "./chains.js";
+import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";

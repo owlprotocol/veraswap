@@ -42,6 +42,16 @@
       "types": "./_types/artifacts/*.d.ts",
       "require": "./_cjs/lib/artifacts/*.js",
       "import": "./_esm/lib/artifacts/*.js"
+    },
+    "./chains": {
+      "types": "./_types/chains/index.d.ts",
+      "require": "./_cjs/lib/chains/index.js",
+      "import": "./_esm/lib/chains/index.js"
+    },
+    "./constants": {
+      "types": "./_types/constants/index.d.ts",
+      "require": "./_cjs/lib/constants/index.js",
+      "import": "./_esm/lib/constants/index.js"
     }
   },
   "scripts": {

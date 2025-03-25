@@ -19,7 +19,7 @@ import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
-import { opChainL1Client } from "../constants/chains.js";
+import { opChainL1Client } from "../chains/index.js";
 import { getKernelInitData } from "./getKernelInitData.js";
 import { encodeExecuteSignature, installOwnableExecutor } from "./OwnableExecutor.js";
 import { getKernelAddress } from "./getKernelAddress.js";

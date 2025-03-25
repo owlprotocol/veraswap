@@ -1,7 +1,7 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { MockERC20 } from "../artifacts/MockERC20.js";
-import { opChainA, opChainL1 } from "./chains.js";
+import { opChainA, opChainL1 } from "../chains/index.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
 

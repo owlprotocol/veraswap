@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { LOCAL_TOKENS } from "./tokens.js";
-import { opChainL1Client, opChainAClient, opChainBClient } from "./chains.js";
+import { opChainL1Client, opChainAClient, opChainBClient } from "../chains/index.js";
 
 describe("constants/tokens.test.ts", function () {
     const clients = {
