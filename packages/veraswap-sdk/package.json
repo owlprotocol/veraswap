@@ -57,7 +57,7 @@
   "scripts": {
     "build": "pnpm build:forge && pnpm build:artifacts && npm-run-all -p tsc esbuild",
     "build:artifacts": "tsx src/codegen/runHardhatArtifactsExport.ts && eslint --fix 'src/artifacts/*.ts'",
-    "build:forge": "if [ -x forge ]; then forge build; else echo 'forge not installed, skipping'; fi",
+    "build:forge": "forge build || echo 'forge step skipped'",
     "build:watch": "npm-run-all -p tsc:watch esbuild:watch",
     "clean": "rimraf _esm _cjs _types",
     "depcheck": "depcheck",
