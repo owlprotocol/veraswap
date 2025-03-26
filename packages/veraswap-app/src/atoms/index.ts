@@ -114,10 +114,11 @@ export const tokensAtom = atom((get) => {
 
     const combinedTokens = Array.from(
         new Map(
-            [...localTokens, ...fetchedTokens].map((token) =>
+            [...localTokens, ...fetchedTokens].map((token) => {
+                const address = token.collateralAddress ?? token.address;
                 // ensures no duplicate tokens on same chain
-                [`${token.chainId}-${token.address.toLowerCase()}`, token],
-            ),
+                return [`${token.chainId}-${address.toLowerCase()}`, token];
+            }),
         ).values(),
     );
 
