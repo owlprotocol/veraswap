@@ -1,6 +1,7 @@
 import { useAtom } from "jotai";
 import { Button } from "./ui/button.js";
 import { ChainsType, chainsTypeAtom } from "@/atoms/index.js";
+import { Route } from "@/routes/index.js";
 
 const buttonStyles: Record<string, string> = {
     local: `
@@ -37,6 +38,22 @@ const networkTypes =
 
 export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(chainsTypeAtom);
+    const navigate = Route.useNavigate();
+
+    const handleNetworkChange = (newType: "mainnet" | "testnet" | "local") => {
+        setNetworkType(newType);
+
+        navigate({
+            search: {
+                type: newType,
+                tokenIn: undefined,
+                chainIdIn: undefined,
+                tokenOut: undefined,
+                chainIdOut: undefined,
+            },
+            replace: true,
+        });
+    };
 
     return (
         <div className="flex justify-center mb-4">
@@ -54,7 +71,7 @@ export const MainnetTestnetButtons = () => {
                         className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${
                             networkType === type ? buttonStyles[type] : buttonStyles.default
                         }`}
-                        onClick={() => setNetworkType(type)}
+                        onClick={() => handleNetworkChange(type)}
                     >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                     </Button>
