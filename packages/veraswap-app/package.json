@@ -76,6 +76,7 @@
     "cmdk": "1.0.0",
     "jotai": "^2.12.1",
     "jotai-tanstack-query": "^0.9.0",
+    "jsbi": "3.2.5",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.319.0",
     "next-themes": "^0.2.1",
