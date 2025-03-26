@@ -15,9 +15,6 @@ _types
 /broadcast/*/1338/
 /broadcast/**/dry-run/
 /broadcast/multi/**
-src/artifacts
-
-
 
 # dependencies
 node_modules
