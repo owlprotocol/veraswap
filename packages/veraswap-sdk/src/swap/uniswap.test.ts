@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, expect, test } from "vitest";
 import { UniswapTrade, RoutePlanner as UniswapRoutePlanner } from "@uniswap/universal-router-sdk";
 import { Percent } from "@uniswap/sdk-core";
 import { parseUnits, zeroAddress } from "viem";
 import { polygon } from "viem/chains";
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
-import { SUPERCHAIN_SWEEP_ADDRESS } from "../constants.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
 import {
     RouterPreference,
     URAQuoteType,
@@ -18,13 +17,10 @@ import { CommandType, WBTC_POLYGON, WETH_POLYGON } from "../uniswap/index.js";
 import { getUniswapRoutingQuote } from "../uniswap/getUniswapRoutingQuote.js";
 import { RoutePlanner } from "../uniswap/index.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-export const UNISWAP_API_KEY: string =
-    // @ts-expect-error env is an attribute
-    import.meta?.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
+export const UNISWAP_API_KEY: string = process.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
 
 describe("uniswap.test.ts", function () {
-    test.skip("Get quote", async () => {
+    test("Get quote", async () => {
         const slippageTolerance = new Percent(1, 100);
 
         const quoteArgs: GetQuoteArgs = {
@@ -45,8 +41,7 @@ describe("uniswap.test.ts", function () {
         const trade = (data as TradeResult).trade as ClassicTrade;
         expect(trade).toBeDefined();
 
-        // TODO: change to hyperlane sweep address once merged
-        const recipient = SUPERCHAIN_SWEEP_ADDRESS;
+        const recipient = HYPERLANE_ROUTER_SWEEP_ADDRESS;
 
         // slippageTolerance required if specifying recipient
         const uniswapTrade = new UniswapTrade(trade, { recipient, slippageTolerance });
