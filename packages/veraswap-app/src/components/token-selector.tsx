@@ -77,9 +77,13 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                                 className="h-7 w-7 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
                                 onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                             />
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                {currentToken.symbol}
-                            </span>
+                            <div>
+                                <div className="font-semibold">{currentToken.symbol}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    {chains.find((c) => c.id === currentToken.chainId)?.name ??
+                                        `Chain ${currentToken.chainId}`}
+                                </div>
+                            </div>
                         </>
                     ) : (
                         <span className="text-gray-500 dark:text-gray-400">Select Token</span>
