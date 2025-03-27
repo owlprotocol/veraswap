@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../schema.json
 chainId: 900
-displayName: Localhost Main
+displayName: OP Chain L1
 domainId: 900
 isTestnet: true
-name: local
+name: opchainl1
 nativeToken:
-    decimals: 18
-    name: Ether
-    symbol: ETH
+  decimals: 18
+  name: Ether
+  symbol: ETH
 protocol: ethereum
 rpcUrls:
-    - http: http://localhost:8547
+  - http: http://127.0.0.1:8547
 technicalStack: other

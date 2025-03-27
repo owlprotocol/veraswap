@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=../schema.json
-chainId: 901
-displayName: OP Chain A
-domainId: 901
+chainId: 902
+displayName: OP Chain B
+domainId: 902
 isTestnet: true
-name: opchaina
+name: opchainb
 nativeToken:
   decimals: 18
   name: Ether
   symbol: ETH
 protocol: ethereum
 rpcUrls:
-  - http: http://127.0.0.1:9545
+  - http: http://127.0.0.1:9546
 technicalStack: other
