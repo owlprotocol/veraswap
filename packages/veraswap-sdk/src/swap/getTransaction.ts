@@ -1,49 +1,55 @@
 import { Address, Hex } from "viem";
 import {
-    TransactionSwap,
-    TransactionBridge,
-    TransactionSwapAndBridge,
-    TransactionBridgeAndSwap,
+    TransactionTypeSwap,
+    TransactionTypeBridge,
+    TransactionTypeSwapBridge,
+    TransactionTypeBridgeSwap,
 } from "../utils/getTransactionType.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { UNISWAP_CONTRACTS } from "../constants.js";
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
-import { getHyperlaneBridgeTransaction } from "./getHyperlaneBridgeData.js";
+import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
-export interface TransactionSwapExtras {
+export interface TransactionSwapOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
-    zeroForOne: boolean;
 }
 
-export interface TransactionBridgeExtras {
+export interface TransactionBridgeOptions {
     amountIn: bigint;
     walletAddress: Address;
+    bridgePayment: bigint;
 }
 
-export interface TransactionSwapAndBridgeExtras {
+export interface TransactionSwapBridgeOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
     bridgePayment: bigint;
-    zeroForOne: boolean;
     walletAddress: Address;
+    uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface TransactionBridgeAndSwapExtras {}
+export interface TransactionBridgeSwapOptions { }
 
 export type TransactionParams =
-    | (TransactionSwap & TransactionSwapExtras)
-    | (TransactionBridge & TransactionBridgeExtras)
-    | (TransactionSwapAndBridge & TransactionSwapAndBridgeExtras)
-    | (TransactionBridgeAndSwap & TransactionBridgeAndSwapExtras);
+    | (TransactionTypeSwap & TransactionSwapOptions)
+    | (TransactionTypeBridge & TransactionBridgeOptions)
+    | (TransactionTypeSwapBridge & TransactionSwapBridgeOptions)
+    | (TransactionTypeBridgeSwap & TransactionBridgeSwapOptions);
 
-export const getTransaction = (params: TransactionParams): { to: Address; data: Hex; value: bigint } | null => {
+export function getTransaction(
+    params: TransactionParams,
+    constants?: { uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }> },
+): { to: Address; data: Hex; value: bigint } | null {
+    const uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }> =
+        constants?.uniswapContracts ?? UNISWAP_CONTRACTS;
+
     switch (params.type) {
         case "SWAP": {
             const { tokenIn, poolKey, zeroForOne, amountIn, amountOutMinimum } = params;
             return getSwapExactInExecuteData({
-                universalRouter: UNISWAP_CONTRACTS[tokenIn.chainId].UNIVERSAL_ROUTER,
+                universalRouter: uniswapContracts[tokenIn.chainId].UNIVERSAL_ROUTER,
                 poolKey,
                 zeroForOne,
                 amountIn,
@@ -52,27 +58,25 @@ export const getTransaction = (params: TransactionParams): { to: Address; data: 
         }
 
         case "BRIDGE": {
-            const { tokenIn, tokenOut, amountIn, walletAddress } = params;
-            return getHyperlaneBridgeTransaction({
-                tokenIn,
-                tokenOut,
+            const { tokenIn, tokenOut, amountIn, walletAddress, bridgePayment } = params;
+            return getTransferRemoteCall({
+                address: tokenIn.address,
+                destination: tokenOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
+                bridgePayment,
             });
         }
 
         case "SWAP_BRIDGE": {
-            const { swap, bridge, bridgePayment, zeroForOne, amountIn, amountOutMinimum, walletAddress } = params;
-            const { tokenIn: swapTokenIn, poolKey } = swap;
+            const { swap, bridge, bridgePayment, amountIn, amountOutMinimum, walletAddress } = params;
+            const { tokenIn: swapTokenIn, poolKey, zeroForOne } = swap;
             const { tokenIn: bridgeTokenIn, tokenOut: bridgeTokenOut } = bridge;
 
-            const bridgeAddress =
-                bridgeTokenIn.standard === "HypERC20Collateral"
-                    ? bridgeTokenIn.collateralAddress
-                    : bridgeTokenIn.address;
+            const bridgeAddress = bridgeTokenIn.address;
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
-                universalRouter: UNISWAP_CONTRACTS[swapTokenIn.chainId].UNIVERSAL_ROUTER,
+                universalRouter: uniswapContracts[swapTokenIn.chainId].UNIVERSAL_ROUTER,
                 bridgeAddress,
                 // Default for local env
                 bridgePayment: bridgePayment ?? 1n,
@@ -93,4 +97,4 @@ export const getTransaction = (params: TransactionParams): { to: Address; data: 
         default:
             return null;
     }
-};
+}
