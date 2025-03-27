@@ -34,6 +34,7 @@ export type TransactionResult =
     | TransactionSwapAndBridge
     | TransactionBridgeAndSwap;
 
+// TODO: Add invariant checks for when tokens have to be on same / different chains
 /**
  * Take token pair and return list of token pairs on same chain using their `connections`
  * @param param0
@@ -104,7 +105,7 @@ export function getPoolKey2({
 }
 
 /**
- * Take a `tokenIn`/`tokenOut` and find which chain(s) they can be swapped on
+ * Take a `tokenIn`/`tokenOut` (assumed on different chains) and find which chain(s) they can be swapped on
  * @param params
  * @returns
  */
@@ -132,7 +133,10 @@ export function getSharedChainPools({
         const tokenIn = tokens[pair.chainId][pair.tokenIn];
         const tokenOut = tokens[pair.chainId][pair.tokenOut];
         // Search for poolKey
-        const poolKey = getPoolKey2({ poolKeys: poolKeys[tokenIn.chainId] ?? [], tokenIn, tokenOut });
+        const chainPoolKeys = poolKeys[tokenIn.chainId];
+        if (!chainPoolKeys) return;
+
+        const poolKey = getPoolKey2({ poolKeys: chainPoolKeys, tokenIn, tokenOut });
         // Add to options
         if (poolKey) {
             poolKeyOptions.push({ chainId: pair.chainId, tokenIn, tokenOut, poolKey });
@@ -188,6 +192,7 @@ export function getTransactionType({
 
     // Find crosschain pools
     const poolKeyOptions = getSharedChainPools({ tokens, poolKeys, tokenIn, tokenOut });
+    if (poolKeyOptions.length == 0) return null;
 
     // SWAP_BRIDGE: `pool.chainId == tokenIn.chainId`
     const poolKeyInChain = poolKeyOptions.find((option) => option.chainId === tokenIn.chainId);
