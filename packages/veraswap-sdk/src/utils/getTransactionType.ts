@@ -2,37 +2,38 @@ import { Address } from "viem";
 import { Token } from "../types/Token.js";
 import { PoolKey } from "../types/PoolKey.js";
 
-export interface TransactionSwap {
+export interface TransactionTypeSwap {
     type: "SWAP";
     chainId: number;
     tokenIn: Token;
     tokenOut: Token;
     poolKey: PoolKey;
+    zeroForOne: boolean;
 }
 
-export interface TransactionBridge {
+export interface TransactionTypeBridge {
     type: "BRIDGE";
     tokenIn: Token;
     tokenOut: Token;
 }
 
-export interface TransactionSwapAndBridge {
+export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
-    swap: TransactionSwap;
-    bridge: TransactionBridge;
+    swap: TransactionTypeSwap;
+    bridge: TransactionTypeBridge;
 }
 
-export interface TransactionBridgeAndSwap {
+export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
-    bridge: TransactionBridge;
-    swap: TransactionSwap;
+    bridge: TransactionTypeBridge;
+    swap: TransactionTypeSwap;
 }
 
-export type TransactionResult =
-    | TransactionSwap
-    | TransactionBridge
-    | TransactionSwapAndBridge
-    | TransactionBridgeAndSwap;
+export type TransactionType =
+    | TransactionTypeSwap
+    | TransactionTypeBridge
+    | TransactionTypeSwapBridge
+    | TransactionTypeBridgeSwap;
 
 // TODO: Add invariant checks for when tokens have to be on same / different chains
 /**
@@ -162,7 +163,7 @@ export function getTransactionType({
     poolKeys: Record<number, PoolKey[]>;
     tokenIn: Token;
     tokenOut: Token;
-}): TransactionResult | null {
+}): TransactionType | null {
     // same token!
     if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return null;
 
@@ -181,12 +182,16 @@ export function getTransactionType({
         //TODO: Check alternative sources of liquidity
         if (!poolKey) return null;
 
+        const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        const zeroForOne = poolKey.currency0 === tokenInAddress;
+
         return {
             type: "SWAP",
             chainId: tokenIn.chainId,
             poolKey,
             tokenIn: tokenIn,
             tokenOut: tokenOut,
+            zeroForOne,
         };
     }
 
@@ -197,6 +202,9 @@ export function getTransactionType({
     // SWAP_BRIDGE: `pool.chainId == tokenIn.chainId`
     const poolKeyInChain = poolKeyOptions.find((option) => option.chainId === tokenIn.chainId);
     if (poolKeyInChain) {
+        const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        const zeroForOne = poolKeyInChain.poolKey.currency0 === tokenInAddress;
+
         return {
             type: "SWAP_BRIDGE",
             swap: {
@@ -205,6 +213,7 @@ export function getTransactionType({
                 poolKey: poolKeyInChain.poolKey,
                 tokenIn,
                 tokenOut: poolKeyInChain.tokenOut,
+                zeroForOne,
             },
             bridge: {
                 type: "BRIDGE",
@@ -217,6 +226,10 @@ export function getTransactionType({
     // BRIDGE_SWAP: `pool.chainId == tokenOut.chainId`
     const poolKeyOutChain = poolKeyOptions.find((option) => option.chainId === tokenOut.chainId);
     if (poolKeyOutChain) {
+        const tokenOutAddress =
+            tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+        const zeroForOne = poolKeyOutChain.poolKey.currency1 === tokenOutAddress;
+
         return {
             type: "BRIDGE_SWAP",
             bridge: {
@@ -229,7 +242,8 @@ export function getTransactionType({
                 chainId: tokenOut.chainId,
                 poolKey: poolKeyOutChain.poolKey,
                 tokenIn: poolKeyOutChain.tokenIn,
-                tokenOut: poolKeyOutChain.tokenOut,
+                tokenOut: tokenOut,
+                zeroForOne,
             },
         };
     }
