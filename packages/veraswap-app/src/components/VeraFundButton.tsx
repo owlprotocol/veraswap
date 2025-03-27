@@ -1,7 +1,7 @@
 import { useAccount } from "wagmi";
 import { FundButton, getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
 import { useAtomValue } from "jotai";
-import { formatUnits, parseUnits } from "viem";
+import { parseUnits } from "viem";
 import { chainInAtom, tokenInAmountAtom } from "@/atoms/index.js";
 const projectId = import.meta.env.VITE_CDP_PROJECT_ID;
 console.log({ projectId });
@@ -29,7 +29,7 @@ export const VeraFundButton = () => {
             {address && (
                 <FundButton
                     fundingUrl={onrampBuyUrl}
-                    className="bg-purple-400 border-1 hover:bg-purple-900 h-[40px] 
+                    className="bg-purple-400 border-1 hover:bg-purple-900 h-[40px]
                            transform transition-all duration-200 hover:scale-105"
                     disabled={!chainIn}
                 />

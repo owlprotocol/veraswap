@@ -4,12 +4,12 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { Token } from "@owlprotocol/veraswap-sdk";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, tokensInAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
+import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
 
     const chains = useAtomValue(chainsAtom);
-    const allTokens = useAtomValue(tokensInAtom);
+    const allTokens = useAtomValue(tokensAtom);
     const uniqueTokens = useMemo(() => groupBy(allTokens, "symbol"), [allTokens]);
 
     const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
@@ -42,7 +42,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
     const popularTokens = ["AAVE", "USDT", "USDC"];
 
-    const handleTokenSelect = (token: VeraSwapToken) => {
+    const handleTokenSelect = (token: Token) => {
         if (selectingTokenIn) {
             setTokenIn(token);
         } else {
@@ -150,7 +150,7 @@ const PopularTokens = ({
     onExpand,
 }: {
     popularTokens: string[];
-    uniqueTokens: { [symbol: string]: VeraSwapToken[] };
+    uniqueTokens: { [symbol: string]: Token[] };
     onExpand: (symbol: string) => void;
 }) => {
     return (
@@ -192,13 +192,13 @@ const TokenGroup = ({
     onToggle,
     onSelect,
 }: {
-    tokenList: VeraSwapToken[];
+    tokenList: Token[];
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
     chains: Chain[];
     onToggle: () => void;
-    onSelect: (token: VeraSwapToken) => void;
+    onSelect: (token: Token) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
 

@@ -14,20 +14,16 @@ import {
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
     SUPERCHAIN_TOKEN_BRIDGE,
-    DIVVI_BASE_REGISTRY,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, parseUnits, stringToHex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
-import { base } from "viem/chains";
 import {
     hyperlaneGasPaymentAtom,
-    poolKeyInAtom,
     quoteInAtom,
-    remoteTokenInfoAtom,
     sendTransactionMutationAtom,
     swapInvertAtom,
     SwapStep,
@@ -38,7 +34,6 @@ import {
     tokenInBalanceQueryAtom,
     tokenOutAtom,
     tokenOutBalanceQueryAtom,
-    swapTypeAtom,
     transactionModalOpenAtom,
     transactionStepsAtom,
     currentTransactionStepIdAtom,
@@ -47,11 +42,9 @@ import {
     initializeTransactionStepsAtom,
     waitForReceiptQueryAtom,
     messageIdAtom,
-    networkTypeAtom,
     remoteTransactionHashAtom,
     hyperlaneMailboxChainOut,
-    chainInAtom,
-    chainOutAtom,
+    chainsTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -63,6 +56,7 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
 import { registerReferrals } from "@/abis/registerReferrals.js";
 import { TokenSelector } from "@/components/token-selector.js";
+import { chains } from "@/config.js";
 
 export const Route = createLazyFileRoute("/")({
     component: Index,
@@ -74,10 +68,11 @@ function Index() {
     const swapType = useAtomValue(swapTypeAtom);
     const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
 
-    const chainIn = useAtomValue(chainInAtom);
-    const chainOut = useAtomValue(chainOutAtom);
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);
+
+    const chainIn = chains.find((c) => c.id === tokenIn?.chainId);
+    const chainOut = chains.find((c) => c.id === tokenOut?.chainId);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
@@ -120,10 +115,12 @@ function Index() {
     const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
     if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
 
-    const networkType = useAtomValue(networkTypeAtom);
+    const networkType = useAtomValue(chainsTypeAtom);
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
 
+    /*
+    //DISABLE DIVVY
     const { data: isUserRegisteredArr } = useReadContract({
         abi: [isUserRegisteredAbi],
         chainId: chainIn?.id ?? 0,
@@ -132,7 +129,9 @@ function Index() {
         args: [walletAddress ?? zeroAddress, [stringToHex("beefy", { size: 32 })]],
         query: { enabled: chainIn?.id === base.id && !!walletAddress && swapType === SwapType.Swap },
     });
+    */
 
+    /*
     const { switchChain } = useSwitchChain();
     useEffect(() => {
         if (!chainIn) return;
@@ -154,34 +153,37 @@ function Index() {
 
         fetch(`https://veraswap-test-duster.vercel.app/api/${chainIn.id}/${walletAddress}`, { method: "POST" });
     }, [walletAddress, chainIn?.id, chainIn]);
+    */
 
+    /*
     useWatchContractEvent(
-        networkType === "superchain"
+        networkType === "interopDevnet"
             ? {
-                  abi: [RelayedMessage],
-                  eventName: "RelayedMessage",
-                  chainId: chainOut?.id ?? 0,
-                  address: SUPERCHAIN_TOKEN_BRIDGE ?? zeroAddress,
-                  args: { messageHash: messageId ?? "0x" },
-                  enabled: !!chainOut && !!messageId,
-                  strict: true,
-                  onLogs: (logs) => {
-                      setRemoteTransactionHash(logs[0].transactionHash);
-                  },
-              }
+                abi: [RelayedMessage],
+                eventName: "RelayedMessage",
+                chainId: tokenOut?.chainId ?? 0,
+                address: SUPERCHAIN_TOKEN_BRIDGE ?? zeroAddress,
+                args: { messageHash: messageId ?? "0x" },
+                enabled: !!tokenOut && !!messageId,
+                strict: true,
+                onLogs: (logs) => {
+                    setRemoteTransactionHash(logs[0].transactionHash);
+                },
+            }
             : {
-                  abi: [ProcessId],
-                  eventName: "ProcessId",
-                  chainId: chainOut?.id ?? 0,
-                  address: hyperlaneMailboxAddress ?? zeroAddress,
-                  args: { messageId: messageId ?? "0x" },
-                  enabled: !!chainOut && !!messageId && !!hyperlaneMailboxAddress,
-                  strict: true,
-                  onLogs: (logs) => {
-                      setRemoteTransactionHash(logs[0].transactionHash);
-                  },
-              },
+                abi: [ProcessId],
+                eventName: "ProcessId",
+                chainId: tokenOut?.chainId ?? 0,
+                address: hyperlaneMailboxAddress ?? zeroAddress,
+                args: { messageId: messageId ?? "0x" },
+                enabled: !!tokenOut && !!messageId && !!hyperlaneMailboxAddress,
+                strict: true,
+                onLogs: (logs) => {
+                    setRemoteTransactionHash(logs[0].transactionHash);
+                },
+            },
     );
+    */
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
@@ -208,8 +210,7 @@ function Index() {
                     args: [
                         tokenIn!.address,
                         UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                        // TODO: better check on main
-                        chainIn?.id === base.id ? parseUnits("10", 6) : MAX_UINT_160,
+                        MAX_UINT_160,
                         MAX_UINT_48,
                     ],
                 }),
@@ -224,6 +225,7 @@ function Index() {
             const amountOutMinimum = quoterData![0];
             const zeroForOne = tokenIn!.address === poolKey!.currency0;
             if (swapType === SwapType.Swap) {
+                /*
                 const isUserRegistered = isUserRegisteredArr?.[0] as boolean | undefined;
                 if (isUserRegistered === false && chainIn?.id === base.id) {
                     writeContractRegisterUser({
@@ -234,6 +236,7 @@ function Index() {
                         args: [stringToHex("investor", { size: 32 }), [stringToHex("beefy", { size: 32 })]],
                     });
                 }
+                */
 
                 if (!tokenOut) {
                     throw new Error("Token out not selected for swap");
@@ -246,7 +249,9 @@ function Index() {
                     amountOutMinimum,
                 });
             } else if (swapType === SwapType.SwapAndBridge) {
-                if (networkType === "superchain") {
+                if (false) {
+                    // Disable superchain
+                    /*
                     transaction = getSwapAndSuperchainBridgeTransaction({
                         universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
                         destinationChain: chainOut!.id,
@@ -256,6 +261,7 @@ function Index() {
                         amountIn: tokenInAmount!,
                         amountOutMinimum,
                     });
+                    */
                 } else {
                     const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
 
@@ -286,7 +292,7 @@ function Index() {
             }
 
             sendTransaction(
-                { chainId: chainIn!.id, ...transaction },
+                { chainId: tokenIn!.chainId, ...transaction },
                 {
                     onSuccess: (hash) => {
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
@@ -339,10 +345,7 @@ function Index() {
         if (!receipt) return;
         if (receipt.status === "reverted") return;
         if (swapType !== SwapType.SwapAndBridge) return;
-        const messageId =
-            networkType === "superchain"
-                ? getSuperchainMessageIdFromReceipt(receipt)
-                : getHyperlaneMessageIdFromReceipt(receipt);
+        const messageId = getHyperlaneMessageIdFromReceipt(receipt);
 
         setMessageId(messageId);
         setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
@@ -437,8 +440,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0.0"
+                                                ? "Fetching quote..."
+                                                : "0.0"
                                     }
                                     disabled={true}
                                 />
@@ -473,7 +476,10 @@ function Index() {
                 steps={transactionSteps}
                 currentStepId={currentTransactionStepId}
                 hashes={transactionHashes}
-                chains={{ source: chainIn ?? undefined, destination: chainOut ?? undefined }}
+                chains={{
+                    source: chainIn,
+                    destination: chainOut,
+                }}
                 networkType={networkType}
             />
         </div>

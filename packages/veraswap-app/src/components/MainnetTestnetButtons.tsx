@@ -1,16 +1,16 @@
 import { useAtom } from "jotai";
 import { Button } from "./ui/button.js";
-import { networkTypeWithResetAtom } from "@/atoms/index.js";
+import { chainsTypeAtom } from "@/atoms/index.js";
 
 const buttonStyles: Record<string, string> = {
     mainnet: `
-    bg-blue-500 text-white 
+    bg-blue-500 text-white
     hover:bg-blue-600
     dark:bg-blue-600 dark:hover:bg-blue-700
     shadow-md
   `,
     testnet: `
-    bg-green-500 text-white 
+    bg-green-500 text-white
     hover:bg-green-600
     dark:bg-green-600 dark:hover:bg-green-700
     shadow-md
@@ -31,25 +31,24 @@ const buttonStyles: Record<string, string> = {
 };
 
 export const MainnetTestnetButtons = () => {
-    const [networkType, setNetworkType] = useAtom(networkTypeWithResetAtom);
+    const [networkType, setNetworkType] = useAtom(chainsTypeAtom);
 
     return (
         <div className="flex justify-center mb-4">
             <div
                 className="
-    bg-gray-100 border-gray-300 
-    dark:bg-gray-800 dark:border-gray-600 
+    bg-gray-100 border-gray-300
+    dark:bg-gray-800 dark:border-gray-600
     p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border
 "
             >
-                {["mainnet", "testnet", "superchain"].map((type) => (
+                {["local", "testnet", "mainnet"].map((type) => (
                     <Button
                         key={type}
                         type="button"
-                        className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${
-                            networkType === type ? buttonStyles[type] : buttonStyles.default
-                        }`}
-                        onClick={() => setNetworkType(type as "mainnet" | "testnet" | "superchain")}
+                        className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${networkType === type ? buttonStyles[type] : buttonStyles.default
+                            }`}
+                        onClick={() => setNetworkType(type as "local" | "testnet" | "mainnet")}
                     >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                     </Button>

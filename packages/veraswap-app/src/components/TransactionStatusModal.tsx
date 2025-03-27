@@ -18,7 +18,7 @@ type TransactionStatusModalProps = {
     currentStepId?: string;
     hashes?: { swap?: string; bridge?: string; transfer?: string };
     chains?: { source?: Chain; destination?: Chain };
-    networkType: "mainnet" | "superchain" | "testnet";
+    networkType: "local" | "testnet" | "mainnet";
 };
 
 export function TransactionStatusModal({
@@ -39,10 +39,12 @@ export function TransactionStatusModal({
             case "bridge":
                 if (!hashes?.swap) return undefined;
 
+                /*
                 if (networkType === "superchain") {
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.swap}`;
                     // TODO: fix messageId return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
                 }
+                */
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "transfer":
                 return hashes?.transfer && chains?.destination
