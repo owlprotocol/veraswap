@@ -43,6 +43,26 @@ import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 
+struct CoreContracts {
+    // Uniswap
+    address v4PoolManager;
+    address v4PositionManager;
+    address v4StateView;
+    address v4Quoter;
+    address universalRouter;
+    // Hyperlane
+    address mailbox;
+    address ism;
+    address hook;
+    address hypTokenRouterSweep;
+    // Kernel
+    address kernel;
+    address kernelFactory;
+    address ecdsaValidator;
+    address ownableSignatureExecutor;
+    address erc7579ExecutorRouter;
+}
+
 contract DeployAll is Script, Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
@@ -53,19 +73,18 @@ contract DeployAll is Script, Test {
         uint mainFork = vm.createSelectFork(chains[0]);
         vm.startBroadcast();
 
-        (
-            address mailboxMain,
-            address routerMain,
-            address v4PositionManagerMain,
-            address v4StateViewMain
-        ) = deployCoreContracts();
-        (address tokenA, address tokenB) = deployTokensAndPools(routerMain, v4PositionManagerMain, v4StateViewMain);
+        CoreContracts memory contractsMain = deployCoreContracts();
+        (address tokenA, address tokenB) = deployTokensAndPools(
+            contractsMain.universalRouter,
+            contractsMain.v4PositionManager,
+            contractsMain.v4StateView
+        );
 
         // Create HypERC20Collateral for token A and B
-        (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(tokenA, mailboxMain);
+        (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(tokenA, contractsMain.mailbox);
         console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
 
-        (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(tokenB, mailboxMain);
+        (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(tokenB, contractsMain.mailbox);
         console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
 
         vm.stopBroadcast();
@@ -74,10 +93,10 @@ contract DeployAll is Script, Test {
         uint remoteFork = vm.createSelectFork(chains[1]);
         vm.startBroadcast();
 
-        (address mailboxRemote, , , ) = deployCoreContracts();
-        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token A", "A");
+        CoreContracts memory contractsRemote = deployCoreContracts();
+        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, contractsRemote.mailbox, 0, "Token A", "A");
         console2.log("hypERC20TokenA:", hypERC20TokenA);
-        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxRemote, 0, "Token B", "B");
+        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, contractsRemote.mailbox, 0, "Token B", "B");
         console2.log("hypERC20TokenB:", hypERC20TokenB);
 
         vm.stopBroadcast();
@@ -103,10 +122,7 @@ contract DeployAll is Script, Test {
         vm.stopBroadcast();
     }
 
-    function deployCoreContracts()
-        internal
-        returns (address mailbox, address router, address v4PositionManager, address v4StateView)
-    {
+    function deployCoreContracts() internal returns (CoreContracts memory) {
         uint32 chainId = uint32(block.chainid);
         console2.log("ChainId:", chainId);
 
@@ -115,9 +131,9 @@ contract DeployAll is Script, Test {
         // UNISWAP CONTRACTS
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        (v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
-        (v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
-        V4QuoterUtils.getOrCreate2(v4PoolManager);
+        (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
+        (address v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
+        (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
@@ -130,20 +146,23 @@ contract DeployAll is Script, Test {
             v3NFTPositionManager: unsupported,
             v4PositionManager: v4PositionManager
         });
+        (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
 
-        (router, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
+        console2.log("v4PoolManager:", v4PoolManager);
+        console2.log("v4PositionManager:", v4PositionManager);
+        console2.log("v4StateView:", v4StateView);
+        console2.log("v4Quoter:", v4Quoter);
+        console2.log("universalRouter:", universalRouter);
 
         // HYPERLANE CONTRACTS
-        HypTokenRouterSweepUtils.getOrCreate2();
+        (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
         (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
         (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
-        (mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
+        (address mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
         (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
 
         console2.log("Mailbox:", mailbox);
-        console2.log("Router:", router);
-        console2.log("v4PositionManager:", v4PositionManager);
-        console2.log("v4StateView:", v4StateView);
+
         console2.log("testRecipient: ", testRecipient);
 
         // KERNEL CONTRACTS
@@ -151,14 +170,35 @@ contract DeployAll is Script, Test {
         (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
 
         (address ecdsaValidator, ) = ECDSAValidatorUtils.getOrCreate2();
-        (address executor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
+        (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
 
-        (address executorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+        (address erc7579ExecutorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
             mailbox,
             address(0),
-            executor,
+            ownableSignatureExecutor,
             kernelFactory
         );
+
+        return
+            CoreContracts({
+                // Uniswap
+                v4PoolManager: v4PoolManager,
+                v4PositionManager: v4PositionManager,
+                v4StateView: v4StateView,
+                v4Quoter: v4Quoter,
+                universalRouter: universalRouter,
+                // Hyperlane
+                mailbox: mailbox,
+                ism: ism,
+                hook: hook,
+                hypTokenRouterSweep: hypTokenRouterSweep,
+                // Kernel
+                kernel: kernel,
+                kernelFactory: kernelFactory,
+                ecdsaValidator: ecdsaValidator,
+                ownableSignatureExecutor: ownableSignatureExecutor,
+                erc7579ExecutorRouter: erc7579ExecutorRouter
+            });
     }
 
     function deployTokensAndPools(
