@@ -10,27 +10,27 @@ import { UNISWAP_CONTRACTS } from "../constants.js";
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 import { getHyperlaneBridgeTransaction } from "./getHyperlaneBridgeData.js";
 
-export type TransactionSwapExtras = {
+export interface TransactionSwapExtras {
     amountIn: bigint;
     amountOutMinimum: bigint;
     zeroForOne: boolean;
-};
+}
 
-export type TransactionBridgeExtras = {
+export interface TransactionBridgeExtras {
     amountIn: bigint;
     walletAddress: Address;
-};
+}
 
-export type TransactionSwapAndBridgeExtras = {
+export interface TransactionSwapAndBridgeExtras {
     amountIn: bigint;
     amountOutMinimum: bigint;
     bridgePayment: bigint;
     zeroForOne: boolean;
     walletAddress: Address;
-};
+}
 
-export type TransactionBridgeAndSwapExtras = {
-};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface TransactionBridgeAndSwapExtras {}
 
 export type TransactionParams =
     | (TransactionSwap & TransactionSwapExtras)

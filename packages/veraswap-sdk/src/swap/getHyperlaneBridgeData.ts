@@ -17,14 +17,9 @@ export function getHyperlaneBridgeTransaction({
     const destinationChain = tokenOut.chainId;
     const tokenStandard = tokenIn.standard;
 
-    const abi = tokenStandard === "HypERC20Collateral"
-        ? HypERC20Collateral.abi
-        : HypERC20.abi;
+    const abi = tokenStandard === "HypERC20Collateral" ? HypERC20Collateral.abi : HypERC20.abi;
 
-    const bridgeAddress =
-        tokenStandard === "HypERC20Collateral"
-            ? tokenIn.collateralAddress
-            : tokenIn.address;
+    const bridgeAddress = tokenStandard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
 
     const data = encodeFunctionData({
         abi,
