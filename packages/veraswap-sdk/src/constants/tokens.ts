@@ -4,6 +4,7 @@ import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainL1 } from "../chains/index.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
+import { HypERC20CollateralToken, HypERC20Token, Token, TokenBase } from "../types/Token.js";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -16,35 +17,6 @@ export function getMockERC20Address({ name, symbol, decimals }: { name: string; 
     });
 }
 
-export type TokenStandard = "ERC20" | "MockERC20" | "HypERC20" | "HypERC20Collateral" | "SuperchainERC20";
-
-export interface Token<T extends TokenStandard = TokenStandard> {
-    standard: T;
-    chainId: number;
-    address: Address;
-    decimals: number;
-    name: string;
-    symbol: string;
-    logoURI?: string;
-}
-
-export interface HypERC20Token extends Token<"HypERC20"> {
-    connections: {
-        vm: string;
-        chainId: number;
-        address: Address;
-    }[];
-}
-
-export interface HypERC20CollateralToken extends Token<"HypERC20Collateral"> {
-    collateralAddress: Address;
-    connections: {
-        vm: string;
-        chainId: number;
-        address: Address;
-    }[];
-}
-
 /**
  * Create a MockERC20, HypERC20Collateral, HypERC20Synthetic
  */
@@ -53,7 +25,7 @@ export function createMockERC20WarpRoute({
     connectionChainIds,
     msgSender,
 }: {
-    token: Token<"MockERC20">;
+    token: TokenBase<"MockERC20">;
     connectionChainIds: number[];
     msgSender?: Address;
 }): [HypERC20CollateralToken, ...HypERC20Token[]] {
@@ -103,7 +75,7 @@ export function createMockERC20WarpRoute({
     return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
 }
 
-const mockTokens: Token<"MockERC20">[] = [
+const mockTokens: TokenBase<"MockERC20">[] = [
     {
         standard: "MockERC20",
         chainId: opChainL1.id,
@@ -132,6 +104,18 @@ export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
         connectionChainIds: [opChainA.id],
     }),
 ];
+
+export function createTokenMap(tokens: Token[]): Record<number, Record<Address, Token>> {
+    const data: Record<number, Record<Address, Token>> = {};
+    tokens.forEach((token) => {
+        if (!data[token.chainId]) data[token.chainId] = {};
+        data[token.chainId][token.address] = token;
+    });
+
+    return data;
+}
+
+export const LOCAL_TOKENS_MAP = createTokenMap([...mockTokens, ...LOCAL_TOKENS]);
 
 export const LOCAL_POOLS = {
     [opChainL1.id]: [

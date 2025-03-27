@@ -1,139 +1,228 @@
 import { Address } from "viem";
-import { VeraSwapToken } from "../types/VeraSwapToken.js";
+import { Token } from "../types/Token.js";
+import { PoolKey } from "../types/PoolKey.js";
 
-interface TransactionSwap {
+export interface TransactionSwap {
     type: "SWAP";
     chainId: number;
-    fromToken: Address;
-    toToken: Address;
+    tokenIn: Token;
+    tokenOut: Token;
+    poolKey: PoolKey;
 }
 
-interface TransactionBridge {
+export interface TransactionBridge {
     type: "BRIDGE";
-    fromChainId: number;
-    toChainId: number;
-    fromToken: Address;
-    toToken: Address;
+    tokenIn: Token;
+    tokenOut: Token;
 }
 
-interface TransactionSwapAndBridge {
-    type: "SWAP_AND_BRIDGE";
-    swap: {
-        chainId: number;
-        fromToken: Address;
-        toToken: Address;
-    };
-    bridge: {
-        fromChainId: number;
-        toChainId: number;
-        fromToken: Address;
-        toToken: Address;
-    };
+export interface TransactionSwapAndBridge {
+    type: "SWAP_BRIDGE";
+    swap: TransactionSwap;
+    bridge: TransactionBridge;
 }
 
-interface TransactionBridgeAndSwap {
-    type: "BRIDGE_AND_SWAP";
-    bridge: {
-        fromChainId: number;
-        toChainId: number;
-        fromToken: string;
-        toToken: string;
-    };
-    swap: {
-        chainId: number;
-        fromToken: string;
-        toToken: string;
-    };
+export interface TransactionBridgeAndSwap {
+    type: "BRIDGE_SWAP";
+    bridge: TransactionBridge;
+    swap: TransactionSwap;
 }
 
 export type TransactionResult =
     | TransactionSwap
     | TransactionBridge
     | TransactionSwapAndBridge
-    | TransactionBridgeAndSwap
-    | { type: "UNKNOWN" };
+    | TransactionBridgeAndSwap;
 
-const isHyperlaneStandard = (standard?: string) => standard === "EvmHypCollateral" || standard === "EvmHypSynthetic";
-
-function hasConnection(from: VeraSwapToken, to: VeraSwapToken): boolean {
-    if (!from.connections) return false;
-    return from.connections.some(
-        (c) => c.chainId === to.chainId && c.address.toLowerCase() === to.address.toLowerCase(),
-    );
-}
-
-export function getTransactionType({
+/**
+ * Take token pair and return list of token pairs on same chain using their `connections`
+ * @param param0
+ */
+export function getSharedChainTokenPairs({
     tokenIn,
     tokenOut,
 }: {
-    tokenIn: VeraSwapToken;
-    tokenOut: VeraSwapToken;
-}): TransactionResult {
-    const sameChain = tokenIn.chainId === tokenOut.chainId;
+    tokenIn: {
+        chainId: number;
+        address: Address;
+        connections?: {
+            vm: string;
+            chainId: number;
+            address: Address;
+        }[];
+    };
+    tokenOut: {
+        chainId: number;
+        address: Address;
+        connections?: {
+            vm: string;
+            chainId: number;
+            address: Address;
+        }[];
+    };
+}): { chainId: number; tokenIn: Address; tokenOut: Address }[] {
+    const result: { chainId: number; tokenIn: Address; tokenOut: Address }[] = [];
+    const tokensIn: { chainId: number; address: Address }[] = [tokenIn, ...(tokenIn.connections ?? [])];
+    const tokensOut: { chainId: number; address: Address }[] = [tokenOut, ...(tokenOut.connections ?? [])];
 
-    // We assume that if the chain is the same, there is some liquidty and it's a swap. TODO: improve
-    if (sameChain) {
+    tokensIn.forEach((tokenIn) => {
+        // Find tokenOut on same chain
+        const tokenOut = tokensOut.find((token) => token.chainId === tokenIn.chainId);
+        if (tokenOut) result.push({ chainId: tokenIn.chainId, tokenIn: tokenIn.address, tokenOut: tokenOut.address });
+    });
+
+    return result;
+}
+
+/**
+ * Get PoolKey from poolKeys and tokenIn/tokenOut
+ * @param param0
+ * @returns
+ */
+export function getPoolKey2({
+    poolKeys,
+    chainId,
+    tokenIn,
+    tokenOut,
+}: {
+    poolKeys: Record<number, PoolKey[]>;
+    chainId: number;
+    tokenIn: Token;
+    tokenOut: Token;
+}): PoolKey | null {
+    // Get correct address
+    const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+    const tokenOutAddress = tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+
+    // Search for poolKey
+    const poolKey = (poolKeys[chainId] ?? []).find((key) => {
+        const currency0 = tokenInAddress < tokenOutAddress ? tokenInAddress : tokenOutAddress;
+        const currency1 = tokenInAddress < tokenOutAddress ? tokenOutAddress : tokenInAddress;
+        return key.currency0 === currency0 && key.currency1 === currency1;
+    });
+
+    return poolKey ?? null;
+}
+
+/**
+ * Take a `tokenIn`/`tokenOut` and find which chain(s) they can be swapped on
+ * @param params
+ * @returns
+ */
+export function getSharedChainPools({
+    tokens,
+    poolKeys,
+    tokenIn,
+    tokenOut,
+}: {
+    tokens: Record<number, Record<Address, Token>>;
+    poolKeys: Record<number, PoolKey[]>;
+    tokenIn: Token;
+    tokenOut: Token;
+}): { chainId: number; tokenIn: Token; tokenOut: Token; poolKey: PoolKey }[] {
+    // same token!
+    if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return [];
+
+    const tokenPairs = getSharedChainTokenPairs({ tokenIn, tokenOut });
+
+    // Find pool pairs on same chain to search pool keys
+    const poolKeyOptions: { chainId: number; tokenIn: Token; tokenOut: Token; poolKey: PoolKey }[] = [];
+
+    tokenPairs.forEach((pair) => {
+        // Get tokens
+        const tokenIn = tokens[pair.chainId][pair.tokenIn];
+        const tokenOut = tokens[pair.chainId][pair.tokenOut];
+        // Search for poolKey
+        const poolKey = getPoolKey2({ poolKeys, tokenIn, tokenOut, chainId: tokenIn.chainId });
+        // Add to options
+        if (poolKey) {
+            poolKeyOptions.push({ chainId: pair.chainId, tokenIn, tokenOut, poolKey });
+        }
+    });
+
+    return poolKeyOptions;
+}
+
+export function getTransactionType({
+    tokens,
+    poolKeys,
+    tokenIn,
+    tokenOut,
+}: {
+    tokens: Record<number, Record<Address, Token>>;
+    poolKeys: Record<number, PoolKey[]>;
+    tokenIn: Token;
+    tokenOut: Token;
+}): TransactionResult | null {
+    // same token!
+    if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return null;
+
+    // BRIDGE: `tokenIn.connections.includes(tokenOut)`
+    if (tokenIn.connections?.find((c) => c.chainId === tokenOut.chainId && c.address === tokenOut.address)) {
+        return {
+            type: "BRIDGE",
+            tokenIn,
+            tokenOut,
+        };
+    }
+
+    // SWAP: `tokenIn.chainId == tokenOut.chainId`
+    if (tokenIn.chainId === tokenOut.chainId) {
+        const poolKey = getPoolKey2({ poolKeys, chainId: tokenIn.chainId, tokenIn, tokenOut });
+        //TODO: Check alternative sources of liquidity
+        if (!poolKey) return null;
+
         return {
             type: "SWAP",
             chainId: tokenIn.chainId,
-            fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-            toToken: tokenOut.collateralAddress ?? tokenOut.address,
+            poolKey,
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
         };
     }
 
-    if (
-        isHyperlaneStandard(tokenIn.standard) &&
-        isHyperlaneStandard(tokenOut.standard) &&
-        hasConnection(tokenIn, tokenOut)
-    ) {
+    // Find crosschain pools
+    const poolKeyOptions = getSharedChainPools({ tokens, poolKeys, tokenIn, tokenOut });
+
+    // SWAP_BRIDGE: `pool.chainId == tokenIn.chainId`
+    const poolKeyInChain = poolKeyOptions.find((option) => option.chainId === tokenIn.chainId);
+    if (poolKeyInChain) {
         return {
-            type: "BRIDGE",
-            fromChainId: tokenIn.chainId,
-            toChainId: tokenOut.chainId,
-            fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-            toToken: tokenOut.collateralAddress ?? tokenOut.address,
+            type: "SWAP_BRIDGE",
+            swap: {
+                type: "SWAP",
+                chainId: tokenIn.chainId,
+                poolKey: poolKeyInChain.poolKey,
+                tokenIn,
+                tokenOut: poolKeyInChain.tokenOut,
+            },
+            bridge: {
+                type: "BRIDGE",
+                tokenIn: poolKeyInChain.tokenOut,
+                tokenOut,
+            },
         };
     }
 
-    if (isHyperlaneStandard(tokenIn.standard)) {
-        const tokenInConnection = tokenIn.connections?.find((c) => c.chainId === tokenOut.chainId);
-        if (tokenInConnection) {
-            return {
-                type: "BRIDGE_AND_SWAP",
-                bridge: {
-                    fromChainId: tokenIn.chainId,
-                    toChainId: tokenOut.chainId,
-                    fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-                    toToken: tokenInConnection.address,
-                },
-                swap: {
-                    chainId: tokenOut.chainId,
-                    fromToken: tokenInConnection.address,
-                    toToken: tokenOut.collateralAddress ?? tokenOut.address,
-                },
-            };
-        }
+    // BRIDGE_SWAP: `pool.chainId == tokenOut.chainId`
+    const poolKeyOutChain = poolKeyOptions.find((option) => option.chainId === tokenOut.chainId);
+    if (poolKeyOutChain) {
+        return {
+            type: "BRIDGE_SWAP",
+            bridge: {
+                type: "BRIDGE",
+                tokenIn,
+                tokenOut: poolKeyOutChain.tokenIn,
+            },
+            swap: {
+                type: "SWAP",
+                chainId: tokenOut.chainId,
+                poolKey: poolKeyOutChain.poolKey,
+                tokenIn: poolKeyOutChain.tokenIn,
+                tokenOut: poolKeyOutChain.tokenOut,
+            },
+        };
     }
 
-    if (isHyperlaneStandard(tokenOut.standard)) {
-        const tokenOutConnection = tokenOut.connections?.find((c) => c.chainId === tokenIn.chainId);
-        if (tokenOutConnection) {
-            return {
-                type: "SWAP_AND_BRIDGE",
-                swap: {
-                    chainId: tokenIn.chainId,
-                    fromToken: tokenIn.collateralAddress ?? tokenIn.address,
-                    toToken: tokenOutConnection.address,
-                },
-                bridge: {
-                    fromChainId: tokenIn.chainId,
-                    toChainId: tokenOut.chainId,
-                    fromToken: tokenOutConnection.address,
-                    toToken: tokenOut.collateralAddress ?? tokenOut.address,
-                },
-            };
-        }
-    }
-
-    return { type: "UNKNOWN" };
+    return null;
 }
