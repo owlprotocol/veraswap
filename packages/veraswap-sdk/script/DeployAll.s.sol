@@ -89,8 +89,8 @@ contract DeployAll is Script, Test {
         console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
 
         // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
-        HypTokenRouterSweep(hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
-        HypTokenRouterSweep(hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
+        HypTokenRouterSweep(contractsMain.hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
+        HypTokenRouterSweep(contractsMain.hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
 
         vm.stopBroadcast();
 
