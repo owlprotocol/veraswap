@@ -23,9 +23,8 @@ if [ $? != 0 ]; then
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
-forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 393216 && \
-HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local,opchaina" ENTER
-# HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains local,opchaina" ENTER
+forge script ./script/DeployAll.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
+HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,opchaina,opchainb" ENTER
 
     # Start auth dev mode
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
