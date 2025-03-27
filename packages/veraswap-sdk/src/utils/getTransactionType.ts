@@ -34,6 +34,7 @@ export type TransactionResult =
     | TransactionSwapAndBridge
     | TransactionBridgeAndSwap;
 
+// TODO: Add invariant checks for when tokens have to be on same / different chains
 /**
  * Take token pair and return list of token pairs on same chain using their `connections`
  * @param param0
@@ -75,29 +76,28 @@ export function getSharedChainTokenPairs({
 }
 
 /**
- * Get PoolKey from poolKeys and tokenIn/tokenOut
+ * Get PoolKey from poolKeys and tokenIn/tokenOut (assumes both are on same chain)
  * @param param0
  * @returns
  */
 export function getPoolKey2({
     poolKeys,
-    chainId,
     tokenIn,
     tokenOut,
 }: {
-    poolKeys: Record<number, PoolKey[]>;
-    chainId: number;
+    poolKeys: PoolKey[];
     tokenIn: Token;
     tokenOut: Token;
 }): PoolKey | null {
     // Get correct address
     const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
     const tokenOutAddress = tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+    // Compute address following PoolKey invariant
+    const currency0 = tokenInAddress < tokenOutAddress ? tokenInAddress : tokenOutAddress;
+    const currency1 = tokenInAddress < tokenOutAddress ? tokenOutAddress : tokenInAddress;
 
     // Search for poolKey
-    const poolKey = (poolKeys[chainId] ?? []).find((key) => {
-        const currency0 = tokenInAddress < tokenOutAddress ? tokenInAddress : tokenOutAddress;
-        const currency1 = tokenInAddress < tokenOutAddress ? tokenOutAddress : tokenInAddress;
+    const poolKey = poolKeys.find((key) => {
         return key.currency0 === currency0 && key.currency1 === currency1;
     });
 
@@ -105,7 +105,7 @@ export function getPoolKey2({
 }
 
 /**
- * Take a `tokenIn`/`tokenOut` and find which chain(s) they can be swapped on
+ * Take a `tokenIn`/`tokenOut` (assumed on different chains) and find which chain(s) they can be swapped on
  * @param params
  * @returns
  */
@@ -133,7 +133,10 @@ export function getSharedChainPools({
         const tokenIn = tokens[pair.chainId][pair.tokenIn];
         const tokenOut = tokens[pair.chainId][pair.tokenOut];
         // Search for poolKey
-        const poolKey = getPoolKey2({ poolKeys, tokenIn, tokenOut, chainId: tokenIn.chainId });
+        const chainPoolKeys = poolKeys[tokenIn.chainId];
+        if (!chainPoolKeys) return;
+
+        const poolKey = getPoolKey2({ poolKeys: chainPoolKeys, tokenIn, tokenOut });
         // Add to options
         if (poolKey) {
             poolKeyOptions.push({ chainId: pair.chainId, tokenIn, tokenOut, poolKey });
@@ -143,6 +146,12 @@ export function getSharedChainPools({
     return poolKeyOptions;
 }
 
+// TODO: Update quoting logic to use actual API and use an amount/minLiquidity parameter (current logic just checks hard-coded poolKeys)
+/**
+ * Get transaction type & params (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP)
+ * @param param0
+ * @returns
+ */
 export function getTransactionType({
     tokens,
     poolKeys,
@@ -168,7 +177,7 @@ export function getTransactionType({
 
     // SWAP: `tokenIn.chainId == tokenOut.chainId`
     if (tokenIn.chainId === tokenOut.chainId) {
-        const poolKey = getPoolKey2({ poolKeys, chainId: tokenIn.chainId, tokenIn, tokenOut });
+        const poolKey = getPoolKey2({ poolKeys: poolKeys[tokenIn.chainId] ?? [], tokenIn, tokenOut });
         //TODO: Check alternative sources of liquidity
         if (!poolKey) return null;
 
@@ -183,6 +192,7 @@ export function getTransactionType({
 
     // Find crosschain pools
     const poolKeyOptions = getSharedChainPools({ tokens, poolKeys, tokenIn, tokenOut });
+    if (poolKeyOptions.length == 0) return null;
 
     // SWAP_BRIDGE: `pool.chainId == tokenIn.chainId`
     const poolKeyInChain = poolKeyOptions.find((option) => option.chainId === tokenIn.chainId);
