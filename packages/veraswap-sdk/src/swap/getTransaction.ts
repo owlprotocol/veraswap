@@ -30,7 +30,7 @@ export interface TransactionSwapBridgeOptions {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface TransactionBridgeSwapOptions { }
+export interface TransactionBridgeSwapOptions {}
 
 export type TransactionParams =
     | (TransactionTypeSwap & TransactionSwapOptions)
