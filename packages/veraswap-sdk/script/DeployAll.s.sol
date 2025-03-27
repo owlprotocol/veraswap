@@ -166,23 +166,31 @@ contract DeployAll is Script, Test {
         (address mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
         (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
 
-        console2.log("Mailbox:", mailbox);
-
-        console2.log("testRecipient: ", testRecipient);
+        console2.log("hypTokenRouterSweep:", hypTokenRouterSweep);
+        console2.log("ism:", ism);
+        console2.log("hook:", hook);
+        console2.log("mailbox:", mailbox);
+        console2.log("testRecipient:", testRecipient);
 
         // KERNEL CONTRACTS
         (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
         (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
-
         (address ecdsaValidator, ) = ECDSAValidatorUtils.getOrCreate2();
-        (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
 
+        console2.log("kernel:", kernel);
+        console2.log("kernelFactory:", kernelFactory);
+        console2.log("ecdsaValidator:", ecdsaValidator);
+
+        (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
         (address erc7579ExecutorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
             mailbox,
             address(0),
             ownableSignatureExecutor,
             kernelFactory
         );
+
+        console2.log("ownableSignatureExecutor:", ownableSignatureExecutor);
+        console2.log("erc7579ExecutorRouter:", erc7579ExecutorRouter);
 
         return
             CoreContracts({
