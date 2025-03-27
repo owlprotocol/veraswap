@@ -23,23 +23,23 @@ import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 import {PoolUtils} from "./utils/PoolUtils.sol";
+// Permit2
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
+// Hyperlane
+import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
+import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {HyperlanePausableHookUtils} from "./utils/HyperlanePausableHookUtils.sol";
 import {HyperlaneNoopIsmUtils} from "./utils/HyperlaneNoopIsmUtils.sol";
 import {HyperlaneMailboxUtils} from "./utils/HyperlaneMailboxUtils.sol";
+import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
-import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
-import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
-import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
-import {TestRecipient} from "@hyperlane-xyz/core/test/TestRecipient.sol";
-
-// Permit2
-import {Permit2Utils} from "./utils/Permit2Utils.sol";
-
-// Hyperlane Kernel Interchain Account Infra
+import {HyperlaneTestRecipientUtils} from "./utils/HyperlaneTestRecipientUtils.sol";
+// Kernel Account
 import {ECDSAValidatorUtils} from "./utils/ECDSAValidatorUtils.sol";
 import {KernelUtils} from "./utils/KernelUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
+// Kernel Account (custom)
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 
@@ -100,18 +100,6 @@ contract DeployAll is Script, Test {
         HypERC20(hypERC20TokenA).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenA))));
         HypERC20(hypERC20TokenB).enrollRemoteRouter(chainIds[0], bytes32(uint256(uint160(hypERC20CollateralTokenB))));
 
-        // Deploy TestRecipient on remote
-        address testRecipientAddr = Create2.computeAddress(
-            BYTES32_ZERO,
-            keccak256(type(TestRecipient).creationCode),
-            Create2Utils.DETERMINISTIC_DEPLOYER
-        );
-        bool testRecipientExists = address(testRecipientAddr).code.length > 0;
-
-        if (!testRecipientExists) {
-            new TestRecipient{salt: BYTES32_ZERO}();
-        }
-        console2.log("testRecipient: ", testRecipientAddr);
         vm.stopBroadcast();
     }
 
@@ -150,11 +138,13 @@ contract DeployAll is Script, Test {
         (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
         (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
         (mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
+        (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
 
         console2.log("Mailbox:", mailbox);
         console2.log("Router:", router);
         console2.log("v4PositionManager:", v4PositionManager);
         console2.log("v4StateView:", v4StateView);
+        console2.log("testRecipient: ", testRecipient);
 
         // KERNEL CONTRACTS
         (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
