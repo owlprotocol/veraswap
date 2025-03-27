@@ -1,5 +1,5 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
-import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, localhost, mainnet, sepolia } from "wagmi/chains";
+import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, mainnet, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
 import {
@@ -7,17 +7,32 @@ import {
     interopDevnet0,
     interopDevnet1,
     unichainSepolia,
-    localhost2,
-    localOp,
-    localOpChainA,
-    localOpChainB,
-} from "@owlprotocol/veraswap-sdk";
+    opChainL1,
+    opChainA,
+    opChainB,
+} from "@owlprotocol/veraswap-sdk/chains";
 
 /***** Chains *****/
 // List of supported networks
+export const localChains = [opChainL1, opChainA, opChainB];
 
-export const prodChains = [
+export const interopDevnetChains = [interopDevnet0, interopDevnet1];
+
+export const mainnetChains = [
     mainnet,
+    arbitrum,
+    {
+        ...base,
+        rpcUrls: {
+            default: {
+                http: ["https://lb.drpc.org/ogrpc?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+                webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            },
+        },
+    },
+];
+
+export const testnetChains = [
     {
         ...sepolia,
         rpcUrls: {
@@ -40,17 +55,6 @@ export const prodChains = [
             },
         },
     },
-    interopDevnet0,
-    interopDevnet1,
-    {
-        ...base,
-        rpcUrls: {
-            default: {
-                http: ["https://lb.drpc.org/ogrpc?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-                webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            },
-        },
-    },
     {
         ...baseSepolia,
         rpcUrls: {
@@ -64,29 +68,19 @@ export const prodChains = [
             },
         },
     },
-    arbitrum,
     inkSepolia,
     unichainSepolia,
-] as const;
-export const localChains = [
-    ...prodChains,
-    // {
-    //     ...localhost,
-    //     rpcUrls: {
-    //         default: {
-    //             http: ["http://127.0.0.1:8545"],
-    //             webSocket: ["ws://127.0.0.1:8545"],
-    //         },
-    //     },
-    // },
-    // localhost2,
-    localOp,
-    localOpChainA,
-    localOpChainB,
-] as const;
+];
 
-export const chains = import.meta.env.MODE != "development" ? prodChains : localChains;
+const allChains = [...localChains, ...interopDevnetChains, ...testnetChains, ...mainnetChains] as unknown as [
+    Chain,
+    ...Chain[],
+];
 
+//TODO: Alter config based on MODE?: Not really needed rn
+export const chains = import.meta.env.MODE != "development" ? allChains : allChains;
+
+//TODO: Why not support all wallets even in devmode?
 const wallets =
     import.meta.env.MODE === "development"
         ? [metaMaskWallet]
@@ -106,6 +100,7 @@ export const config = createConfig({
     chains,
     // @ts-ignore
     transports: Object.fromEntries(
+        // Use websocket by default
         chains.map((chain: Chain) => [chain.id, !!chain.rpcUrls.default.webSocket?.[0] ? webSocket() : http()]),
     ),
     connectors,
