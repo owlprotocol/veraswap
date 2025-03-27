@@ -28,6 +28,7 @@ import {Permit2Utils} from "./utils/Permit2Utils.sol";
 // Hyperlane
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
+import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
 import {HyperlanePausableHookUtils} from "./utils/HyperlanePausableHookUtils.sol";
 import {HyperlaneNoopIsmUtils} from "./utils/HyperlaneNoopIsmUtils.sol";
 import {HyperlaneMailboxUtils} from "./utils/HyperlaneMailboxUtils.sol";
@@ -86,6 +87,10 @@ contract DeployAll is Script, Test {
 
         (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(tokenB, contractsMain.mailbox);
         console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
+
+        // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
+        HypTokenRouterSweep(hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
+        HypTokenRouterSweep(hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
 
         vm.stopBroadcast();
 
