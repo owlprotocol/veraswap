@@ -17,7 +17,7 @@ import {
     zksync,
     zora,
 } from "viem/chains";
-import { unichainSepolia } from "../../chains.js";
+import { unichainSepolia } from "../../chains/index.js";
 
 // export const USDT_MONAD_TESTNET = new Token(
 //     monadtestnet.id,

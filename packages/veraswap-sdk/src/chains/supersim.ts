@@ -10,7 +10,9 @@ export const opChainL1 = {
     ...localhost,
     id: 900,
     name: "OP Chain L1",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${opChainL1Port}`] } },
+    rpcUrls: {
+        default: { http: [`http://127.0.0.1:${opChainL1Port}`], webSocket: [`ws://127.0.0.1:${opChainL1Port}`] },
+    },
 } as const satisfies Chain;
 export const opChainL1Client = createPublicClient({ chain: opChainL1, transport: http() });
 
@@ -19,7 +21,9 @@ export const opChainA = {
     ...localhost,
     id: 901,
     name: "OP Chain A",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${opChainAPort}`] } },
+    rpcUrls: {
+        default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
+    },
 } as const satisfies Chain;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
 
@@ -28,6 +32,8 @@ export const opChainB = {
     ...localhost,
     id: 902,
     name: "OP Chain B",
-    rpcUrls: { default: { http: [`http://127.0.0.1:${opChainBPort}`] } },
+    rpcUrls: {
+        default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
+    },
 } as const satisfies Chain;
 export const opChainBClient = createPublicClient({ chain: opChainB, transport: http() });
