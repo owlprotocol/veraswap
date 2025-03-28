@@ -9,12 +9,14 @@ evm_version = "cancun"
 via_ir = true
 optimizer = true
 optimizer_runs = 200
+bytecode_hash = "none"
+cbor_metadata = true
 
 [rpc_endpoints]
 # Use local anvils
 localhost = "http://127.0.0.1:8547"
-OPChainA="http://127.0.0.1:9545"
-OPChainB="http://127.0.0.1:9546"
+OPChainA = "http://127.0.0.1:9545"
+OPChainB = "http://127.0.0.1:9546"
 mainnet = "https://lb.drpc.org/ogrpc?network=mainnet&dkey=${DRPC_API_KEY}"
 sepolia = "https://lb.drpc.org/ogrpc?network=sepolia&dkey=${DRPC_API_KEY}"
 optimism = "https://lb.drpc.org/ogrpc?network=optimism&dkey=${DRPC_API_KEY}"

@@ -4,12 +4,12 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { Token } from "@owlprotocol/veraswap-sdk";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, tokensInAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
+import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
 
     const chains = useAtomValue(chainsAtom);
-    const allTokens = useAtomValue(tokensInAtom);
+    const allTokens = useAtomValue(tokensAtom);
     const uniqueTokens = useMemo(() => groupBy(allTokens, "symbol"), [allTokens]);
 
     const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
@@ -27,22 +27,30 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const currentTokenSymbol = currentToken?.symbol || null;
 
     const filteredTokens = useMemo(() => {
-        return Object.entries(uniqueTokens).filter(([symbol, tokenList]) => {
-            const oppositeToken = selectingTokenIn ? tokenOut : tokenIn;
-            if (oppositeToken && tokenList.some((t) => t.address === oppositeToken.address)) return false;
+        return Object.entries(uniqueTokens)
+            .map(([symbol, tokenList]) => {
+                const oppositeToken = selectingTokenIn ? tokenOut : tokenIn;
 
-            const lowerQuery = searchQuery.toLowerCase();
-            return (
-                symbol.toLowerCase().includes(lowerQuery) ||
-                tokenList[0].name.toLowerCase().includes(lowerQuery) ||
-                tokenList[0].address.toLowerCase().includes(lowerQuery)
-            );
-        });
+                const filteredList = oppositeToken
+                    ? tokenList.filter(
+                          (t) => !(t.address === oppositeToken.address && t.chainId === oppositeToken.chainId),
+                      )
+                    : tokenList;
+
+                const lowerQuery = searchQuery.toLowerCase();
+                const matchesQuery =
+                    symbol.toLowerCase().includes(lowerQuery) ||
+                    (filteredList[0]?.name.toLowerCase().includes(lowerQuery) ?? false) ||
+                    (filteredList[0]?.address.toLowerCase().includes(lowerQuery) ?? false);
+
+                return matchesQuery && filteredList.length > 0 ? [symbol, filteredList] : null;
+            })
+            .filter(Boolean) as [string, Token[]][];
     }, [uniqueTokens, searchQuery, tokenIn, tokenOut, selectingTokenIn]);
 
     const popularTokens = ["AAVE", "USDT", "USDC"];
 
-    const handleTokenSelect = (token: VeraSwapToken) => {
+    const handleTokenSelect = (token: Token) => {
         if (selectingTokenIn) {
             setTokenIn(token);
         } else {
@@ -150,7 +158,7 @@ const PopularTokens = ({
     onExpand,
 }: {
     popularTokens: string[];
-    uniqueTokens: { [symbol: string]: VeraSwapToken[] };
+    uniqueTokens: { [symbol: string]: Token[] };
     onExpand: (symbol: string) => void;
 }) => {
     return (
@@ -192,13 +200,13 @@ const TokenGroup = ({
     onToggle,
     onSelect,
 }: {
-    tokenList: VeraSwapToken[];
+    tokenList: Token[];
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
     chains: Chain[];
     onToggle: () => void;
-    onSelect: (token: VeraSwapToken) => void;
+    onSelect: (token: Token) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
 
