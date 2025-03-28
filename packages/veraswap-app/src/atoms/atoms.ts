@@ -1,6 +1,6 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { SwapType, getChainNameAndMailbox, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { getChainNameAndMailbox, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
@@ -19,7 +19,7 @@ import {
     tokenOutAtom,
     transactionTypeAtom,
 } from "./tokens.js";
-import { chainsTypeAtom } from "./chains";
+import { chainsTypeAtom } from "./chains.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";

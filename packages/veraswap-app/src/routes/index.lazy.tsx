@@ -8,7 +8,6 @@ import {
     MAX_UINT_256,
     MAX_UINT_48,
     PERMIT2_ADDRESS,
-    SwapType,
     UNISWAP_CONTRACTS,
     getHyperlaneMessageIdFromReceipt,
     getSwapAndSuperchainBridgeTransaction,
