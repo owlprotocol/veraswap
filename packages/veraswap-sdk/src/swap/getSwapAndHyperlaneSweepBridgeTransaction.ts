@@ -5,7 +5,6 @@ import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
-import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
 
 /**
  * getSwapAndHyperlaneSweepBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
@@ -44,19 +43,6 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
         hookData,
     });
     routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
-
-    const currencyOut = zeroForOne ? poolKey.currency1 : poolKey.currency0;
-
-    // TODO: Don't do this it here, do in once elsewhere
-    routePlanner.addCommand(CommandType.CALL_TARGET, [
-        HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        0n,
-        encodeFunctionData({
-            abi: HypTokenRouterSweep.abi,
-            functionName: "approveAll",
-            args: [currencyOut, bridgeAddress],
-        }),
-    ]);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,
