@@ -24,8 +24,6 @@ import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
 
 import { encodeFunctionData } from "viem";
 import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
-
-import { localOp } from "./chains.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { IERC20 } from "./artifacts/IERC20.js";
 import { IPositionManager } from "./artifacts/IPositionManager.js";
@@ -41,9 +39,10 @@ import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 import { getRandomValues } from "crypto";
 import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, V4_SWAP } from "./constants/index.js";
+import { opChainL1 } from "./chains/index.js";
 
 describe("index.test.ts", function () {
-    const chain = localOp;
+    const chain = opChainL1;
     const chainId = chain.id;
     const publicClient = createPublicClient({
         chain,
