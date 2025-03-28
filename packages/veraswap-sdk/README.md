@@ -56,6 +56,12 @@ forge script script/DeployAnvil.s.sol \
 
 See [script/](script/) for hook deployment, pool creation, liquidity provision, and swapping.
 
+### Mainnet Deployment
+For mainnet deployments we MUST use some existing official deployed contracts as parameters (eg. PoolManager, Mailbox, Kernel):
+- Uniswap: https://github.com/Uniswap/universal-router/tree/main/script/deployParameters
+- Hyperlane: https://github.com/hyperlane-xyz/hyperlane-registry/tree/main/chains
+- Kernel: https://github.com/zerodevapp/kernel (3.1)
+
 ### Manual installation
 
 For custom projects that want to just copy over our forge setup, you can copy the [remappings.tsx](./remappings.txt) and install the dependencies at latest branches. Note we use a custom v3-periphery fork to make it work with latest openzeppelin contracts.
