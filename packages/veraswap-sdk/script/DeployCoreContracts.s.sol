@@ -41,36 +41,7 @@ import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 
-struct UniswapContracts {
-    // Uniswap
-    address v4PoolManager;
-    address v4PositionManager;
-    address v4StateView;
-    address v4Quoter;
-    address universalRouter;
-}
-
-struct HyperlaneContracts {
-    // Uniswap
-    address ism;
-    address hook;
-    address mailbox;
-    address testRecipient;
-    address hypTokenRouterSweep;
-}
-
-struct CoreContracts {
-    // Uniswap
-    UniswapContracts uniswap;
-    // Hyperlane
-    HyperlaneContracts hyperlane;
-    // Kernel
-    address kernel;
-    address kernelFactory;
-    address ecdsaValidator;
-    address ownableSignatureExecutor;
-    address erc7579ExecutorRouter;
-}
+import {UniswapContracts, HyperlaneContracts, CoreContracts} from "./Structs.sol";
 
 contract DeployCoreContracts is Script, Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
