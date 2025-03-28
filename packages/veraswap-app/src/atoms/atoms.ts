@@ -15,7 +15,7 @@ import {
     tokenInAtom,
     tokenInBalanceAtom,
     tokenInPermit2AllowanceAtom,
-    tokenInRouterAllowanceAtom,
+    tokenInUniswapRouterAllowanceAtom,
     tokenOutAtom,
     transactionTypeAtom,
 } from "./tokens.js";
@@ -34,7 +34,7 @@ export enum SwapStep {
     INSUFFICIENT_BALANCE = "Insufficient Balance",
     INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
     APPROVE_PERMIT2 = "Approve Permit2",
-    APPROVE_UNISWAP_ROUTER = "Approve Uniswap Router",
+    APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
@@ -49,7 +49,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
-    const tokenInRouterAllowance = get(tokenInRouterAllowanceAtom);
+    const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
 
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;
@@ -69,8 +69,8 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2;
-    } else if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount)
-        return SwapStep.APPROVE_UNISWAP_ROUTER;
+    } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
+        return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
 
     return SwapStep.EXECUTE_SWAP;
 });

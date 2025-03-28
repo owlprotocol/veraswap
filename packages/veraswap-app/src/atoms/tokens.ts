@@ -115,7 +115,7 @@ export const tokenInPermit2AllowanceAtom = atom<bigint | null>((get) => {
     return get(tokenInPermit2AllowanceQueryAtom).data ?? null;
 });
 /** permit2.allowance(account, tokenIn, UniversalRouter): QueryResult */
-export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
+export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
     const tokenIn = get(tokenInAtom);
@@ -143,8 +143,8 @@ export const tokenInRouterAllowanceQueryAtom = atomWithQuery((get) => {
     };
 });
 /** permit2.allowance(account, tokenIn, UniversalRouter): bigint */
-export const tokenInRouterAllowanceAtom = atom<bigint | null>((get) => {
-    const data = get(tokenInRouterAllowanceQueryAtom).data;
+export const tokenInUniswapRouterAllowanceAtom = atom<bigint | null>((get) => {
+    const data = get(tokenInUniswapRouterAllowanceQueryAtom).data;
     return data ? data[0] : null;
 });
 

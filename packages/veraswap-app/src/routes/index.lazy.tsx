@@ -200,7 +200,7 @@ function Index() {
             return;
         }
 
-        if (swapStep === SwapStep.APPROVE_UNISWAP_ROUTER) {
+        if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
             sendTransaction({
                 to: PERMIT2_ADDRESS,
                 chainId: tokenIn!.chainId,
@@ -409,7 +409,7 @@ function Index() {
                             !(
                                 (
                                     swapStep === SwapStep.APPROVE_PERMIT2 ||
-                                    swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
+                                    swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
                                     swapStep === SwapStep.EXECUTE_SWAP
                                 )
                                 // TODO: Add back
