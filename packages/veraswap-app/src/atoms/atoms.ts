@@ -1,6 +1,6 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getChainNameAndMailbox, TransactionType, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { getChainNameAndMailbox, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
@@ -9,7 +9,6 @@ import {
 } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
 import {
-    chainInAtom,
     chainOutAtom,
     tokenInAmountAtom,
     tokenInAtom,
@@ -44,6 +43,25 @@ export enum SwapStep {
     NOT_SUPPORTED = "Not supported",
 }
 
+export const getSwapStepMessage = (swapStep: SwapStep, transactionType: TransactionType | null) => {
+    if (swapStep !== SwapStep.EXECUTE_SWAP) return swapStep;
+
+    if (!transactionType) return swapStep;
+
+    if (transactionType.type === "SWAP") {
+        return "Execute Swap";
+    }
+    if (transactionType.type === "BRIDGE") {
+        return "Execute Bridge";
+    }
+    if (transactionType.type === "SWAP_BRIDGE") {
+        return "Execute Swap and Bridge";
+    }
+    if (transactionType.type === "BRIDGE_SWAP") {
+        return "Execute Bridge and Swap";
+    }
+};
+
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
@@ -76,8 +94,8 @@ export const swapStepAtom = atom((get) => {
     } else if (
         transactionType?.type === "BRIDGE" &&
         tokenIn.standard === "HypERC20Collateral" &&
-        !!tokenInBridgeAllowance &&
-        tokenInBridgeAllowance < tokenInAmount
+        tokenInBridgeAllowance !== null &&
+        tokenInAmount > tokenInBridgeAllowance
     ) {
         return SwapStep.APPROVE_BRIDGE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {

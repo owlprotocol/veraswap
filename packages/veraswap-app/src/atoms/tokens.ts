@@ -161,6 +161,8 @@ export const tokenInBridgeAllowanceQueryAtom = atomWithQuery((get) => {
     const accountAddress = account.address ?? zeroAddress;
     const bridgeAddress = tokenIn?.address ?? zeroAddress;
 
+    console.log({ enabled, tokenIn, account });
+
     return {
         ...readContractQueryOptions(config, {
             abi: [allowanceAbi],

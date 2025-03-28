@@ -15,6 +15,8 @@ import {
     SUPERCHAIN_TOKEN_BRIDGE,
     getTransaction,
     TransactionParams,
+    HypERC20Token,
+    HypERC20CollateralToken,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -47,6 +49,7 @@ import {
     transactionTypeAtom,
     hyperlaneMailboxChainOut,
     chainsTypeAtom,
+    getSwapStepMessage,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -202,7 +205,7 @@ function Index() {
 
         if (swapStep === SwapStep.APPROVE_BRIDGE) {
             sendTransaction({
-                to: tokenIn!.address,
+                to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
                 chainId: tokenIn!.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
@@ -411,6 +414,7 @@ function Index() {
                             !(
                                 swapStep === SwapStep.APPROVE_PERMIT2 ||
                                 swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
+                                swapStep === SwapStep.APPROVE_BRIDGE ||
                                 swapStep === SwapStep.EXECUTE_SWAP ||
                                 swapStep === SwapStep.NOT_SUPPORTED
                             )
@@ -418,7 +422,7 @@ function Index() {
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
                         onClick={() => handleSwapSteps()}
                     >
-                        {swapStep}
+                        {getSwapStepMessage(swapStep, transactionType)}
                     </Button>
                 </CardContent>
             </Card>
