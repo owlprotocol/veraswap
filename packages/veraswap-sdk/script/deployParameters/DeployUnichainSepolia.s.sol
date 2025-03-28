@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {DeployParameters} from "../DeployParameters.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {HyperlaneDeployParams} from "../Structs.sol";
 
-contract DeployUnichainSepolia is DeployParameters {
-    function setUp() public override {
-        params = RouterParameters({
+library DeployUnichainSepolia {
+    function getParams()
+        internal
+        pure
+        returns (RouterParameters memory uniswapParams, HyperlaneDeployParams memory hyperlaneParams)
+    {
+        uniswapParams = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x4200000000000000000000000000000000000006,
             v2Factory: 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f,
@@ -17,5 +21,7 @@ contract DeployUnichainSepolia is DeployParameters {
             v3NFTPositionManager: 0xB7F724d6dDDFd008eFf5cc2834edDE5F9eF0d075,
             v4PositionManager: 0x12A98709BB5D0641D61458f85dcAFbE17AC2d05c
         });
+
+        hyperlaneParams = HyperlaneDeployParams({mailbox: address(0)});
     }
 }

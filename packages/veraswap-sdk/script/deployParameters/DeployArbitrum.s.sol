@@ -5,15 +5,14 @@ import {HyperlaneDeployParams} from "../Structs.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
 library DeployArbitrum {
-    address constant UNSUPPORTED_PROTOCOL = address(0);
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function getParams()
         internal
         pure
-        returns (RouterParameters memory params, address unsupported, HyperlaneDeployParams memory hyperlaneParams)
+        returns (RouterParameters memory uniswapParams, HyperlaneDeployParams memory hyperlaneParams)
     {
-        params = RouterParameters({
+        uniswapParams = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,
             v2Factory: 0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9,
@@ -24,8 +23,6 @@ library DeployArbitrum {
             v3NFTPositionManager: 0xC36442b4a4522E871399CD717aBDD847Ab11FE88,
             v4PositionManager: 0xd88F38F930b7952f2DB2432Cb002E7abbF3dD869
         });
-
-        unsupported = 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B;
 
         hyperlaneParams = HyperlaneDeployParams({mailbox: 0x979Ca5202784112f4738403dBec5D0F3B9daabB9});
     }
