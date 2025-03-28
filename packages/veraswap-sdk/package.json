@@ -59,7 +59,7 @@
     "build:artifacts": "tsx src/codegen/runHardhatArtifactsExport.ts && eslint --fix 'src/artifacts/*.ts'",
     "build:forge": "forge build || echo 'forge step skipped'",
     "build:watch": "npm-run-all -p tsc:watch esbuild:watch",
-    "clean": "rimraf _esm _cjs _types",
+    "clean": "rimraf _esm _cjs _types cache out",
     "depcheck": "depcheck",
     "esbuild": "node esbuild.config.mjs",
     "esbuild:watch": "ESBUILD_WATCH=true node esbuild.config.mjs",
