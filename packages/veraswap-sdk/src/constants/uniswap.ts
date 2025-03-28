@@ -10,6 +10,8 @@ import { UniversalRouterApprovedReentrant as UniversalRouter } from "../artifact
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 import { arbitrum, arbitrumSepolia, base, bsc, mainnet, sepolia } from "viem/chains";
 
+export const V4_SWAP = 0x10;
+
 /*** Uniswap Constants ***/
 export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 /**
@@ -93,7 +95,16 @@ export function getUniswapContracts(params?: { owner?: Address }) {
 export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
 /** Uniswap contracts by chain */
-export const UNISWAP_CONTRACTS = {
+export const UNISWAP_CONTRACTS: Record<
+    number,
+    {
+        v4PoolManager: `0x${string}`;
+        v4PositionManager: `0x${string}`;
+        v4StateView: `0x${string}`;
+        v4Quoter: `0x${string}`;
+        universalRouter: `0x${string}`;
+    }
+> = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainA.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainB.id]: LOCAL_UNISWAP_CONTRACTS,

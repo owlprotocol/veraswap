@@ -6,7 +6,7 @@ import { http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
 import { ReactNode } from "react";
 import { tokenDataQueryOptions } from "./tokenData.js";
-import { TOKEN_LIST } from "../constants.js";
+import { TOKEN_LIST } from "../constants/index.js";
 
 describe("tokenData.test.tsx", () => {
     // Wagmi Config

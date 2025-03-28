@@ -4,15 +4,9 @@ import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, use
 import {
     getSwapAndHyperlaneSweepBridgeTransaction,
     getSwapExactInExecuteData,
-    MAX_UINT_160,
-    MAX_UINT_256,
-    MAX_UINT_48,
-    PERMIT2_ADDRESS,
-    UNISWAP_CONTRACTS,
     getHyperlaneMessageIdFromReceipt,
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
-    SUPERCHAIN_TOKEN_BRIDGE,
     getTransaction,
     TransactionParams,
     HypERC20Token,
@@ -24,6 +18,13 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
+import {
+    MAX_UINT_160,
+    MAX_UINT_256,
+    MAX_UINT_48,
+    PERMIT2_ADDRESS,
+    UNISWAP_CONTRACTS,
+} from "@owlprotocol/veraswap-sdk/constants";
 import {
     hyperlaneGasPaymentAtom,
     quoteInAtom,
@@ -194,7 +195,7 @@ function Index() {
                     functionName: "approve",
                     args: [
                         tokenIn!.address,
-                        UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
+                        UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
                         MAX_UINT_160,
                         MAX_UINT_48,
                     ],

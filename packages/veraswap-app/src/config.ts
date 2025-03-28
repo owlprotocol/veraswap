@@ -2,12 +2,19 @@ import { http, createStorage, createConfig, webSocket } from "wagmi";
 import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, mainnet, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
-import { inkSepolia, interopDevnet0, interopDevnet1, unichainSepolia } from "@owlprotocol/veraswap-sdk/chains";
-import { localOp, localOpChainA, localOpChainB } from "@owlprotocol/veraswap-sdk";
+import {
+    inkSepolia,
+    interopDevnet0,
+    interopDevnet1,
+    opChainA,
+    opChainB,
+    opChainL1,
+    unichainSepolia,
+} from "@owlprotocol/veraswap-sdk/chains";
 
 /***** Chains *****/
 // List of supported networks
-export const localChains = [localOp, localOpChainA, localOpChainB];
+export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 

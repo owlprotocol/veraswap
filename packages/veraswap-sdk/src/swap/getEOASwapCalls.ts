@@ -4,7 +4,7 @@ import { PoolKey } from "@uniswap/v4-sdk";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
-import { MAX_UINT_256, MAX_UINT_160, MAX_UINT_48 } from "../constants.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/index.js";
 
 export function getEOASwapCalls({
     amountIn,
