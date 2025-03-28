@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { SwapType, getChainNameAndMailbox, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
-import { Hash, zeroAddress } from "viem";
+import { Address, Hash, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
     sendTransactionMutationOptions,
@@ -9,12 +9,17 @@ import {
 } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
 
+import { getBridgehubContractAddress } from "viem/zksync";
 import {
+    chainInAtom,
+    chainOutAtom,
     tokenInAmountAtom,
     tokenInAtom,
     tokenInBalanceAtom,
     tokenInPermit2AllowanceAtom,
+    tokenInRouterAllowanceAtom,
     tokenOutAtom,
+    transactionTypeAtom,
 } from "./tokens.js";
 import { chainsTypeAtom } from "./chains";
 import { config } from "@/config.js";
@@ -46,6 +51,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
+    const tokenInRouterAllowance = get(tokenInRouterAllowanceAtom);
 
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;
@@ -65,7 +71,8 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2;
-    }
+    } else if (tokenInRouterAllowance === null || tokenInRouterAllowance < tokenInAmount)
+        return SwapStep.APPROVE_UNISWAP_ROUTER;
 
     return SwapStep.EXECUTE_SWAP;
 });
@@ -81,25 +88,36 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     return waitForTransactionReceiptQueryOptions(config, { hash });
 });
 
-/*
 export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
-    const chainOut = get(chainOutAtom);
-    const chainIn = get(chainInAtom);
-    const remoteInfo = get(remoteTokenInfoAtom);
-    const networkType = get(networkTypeAtom);
+    const transactionType = get(transactionTypeAtom);
+
+    let chainId: number = 0;
+    let address: Address = zeroAddress;
+    let chainIdOut: number = 0;
+
+    if (transactionType?.type === "BRIDGE") {
+        chainId = transactionType.tokenIn.chainId;
+        address = transactionType.tokenIn.address;
+        chainIdOut = transactionType.tokenOut.chainId;
+    } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
+        chainId = transactionType.bridge.tokenIn.chainId;
+        address = transactionType.bridge.tokenIn.address;
+        chainIdOut = transactionType.bridge.tokenOut.chainId;
+    }
+
+    const enabled = chainId !== 0 && address !== zeroAddress && chainIdOut !== 0;
 
     return {
         ...readContractQueryOptions(config, {
-            chainId: chainIn?.id ?? 0,
-            address: remoteInfo?.remoteBridgeAddress ?? zeroAddress,
+            chainId,
+            address,
             abi: [quoteGasPayment],
             functionName: "quoteGasPayment",
-            args: [chainOut?.id ?? 0],
+            args: [chainIdOut],
         }),
-        enabled: networkType != "superchain" && !!remoteInfo?.remoteBridgeAddress && !!chainOut && !!chainIn,
+        enabled,
     };
 }) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
-*/
 
 export const transactionModalOpenAtom = atom<boolean>(false);
 export const transactionStepsAtom = atom<TransactionStep[]>([]);
