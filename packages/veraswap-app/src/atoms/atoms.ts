@@ -8,8 +8,6 @@ import {
     waitForTransactionReceiptQueryOptions,
 } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
-
-import { getBridgehubContractAddress } from "viem/zksync";
 import {
     chainInAtom,
     chainOutAtom,
