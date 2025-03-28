@@ -15,7 +15,7 @@ const buttonStyles: Record<string, string> = {
     dark:bg-green-600 dark:hover:bg-green-700
     shadow-md
   `,
-    superchain: `
+    local: `
     bg-red-500 text-white
     hover:bg-red-600
     dark:bg-red-600 dark:hover:bg-red-700
