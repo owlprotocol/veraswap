@@ -687,6 +687,10 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
             chainId: 901,
             name: "localhost-op-chain-a",
         } as ChainMetadata,
+        "localhost-op-chain-b": {
+            chainId: 902,
+            name: "localhost-op-chain-b",
+        } as ChainMetadata,
     } as ChainMap<ChainMetadata>,
     addresses: {
         "localhost-1337": {
@@ -700,6 +704,9 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
         },
         "localhost-op-chain-a": {
             mailbox: getMailboxAddress(901),
+        },
+        "localhost-op-chain-b": {
+            mailbox: getMailboxAddress(902),
         },
     },
 };
