@@ -10,9 +10,9 @@ import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
-import { TOKEN_LIST } from "../constants.js";
 import { port } from "../test/constants.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
+import { TOKEN_LIST } from "../constants/tokens.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;

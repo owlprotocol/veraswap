@@ -35,12 +35,12 @@ import { quoteExactInputSingle as quoteExactInputSingleAbi } from "./artifacts/I
 import { IUniversalRouter } from "./artifacts/IUniversalRouter.js";
 import { IStateView } from "./artifacts/IStateView.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { MAX_UINT_256, MAX_UINT_160, MAX_UINT_48, V4_SWAP } from "./constants.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 import { getRandomValues } from "crypto";
 import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, V4_SWAP } from "./constants/index.js";
 
 describe("index.test.ts", function () {
     const chain = localOp;

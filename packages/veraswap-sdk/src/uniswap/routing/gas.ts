@@ -3,7 +3,7 @@ import { Address, createPublicClient, encodeFunctionData, http } from "viem";
 import { arbitrum } from "viem/chains";
 import { ApproveInfo } from "../../types/uniswapRouting.js";
 import { getChainById } from "../../query/tokenData.js";
-import { MAX_UINT_256, PERMIT2_ADDRESS } from "../../constants.js";
+import { MAX_UINT_256, PERMIT2_ADDRESS } from "../../constants/index.js";
 import { IERC20 } from "../../artifacts/IERC20.js";
 
 const APPROVE_FALLBACK_GAS_LIMIT_IN_GWEI = 65_000;
