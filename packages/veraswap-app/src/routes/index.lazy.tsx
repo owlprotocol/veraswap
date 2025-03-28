@@ -212,8 +212,8 @@ function Index() {
                     functionName: "approve",
                     args: [tokenIn!.address, MAX_UINT_256],
                 }),
-            })
-            return
+            });
+            return;
         }
 
         if (swapStep === SwapStep.EXECUTE_SWAP) {
@@ -244,11 +244,21 @@ function Index() {
                 { chainId: tokenIn!.chainId, ...transaction },
                 {
                     onSuccess: (hash) => {
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
+                            updateTransactionStep({ id: "bridge", status: "processing" });
+                            return;
+                        }
+
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
                     },
                     onError: () => {
-                        updateTransactionStep({ id: "swap", status: "error" });
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            updateTransactionStep({ id: "bridge", status: "error" });
+                        } else {
+                            updateTransactionStep({ id: "swap", status: "error" });
+                        }
                         //TODO: show in UI instead
                         toast({
                             title: "Transaction Failed",
@@ -265,7 +275,11 @@ function Index() {
         if (!receipt) return;
 
         if (receipt.status === "reverted") {
-            updateTransactionStep({ id: "swap", status: "error" });
+            if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
+                updateTransactionStep({ id: "bridge", status: "error" });
+            } else {
+                updateTransactionStep({ id: "swap", status: "error" });
+            }
             toast({
                 title: "Transaction Failed",
                 description: "Your transaction has failed. Please try again.",
@@ -273,6 +287,8 @@ function Index() {
             });
             return;
         }
+
+        if (transactionType?.type === "BRIDGE") return;
 
         updateTransactionStep({ id: "swap", status: "success" });
 
@@ -304,11 +320,20 @@ function Index() {
 
     useEffect(() => {
         if (!remoteTransactionHash) return;
-        if (transactionType?.type !== "SWAP_BRIDGE") return;
+        if (!(transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE")) return;
 
         updateTransactionStep({ id: "bridge", status: "success" });
         updateTransactionStep({ id: "transfer", status: "success" });
         setTransactionHashes((prev) => ({ ...prev, transfer: remoteTransactionHash }));
+
+        if (transactionType.type === "BRIDGE") {
+            toast({
+                title: "Bridge Complete",
+                description: "Your bridge has been completed successfully",
+                variant: "default",
+            });
+            return;
+        }
 
         toast({
             title: "Transaction Complete",
