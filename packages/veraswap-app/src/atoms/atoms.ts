@@ -39,6 +39,7 @@ export enum SwapStep {
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
     BRIDGING_NOT_SUPPORTED = "Bridging not supported",
+    NOT_SUPPORTED = "Not supported",
 }
 
 export const swapStepAtom = atom((get) => {
@@ -50,6 +51,8 @@ export const swapStepAtom = atom((get) => {
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
+
+    const transactionType = get(transactionTypeAtom);
 
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;
@@ -69,8 +72,11 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2;
-    } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
+    } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
+    } else if (!transactionType) {
+        return SwapStep.NOT_SUPPORTED;
+    }
 
     return SwapStep.EXECUTE_SWAP;
 });

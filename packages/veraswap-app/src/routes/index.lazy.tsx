@@ -200,8 +200,9 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            const amountOutMinimum = transactionType?.type === "BRIDGE" ? null : quoterData![0];
             if (!transactionType) return;
+
+            const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
 
             initializeTransactionSteps(transactionType);
 
@@ -394,13 +395,10 @@ function Index() {
                     <Button
                         disabled={
                             !(
-                                (
-                                    swapStep === SwapStep.APPROVE_PERMIT2 ||
-                                    swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
-                                    swapStep === SwapStep.EXECUTE_SWAP
-                                )
-                                // TODO: Add back
-                                // swapStep === SwapStep.BRIDGING_NOT_SUPPORTED
+                                swapStep === SwapStep.APPROVE_PERMIT2 ||
+                                swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
+                                swapStep === SwapStep.EXECUTE_SWAP ||
+                                swapStep === SwapStep.NOT_SUPPORTED
                             )
                         }
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
