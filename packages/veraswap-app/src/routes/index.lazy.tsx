@@ -200,11 +200,10 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            // initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
-
             const amountOutMinimum = transactionType?.type === "BRIDGE" ? null : quoterData![0];
-
             if (!transactionType) return;
+
+            initializeTransactionSteps(transactionType);
 
             const transaction = getTransaction({
                 ...transactionType,

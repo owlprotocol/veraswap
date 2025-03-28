@@ -1,6 +1,6 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getChainNameAndMailbox, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { getChainNameAndMailbox, TransactionType, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
@@ -134,31 +134,44 @@ export const updateTransactionStepAtom = atom(
     },
 );
 
-export const initializeTransactionStepsAtom = atom(null, (_, set, swapType: "Swap" | "SwapAndBridge") => {
-    const steps: TransactionStep[] = [
+export const initializeTransactionStepsAtom = atom(null, (_, set, transactionType: TransactionType) => {
+    const swapStep: TransactionStep = {
+        id: "swap",
+        title: "🤝 Swap",
+        description: "Trading with your local Walmart 💵💵💵💵💵💵",
+        status: "pending",
+    };
+
+    const bridgeSteps: TransactionStep[] = [
         {
-            id: "swap",
-            title: "🤝 Swap",
-            description: "Trading with your local Walmart 💵💵💵💵💵💵",
+            id: "bridge",
+            title: "🚀 Bridge",
+            description: "Your token is traveling...",
+            status: "pending",
+        },
+        {
+            id: "transfer",
+            title: "🕊️ Transfer Token",
+            description: "We're freeing your token. Don't be impatient!",
             status: "pending",
         },
     ];
 
-    if (swapType === "SwapAndBridge") {
-        steps.push(
-            {
-                id: "bridge",
-                title: "🚀 Bridge",
-                description: "Your token is traveling...",
-                status: "pending",
-            },
-            {
-                id: "transfer",
-                title: "🕊️ Transfer Token",
-                description: "We're freeing your token. Don't be impatient!",
-                status: "pending",
-            },
-        );
+    let steps: TransactionStep[] = [];
+
+    switch (transactionType.type) {
+        case "SWAP":
+            steps = [swapStep];
+            break;
+        case "BRIDGE":
+            steps = [...bridgeSteps];
+            break;
+        case "SWAP_BRIDGE":
+            steps = [swapStep, ...bridgeSteps];
+            break;
+        case "BRIDGE_SWAP":
+            steps = [...bridgeSteps, swapStep];
+            break;
     }
 
     set(transactionStepsAtom, steps);
