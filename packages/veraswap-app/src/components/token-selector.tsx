@@ -27,17 +27,25 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const currentTokenSymbol = currentToken?.symbol || null;
 
     const filteredTokens = useMemo(() => {
-        return Object.entries(uniqueTokens).filter(([symbol, tokenList]) => {
-            const oppositeToken = selectingTokenIn ? tokenOut : tokenIn;
-            if (oppositeToken && tokenList.some((t) => t.address === oppositeToken.address)) return false;
+        return Object.entries(uniqueTokens)
+            .map(([symbol, tokenList]) => {
+                const oppositeToken = selectingTokenIn ? tokenOut : tokenIn;
 
-            const lowerQuery = searchQuery.toLowerCase();
-            return (
-                symbol.toLowerCase().includes(lowerQuery) ||
-                tokenList[0].name.toLowerCase().includes(lowerQuery) ||
-                tokenList[0].address.toLowerCase().includes(lowerQuery)
-            );
-        });
+                const filteredList = oppositeToken
+                    ? tokenList.filter(
+                          (t) => !(t.address === oppositeToken.address && t.chainId === oppositeToken.chainId),
+                      )
+                    : tokenList;
+
+                const lowerQuery = searchQuery.toLowerCase();
+                const matchesQuery =
+                    symbol.toLowerCase().includes(lowerQuery) ||
+                    (filteredList[0]?.name.toLowerCase().includes(lowerQuery) ?? false) ||
+                    (filteredList[0]?.address.toLowerCase().includes(lowerQuery) ?? false);
+
+                return matchesQuery && filteredList.length > 0 ? [symbol, filteredList] : null;
+            })
+            .filter(Boolean) as [string, Token[]][];
     }, [uniqueTokens, searchQuery, tokenIn, tokenOut, selectingTokenIn]);
 
     const popularTokens = ["AAVE", "USDT", "USDC"];
