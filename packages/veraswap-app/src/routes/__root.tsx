@@ -20,7 +20,8 @@ function RootComponent() {
                     <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraSwap</h1>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
-                        <VeraFundButton />
+                        {/* TODO: add back later? */}
+                        {/* <VeraFundButton /> */}
                         <ThemeSwitcher />
                         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
                     </div>
