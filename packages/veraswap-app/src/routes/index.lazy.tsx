@@ -202,7 +202,7 @@ function Index() {
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
 
-            const amountOutMinimum = transactionType?.type === "BRIDGE" ? tokenInAmount : quoterData![0];
+            const amountOutMinimum = transactionType?.type === "BRIDGE" ? null : quoterData![0];
 
             if (!transactionType) return;
 
@@ -361,7 +361,13 @@ function Index() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    value={quoterData ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18) : ""}
+                                    value={
+                                        transactionType?.type === "BRIDGE"
+                                            ? formatUnits(tokenInAmount ?? 0n, tokenIn?.decimals ?? 18)
+                                            : quoterData
+                                              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+                                              : ""
+                                    }
                                     type="number"
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold p-0",
@@ -372,8 +378,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                                ? "Fetching quote..."
-                                                : "0.0"
+                                              ? "Fetching quote..."
+                                              : "0.0"
                                     }
                                     disabled={true}
                                 />
