@@ -268,6 +268,7 @@ function Index() {
                     },
                 },
             );
+            setTokenInAmountInput("");
         }
     };
 
