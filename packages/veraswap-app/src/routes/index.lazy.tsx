@@ -199,6 +199,20 @@ function Index() {
             });
             return;
         }
+
+        if (swapStep === SwapStep.APPROVE_BRIDGE) {
+            sendTransaction({
+                to: tokenIn!.address,
+                chainId: tokenIn!.chainId,
+                data: encodeFunctionData({
+                    abi: IERC20.abi,
+                    functionName: "approve",
+                    args: [tokenIn!.address, MAX_UINT_256],
+                }),
+            })
+            return
+        }
+
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             if (!transactionType) return;
 

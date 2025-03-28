@@ -14,6 +14,7 @@ import {
     tokenInAmountAtom,
     tokenInAtom,
     tokenInBalanceAtom,
+    tokenInBridgeAllowanceAtom,
     tokenInPermit2AllowanceAtom,
     tokenInUniswapRouterAllowanceAtom,
     tokenOutAtom,
@@ -35,6 +36,7 @@ export enum SwapStep {
     INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
+    APPROVE_BRIDGE = "Approve Token Bridge",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
@@ -51,6 +53,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
+    const tokenInBridgeAllowance = get(tokenInBridgeAllowanceAtom);
 
     const transactionType = get(transactionTypeAtom);
 
@@ -70,6 +73,13 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.SELECT_TOKEN_AMOUNT;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
+    } else if (
+        transactionType?.type === "BRIDGE" &&
+        tokenIn.standard === "HypERC20Collateral" &&
+        !!tokenInBridgeAllowance &&
+        tokenInBridgeAllowance < tokenInAmount
+    ) {
+        return SwapStep.APPROVE_BRIDGE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount) {
