@@ -17,12 +17,13 @@ import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
 import { Pool, V4PositionPlanner, priceToClosestTick, Position } from "@uniswap/v4-sdk";
 import { MockERC20 } from "../artifacts/MockERC20.js";
-import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, PERMIT2_ADDRESS, UNISWAP_CONTRACTS } from "../constants.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, PERMIT2_ADDRESS } from "../constants.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { IPositionManager } from "../artifacts/IPositionManager.js";
 import { IMulticall_v4 } from "../artifacts/IMulticall_v4.js";
 import { PoolKeyAbi } from "../types/PoolKey.js";
 import { IStateView } from "../artifacts/IStateView.js";
+import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 
 /**
  * Deploys:
@@ -112,7 +113,7 @@ export async function addLiquidity(chains: Chain[]) {
         const walletClient = walletClients[0];
         const publicClient = publicClients[0];
 
-        const positionManager = UNISWAP_CONTRACTS[chainId0Str].POSITION_MANAGER;
+        const positionManager = UNISWAP_CONTRACTS[chainId0Str].v4PositionManager;
 
         const currency0Allowance = await publicClient.readContract({
             address: currency0Address,
@@ -205,7 +206,7 @@ export async function addLiquidity(chains: Chain[]) {
         const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 
         const currentLiquidity = await publicClients[0].readContract({
-            address: UNISWAP_CONTRACTS[chainId0Str].STATE_VIEW,
+            address: UNISWAP_CONTRACTS[chainId0Str].v4StateView,
             abi: IStateView.abi,
             functionName: "getLiquidity",
             args: [poolId],
@@ -276,7 +277,7 @@ export async function addLiquidity(chains: Chain[]) {
 
         /** *** Execute Multicall *****/
         const multicallHash = await walletClient.writeContract({
-            address: UNISWAP_CONTRACTS[chainId0Str].POSITION_MANAGER,
+            address: UNISWAP_CONTRACTS[chainId0Str].v4PositionManager,
             abi: IMulticall_v4.abi,
             functionName: "multicall",
             args: [[initializePoolData, modifyLiquiditiesData]],
@@ -286,7 +287,7 @@ export async function addLiquidity(chains: Chain[]) {
         await publicClient.waitForTransactionReceipt({ hash: multicallHash });
 
         const newLiquidity = await publicClient.readContract({
-            address: UNISWAP_CONTRACTS[chainId0Str].STATE_VIEW,
+            address: UNISWAP_CONTRACTS[chainId0Str].v4StateView,
             abi: IStateView.abi,
             functionName: "getLiquidity",
             args: [poolId],
