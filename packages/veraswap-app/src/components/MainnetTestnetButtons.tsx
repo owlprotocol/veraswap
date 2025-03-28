@@ -3,6 +3,12 @@ import { Button } from "./ui/button.js";
 import { chainsTypeAtom } from "@/atoms/index.js";
 
 const buttonStyles: Record<string, string> = {
+    local: `
+    bg-red-500 text-white
+    hover:bg-red-600
+    dark:bg-red-600 dark:hover:bg-red-700
+    shadow-md
+  `,
     mainnet: `
     bg-blue-500 text-white
     hover:bg-blue-600
@@ -13,12 +19,6 @@ const buttonStyles: Record<string, string> = {
     bg-green-500 text-white
     hover:bg-green-600
     dark:bg-green-600 dark:hover:bg-green-700
-    shadow-md
-  `,
-    local: `
-    bg-red-500 text-white
-    hover:bg-red-600
-    dark:bg-red-600 dark:hover:bg-red-700
     shadow-md
   `,
     default: `
@@ -42,7 +42,7 @@ export const MainnetTestnetButtons = () => {
     p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border
 "
             >
-                {["local", "testnet", "mainnet"].map((type) => (
+                {["mainnet", "testnet", "local"].map((type) => (
                     <Button
                         key={type}
                         type="button"
