@@ -169,15 +169,13 @@ export const messageIdAtom = atom<Hash | undefined>(undefined);
 
 export const remoteTransactionHashAtom = atom<Hash | null>(null);
 
-/*
 export const hyperlaneMailboxChainOut = atom((get) => {
-    const chainOut = get(chainOutAtom);
-    const networkType = get(networkTypeAtom);
-    if (!chainOut || networkType == "superchain") return null;
-
     const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
     if (!hyperlaneRegistry) return null;
+    const chainOut = get(chainOutAtom);
+    const chainsType = get(chainsTypeAtom);
+    if (!chainOut || !chainsType) return null;
+
     const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
     return mailbox;
 });
-*/

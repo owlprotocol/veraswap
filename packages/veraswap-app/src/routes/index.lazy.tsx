@@ -46,7 +46,7 @@ import {
     messageIdAtom,
     remoteTransactionHashAtom,
     transactionTypeAtom,
-    // hyperlaneMailboxChainOut,
+    hyperlaneMailboxChainOut,
     chainsTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
@@ -99,7 +99,7 @@ function Index() {
     const [_, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
-    // const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
+    const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
 
     const { toast } = useToast();
 
@@ -155,35 +155,18 @@ function Index() {
     }, [walletAddress, chainIn?.id, chainIn]);
     */
 
-    /*
-    useWatchContractEvent(
-        networkType === "interopDevnet"
-            ? {
-                abi: [RelayedMessage],
-                eventName: "RelayedMessage",
-                chainId: tokenOut?.chainId ?? 0,
-                address: SUPERCHAIN_TOKEN_BRIDGE ?? zeroAddress,
-                args: { messageHash: messageId ?? "0x" },
-                enabled: !!tokenOut && !!messageId,
-                strict: true,
-                onLogs: (logs) => {
-                    setRemoteTransactionHash(logs[0].transactionHash);
-                },
-            }
-            : {
-                abi: [ProcessId],
-                eventName: "ProcessId",
-                chainId: tokenOut?.chainId ?? 0,
-                address: hyperlaneMailboxAddress ?? zeroAddress,
-                args: { messageId: messageId ?? "0x" },
-                enabled: !!tokenOut && !!messageId && !!hyperlaneMailboxAddress,
-                strict: true,
-                onLogs: (logs) => {
-                    setRemoteTransactionHash(logs[0].transactionHash);
-                },
-            },
-    );
-    */
+    useWatchContractEvent({
+        abi: [ProcessId],
+        eventName: "ProcessId",
+        chainId: tokenOut?.chainId ?? 0,
+        address: hyperlaneMailboxAddress ?? zeroAddress,
+        args: { messageId: messageId ?? "0x" },
+        enabled: !!tokenOut && !!messageId && !!hyperlaneMailboxAddress,
+        strict: true,
+        onLogs: (logs) => {
+            setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
 
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
