@@ -31,6 +31,7 @@ export function TransactionStatusModal({
     networkType,
 }: TransactionStatusModalProps) {
     const getExplorerUrl = (stepId: "swap" | "bridge" | "transfer") => {
+        if (networkType === "local") return undefined;
         switch (stepId) {
             case "swap":
                 return hashes?.swap && chains?.source
