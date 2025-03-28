@@ -46,8 +46,9 @@ export const MainnetTestnetButtons = () => {
                     <Button
                         key={type}
                         type="button"
-                        className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${networkType === type ? buttonStyles[type] : buttonStyles.default
-                            }`}
+                        className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${
+                            networkType === type ? buttonStyles[type] : buttonStyles.default
+                        }`}
                         onClick={() => setNetworkType(type as "local" | "testnet" | "mainnet")}
                     >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
