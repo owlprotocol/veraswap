@@ -15,6 +15,8 @@ import {
     SUPERCHAIN_TOKEN_BRIDGE,
     getTransaction,
     TransactionParams,
+    HypERC20Token,
+    HypERC20CollateralToken,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -47,6 +49,7 @@ import {
     transactionTypeAtom,
     hyperlaneMailboxChainOut,
     chainsTypeAtom,
+    getSwapStepMessage,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -199,6 +202,20 @@ function Index() {
             });
             return;
         }
+
+        if (swapStep === SwapStep.APPROVE_BRIDGE) {
+            sendTransaction({
+                to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
+                chainId: tokenIn!.chainId,
+                data: encodeFunctionData({
+                    abi: IERC20.abi,
+                    functionName: "approve",
+                    args: [tokenIn!.address, MAX_UINT_256],
+                }),
+            });
+            return;
+        }
+
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             if (!transactionType) return;
 
@@ -227,11 +244,21 @@ function Index() {
                 { chainId: tokenIn!.chainId, ...transaction },
                 {
                     onSuccess: (hash) => {
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
+                            updateTransactionStep({ id: "bridge", status: "processing" });
+                            return;
+                        }
+
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
                     },
                     onError: () => {
-                        updateTransactionStep({ id: "swap", status: "error" });
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            updateTransactionStep({ id: "bridge", status: "error" });
+                        } else {
+                            updateTransactionStep({ id: "swap", status: "error" });
+                        }
                         //TODO: show in UI instead
                         toast({
                             title: "Transaction Failed",
@@ -248,7 +275,11 @@ function Index() {
         if (!receipt) return;
 
         if (receipt.status === "reverted") {
-            updateTransactionStep({ id: "swap", status: "error" });
+            if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
+                updateTransactionStep({ id: "bridge", status: "error" });
+            } else {
+                updateTransactionStep({ id: "swap", status: "error" });
+            }
             toast({
                 title: "Transaction Failed",
                 description: "Your transaction has failed. Please try again.",
@@ -256,6 +287,8 @@ function Index() {
             });
             return;
         }
+
+        if (transactionType?.type === "BRIDGE") return;
 
         updateTransactionStep({ id: "swap", status: "success" });
 
@@ -287,11 +320,20 @@ function Index() {
 
     useEffect(() => {
         if (!remoteTransactionHash) return;
-        if (transactionType?.type !== "SWAP_BRIDGE") return;
+        if (!(transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE")) return;
 
         updateTransactionStep({ id: "bridge", status: "success" });
         updateTransactionStep({ id: "transfer", status: "success" });
         setTransactionHashes((prev) => ({ ...prev, transfer: remoteTransactionHash }));
+
+        if (transactionType.type === "BRIDGE") {
+            toast({
+                title: "Bridge Complete",
+                description: "Your bridge has been completed successfully",
+                variant: "default",
+            });
+            return;
+        }
 
         toast({
             title: "Transaction Complete",
@@ -397,6 +439,7 @@ function Index() {
                             !(
                                 swapStep === SwapStep.APPROVE_PERMIT2 ||
                                 swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
+                                swapStep === SwapStep.APPROVE_BRIDGE ||
                                 swapStep === SwapStep.EXECUTE_SWAP ||
                                 swapStep === SwapStep.NOT_SUPPORTED
                             )
@@ -404,7 +447,7 @@ function Index() {
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
                         onClick={() => handleSwapSteps()}
                     >
-                        {swapStep}
+                        {getSwapStepMessage(swapStep, transactionType)}
                     </Button>
                 </CardContent>
             </Card>

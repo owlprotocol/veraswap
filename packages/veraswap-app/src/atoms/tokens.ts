@@ -148,6 +148,38 @@ export const tokenInUniswapRouterAllowanceAtom = atom<bigint | null>((get) => {
     return data ? data[0] : null;
 });
 
+/** Check if router is approved for token in if token in is collateral */
+export const tokenInBridgeAllowanceQueryAtom = atomWithQuery((get) => {
+    // TODO: Could cause issues on account change
+    const account = getAccount(config);
+    const tokenIn = get(tokenInAtom);
+    const enabled = !!tokenIn && !!account.address && tokenIn.standard === "HypERC20Collateral";
+
+    const chainId = tokenIn?.chainId ?? 0;
+    const tokenAddress =
+        !!tokenIn && tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : zeroAddress;
+    const accountAddress = account.address ?? zeroAddress;
+    const bridgeAddress = tokenIn?.address ?? zeroAddress;
+
+    console.log({ enabled, tokenIn, account });
+
+    return {
+        ...readContractQueryOptions(config, {
+            abi: [allowanceAbi],
+            chainId: chainId,
+            address: tokenAddress,
+            functionName: "allowance",
+            args: [accountAddress, bridgeAddress],
+        }),
+        enabled,
+        refetchInterval: 2000,
+    };
+});
+
+export const tokenInBridgeAllowanceAtom = atom<bigint | null>((get) => {
+    return get(tokenInBridgeAllowanceQueryAtom).data ?? null;
+});
+
 /***** Token Out *****/
 /** Selected tokenOut */
 export const tokenOutAtom = atom<Token | null>(null);
@@ -184,36 +216,6 @@ export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
 /** tokenOut.balanceOf(account): bigint */
 export const tokenOutBalanceAtom = atom<bigint | null>((get) => {
     return get(tokenOutBalanceQueryAtom).data ?? null;
-});
-
-/** Check if router is approved for token out if token out is collateral */
-export const tokenOutBridgeAllowanceQueryAtom = atomWithQuery((get) => {
-    // TODO: Could cause issues on account change
-    const account = getAccount(config);
-    const tokenOut = get(tokenOutAtom);
-    const enabled = !!tokenOut && !!account.address && tokenOut.standard === "HypERC20Collateral";
-
-    const chainId = tokenOut?.chainId ?? 0;
-    const tokenAddress = tokenOut?.address ?? zeroAddress;
-    const accountAddress = account.address ?? zeroAddress;
-    const bridgeAddress =
-        tokenOut && tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : zeroAddress;
-
-    return {
-        ...readContractQueryOptions(config, {
-            abi: [allowanceAbi],
-            chainId: chainId,
-            address: tokenAddress,
-            functionName: "allowance",
-            args: [accountAddress, bridgeAddress],
-        }),
-        enabled,
-        refetchInterval: 2000,
-    };
-});
-
-export const tokenOutBridgeAllowanceAtom = atom<bigint | null>((get) => {
-    return get(tokenOutBridgeAllowanceQueryAtom).data ?? null;
 });
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */

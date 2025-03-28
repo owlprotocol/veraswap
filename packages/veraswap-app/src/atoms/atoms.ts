@@ -1,6 +1,6 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getChainNameAndMailbox, TransactionType, VeraSwapToken } from "@owlprotocol/veraswap-sdk";
+import { getChainNameAndMailbox, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
@@ -9,11 +9,11 @@ import {
 } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
 import {
-    chainInAtom,
     chainOutAtom,
     tokenInAmountAtom,
     tokenInAtom,
     tokenInBalanceAtom,
+    tokenInBridgeAllowanceAtom,
     tokenInPermit2AllowanceAtom,
     tokenInUniswapRouterAllowanceAtom,
     tokenOutAtom,
@@ -35,12 +35,32 @@ export enum SwapStep {
     INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
+    APPROVE_BRIDGE = "Approve Token Bridge",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
     BRIDGING_NOT_SUPPORTED = "Bridging not supported",
     NOT_SUPPORTED = "Not supported",
 }
+
+export const getSwapStepMessage = (swapStep: SwapStep, transactionType: TransactionType | null) => {
+    if (swapStep !== SwapStep.EXECUTE_SWAP) return swapStep;
+
+    if (!transactionType) return swapStep;
+
+    if (transactionType.type === "SWAP") {
+        return "Execute Swap";
+    }
+    if (transactionType.type === "BRIDGE") {
+        return "Execute Bridge";
+    }
+    if (transactionType.type === "SWAP_BRIDGE") {
+        return "Execute Swap and Bridge";
+    }
+    if (transactionType.type === "BRIDGE_SWAP") {
+        return "Execute Bridge and Swap";
+    }
+};
 
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
@@ -51,6 +71,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
+    const tokenInBridgeAllowance = get(tokenInBridgeAllowanceAtom);
 
     const transactionType = get(transactionTypeAtom);
 
@@ -70,6 +91,13 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.SELECT_TOKEN_AMOUNT;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
+    } else if (
+        transactionType?.type === "BRIDGE" &&
+        tokenIn.standard === "HypERC20Collateral" &&
+        tokenInBridgeAllowance !== null &&
+        tokenInAmount > tokenInBridgeAllowance
+    ) {
+        return SwapStep.APPROVE_BRIDGE;
     } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount) {
