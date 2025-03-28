@@ -309,7 +309,7 @@ function Index() {
     useEffect(() => {
         if (!receipt) return;
         if (receipt.status === "reverted") return;
-        if (transactionType?.type !== "SWAP_BRIDGE") return;
+        if (!(transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE")) return;
         const messageId = getHyperlaneMessageIdFromReceipt(receipt);
 
         setMessageId(messageId);
