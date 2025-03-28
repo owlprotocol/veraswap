@@ -202,7 +202,7 @@ function Index() {
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
 
-            const amountOutMinimum = quoterData![0];
+            const amountOutMinimum = transactionType?.type === "BRIDGE" ? tokenInAmount : quoterData![0];
 
             if (!transactionType) return;
 
@@ -372,8 +372,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0.0"
+                                                ? "Fetching quote..."
+                                                : "0.0"
                                     }
                                     disabled={true}
                                 />
