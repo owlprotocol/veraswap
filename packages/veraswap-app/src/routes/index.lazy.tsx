@@ -14,6 +14,8 @@ import {
     getSwapAndSuperchainBridgeTransaction,
     getSuperchainMessageIdFromReceipt,
     SUPERCHAIN_TOKEN_BRIDGE,
+    getTransaction,
+    TransactionParams,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -43,7 +45,8 @@ import {
     waitForReceiptQueryAtom,
     messageIdAtom,
     remoteTransactionHashAtom,
-    hyperlaneMailboxChainOut,
+    transactionTypeAtom,
+    // hyperlaneMailboxChainOut,
     chainsTypeAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
@@ -65,9 +68,6 @@ export const Route = createLazyFileRoute("/")({
 function Index() {
     const { address: walletAddress } = useAccount();
 
-    const swapType = useAtomValue(swapTypeAtom);
-    const remoteTokenInfo = useAtomValue(remoteTokenInfoAtom);
-
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);
 
@@ -81,8 +81,6 @@ function Index() {
 
     const [messageId, setMessageId] = useAtom(messageIdAtom);
 
-    const poolKey = useAtomValue(poolKeyInAtom);
-
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
@@ -90,6 +88,8 @@ function Index() {
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
     const swapStep = useAtomValue(swapStepAtom);
+
+    const transactionType = useAtomValue(transactionTypeAtom);
 
     const [transactionModalOpen, setTransactionModalOpen] = useAtom(transactionModalOpenAtom);
     const [transactionSteps] = useAtom(transactionStepsAtom);
@@ -99,7 +99,7 @@ function Index() {
     const [_, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
-    const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
+    // const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
 
     const { toast } = useToast();
 
@@ -218,77 +218,27 @@ function Index() {
             return;
         }
         if (swapStep === SwapStep.EXECUTE_SWAP) {
-            initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
-
-            let transaction: { to: Address; data: Hex; value: bigint };
+            // initializeTransactionSteps(swapType === SwapType.SwapAndBridge ? "SwapAndBridge" : "Swap");
 
             const amountOutMinimum = quoterData![0];
-            const zeroForOne = tokenIn!.address === poolKey!.currency0;
-            if (swapType === SwapType.Swap) {
-                /*
-                const isUserRegistered = isUserRegisteredArr?.[0] as boolean | undefined;
-                if (isUserRegistered === false && chainIn?.id === base.id) {
-                    writeContractRegisterUser({
-                        abi: [registerReferrals],
-                        address: DIVVI_BASE_REGISTRY,
-                        functionName: "registerReferrals",
-                        chainId: chainIn?.id ?? 0,
-                        args: [stringToHex("investor", { size: 32 }), [stringToHex("beefy", { size: 32 })]],
-                    });
-                }
-                */
 
-                if (!tokenOut) {
-                    throw new Error("Token out not selected for swap");
-                }
-                transaction = getSwapExactInExecuteData({
-                    universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                    poolKey: poolKey!,
-                    zeroForOne,
-                    amountIn: tokenInAmount!,
-                    amountOutMinimum,
+            if (!transactionType) return;
+
+            const transaction = getTransaction({
+                ...transactionType,
+                amountIn: tokenInAmount,
+                amountOutMinimum,
+                walletAddress,
+                bridgePayment,
+            } as TransactionParams);
+
+            if (!transaction) {
+                toast({
+                    title: "Transaction Failed",
+                    description: "Your transaction has failed. Please try again.",
+                    variant: "destructive",
                 });
-            } else if (swapType === SwapType.SwapAndBridge) {
-                if (false) {
-                    // Disable superchain
-                    /*
-                    transaction = getSwapAndSuperchainBridgeTransaction({
-                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                        destinationChain: chainOut!.id,
-                        receiver: walletAddress!,
-                        poolKey: poolKey!,
-                        zeroForOne,
-                        amountIn: tokenInAmount!,
-                        amountOutMinimum,
-                    });
-                    */
-                } else {
-                    const bridgeAddress = remoteTokenInfo?.remoteBridgeAddress ?? remoteTokenInfo?.remoteTokenAddress;
-
-                    if (!bridgeAddress) {
-                        throw new Error("Bridge address not found");
-                    }
-
-                    // TODO: check why it can't infer type
-                    if (!bridgePayment && import.meta.env.MODE !== "development") {
-                        throw new Error("Bridge payment not found");
-                    }
-
-                    transaction = getSwapAndHyperlaneSweepBridgeTransaction({
-                        universalRouter: UNISWAP_CONTRACTS[tokenIn!.chainId].UNIVERSAL_ROUTER,
-                        bridgeAddress,
-                        // Default for local env
-                        bridgePayment: bridgePayment ?? 1n,
-                        destinationChain: chainOut!.id,
-                        receiver: walletAddress!,
-                        poolKey: poolKey!,
-                        zeroForOne,
-                        amountIn: tokenInAmount!,
-                        amountOutMinimum,
-                    });
-                }
-            } else {
-                throw new Error("Swap type not supported");
+                return;
             }
 
             sendTransaction(
@@ -327,7 +277,7 @@ function Index() {
 
         updateTransactionStep({ id: "swap", status: "success" });
 
-        if (swapType !== SwapType.SwapAndBridge) {
+        if (transactionType?.type !== "SWAP_BRIDGE") {
             if (swapStep !== SwapStep.EXECUTE_SWAP) {
                 return;
             }
@@ -339,23 +289,23 @@ function Index() {
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [receipt, swapType]);
+    }, [receipt]);
 
     useEffect(() => {
         if (!receipt) return;
         if (receipt.status === "reverted") return;
-        if (swapType !== SwapType.SwapAndBridge) return;
+        if (transactionType?.type !== "SWAP_BRIDGE") return;
         const messageId = getHyperlaneMessageIdFromReceipt(receipt);
 
         setMessageId(messageId);
         setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
         updateTransactionStep({ id: "bridge", status: "processing" });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [receipt, swapType, networkType]);
+    }, [receipt, networkType]);
 
     useEffect(() => {
         if (!remoteTransactionHash) return;
-        if (swapType !== SwapType.SwapAndBridge) return;
+        if (transactionType?.type !== "SWAP_BRIDGE") return;
 
         updateTransactionStep({ id: "bridge", status: "success" });
         updateTransactionStep({ id: "transfer", status: "success" });
@@ -367,7 +317,7 @@ function Index() {
             variant: "default",
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [remoteTransactionHash, swapType]);
+    }, [remoteTransactionHash]);
 
     return (
         <div className="max-w-xl mx-auto px-4">
@@ -440,8 +390,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                                ? "Fetching quote..."
-                                                : "0.0"
+                                              ? "Fetching quote..."
+                                              : "0.0"
                                     }
                                     disabled={true}
                                 />
@@ -457,10 +407,13 @@ function Index() {
                     <Button
                         disabled={
                             !(
-                                swapStep === SwapStep.APPROVE_PERMIT2 ||
-                                swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
-                                swapStep === SwapStep.EXECUTE_SWAP ||
-                                swapStep === SwapStep.BRIDGING_NOT_SUPPORTED
+                                (
+                                    swapStep === SwapStep.APPROVE_PERMIT2 ||
+                                    swapStep === SwapStep.APPROVE_UNISWAP_ROUTER ||
+                                    swapStep === SwapStep.EXECUTE_SWAP
+                                )
+                                // TODO: Add back
+                                // swapStep === SwapStep.BRIDGING_NOT_SUPPORTED
                             )
                         }
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"

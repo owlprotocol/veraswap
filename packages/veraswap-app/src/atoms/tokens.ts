@@ -4,7 +4,7 @@ import { parseUnits, zeroAddress } from "viem";
 import { readContractQueryOptions } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
 
-import { Token, getTransactionType, TransactionResult } from "@owlprotocol/veraswap-sdk";
+import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, LOCAL_POOLS, LOCAL_TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
@@ -187,7 +187,7 @@ export const tokenOutBalanceAtom = atom<bigint | null>((get) => {
 });
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
-export const transactionTypeAtom = atom<TransactionResult | null>((get) => {
+export const transactionTypeAtom = atom<TransactionType | null>((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
     if (!tokenIn || !tokenOut) return null;
