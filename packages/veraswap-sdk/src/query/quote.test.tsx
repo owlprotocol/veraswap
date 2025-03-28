@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react-hooks";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { WagmiProvider, http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
-import { createPublicClient } from "viem";
+import { Address, createPublicClient, zeroAddress } from "viem";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
 import { beforeEach, describe, expect, test } from "vitest";
 import { quoteQueryOptions } from "./quote.js";
@@ -10,8 +10,9 @@ import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
-import { MOCK_POOLS, TOKEN_LIST, UNISWAP_CONTRACTS } from "../constants.js";
+import { TOKEN_LIST } from "../constants.js";
 import { port } from "../test/constants.js";
+import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
@@ -34,7 +35,14 @@ describe("quote.test.tsx", () => {
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;
 
-    const poolKey = MOCK_POOLS[chainId];
+    // const poolKey = MOCK_POOLS?.[chainId];
+    const poolKey = {
+        currency0: currency0.address as Address,
+        currency1: currency1.address as Address,
+        fee: 3000,
+        tickSpacing: 60,
+        hooks: zeroAddress,
+    };
 
     const currency0Amount = CurrencyAmount.fromFractionalAmount(currency0, 1, 1);
     const currency1Amount = CurrencyAmount.fromFractionalAmount(currency1, 1, 1);
@@ -60,7 +68,7 @@ describe("quote.test.tsx", () => {
                         poolKey,
                         exactCurrencyAmount: currency0Amount,
                         quoteType: "quoteExactInputSingle",
-                        quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
+                        quoterAddress: UNISWAP_CONTRACTS[chainId].v4Quoter,
                     }),
                 ),
             { wrapper },
@@ -76,7 +84,7 @@ describe("quote.test.tsx", () => {
         };
         const [amountOutQuoted, gasEstimateQuoted] = (await publicClient.readContract({
             abi: [quoteExactInputSingleAbi],
-            address: UNISWAP_CONTRACTS[chainId].QUOTER,
+            address: UNISWAP_CONTRACTS[chainId].v4Quoter,
             functionName: "quoteExactInputSingle",
             args: [quoteExactInputSingleParams],
         })) as [bigint, bigint];
@@ -102,7 +110,7 @@ describe("quote.test.tsx", () => {
                         poolKey,
                         exactCurrencyAmount: currency1Amount,
                         quoteType: "quoteExactOutputSingle",
-                        quoterAddress: UNISWAP_CONTRACTS[chainId].QUOTER,
+                        quoterAddress: UNISWAP_CONTRACTS[chainId].v4Quoter,
                     }),
                 ),
             { wrapper },
@@ -118,7 +126,7 @@ describe("quote.test.tsx", () => {
         };
         const [amountInQuoted, gasEstimatedQuoted] = (await publicClient.readContract({
             abi: [quoteExactOutputSingleAbi],
-            address: UNISWAP_CONTRACTS[chainId].QUOTER,
+            address: UNISWAP_CONTRACTS[chainId].v4Quoter,
             functionName: "quoteExactOutputSingle",
             args: [quoteExactOutputSingleParams],
         })) as [bigint, bigint];
