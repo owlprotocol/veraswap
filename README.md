@@ -6,8 +6,12 @@ This is the monorepo for the VeraSwap project. It contains the following package
 
 ## Getting started
 
-### Install dependencies and build
+### Clone
+```bash
+git clone --recurse-submodules -j8 git@github.com:owlprotocol/veraswap.git
+```
 
+### Install dependencies and build
 ```bash
 pnpm install && cd packages/veraswap-sdk/lib/rhinestone-core-modules && pnpm i --ignore-workspace # uses shameful hoisting :(
 pnpm build
