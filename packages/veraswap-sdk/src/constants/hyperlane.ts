@@ -8,6 +8,9 @@ import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
+import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
+import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
+import { HypTokenRouterSweep } from "../artifacts/index.js";
 
 export function getMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({
@@ -142,3 +145,50 @@ export function getHypERC20CollateralAddress({ erc20, mailbox }: { erc20: Addres
         salt: zeroHash,
     });
 }
+
+export const HYPERLANE_ROUTER_SWEEP_ADDRESS = getDeployDeterministicAddress({
+    bytecode: HypTokenRouterSweep.bytecode,
+    salt: zeroHash,
+});
+
+export const testHyperlaneRegistry: HyperlaneRegistry = {
+    metadata: {
+        "localhost-1337": {
+            chainId: 1337,
+            name: "localhost-1337",
+        } as ChainMetadata,
+        "localhost-1338": {
+            chainId: 1338,
+            name: "localhost-1338",
+        } as ChainMetadata,
+        "localhost-op": {
+            chainId: 900,
+            name: "localhost-op",
+        } as ChainMetadata,
+        "localhost-op-chain-a": {
+            chainId: 901,
+            name: "localhost-op-chain-a",
+        } as ChainMetadata,
+        "localhost-op-chain-b": {
+            chainId: 902,
+            name: "localhost-op-chain-b",
+        } as ChainMetadata,
+    } as ChainMap<ChainMetadata>,
+    addresses: {
+        "localhost-1337": {
+            mailbox: getMailboxAddress({ chainId: 1337 }),
+        },
+        "localhost-1338": {
+            mailbox: getMailboxAddress({ chainId: 1338 }),
+        },
+        "localhost-op": {
+            mailbox: getMailboxAddress({ chainId: 900 }),
+        },
+        "localhost-op-chain-a": {
+            mailbox: getMailboxAddress({ chainId: 901 }),
+        },
+        "localhost-op-chain-b": {
+            mailbox: getMailboxAddress({ chainId: 902 }),
+        },
+    },
+};

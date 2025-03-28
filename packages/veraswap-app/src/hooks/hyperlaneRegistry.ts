@@ -1,5 +1,5 @@
 import { GithubRegistry } from "@hyperlane-xyz/registry";
-import { testHyperlaneRegistry } from "@owlprotocol/veraswap-sdk";
+import { testHyperlaneRegistry } from "@owlprotocol/veraswap-sdk/constants";
 
 const fetchGithubRegistryData = async () => {
     const registry = new GithubRegistry();

@@ -1,6 +1,7 @@
 import { Address, encodeFunctionData, Hex, padHex } from "viem";
-import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
+
 import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
 
 export function getHyperlaneSweepBridgeCallTargetParams({
     bridgeAddress,
