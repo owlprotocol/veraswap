@@ -58,7 +58,8 @@ See [script/](script/) for hook deployment, pool creation, liquidity provision, 
 
 ### Mainnet Deployment
 For mainnet deployments we MUST use some existing official deployed contracts as parameters (eg. PoolManager, Mailbox, Kernel):
-- Uniswap: https://github.com/Uniswap/universal-router/tree/main/script/deployParameters
+- Uniswap Router Params: https://github.com/Uniswap/universal-router/tree/main/script/deployParameters
+- Uniswap View Contracts: https://docs.uniswap.org/contracts/v4/deployments
 - Hyperlane: https://github.com/hyperlane-xyz/hyperlane-registry/tree/main/chains
 - Kernel: https://github.com/zerodevapp/kernel (3.1)
 

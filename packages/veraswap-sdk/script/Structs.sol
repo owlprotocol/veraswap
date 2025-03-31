@@ -20,8 +20,6 @@ struct UniswapContracts {
 }
 
 struct HyperlaneContracts {
-    address ism;
-    address hook;
     address mailbox;
     address testRecipient;
     address hypTokenRouterSweep;
