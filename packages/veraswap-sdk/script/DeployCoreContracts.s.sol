@@ -2,8 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/console2.sol";
-import "forge-std/Script.sol";
-import "forge-std/Test.sol";
 
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Create2Utils} from "./utils/Create2Utils.sol";
@@ -88,37 +86,59 @@ contract DeployCoreContracts is DeployParameters {
         return HyperlaneDeployParams({mailbox: mailbox});
     }
 
-    function deployCoreContracts() internal returns (CoreContracts memory) {
+    function deployCoreContracts() internal returns (CoreContracts memory contracts) {
         uint256 chainId = block.chainid;
 
-        // Deploy Parameters (contracts that might already have official addresses)
-        RouterParameters memory uniswapParams;
-        HyperlaneDeployParams memory hyperlaneParams;
-
-        // TODO: These are only generated on local
-        address v4StateView;
-        address v4Quoter;
+        // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Local Anvil / Supersim
-            uniswapParams = deployUniswapRouterParams();
-            (v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
-            (v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
+            RouterParameters memory uniswapParams = deployUniswapRouterParams();
+            (address v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
+            (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
+            (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(uniswapParams);
 
-            hyperlaneParams = deployHyperlaneParams();
+            contracts.uniswap = UniswapContracts({
+                v4PoolManager: uniswapParams.v4PoolManager,
+                v4PositionManager: uniswapParams.v4PositionManager,
+                v4StateView: v4StateView,
+                v4Quoter: v4Quoter,
+                universalRouter: universalRouter
+            });
         } else {
-            uniswapParams = deployParams[chainId].uniswap;
+            RouterParameters memory uniswapParams = deployParams[chainId].uniswap;
             if (uniswapParams.permit2 == address(0)) revert("Invalid: DeployParams Permit2 not deployed");
-            hyperlaneParams = deployParams[chainId].hyperlane;
-            if (hyperlaneParams.mailbox == address(0)) revert("Invalid: DeployParams Hyperlane Mailbox not deployed");
+            (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(uniswapParams);
+
+            contracts.uniswap = UniswapContracts({
+                v4PoolManager: uniswapParams.v4PoolManager,
+                v4PositionManager: uniswapParams.v4PositionManager,
+                v4StateView: address(0),
+                v4Quoter: address(0),
+                universalRouter: universalRouter
+            });
         }
 
-        // Custom contracts (always deployed)
-        // Deploy Universal Router
-        (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(uniswapParams);
-
-        // Deploy Hyperlane Contracts
-        (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
-        (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+        // Hyperlane contracts
+        if (chainId == 900 || chainId == 901 || chainId == 902) {
+            HyperlaneDeployParams memory hyperlaneParams = deployHyperlaneParams();
+            (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
+            (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+            contracts.hyperlane = HyperlaneContracts({
+                mailbox: hyperlaneParams.mailbox,
+                testRecipient: testRecipient,
+                hypTokenRouterSweep: hypTokenRouterSweep
+            });
+        } else {
+            HyperlaneDeployParams memory hyperlaneParams = deployParams[chainId].hyperlane;
+            if (hyperlaneParams.mailbox == address(0)) revert("Invalid: DeployParams Hyperlane Mailbox not deployed");
+            (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
+            (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+            contracts.hyperlane = HyperlaneContracts({
+                mailbox: hyperlaneParams.mailbox,
+                testRecipient: testRecipient,
+                hypTokenRouterSweep: hypTokenRouterSweep
+            });
+        }
 
         // KERNEL CONTRACTS
         (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
@@ -127,32 +147,16 @@ contract DeployCoreContracts is DeployParameters {
 
         (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
         (address erc7579ExecutorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
-            hyperlaneParams.mailbox,
+            contracts.hyperlane.mailbox,
             address(0),
             ownableSignatureExecutor,
             kernelFactory
         );
 
-        return
-            CoreContracts({
-                uniswap: UniswapContracts({
-                    v4PoolManager: uniswapParams.v4PoolManager,
-                    v4PositionManager: uniswapParams.v4PositionManager,
-                    v4StateView: v4StateView,
-                    v4Quoter: v4Quoter,
-                    universalRouter: universalRouter
-                }),
-                hyperlane: HyperlaneContracts({
-                    mailbox: hyperlaneParams.mailbox,
-                    testRecipient: testRecipient,
-                    hypTokenRouterSweep: hypTokenRouterSweep
-                }),
-                // Kernel
-                kernel: kernel,
-                kernelFactory: kernelFactory,
-                ecdsaValidator: ecdsaValidator,
-                ownableSignatureExecutor: ownableSignatureExecutor,
-                erc7579ExecutorRouter: erc7579ExecutorRouter
-            });
+        contracts.kernel = kernel;
+        contracts.kernelFactory = kernelFactory;
+        contracts.ecdsaValidator = ecdsaValidator;
+        contracts.ownableSignatureExecutor = ownableSignatureExecutor;
+        contracts.erc7579ExecutorRouter = erc7579ExecutorRouter;
     }
 }

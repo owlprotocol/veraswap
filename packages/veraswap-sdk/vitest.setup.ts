@@ -41,7 +41,7 @@ export async function setup() {
 
     // Forge script
     const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // anvil 0
-    const templateCommand = `forge script ./script/DeployAll.s.sol --private-key ${privateKey} --broadcast`;
+    const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${privateKey} --broadcast`;
     const { stdout } = await execPromise(templateCommand);
 }
 
