@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowUpDown } from "lucide-react";
-import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, useWriteContract } from "wagmi";
+import { ArrowUpDown, Wallet, Wallet2 } from "lucide-react";
+import {
+    useAccount,
+    useReadContract,
+    useSwitchChain,
+    useWatchContractEvent,
+    useWriteContract,
+    useWatchAsset,
+} from "wagmi";
 import {
     getSwapAndHyperlaneSweepBridgeTransaction,
     getSwapExactInExecuteData,
@@ -12,6 +19,7 @@ import {
     TransactionParams,
     HypERC20Token,
     HypERC20CollateralToken,
+    Token,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -78,6 +86,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
     const { address: walletAddress } = useAccount();
+
+    const { watchAsset } = useWatchAsset();
 
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);
@@ -353,6 +363,17 @@ function Index() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remoteTransactionHash]);
 
+    const importToken = (token: Token) => {
+        watchAsset({
+            type: "ERC20",
+            options: {
+                address: token.address,
+                symbol: token.symbol,
+                decimals: token.decimals,
+            },
+        });
+    };
+
     return (
         <div className="max-w-xl mx-auto px-4">
             <MainnetTestnetButtons />
@@ -376,6 +397,15 @@ function Index() {
                                     placeholder="0.0"
                                     disabled={!tokenIn}
                                 />
+                                {tokenIn && (
+                                    <button
+                                        onClick={() => importToken(tokenIn)}
+                                        className="flex items-center gap-1 text-sm"
+                                        type="button"
+                                    >
+                                        <Wallet size={20} /> +
+                                    </button>
+                                )}
                                 <TokenSelector selectingTokenIn={true} />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
@@ -435,9 +465,19 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
+                                {tokenOut && (
+                                    <button
+                                        onClick={() => importToken(tokenOut)}
+                                        className="flex items-center gap-1 text-sm"
+                                        type="button"
+                                    >
+                                        <Wallet size={20} /> +
+                                    </button>
+                                )}
                                 <TokenSelector />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
+                                {" "}
                                 <div className="space-x-2 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>
