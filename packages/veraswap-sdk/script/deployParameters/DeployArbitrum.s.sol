@@ -6,6 +6,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 
 library DeployArbitrum {
     bytes32 constant BYTES32_ZERO = bytes32(0);
+    uint256 constant chainId = 42161;
 
     function getParams() internal pure returns (DeployParams memory params) {
         RouterParameters memory uniswap = RouterParameters({

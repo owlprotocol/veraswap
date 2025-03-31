@@ -5,6 +5,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeploySoneium {
+    uint256 constant chainId = 1868;
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant UNSUPPORTED_PROTOCOL = address(0);
 

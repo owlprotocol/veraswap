@@ -7,6 +7,7 @@ import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 library DeployOPSepolia {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant UNSUPPORTED_PROTOCOL = address(0);
+    uint256 constant chainId = 11155420;
 
     function getParams() internal pure returns (DeployParams memory params) {
         RouterParameters memory uniswap = RouterParameters({

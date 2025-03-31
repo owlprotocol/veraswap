@@ -5,6 +5,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployGoerli {
+    uint256 constant chainId = 5;
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant UNSUPPORTED_PROTOCOL = address(0);
 

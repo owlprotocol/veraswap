@@ -5,6 +5,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeploySepolia {
+    uint256 constant chainId = 11155111;
     bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function getParams() internal pure returns (DeployParams memory params) {

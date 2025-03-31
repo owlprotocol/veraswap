@@ -5,6 +5,8 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployAvalanche {
+    uint256 constant chainId = 43114;
+
     function getParams() internal pure returns (DeployParams memory params) {
         RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,

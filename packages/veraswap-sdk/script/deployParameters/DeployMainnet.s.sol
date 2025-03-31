@@ -5,6 +5,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployMainnet {
+    uint256 constant chainId = 1;
     address constant UNSUPPORTED_PROTOCOL = address(0);
 
     function getParams() internal pure returns (DeployParams memory params) {

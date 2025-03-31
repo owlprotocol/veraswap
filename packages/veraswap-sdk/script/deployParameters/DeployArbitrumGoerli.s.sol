@@ -5,6 +5,7 @@ import {RouterParameters} from "@uniswap/universal-router/contracts/types/Router
 import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployArbitrumGoerli {
+    uint256 constant chainId = 421613;
     bytes32 constant BYTES32_ZERO = bytes32(0);
     address constant UNSUPPORTED_PROTOCOL = address(0);
 
