@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {DeployParameters} from "../DeployParameters.s.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
-contract DeployInk is DeployParameters {
-    function setUp() public override {
-        params = RouterParameters({
+library DeployInk {
+    uint256 constant chainId = 57073;
+    bytes32 constant BYTES32_ZERO = bytes32(0);
+
+    function getParams() internal pure returns (DeployParams memory params) {
+        RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x4200000000000000000000000000000000000006,
             v2Factory: 0xfe57A6BA1951F69aE2Ed4abe23e0f095DF500C04,
@@ -17,5 +20,9 @@ contract DeployInk is DeployParameters {
             v3NFTPositionManager: 0xC0836E5B058BBE22ae2266e1AC488A1A0fD8DCE8,
             v4PositionManager: 0x1b35d13a2E2528f192637F14B05f0Dc0e7dEB566
         });
+
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+
+        params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
 }

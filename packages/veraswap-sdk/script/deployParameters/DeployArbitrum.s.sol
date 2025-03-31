@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {DeployParameters, HyperlaneParameters} from "../DeployParameters.s.sol";
+import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
-contract DeployArbitrum is DeployParameters {
-    function setUp() public override {
-        params = RouterParameters({
+library DeployArbitrum {
+    bytes32 constant BYTES32_ZERO = bytes32(0);
+    uint256 constant chainId = 42161;
+
+    function getParams() internal pure returns (DeployParams memory params) {
+        RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1,
             v2Factory: 0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9,
@@ -18,8 +21,10 @@ contract DeployArbitrum is DeployParameters {
             v4PositionManager: 0xd88F38F930b7952f2DB2432Cb002E7abbF3dD869
         });
 
-        unsupported = 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B;
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0x979Ca5202784112f4738403dBec5D0F3B9daabB9
+        });
 
-        hyperlaneParams = HyperlaneParameters({mailbox: 0x979Ca5202784112f4738403dBec5D0F3B9daabB9});
+        params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
 }
