@@ -1,8 +1,9 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { PoolKey, UNISWAP_CONTRACTS, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount } from "@uniswap/sdk-core";
 import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
+import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { tokenInAmountAtom, transactionTypeAtom } from "./tokens.js";
 import { config } from "@/config.js";
 
@@ -45,7 +46,7 @@ export const quoteInAtom = atomWithQuery((get) => {
     // Query args MUST be defined
     const currencyIn = new Token(chainId, tokenInAddress, tokenInDecimals);
     const exactCurrencyAmount = CurrencyAmount.fromRawAmount(currencyIn, (tokenInAmount ?? 0).toString());
-    const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].QUOTER : zeroAddress;
+    const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].v4Quoter : zeroAddress;
 
     return {
         ...quoteQueryOptions(config, {

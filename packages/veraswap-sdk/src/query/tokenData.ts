@@ -6,7 +6,7 @@ import * as chains from "viem/chains";
 
 import { tokenRegistryData } from "./tokenRegistryData.js";
 import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
-import { inkSepolia, unichainSepolia } from "../chains.js";
+import { inkSepolia, unichainSepolia } from "../chains/index.js";
 
 // TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {

@@ -2,7 +2,7 @@ import { PoolKey } from "@uniswap/v4-sdk";
 import { Hex, encodePacked, encodeFunctionData, Address } from "viem";
 import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { V4_SWAP } from "../constants.js";
+import { V4_SWAP } from "../constants/index.js";
 
 /**
  * getSwapExactInExecuteData creates a trade plan, and returns a router execute call data.

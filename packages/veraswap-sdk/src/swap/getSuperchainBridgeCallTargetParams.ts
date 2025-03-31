@@ -1,6 +1,6 @@
 import { Address, encodeFunctionData, Hex } from "viem";
-import { SUPERCHAIN_SWEEP_ADDRESS } from "../constants.js";
 import { SuperchainTokenBridgeSweep } from "../artifacts/SuperchainTokenBridgeSweep.js";
+import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
 
 export function getSuperchainBridgeCallTargetParams({
     destinationChain,

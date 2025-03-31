@@ -81,7 +81,7 @@ export function getSharedChainTokenPairs({
  * @param param0
  * @returns
  */
-export function getPoolKey2({
+export function getPoolKey({
     poolKeys,
     tokenIn,
     tokenOut,
@@ -137,7 +137,7 @@ export function getSharedChainPools({
         const chainPoolKeys = poolKeys[tokenIn.chainId];
         if (!chainPoolKeys) return;
 
-        const poolKey = getPoolKey2({ poolKeys: chainPoolKeys, tokenIn, tokenOut });
+        const poolKey = getPoolKey({ poolKeys: chainPoolKeys, tokenIn, tokenOut });
         // Add to options
         if (poolKey) {
             poolKeyOptions.push({ chainId: pair.chainId, tokenIn, tokenOut, poolKey });
@@ -178,7 +178,7 @@ export function getTransactionType({
 
     // SWAP: `tokenIn.chainId == tokenOut.chainId`
     if (tokenIn.chainId === tokenOut.chainId) {
-        const poolKey = getPoolKey2({ poolKeys: poolKeys[tokenIn.chainId] ?? [], tokenIn, tokenOut });
+        const poolKey = getPoolKey({ poolKeys: poolKeys[tokenIn.chainId] ?? [], tokenIn, tokenOut });
         //TODO: Check alternative sources of liquidity
         if (!poolKey) return null;
 

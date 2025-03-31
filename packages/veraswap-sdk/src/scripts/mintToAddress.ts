@@ -11,7 +11,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { MockERC20 } from "../artifacts/MockERC20.js";
-import { localOp } from "../chains.js";
+import { opChainL1 } from "../chains/index.js";
 
 export async function mintToAddress() {
     if (process.argv.length < 5) {
@@ -27,7 +27,7 @@ export async function mintToAddress() {
     if (!privateKey) throw new Error("PRIVATE_KEY is required");
 
     // const chain = { ...sepolia, rpcUrls: { default: { http: ["https://sepolia.drpc.org"] } } };
-    const chain = localOp;
+    const chain = opChainL1;
 
     const walletClient = createWalletClient({
         chain,

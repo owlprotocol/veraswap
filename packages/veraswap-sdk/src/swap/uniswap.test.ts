@@ -4,7 +4,7 @@ import { Percent } from "@uniswap/sdk-core";
 import { parseUnits, zeroAddress } from "viem";
 import { polygon } from "viem/chains";
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
-import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
 import {
     RouterPreference,
     URAQuoteType,

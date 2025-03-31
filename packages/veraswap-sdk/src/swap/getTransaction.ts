@@ -6,9 +6,10 @@ import {
     TransactionTypeBridgeSwap,
 } from "../utils/getTransactionType.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
-import { UNISWAP_CONTRACTS } from "../constants.js";
+
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
+import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -40,16 +41,15 @@ export type TransactionParams =
 
 export function getTransaction(
     params: TransactionParams,
-    constants?: { uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }> },
+    constants?: { uniswapContracts: Record<number, { universalRouter: Address }> },
 ): { to: Address; data: Hex; value: bigint } | null {
-    const uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }> =
-        constants?.uniswapContracts ?? UNISWAP_CONTRACTS;
+    const uniswapContracts = constants?.uniswapContracts ?? UNISWAP_CONTRACTS;
 
     switch (params.type) {
         case "SWAP": {
             const { tokenIn, poolKey, zeroForOne, amountIn, amountOutMinimum } = params;
             return getSwapExactInExecuteData({
-                universalRouter: uniswapContracts[tokenIn.chainId].UNIVERSAL_ROUTER,
+                universalRouter: uniswapContracts[tokenIn.chainId].universalRouter,
                 poolKey,
                 zeroForOne,
                 amountIn,
@@ -76,7 +76,7 @@ export function getTransaction(
             const bridgeAddress = bridgeTokenIn.address;
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
-                universalRouter: uniswapContracts[swapTokenIn.chainId].UNIVERSAL_ROUTER,
+                universalRouter: uniswapContracts[swapTokenIn.chainId].universalRouter,
                 bridgeAddress,
                 // Default for local env
                 bridgePayment: bridgePayment ?? 1n,
