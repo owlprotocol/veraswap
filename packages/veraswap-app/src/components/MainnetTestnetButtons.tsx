@@ -40,7 +40,7 @@ export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const navigate = Route.useNavigate();
 
-    const handleNetworkChange = (newType: "mainnet" | "testnet" | "local") => {
+    const handleNetworkChange = (newType: ChainsType) => {
         setNetworkType(newType);
 
         navigate({
