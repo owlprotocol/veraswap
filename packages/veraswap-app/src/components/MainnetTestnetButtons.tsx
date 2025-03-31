@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { Button } from "./ui/button.js";
-import { chainsTypeAtom } from "@/atoms/index.js";
+import { ChainsType, chainsTypeAtom } from "@/atoms/index.js";
 
 const buttonStyles: Record<string, string> = {
     local: `
@@ -30,6 +30,11 @@ const buttonStyles: Record<string, string> = {
   `,
 };
 
+const networkTypes =
+    import.meta.env.MODE === "development"
+        ? (["mainnet", "testnet", "local"] as const)
+        : (["mainnet", "testnet"] as const);
+
 export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(chainsTypeAtom);
 
@@ -42,14 +47,14 @@ export const MainnetTestnetButtons = () => {
     p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border
 "
             >
-                {["mainnet", "testnet", "local"].map((type) => (
+                {networkTypes.map((type: ChainsType) => (
                     <Button
                         key={type}
                         type="button"
                         className={`w-24 md:w-32 px-6 md:py-2 rounded-xl transition-all ${
                             networkType === type ? buttonStyles[type] : buttonStyles.default
                         }`}
-                        onClick={() => setNetworkType(type as "local" | "testnet" | "mainnet")}
+                        onClick={() => setNetworkType(type)}
                     >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                     </Button>
