@@ -477,7 +477,6 @@ function Index() {
                                 <TokenSelector />
                             </div>
                             <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                {" "}
                                 <div className="space-x-2 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>
