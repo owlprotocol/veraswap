@@ -5,13 +5,18 @@ import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Token } from "@owlprotocol/veraswap-sdk";
+import { useSearch } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom } from "@/atoms/index.js";
+import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom, chainsTypeAtom } from "@/atoms/index.js";
+import { Route } from "@/routes/index.js";
+import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
+    const search = useSearch({ from: "/" });
+    const navigate = Route.useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -20,8 +25,11 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const allTokens = useAtomValue(tokensAtom);
     const uniqueTokens = useMemo(() => groupBy(allTokens, "symbol"), [allTokens]);
 
+    useSyncSwapSearchParams(allTokens);
+
     const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
     const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
+    const networkType = useAtomValue(chainsTypeAtom);
 
     const currentToken = selectingTokenIn ? tokenIn : tokenOut;
     const currentTokenSymbol = currentToken?.symbol || null;
@@ -53,8 +61,26 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const handleTokenSelect = (token: Token) => {
         if (selectingTokenIn) {
             setTokenIn(token);
+            navigate({
+                search: {
+                    ...search,
+                    type: networkType,
+                    tokenIn: token.symbol,
+                    chainIdIn: token.chainId,
+                },
+                replace: true,
+            });
         } else {
             setTokenOut(token);
+            navigate({
+                search: {
+                    ...search,
+                    type: networkType,
+                    tokenOut: token.symbol,
+                    chainIdOut: token.chainId,
+                },
+                replace: true,
+            });
         }
         setExpandedSymbol(null);
         setIsOpen(false);

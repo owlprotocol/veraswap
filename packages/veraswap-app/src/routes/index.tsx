@@ -1,4 +1,5 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { ArrowUpDown } from "lucide-react";
 import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, useWriteContract } from "wagmi";
 import {
@@ -64,7 +65,14 @@ import { registerReferrals } from "@/abis/registerReferrals.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains } from "@/config.js";
 
-export const Route = createLazyFileRoute("/")({
+export const Route = createFileRoute("/")({
+    validateSearch: z.object({
+        type: z.enum(["mainnet", "testnet", "local"]).optional(),
+        tokenIn: z.string().optional(),
+        chainIdIn: z.coerce.number().optional(),
+        tokenOut: z.string().optional(),
+        chainIdOut: z.coerce.number().optional(),
+    }),
     component: Index,
 });
 
