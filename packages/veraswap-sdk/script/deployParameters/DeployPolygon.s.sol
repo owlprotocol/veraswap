@@ -2,15 +2,11 @@
 pragma solidity ^0.8.24;
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {HyperlaneDeployParams} from "../Structs.sol";
+import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployPolygon {
-    function getParams()
-        internal
-        pure
-        returns (RouterParameters memory uniswapParams, HyperlaneDeployParams memory hyperlaneParams)
-    {
-        uniswapParams = RouterParameters({
+    function getParams() internal pure returns (DeployParams memory params) {
+        RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270,
             v2Factory: 0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C,
@@ -22,6 +18,8 @@ library DeployPolygon {
             v4PositionManager: 0x1Ec2eBf4F37E7363FDfe3551602425af0B3ceef9
         });
 
-        hyperlaneParams = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+
+        params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
 }

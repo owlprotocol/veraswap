@@ -2,15 +2,11 @@
 pragma solidity ^0.8.24;
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {HyperlaneDeployParams} from "../Structs.sol";
+import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployAvalanche {
-    function getParams()
-        internal
-        pure
-        returns (RouterParameters memory uniswapParams, HyperlaneDeployParams memory hyperlaneParams)
-    {
-        uniswapParams = RouterParameters({
+    function getParams() internal pure returns (DeployParams memory params) {
+        RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7,
             v2Factory: 0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C,
@@ -22,6 +18,8 @@ library DeployAvalanche {
             v4PositionManager: 0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD
         });
 
-        hyperlaneParams = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+
+        params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
 }

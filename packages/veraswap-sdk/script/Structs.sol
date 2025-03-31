@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
+import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+
+struct DeployParams {
+    RouterParameters uniswap;
+    HyperlaneDeployParams hyperlane;
+}
 
 struct HyperlaneDeployParams {
     address mailbox;

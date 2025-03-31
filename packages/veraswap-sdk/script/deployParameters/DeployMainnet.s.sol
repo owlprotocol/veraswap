@@ -2,15 +2,13 @@
 pragma solidity ^0.8.24;
 
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {HyperlaneDeployParams} from "../Structs.sol";
+import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployMainnet {
-    function getParams()
-        internal
-        pure
-        returns (RouterParameters memory uniswapParams, HyperlaneDeployParams memory hyperlaneParams)
-    {
-        uniswapParams = RouterParameters({
+    address constant UNSUPPORTED_PROTOCOL = address(0);
+
+    function getParams() internal pure returns (DeployParams memory params) {
+        RouterParameters memory uniswap = RouterParameters({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
             v2Factory: 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f,
@@ -22,6 +20,8 @@ library DeployMainnet {
             v4PositionManager: UNSUPPORTED_PROTOCOL
         });
 
-        hyperlaneParams = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+
+        params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
 }
