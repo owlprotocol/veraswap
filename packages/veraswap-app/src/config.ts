@@ -65,13 +65,11 @@ export const testnetChains = [
     unichainSepolia,
 ];
 
-const allChains = [...localChains, ...interopDevnetChains, ...testnetChains, ...mainnetChains] as unknown as [
-    Chain,
-    ...Chain[],
-];
+const allChains = [...interopDevnetChains, ...testnetChains, ...mainnetChains];
 
-//TODO: Alter config based on MODE?: Not really needed rn
-export const chains = import.meta.env.MODE != "development" ? allChains : allChains;
+export const chains = (import.meta.env.MODE === "development"
+    ? [...allChains, ...localChains]
+    : allChains) as unknown as [Chain, ...Chain[]];
 
 //TODO: Why not support all wallets even in devmode?
 const wallets =
@@ -91,7 +89,6 @@ export const connectors = connectorsForWallets(
 
 export const config = createConfig({
     chains,
-    // @ts-ignore
     transports: Object.fromEntries(
         // Use websocket by default
         chains.map((chain: Chain) => [chain.id, !!chain.rpcUrls.default.webSocket?.[0] ? webSocket() : http()]),
