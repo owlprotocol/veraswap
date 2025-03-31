@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { Button } from "./ui/button.js";
-import { ChainsType, chainsTypeAtom } from "@/atoms/index.js";
+import { ChainsType, chainsTypeWriteAtom } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 
 const buttonStyles: Record<string, string> = {
@@ -37,7 +37,7 @@ const networkTypes =
         : (["mainnet", "testnet"] as const);
 
 export const MainnetTestnetButtons = () => {
-    const [networkType, setNetworkType] = useAtom(chainsTypeAtom);
+    const [networkType, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const navigate = Route.useNavigate();
 
     const handleNetworkChange = (newType: "mainnet" | "testnet" | "local") => {
