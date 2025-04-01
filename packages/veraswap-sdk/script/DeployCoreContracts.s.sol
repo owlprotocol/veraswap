@@ -148,6 +148,7 @@ contract DeployCoreContracts is DeployParameters {
         (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
         (address erc7579ExecutorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
             contracts.hyperlane.mailbox,
+            //TOOD: Use hardcoded ISM (currently this delegates ISM to Mailbox.defaultIsm())
             address(0),
             ownableSignatureExecutor,
             kernelFactory
