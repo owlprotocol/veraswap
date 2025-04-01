@@ -76,7 +76,7 @@ export function createMockERC20WarpRoute({
     return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
 }
 
-const localMockTokens: TokenBase<"MockERC20">[] = [
+export const localMockTokens: TokenBase<"MockERC20">[] = [
     {
         standard: "MockERC20",
         chainId: opChainL1.id,
