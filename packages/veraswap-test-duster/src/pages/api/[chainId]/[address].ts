@@ -1,6 +1,6 @@
 import { MockERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { inkSepolia, interopDevnet0, interopDevnet1, unichainSepolia } from "@owlprotocol/veraswap-sdk/chains";
-import { TOKEN_LIST } from "@owlprotocol/veraswap-sdk/constants";
+import { TOKENS } from "@owlprotocol/veraswap-sdk/constants";
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
     Address,
@@ -20,6 +20,7 @@ import {
     base,
     arbitrum,
     baseSepolia,
+    optimismSepolia,
 } from "viem/chains";
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -34,6 +35,19 @@ export const prodChains = [
                 ],
                 webSocket: [
                     "wss://lb.drpc.org/ogws?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+            },
+        },
+    },
+    {
+        ...optimismSepolia,
+        rpcUrls: {
+            default: {
+                http: [
+                    "https://lb.drpc.org/ogrpc?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+                webSocket: [
+                    "wss://lb.drpc.org/ogws?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
                 ],
             },
         },
@@ -127,7 +141,7 @@ export default async function handler(
         console.log(`Sent 0.00075 ETH to ${address}`);
     }
 
-    const tokensForChain = Object.values(TOKEN_LIST).filter(
+    const tokensForChain = Object.values(TOKENS).filter(
         (token) => token.chainId === chainIdParsed
     ) as Array<{ address: Address; decimals: number; symbol: string }>;
 
