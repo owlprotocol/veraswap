@@ -1,5 +1,5 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
-import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, mainnet, sepolia } from "wagmi/chains";
+import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, mainnet, optimismSepolia, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
 import {
@@ -39,6 +39,19 @@ export const testnetChains = [
             default: {
                 http: ["https://lb.drpc.org/ogrpc?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
                 webSocket: ["wss://lb.drpc.org/ogws?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            },
+        },
+    },
+    {
+        ...optimismSepolia,
+        rpcUrls: {
+            default: {
+                http: [
+                    "https://lb.drpc.org/ogrpc?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
+                webSocket: [
+                    "wss://lb.drpc.org/ogws?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
+                ],
             },
         },
     },

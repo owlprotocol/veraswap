@@ -5,7 +5,7 @@ import { readContractQueryOptions } from "wagmi/query";
 import { getAccount } from "@wagmi/core";
 
 import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
-import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, LOCAL_POOLS, LOCAL_TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
+import { PERMIT2_ADDRESS, POOLS, TOKENS_MAP, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 
@@ -225,7 +225,7 @@ export const transactionTypeAtom = atom<TransactionType | null>((get) => {
     if (!tokenIn || !tokenOut) return null;
 
     //TODO: Add better constants
-    return getTransactionType({ tokenIn, tokenOut, poolKeys: LOCAL_POOLS, tokens: LOCAL_TOKENS_MAP });
+    return getTransactionType({ tokenIn, tokenOut, poolKeys: POOLS, tokens: TOKENS_MAP });
 });
 
 /***** Invert *****/

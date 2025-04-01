@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
+import {UniswapContracts, HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeployBlast {
     uint256 constant chainId = 81457;
 
     function getParams() internal pure returns (DeployParams memory params) {
-        RouterParameters memory uniswap = RouterParameters({
+        UniswapContracts memory uniswap = UniswapContracts({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x4300000000000000000000000000000000000004,
             v2Factory: 0x5C346464d33F90bABaf70dB6388507CC889C1070,
@@ -17,7 +16,10 @@ library DeployBlast {
             poolInitCodeHash: 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54,
             v4PoolManager: 0x1631559198A9e474033433b2958daBC135ab6446,
             v3NFTPositionManager: 0xB218e4f7cF0533d4696fDfC419A0023D33345F28,
-            v4PositionManager: 0x4AD2F4CcA2682cBB5B950d660dD458a1D3f1bAaD
+            v4PositionManager: 0x4AD2F4CcA2682cBB5B950d660dD458a1D3f1bAaD,
+            v4StateView: address(0),
+            v4Quoter: address(0),
+            universalRouter: address(0)
         });
 
         HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});

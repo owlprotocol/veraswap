@@ -63,6 +63,26 @@ For mainnet deployments we MUST use some existing official deployed contracts as
 - Hyperlane: https://github.com/hyperlane-xyz/hyperlane-registry/tree/main/chains
 - Kernel: https://github.com/zerodevapp/kernel (3.1)
 
+**Deploy Core Contracts**
+Run the [DeployCoreContracts.s.sol](./script/DeployCoreContracts.s.sol) to deploy core immutable contracts.
+```bash
+forge script ./script/DeployCoreContracts.s.sol --broadcast --private-key $PRIVATE_KEY --rpc-url sepolia --verify
+```
+
+If verification failed for some reason, you can re-run using `--resume` flag:
+```bash
+forge script ./script/DeployCoreContracts.s.sol --resume --private-key $PRIVATE_KEY --rpc-url sepolia --verify
+```
+
+> Current Etherscan v1 Endpoints https://docs.etherscan.io/getting-started/endpoint-urls
+> Note: Etherscan [v2 API](https://docs.etherscan.io/etherscan-v2) not supported by forge yet as seen in [foundry/issues/9196](https://github.com/foundry-rs/foundry/issues/9196)
+
+**Deploy Tokens & Pools**
+Run [DeployTestnet.s.sol](./script/DeployTestnet.s.sol) script to deploy tokens & pools. This uses forge multichain deployment which *does not seem* (is this the case?) support verification.
+```bash
+forge script ./script/DeployTestnet.s.sol --broadcast --private-key $PRIVATE_KEY
+```
+
 ### Manual installation
 
 For custom projects that want to just copy over our forge setup, you can copy the [remappings.tsx](./remappings.txt) and install the dependencies at latest branches. Note we use a custom v3-periphery fork to make it work with latest openzeppelin contracts.

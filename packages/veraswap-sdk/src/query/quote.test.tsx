@@ -12,7 +12,6 @@ import {
 } from "../artifacts/IV4Quoter.js";
 import { port } from "../test/constants.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
-import { TOKEN_LIST } from "../constants/tokens.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
@@ -29,8 +28,9 @@ describe("quote.test.tsx", () => {
         },
     });
 
-    const currencyA = new Token(chain.id, TOKEN_LIST.TokenA_1337.address, 18, "A");
-    const currencyB = new Token(chain.id, TOKEN_LIST.TokenB_1337.address, 18, "B");
+    //TODO: Fix test with real deployed addresses
+    const currencyA = new Token(chain.id, zeroAddress, 18, "A");
+    const currencyB = new Token(chain.id, zeroAddress, 18, "B");
 
     const currency0 = currencyA.address < currencyB.address ? currencyA : currencyB;
     const currency1 = currencyA.address < currencyB.address ? currencyB : currencyA;

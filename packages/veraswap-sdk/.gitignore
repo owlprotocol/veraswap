@@ -15,6 +15,7 @@ _types
 /broadcast/*/1338/
 /broadcast/**/dry-run/
 /broadcast/multi/**
+!/broadcast/multi/DeployTestnet.s.sol-**
 
 # dependencies
 node_modules

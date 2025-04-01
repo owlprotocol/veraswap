@@ -39,23 +39,23 @@ somnia-testnet = "https://dream-rpc.somnia.network"
 
 # https://docs.blockscout.com/devs/verification/foundry-verification
 
-## TODO: Add key field and set envvars
-# [etherscan]
-# mainnet = { key = "${ETHERSCAN_MAINNET_KEY}" }
-# sepolia = { url = "https://sepolia.etherscan.io" }
-# base = { url = "https://basescan.org" }
-# base-sepolia = { url = "https://sepolia.basescan.org" }
-# unichain = { url = "https://uniscan.xyz" }
-# unichain-sepolia = { url = "https://sepolia.uniscan.xyz" }
-# zircuit = { url = "https://explorer.zircuit.com" }
-# zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
-# ink = { url = "https://explorer.inkonchain.com" }
-# ink-sepolia = { url = "https://explorer-sepolia.inkonchain.com" }
-# story = { url = "https://aeneid.storyscan.xyz" }
-# story-aeneid = { url = "https://storyscan.xyz" }
-# somnia-testnet = { url = "https://shannon-explorer.somnia.network" }
-# taraxa = { url = "https://mainnet.explorer.taraxa.io" }
-# taraxa-testnet = { url = "https://testnet.explorer.taraxa.io" }
+[etherscan]
+mainnet = { key = "${ETHERSCAN_MAINNET_KEY}" }
+sepolia = { url = "https://api-sepolia.etherscan.io/api", key = "${ETHERSCAN_SEPOLIA_KEY}" }
+optimism-sepolia = { url = "https://api-sepolia-optimism.etherscan.io/api", key = "${ETHERSCAN_OPTIMISM_SEPOLIA_KEY}" }
+#base = { url = "https://basescan.org" }
+#base-sepolia = { url = "https://sepolia.basescan.org" }
+#unichain = { url = "https://uniscan.xyz" }
+#unichain-sepolia = { url = "https://sepolia.uniscan.xyz" }
+#zircuit = { url = "https://explorer.zircuit.com" }
+#zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
+#ink = { url = "https://explorer.inkonchain.com" }
+#ink-sepolia = { url = "https://explorer-sepolia.inkonchain.com" }
+#story = { url = "https://aeneid.storyscan.xyz" }
+#story-aeneid = { url = "https://storyscan.xyz" }
+#somnia-testnet = { url = "https://shannon-explorer.somnia.network" }
+#taraxa = { url = "https://mainnet.explorer.taraxa.io" }
+#taraxa-testnet = { url = "https://testnet.explorer.taraxa.io" }
 
 #### FAUCETS ###
 # ink => superchain console
