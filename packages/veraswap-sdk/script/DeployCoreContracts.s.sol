@@ -12,7 +12,7 @@ import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
 import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
-import {UniversalRouterApprovedReentrantUtils} from "./utils/UniversalRouterApprovedReentrantUtils.sol";
+import {UniversalRouterUtils} from "./utils/UniversalRouterUtils.sol";
 // Permit2
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
 // Hyperlane
@@ -95,7 +95,7 @@ contract DeployCoreContracts is DeployParameters {
             RouterParameters memory uniswapParams = deployUniswapRouterParams();
             (address v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
             (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
-            (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(uniswapParams);
+            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(uniswapParams);
 
             contracts.uniswap = UniswapContracts({
                 v4PoolManager: uniswapParams.v4PoolManager,
@@ -107,7 +107,7 @@ contract DeployCoreContracts is DeployParameters {
         } else {
             RouterParameters memory uniswapParams = deployParams[chainId].uniswap;
             if (uniswapParams.permit2 == address(0)) revert("Invalid: DeployParams Permit2 not deployed");
-            (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(uniswapParams);
+            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(uniswapParams);
 
             contracts.uniswap = UniswapContracts({
                 v4PoolManager: uniswapParams.v4PoolManager,

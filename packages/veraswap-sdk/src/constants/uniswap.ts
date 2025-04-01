@@ -6,7 +6,7 @@ import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
-import { UniversalRouterApprovedReentrant as UniversalRouter } from "../artifacts/UniversalRouterApprovedReentrant.js";
+import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 import { arbitrum, arbitrumSepolia, base, bsc, mainnet, sepolia } from "viem/chains";
 
