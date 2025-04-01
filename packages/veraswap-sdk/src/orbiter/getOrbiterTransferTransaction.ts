@@ -22,7 +22,8 @@ export function getOrbiterETHTransferTransaction({
     entrypoint: Address;
     entrypointContract: Address;
 }): { to: Address; value: bigint; data: Hex } {
-    const totalAmount = amount + parseEther(withholdingFee) + BigInt(orbiterChainId);
+    const identificationCode = 9000 + orbiterChainId;
+    const totalAmount = amount + parseEther(withholdingFee) + BigInt(identificationCode);
 
     if (!recipient) {
         // Same recipient as sender, no need to use contract
