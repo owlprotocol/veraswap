@@ -92,30 +92,72 @@ contract DeployCoreContracts is DeployParameters {
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Local Anvil / Supersim
-            RouterParameters memory uniswapParams = deployUniswapRouterParams();
-            (address v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
-            (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
-            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(uniswapParams);
+            address weth9 = 0x4200000000000000000000000000000000000006;
+            (address permit2, ) = Permit2Utils.getOrCreate2();
+            (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
+            (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
+            (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
+            (address v4StateView, ) = StateViewUtils.getOrCreate2(v4PoolManager);
+            (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(v4PoolManager);
 
-            contracts.uniswap = UniswapContracts({
-                v4PoolManager: uniswapParams.v4PoolManager,
-                v4PositionManager: uniswapParams.v4PositionManager,
-                v4StateView: v4StateView,
-                v4Quoter: v4Quoter,
-                universalRouter: universalRouter
+            RouterParameters memory routerParams = RouterParameters({
+                permit2: permit2,
+                weth9: weth9,
+                v2Factory: unsupported,
+                v3Factory: unsupported,
+                pairInitCodeHash: BYTES32_ZERO,
+                poolInitCodeHash: BYTES32_ZERO,
+                v4PoolManager: v4PoolManager,
+                v3NFTPositionManager: unsupported,
+                v4PositionManager: v4PositionManager
             });
+            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+
+            contracts.uniswap.weth9 = weth9;
+            contracts.uniswap.permit2 = permit2;
+            contracts.uniswap.v4PoolManager = v4PoolManager;
+            contracts.uniswap.v4PositionManager = v4PositionManager;
+            contracts.uniswap.v4StateView = v4StateView;
+            contracts.uniswap.v4Quoter = v4Quoter;
+            contracts.uniswap.universalRouter = universalRouter;
         } else {
-            RouterParameters memory uniswapParams = deployParams[chainId].uniswap;
+            UniswapContracts memory uniswapParams = deployParams[chainId].uniswap;
             if (uniswapParams.permit2 == address(0)) revert("Invalid: DeployParams Permit2 not deployed");
-            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(uniswapParams);
 
-            contracts.uniswap = UniswapContracts({
+            RouterParameters memory routerParams = RouterParameters({
+                permit2: uniswapParams.permit2,
+                weth9: uniswapParams.weth9,
+                v2Factory: uniswapParams.v2Factory,
+                v3Factory: uniswapParams.v3Factory,
+                pairInitCodeHash: uniswapParams.pairInitCodeHash,
+                poolInitCodeHash: uniswapParams.poolInitCodeHash,
                 v4PoolManager: uniswapParams.v4PoolManager,
-                v4PositionManager: uniswapParams.v4PositionManager,
-                v4StateView: address(0),
-                v4Quoter: address(0),
-                universalRouter: universalRouter
+                v3NFTPositionManager: uniswapParams.v3NFTPositionManager,
+                v4PositionManager: uniswapParams.v4PositionManager
             });
+
+            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+
+            contracts.uniswap.weth9 = uniswapParams.weth9;
+            contracts.uniswap.permit2 = uniswapParams.permit2;
+            contracts.uniswap.v4PoolManager = uniswapParams.v4PoolManager;
+            contracts.uniswap.v4PositionManager = uniswapParams.v4PositionManager;
+            contracts.uniswap.universalRouter = universalRouter;
+
+            // v4StateView
+            if (uniswapParams.v4StateView == address(0)) {
+                (address v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
+                contracts.uniswap.v4StateView = v4StateView;
+            } else {
+                contracts.uniswap.v4StateView = uniswapParams.v4StateView;
+            }
+            // v4Quoter
+            if (uniswapParams.v4Quoter == address(0)) {
+                (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
+                contracts.uniswap.v4Quoter = v4Quoter;
+            } else {
+                contracts.uniswap.v4Quoter = uniswapParams.v4Quoter;
+            }
         }
 
         // Hyperlane contracts

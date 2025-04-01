@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
-import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 
 struct DeployParams {
-    RouterParameters uniswap;
+    UniswapContracts uniswap;
     HyperlaneDeployParams hyperlane;
 }
 
@@ -12,7 +11,14 @@ struct HyperlaneDeployParams {
 }
 
 struct UniswapContracts {
+    address permit2;
+    address weth9;
+    address v2Factory;
+    address v3Factory;
+    bytes32 pairInitCodeHash;
+    bytes32 poolInitCodeHash;
     address v4PoolManager;
+    address v3NFTPositionManager;
     address v4PositionManager;
     address v4StateView;
     address v4Quoter;
