@@ -363,7 +363,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
                 messageParams1.callData,
                 messageParams1.nonce ?? 0n,
                 messageParams1.validAfter ?? 0,
-                messageParams1.validUntil ?? 0,
+                messageParams1.validUntil ?? 2 ** 48 - 1,
                 messageParams1.signature ?? "0x",
                 "0x",
                 zeroAddress,
