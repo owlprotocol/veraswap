@@ -106,7 +106,7 @@ library PoolUtils {
         // 6. Encode the SETTLE_PAIR parameters
         mintParams[1] = abi.encode(poolKey.currency0, poolKey.currency1);
         // 7. Encode the modifyLiquidites call
-        uint256 deadline = block.timestamp + 60;
+        uint256 deadline = block.timestamp + 60 * 5; // 5 minutes
         multicallParams[1] = abi.encodeWithSelector(
             IPositionManager.modifyLiquidities.selector,
             abi.encode(mintActions, mintParams),

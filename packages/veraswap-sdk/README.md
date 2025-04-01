@@ -78,9 +78,9 @@ forge script ./script/DeployCoreContracts.s.sol --resume --private-key $PRIVATE_
 > Note: Etherscan [v2 API](https://docs.etherscan.io/etherscan-v2) not supported by forge yet as seen in [foundry/issues/9196](https://github.com/foundry-rs/foundry/issues/9196)
 
 **Deploy Tokens & Pools**
-Run [DeployTestnet.s.sol](./script/DeployTestnet.s.sol) script to deploy tokens & pools. This uses forge multichain deployment.
+Run [DeployTestnet.s.sol](./script/DeployTestnet.s.sol) script to deploy tokens & pools. This uses forge multichain deployment which *does not seem* (is this the case?) support verification.
 ```bash
-forge script ./script/DeployTestnet.s.sol --broadcast --private-key $PRIVATE_KEY --verify
+forge script ./script/DeployTestnet.s.sol --broadcast --private-key $PRIVATE_KEY
 ```
 
 ### Manual installation
