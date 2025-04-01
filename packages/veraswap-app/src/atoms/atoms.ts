@@ -98,7 +98,10 @@ export const swapStepAtom = atom((get) => {
         tokenInAmount > tokenInBridgeAllowance
     ) {
         return SwapStep.APPROVE_BRIDGE;
-    } else if (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount) {
+    } else if (
+        tokenIn.standard !== "NativeToken" &&
+        (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
+    ) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
