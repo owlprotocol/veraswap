@@ -85,7 +85,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-    const { address: walletAddress } = useAccount();
+    const { address: walletAddress, chainId } = useAccount();
 
     const { watchAsset } = useWatchAsset();
 
@@ -139,6 +139,8 @@ function Index() {
     const networkType = useAtomValue(chainsTypeAtom);
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
+
+    const { switchChain } = useSwitchChain();
 
     /*
     //DISABLE DIVVY
@@ -364,14 +366,33 @@ function Index() {
     }, [remoteTransactionHash]);
 
     const importToken = (token: Token) => {
-        watchAsset({
-            type: "ERC20",
+        if (!chainId || !token.chainId) return;
+
+        const asset = {
+            type: "ERC20" as const,
             options: {
                 address: token.address,
                 symbol: token.symbol,
                 decimals: token.decimals,
+                image: token.logoURI,
             },
-        });
+        };
+
+        if (chainId !== token.chainId) {
+            switchChain(
+                { chainId: token.chainId },
+                {
+                    onSuccess: () => {
+                        watchAsset(asset);
+                    },
+                    onError: (err) => {
+                        console.error("Failed to switch chain", err);
+                    },
+                },
+            );
+        } else {
+            watchAsset(asset);
+        }
     };
 
     return (
@@ -397,7 +418,7 @@ function Index() {
                                     placeholder="0.0"
                                     disabled={!tokenIn}
                                 />
-                                {tokenIn && (
+                                {tokenIn && chainId && (
                                     <button
                                         onClick={() => importToken(tokenIn)}
                                         className="flex items-center gap-1 text-sm"
@@ -465,7 +486,7 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
-                                {tokenOut && (
+                                {tokenOut && chainId && (
                                     <button
                                         onClick={() => importToken(tokenOut)}
                                         className="flex items-center gap-1 text-sm"
