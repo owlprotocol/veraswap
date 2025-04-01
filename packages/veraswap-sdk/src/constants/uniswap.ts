@@ -8,7 +8,7 @@ import { StateView } from "../artifacts/StateView.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
-import { sepolia } from "viem/chains";
+import { optimismSepolia, sepolia } from "viem/chains";
 
 export const V4_SWAP = 0x10;
 
@@ -114,5 +114,12 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
         v4Quoter: "0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227",
         universalRouter: "0x6fc36029136a0c9585306190387597d14f4c80a2",
+    },
+    [optimismSepolia.id]: {
+        v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
+        v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
+        v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
+        v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
+        universalRouter: "0x5fb0c37c53ccf5445ef0bac4eea32da4258d5278",
     },
 } as const;
