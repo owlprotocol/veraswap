@@ -16,7 +16,7 @@ import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
 import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
-import {UniversalRouterApprovedReentrantUtils} from "./utils/UniversalRouterApprovedReentrantUtils.sol";
+import {UniversalRouterUtils} from "./utils/UniversalRouterUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {PositionManager} from "@uniswap/v4-periphery/src/PositionManager.sol";
@@ -151,7 +151,7 @@ contract DeployAll is Script, Test {
             v3NFTPositionManager: unsupported,
             v4PositionManager: v4PositionManager
         });
-        (address universalRouter, ) = UniversalRouterApprovedReentrantUtils.getOrCreate2(routerParams);
+        (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
 
         console2.log("v4PoolManager:", v4PoolManager);
         console2.log("v4PositionManager:", v4PositionManager);

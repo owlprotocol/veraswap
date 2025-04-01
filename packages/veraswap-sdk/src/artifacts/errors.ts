@@ -136,6 +136,7 @@ export const errors = [
     },
     { type: "error", name: "TransactionDeadlinePassed", inputs: [] },
     { type: "error", name: "BalanceTooLow", inputs: [] },
+    { type: "error", name: "CallTargetPermit2", inputs: [] },
     { type: "error", name: "FromAddressIsNotOwner", inputs: [] },
     { type: "error", name: "InsufficientETH", inputs: [] },
     { type: "error", name: "InsufficientToken", inputs: [] },
@@ -180,7 +181,6 @@ export const errors = [
             { name: "amountRequested", type: "uint256", internalType: "uint256" },
         ],
     },
-    { type: "error", name: "CallTargetPermit2", inputs: [] },
     {
         type: "error",
         name: "NotEnoughLiquidity",

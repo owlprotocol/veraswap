@@ -36,8 +36,7 @@ export enum CommandType {
     EXECUTE_SUB_PLAN = 0x21,
 
     // Custom Commands
-    APPROVE_REENTRANT = 0x22,
-    CALL_TARGET = 0x23,
+    CALL_TARGET = 0x22,
 }
 
 export enum Subparser {
@@ -237,11 +236,13 @@ export const COMMAND_DEFINITION = {
         parser: Parser.V4Actions,
         params: [{ name: "data", type: "bytes" }],
     },
+    /*
     // Custom commands
     [CommandType.APPROVE_REENTRANT]: {
         parser: Parser.Abi,
         params: [{ name: "approvedReentrant", type: "address" }],
     },
+    */
     [CommandType.CALL_TARGET]: {
         parser: Parser.Abi,
         params: [
