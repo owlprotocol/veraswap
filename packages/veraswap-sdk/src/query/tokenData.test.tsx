@@ -6,7 +6,7 @@ import { http, createConfig } from "wagmi";
 import { localhost } from "wagmi/chains";
 import { ReactNode } from "react";
 import { tokenDataQueryOptions } from "./tokenData.js";
-import { TOKEN_LIST } from "../constants/index.js";
+import { zeroAddress } from "viem";
 
 describe("tokenData.test.tsx", () => {
     // Wagmi Config
@@ -28,12 +28,13 @@ describe("tokenData.test.tsx", () => {
             </WagmiProvider>
         );
 
+        //TODO: fix test with real deployed address
         const { result, waitForNextUpdate } = renderHook(
             () =>
                 useQuery(
                     tokenDataQueryOptions(config, {
                         chainId: chainId,
-                        address: TOKEN_LIST.TokenA_1337.address,
+                        address: zeroAddress,
                     }),
                 ),
             { wrapper },
