@@ -59,6 +59,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
     error AccountDeploymentFailed(address account);
     error InvalidRemoteRouterOwner(address account, uint32 domain, address router, address owner);
     error InvalidExecutorMode();
+    error InvalidTimestamp(uint48 validUntil, uint48 validAfter);
 
     // ============ Public Storage ============
     OwnableSignatureExecutor immutable executor;
@@ -218,7 +219,10 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
                 signature
             );
         } else {
-            //TODO: Add additional checks on validAfter/validUntil?
+            if (block.timestamp > validUntil || block.timestamp < validAfter) {
+                revert InvalidTimestamp(validUntil, validAfter);
+            }
+
             // Assumes Router has been set as owner on Executor
             // Check Router Owner
             if (!owners[account][origin][router][owner]) {

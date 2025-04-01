@@ -216,6 +216,14 @@ export const errors = [
             { name: "owner", type: "address", internalType: "address" },
         ],
     },
+    {
+        type: "error",
+        name: "InvalidTimestamp",
+        inputs: [
+            { name: "validUntil", type: "uint48", internalType: "uint48" },
+            { name: "validAfter", type: "uint48", internalType: "uint48" },
+        ],
+    },
     { type: "error", name: "EventPayloadNotSentMessage", inputs: [] },
     { type: "error", name: "IdOriginNotL2ToL2CrossDomainMessenger", inputs: [] },
     { type: "error", name: "InvalidChainId", inputs: [] },
@@ -268,14 +276,6 @@ export const errors = [
     },
     { type: "error", name: "InvalidNonce", inputs: [{ name: "nonce", type: "uint256", internalType: "uint256" }] },
     { type: "error", name: "InvalidOwner", inputs: [{ name: "owner", type: "address", internalType: "address" }] },
-    {
-        type: "error",
-        name: "InvalidTimestamp",
-        inputs: [
-            { name: "validUntil", type: "uint48", internalType: "uint48" },
-            { name: "validAfter", type: "uint48", internalType: "uint48" },
-        ],
-    },
     { type: "error", name: "LinkedList_AlreadyInitialized", inputs: [] },
     {
         type: "error",
