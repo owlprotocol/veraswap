@@ -22,7 +22,9 @@ library DeployOPSepolia {
             v4PositionManager: 0x0B32f74f8365d535783949E014B7754047B64e31
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0x6966b0E55883d49BFB24539356a2f8A673E02039
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

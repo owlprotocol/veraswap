@@ -6,7 +6,6 @@ import {HyperlaneDeployParams, DeployParams} from "../Structs.sol";
 
 library DeploySepolia {
     uint256 constant chainId = 11155111;
-    bytes32 constant BYTES32_ZERO = bytes32(0);
 
     function getParams() internal pure returns (DeployParams memory params) {
         RouterParameters memory uniswap = RouterParameters({
@@ -21,7 +20,9 @@ library DeploySepolia {
             v4PositionManager: 0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

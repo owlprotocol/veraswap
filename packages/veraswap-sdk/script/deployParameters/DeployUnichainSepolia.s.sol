@@ -20,7 +20,9 @@ library DeployUnichainSepolia {
             v4PositionManager: 0x12A98709BB5D0641D61458f85dcAFbE17AC2d05c
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0xDDcFEcF17586D08A5740B7D91735fcCE3dfe3eeD
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
