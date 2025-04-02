@@ -63,6 +63,8 @@ import {
     chainsTypeAtom,
     getSwapStepMessage,
     orbiterParamsAtom,
+    orbiterAmountOutAtom,
+    orbiterRouterAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -146,6 +148,8 @@ function Index() {
     const { switchChain } = useSwitchChain();
 
     const orbiterParams = useAtomValue(orbiterParamsAtom);
+    const orbiterRouter = useAtomValue(orbiterRouterAtom);
+    const orbiterAmountOut = useAtomValue(orbiterAmountOutAtom);
 
     /*
     //DISABLE DIVVY
@@ -160,6 +164,15 @@ function Index() {
     */
 
     const { switchChainAsync } = useSwitchChain();
+
+    const amountOut =
+        transactionType?.type === "BRIDGE"
+            ? orbiterRouter
+                ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
+                : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
+            : quoterData
+              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+              : "";
 
     /*
     useEffect(() => {
@@ -252,8 +265,6 @@ function Index() {
                 bridgePayment: bridgePayment!,
                 orbiterParams,
             } as TransactionParams);
-
-            console.log({ transaction, orbiterParams });
 
             if (!transaction) {
                 toast({
@@ -478,13 +489,7 @@ function Index() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    value={
-                                        transactionType?.type === "BRIDGE"
-                                            ? formatUnits(tokenInAmount ?? 0n, tokenIn?.decimals ?? 18)
-                                            : quoterData
-                                              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
-                                              : ""
-                                    }
+                                    value={amountOut}
                                     type="number"
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold p-0",
