@@ -96,7 +96,7 @@ const mockTokens: TokenBase<"MockERC20">[] = [
     },
 ];
 
-const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia].map(
+const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA].map(
     (chain) =>
         ({
             chainId: chain.id,
@@ -137,6 +137,13 @@ export const LOCAL_POOLS = {
         createPoolKey({
             currency0: mockTokens[0].address,
             currency1: mockTokens[1].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: mockTokens[0].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,
