@@ -167,6 +167,14 @@ export function getTransactionType({
     // same token!
     if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return null;
 
+    if (tokenIn.standard === "NativeToken" && tokenOut.standard === "NativeToken") {
+        return {
+            type: "BRIDGE",
+            tokenIn,
+            tokenOut,
+        };
+    }
+
     // BRIDGE: `tokenIn.connections.includes(tokenOut)`
     if (tokenIn.connections?.find((c) => c.chainId === tokenOut.chainId && c.address === tokenOut.address)) {
         return {
