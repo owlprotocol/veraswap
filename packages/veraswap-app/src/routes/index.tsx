@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowUpDown } from "lucide-react";
-import { useAccount, useReadContract, useSwitchChain, useWatchContractEvent, useWriteContract } from "wagmi";
+import {
+    useAccount,
+    useChainId,
+    useReadContract,
+    useSwitchChain,
+    useWatchContractEvent,
+    useWriteContract,
+} from "wagmi";
 import {
     getSwapAndHyperlaneSweepBridgeTransaction,
     getSwapExactInExecuteData,
@@ -12,6 +19,7 @@ import {
     TransactionParams,
     HypERC20Token,
     HypERC20CollateralToken,
+    OrbiterParams,
 } from "@owlprotocol/veraswap-sdk";
 import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -52,6 +60,7 @@ import {
     hyperlaneMailboxChainOut,
     chainsTypeAtom,
     getSwapStepMessage,
+    orbiterParamsAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -130,6 +139,8 @@ function Index() {
 
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
 
+    const orbiterParams = useAtomValue(orbiterParamsAtom);
+
     /*
     //DISABLE DIVVY
     const { data: isUserRegisteredArr } = useReadContract({
@@ -142,14 +153,10 @@ function Index() {
     });
     */
 
-    /*
-    const { switchChain } = useSwitchChain();
-    useEffect(() => {
-        if (!chainIn) return;
-        switchChain({ chainId: chainIn.id });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chainIn]);
+    const { switchChainAsync } = useSwitchChain();
+    const chainId = useChainId();
 
+    /*
     useEffect(() => {
         if (!walletAddress) return;
         if (!chainIn) return;
@@ -234,11 +241,14 @@ function Index() {
 
             const transaction = getTransaction({
                 ...transactionType,
-                amountIn: tokenInAmount,
-                amountOutMinimum,
-                walletAddress,
-                bridgePayment,
+                amountIn: tokenInAmount!,
+                amountOutMinimum: amountOutMinimum!,
+                walletAddress: walletAddress,
+                bridgePayment: bridgePayment!,
+                orbiterParams,
             } as TransactionParams);
+
+            console.log({ transaction, orbiterParams });
 
             if (!transaction) {
                 toast({
@@ -249,35 +259,46 @@ function Index() {
                 return;
             }
 
-            sendTransaction(
-                { chainId: tokenIn!.chainId, ...transaction },
-                {
-                    onSuccess: (hash) => {
-                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
-                            updateTransactionStep({ id: "bridge", status: "processing" });
-                            return;
-                        }
+            const sendTransactionCall = () => {
+                sendTransaction(
+                    { chainId: tokenIn!.chainId, ...transaction },
+                    {
+                        onSuccess: (hash) => {
+                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                                setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
+                                updateTransactionStep({ id: "bridge", status: "processing" });
+                                return;
+                            }
 
-                        setTransactionHashes((prev) => ({ ...prev, swap: hash }));
-                        updateTransactionStep({ id: "swap", status: "processing" });
+                            setTransactionHashes((prev) => ({ ...prev, swap: hash }));
+                            updateTransactionStep({ id: "swap", status: "processing" });
+                        },
+                        onError: (error) => {
+                            console.log(error);
+                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                                updateTransactionStep({ id: "bridge", status: "error" });
+                            } else {
+                                updateTransactionStep({ id: "swap", status: "error" });
+                            }
+                            //TODO: show in UI instead
+                            toast({
+                                title: "Transaction Failed",
+                                description: "Your transaction has failed. Please try again.",
+                                variant: "destructive",
+                            });
+                        },
                     },
-                    onError: () => {
-                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                            updateTransactionStep({ id: "bridge", status: "error" });
-                        } else {
-                            updateTransactionStep({ id: "swap", status: "error" });
-                        }
-                        //TODO: show in UI instead
-                        toast({
-                            title: "Transaction Failed",
-                            description: "Your transaction has failed. Please try again.",
-                            variant: "destructive",
-                        });
-                    },
-                },
-            );
-            setTokenInAmountInput("");
+                );
+                setTokenInAmountInput("");
+            };
+
+            if (chainIn!.id !== chainId) {
+                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
+
+                return;
+            }
+
+            sendTransactionCall();
         }
     };
 

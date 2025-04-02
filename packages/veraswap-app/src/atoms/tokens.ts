@@ -1,9 +1,9 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { Address, parseUnits, zeroAddress } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { getAccount, GetBalanceReturnType } from "@wagmi/core";
-import { Token, getTransactionType, TransactionType, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, LOCAL_POOLS, LOCAL_TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
@@ -35,23 +35,6 @@ export const fetchedTokensAtom = atomWithQuery(() => ({
 }));
 
  */
-
-export const orbiterRoutersAllAtom = atom((get) => {
-    const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
-    const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
-
-    return [...(get(orbiterRoutersMainnet).data ?? []), ...(get(orbiterRoutersTestnet).data ?? [])];
-});
-
-export const orbiterRoutersEntrypointContractsAtom = atom((get) => {
-    const orbiterRoutersAll = get(orbiterRoutersAllAtom);
-
-    return orbiterRoutersAll
-        .filter((router) => router.srcToken === zeroAddress && !!router.endpointContract)
-        .reduce((acc, curr) => {
-            return acc.set(Number(curr.srcChain), curr.endpointContract as Address);
-        }, new Map<number, Address>());
-});
 
 /***** Token In *****/
 /** Selected tokenIn */

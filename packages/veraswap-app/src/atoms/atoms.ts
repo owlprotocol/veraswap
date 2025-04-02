@@ -103,7 +103,10 @@ export const swapStepAtom = atom((get) => {
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
-    } else if (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount) {
+    } else if (
+        transactionType?.type !== "BRIDGE" &&
+        (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
+    ) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
     } else if (!transactionType) {
         return SwapStep.NOT_SUPPORTED;
