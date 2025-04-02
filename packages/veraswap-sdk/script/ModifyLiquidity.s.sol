@@ -44,7 +44,7 @@ contract DeployUniswap is Script {
 
         PoolUtils.setupToken(tokenA, IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(tokenB, IPositionManager(v4PositionManager), IUniversalRouter(router));
-        PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPool(tokenAAddr, tokenBAddr, IPositionManager(v4PositionManager), IStateView(v4StateView));
 
         vm.stopBroadcast();
     }

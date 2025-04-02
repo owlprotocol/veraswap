@@ -45,33 +45,26 @@ library PoolUtils {
 
     //TODO: Refactor to decouple deploy from add liquidity
     function deployPool(
-        IERC20 tokenA,
-        IERC20 tokenB,
+        address tokenA,
+        address tokenB,
         IPositionManager v4PositionManager,
         IStateView v4StateView
     ) internal returns (uint256 currentLiquidity) {
-        address token0;
-        address token1;
-        if (uint160(address(tokenA)) < uint160(address(tokenB))) {
-            token0 = address(tokenA);
-            token1 = address(tokenB);
-        } else {
-            token0 = address(tokenB);
-            token1 = address(tokenA);
+        address token0 = tokenA;
+        address token1 = tokenB;
+        if (uint160(tokenA) > uint160(tokenB)) {
+            (token0, token1) = (token1, token0);
         }
+
+        Currency currency0 = (token0 == address(0)) ? CurrencyLibrary.ADDRESS_ZERO : Currency.wrap(token0);
+        Currency currency1 = (token1 == address(0)) ? CurrencyLibrary.ADDRESS_ZERO : Currency.wrap(token1);
 
         // Initialize Pool & Mint Liquidity
         // See https://docs.uniswap.org/contracts/v4/quickstart/create-pool
         bytes[] memory multicallParams = new bytes[](2);
         // 1. Initialize the parameters provided to multicall()
         int24 tickSpacing = 60;
-        PoolKey memory poolKey = PoolKey(
-            Currency.wrap(token0),
-            Currency.wrap(token1),
-            3000,
-            tickSpacing,
-            IHooks(address(0))
-        );
+        PoolKey memory poolKey = PoolKey(currency0, currency1, 3000, tickSpacing, IHooks(address(0)));
         // 3. Encode the initializePool parameters
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
         //WANING UNCOMMENT
@@ -89,8 +82,8 @@ library PoolUtils {
             startingPrice,
             TickMath.getSqrtPriceAtTick(tickLower),
             TickMath.getSqrtPriceAtTick(tickUpper),
-            100 ether,
-            100 ether
+            1 ether,
+            1 ether
         ); // Encodes a 100/100 position at 1:1 price across the entire tick range
         bytes[] memory mintParams = new bytes[](2);
         mintParams[0] = abi.encode(
@@ -98,8 +91,8 @@ library PoolUtils {
             tickLower,
             tickUpper,
             liquidity,
-            50_000 ether,
-            50_000 ether,
+            10 ether,
+            10 ether,
             msg.sender,
             ZERO_BYTES
         );
@@ -115,7 +108,14 @@ library PoolUtils {
         // 8. Approve the tokens
         // Done Above
         // 9. Execute the multicall
-        v4PositionManager.multicall(multicallParams);
+
+        uint256 ethToSend = 0;
+        if (tokenA == address(0) || tokenB == address(0)) {
+            ethToSend = 10 ether;
+        }
+
+        v4PositionManager.multicall{value: ethToSend}(multicallParams);
+
         currentLiquidity = v4StateView.getLiquidity(PoolIdLibrary.toId(poolKey));
     }
 }
