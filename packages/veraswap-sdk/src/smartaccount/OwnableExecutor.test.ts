@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import { Account, Address, createWalletClient, http, zeroHash } from "viem";
+import { Account, Address, createWalletClient, http, LocalAccount, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
@@ -25,6 +25,7 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
     const kernelVersion = KERNEL_V3_1;
 
     const account: Account = getAnvilAccount(1);
+    const signer = { type: "local", address: account.address } as LocalAccount;
     const walletClient = createWalletClient({ account, chain: opChainL1Client.chain, transport: http() });
 
     let kernelAddress: Address;
@@ -33,7 +34,7 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
         const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
             entryPoint,
             kernelVersion,
-            signer: account,
+            signer,
             validatorAddress: LOCAL_KERNEL_CONTRACTS.ecdsaValidator,
         });
         const kernelPluginManager = await toKernelPluginManager<"0.7">(opChainL1Client, {

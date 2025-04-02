@@ -7,7 +7,7 @@ import {
     sendTransactionMutationOptions,
     waitForTransactionReceiptQueryOptions,
 } from "wagmi/query";
-import { getAccount } from "@wagmi/core";
+import { getAccount, watchAccount } from "@wagmi/core";
 import {
     chainOutAtom,
     tokenInAmountAtom,
@@ -226,3 +226,12 @@ export const hyperlaneMailboxChainOut = atom((get) => {
     const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
     return mailbox;
 });
+
+export const accountAtom = atom(getAccount(config));
+
+accountAtom.onMount = (set) => {
+    const unsubscribe = watchAccount(config, {
+        onChange: (account) => set(account),
+    });
+    return unsubscribe;
+};
