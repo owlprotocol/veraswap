@@ -1,4 +1,4 @@
-import { encodeFunctionData, Address, Hex } from "viem";
+import { encodeFunctionData, Address, Hex, zeroAddress } from "viem";
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
 import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
@@ -51,9 +51,12 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
+    const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
+    const isNative = currencyIn === zeroAddress;
+
     return {
         to: universalRouter,
-        value: bridgePayment,
+        value: isNative ? amountIn + bridgePayment + 10n : bridgePayment,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",

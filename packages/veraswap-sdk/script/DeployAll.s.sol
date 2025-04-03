@@ -224,12 +224,8 @@ contract DeployAll is Script, Test {
 
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
-        PoolUtils.deployPool(
-            IERC20(tokenA),
-            IERC20(tokenB),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView)
-        );
+        PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPool(tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
 
         console2.log("Token A:", tokenA);
         console2.log("Token B:", tokenB);
