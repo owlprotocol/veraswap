@@ -20,8 +20,8 @@ export interface GetERC20ApproveCallsReturnType extends GetCallsReturnType {
 }
 
 /**
- * Get spender allowance and return `IERC20.approve` call if below minAmount
- * @dev Make sure to check `owner` balance is sufficient beforehand (if needed)
+ * Get spender allowance and return `IERC20.approve(account, spender)` call if allowance below `minAmount`
+ * @dev Assumes `token.balanceOf(account) > minAmount`
  * @param queryClient
  * @param wagmiConfig
  * @param params

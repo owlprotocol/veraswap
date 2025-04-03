@@ -25,7 +25,7 @@ export interface GetTransferRemoteCallsParams extends GetCallsParams {
 
 /**
  * Get call to fund & set appprovals for `TokenRouter.transferRemote` call
- * @dev Make sure to check `owner` balance is sufficient beforehand (if needed)
+ * @dev Assumes `token.balanceOf(account) > amount`
  * @param queryClient
  * @param wagmiConfig
  * @param params

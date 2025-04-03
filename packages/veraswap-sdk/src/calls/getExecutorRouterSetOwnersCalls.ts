@@ -17,7 +17,7 @@ export interface GetExecutorRouterSetOwnersReturnType extends GetCallsReturnType
 }
 
 /**
- * Call `ERC7579ExecutorRouter.setAccountOwners` if not at desired state
+ * Call `ERC7579ExecutorRouter.setAccountOwners(owners)` for owners in undesired state
  * @param queryClient
  * @param wagmiConfig
  * @param params

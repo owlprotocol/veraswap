@@ -21,8 +21,9 @@ export interface GetERC20TransferFromCallsReturnType extends GetCallsReturnType 
     balance: bigint;
 }
 /**
- * Get balance and return `IERC20.transferFrom` or `IAllowanceTransfer.transferFrom` call if below minAmount
- * @dev Make sure to check `funder` balance & allowance is sufficient beforehand (if needed)
+ * Get balance and return `IERC20.transferFrom` or `IAllowanceTransfer.transferFrom` call if balance below `minAmount`
+ * @dev Assumes `token.balanceOf(funder) > minAmount`
+ * @dev Assumes `allowance(funder, account) > minAmount` (ERC20 or Permit2 allowance)
  * @param queryClient
  * @param wagmiConfig
  * @param params

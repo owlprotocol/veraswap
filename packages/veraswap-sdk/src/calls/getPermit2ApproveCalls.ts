@@ -25,9 +25,9 @@ export interface GetPermit2ApproveCallsReturnType extends GetCallsReturnType {
 }
 
 /**
- * Get spender Permit2 allowance and return `IAllowance.approve` call if below minAmount
- * @dev Make sure to check `owner` balance is sufficient beforehand (if needed)
- * @dev Make sure to check the Permit2 contract is approved first
+ * Get spender Permit2 allowance and return `IAllowance.approve(token, spender, approveAmount, approveExpiration)` call if allowance below `minAmount` or expired
+ * @dev Assumes `token.balanceOf(account) > minAmount`
+ * @dev Assumes `token.allowance(account, PERMIT2) > minAmount`
  * @param queryClient
  * @param wagmiConfig
  * @param params

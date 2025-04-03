@@ -18,7 +18,7 @@ export interface GetOwnableExecutorAddOwnerCallsReturnType extends GetCallsRetur
 }
 
 /**
- * Call `OwnableExecutor.addOwner` if `owner` is not yet added
+ * Call `OwnableExecutor.addOwner(owner)` if `owner` is not yet added
  * @param queryClient
  * @param wagmiConfig
  * @param params

@@ -4,7 +4,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "wagmi";
 
 /**
- * Common params for all `get*Calls` functions
+ * Common params for all `get...Calls` functions with `chainId, account` params
  */
 export interface GetCallsParams {
     chainId: number;
@@ -12,7 +12,7 @@ export interface GetCallsParams {
 }
 
 /**
- * Common return type for all `get*Calls` functio
+ * Common return type for all `get...Calls` functions that return list of `calls`
  */
 export interface GetCallsReturnType {
     calls: CallArgs[];
