@@ -21,7 +21,6 @@ export interface OrbiterParams {
     endpoint: Address;
     endpointContract: Address;
     orbiterChainId: number;
-    withholdingFee: string;
 }
 
 export interface TransactionBridgeOptions {
