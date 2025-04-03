@@ -59,6 +59,8 @@ library PoolUtils {
         Currency currency0 = (token0 == address(0)) ? CurrencyLibrary.ADDRESS_ZERO : Currency.wrap(token0);
         Currency currency1 = (token1 == address(0)) ? CurrencyLibrary.ADDRESS_ZERO : Currency.wrap(token1);
 
+        bool isNative = tokenA == address(0) || tokenB == address(0);
+
         // Initialize Pool & Mint Liquidity
         // See https://docs.uniswap.org/contracts/v4/quickstart/create-pool
         bytes[] memory multicallParams = new bytes[](2);
@@ -82,8 +84,8 @@ library PoolUtils {
             startingPrice,
             TickMath.getSqrtPriceAtTick(tickLower),
             TickMath.getSqrtPriceAtTick(tickUpper),
-            1 ether,
-            1 ether
+            isNative ? 1 ether : 100 ether,
+            isNative ? 1 ether : 100 ether
         ); // Encodes a 100/100 position at 1:1 price across the entire tick range
         bytes[] memory mintParams = new bytes[](2);
         mintParams[0] = abi.encode(
@@ -91,8 +93,8 @@ library PoolUtils {
             tickLower,
             tickUpper,
             liquidity,
-            10 ether,
-            10 ether,
+            isNative ? 10 ether : 50_000 ether,
+            isNative ? 10 ether : 50_000 ether,
             msg.sender,
             ZERO_BYTES
         );
@@ -109,10 +111,7 @@ library PoolUtils {
         // Done Above
         // 9. Execute the multicall
 
-        uint256 ethToSend = 0;
-        if (tokenA == address(0) || tokenB == address(0)) {
-            ethToSend = 10 ether;
-        }
+        uint256 ethToSend = isNative ? 10 ether : 0;
 
         v4PositionManager.multicall{value: ethToSend}(multicallParams);
 

@@ -65,7 +65,7 @@ export function getSwapAndHyperlaneBridgeTransaction({
 
     return {
         to: universalRouter,
-        value: isNative ? amountIn + bridgePayment : bridgePayment,
+        value: isNative ? amountIn + bridgePayment + 10n : bridgePayment,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",
