@@ -4,6 +4,9 @@ import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { V4_SWAP } from "../constants/index.js";
 
+/**
+ * getSwapExactInExecuteData creates a trade plan, and returns a router execute call data.
+ */
 export function getSwapExactInExecuteData({
     universalRouter,
     poolKey,
