@@ -58,6 +58,7 @@ import {
     orbiterParamsAtom,
     orbiterAmountOutAtom,
     orbiterRouterAtom,
+    orbiterRoutersEndpointContractsAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -68,6 +69,7 @@ import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
+import { Transfer } from "@/abis/events.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -90,6 +92,8 @@ function Index() {
 
     const chainIn = chains.find((c) => c.id === tokenIn?.chainId);
     const chainOut = chains.find((c) => c.id === tokenOut?.chainId);
+
+    const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
@@ -127,7 +131,8 @@ function Index() {
     const tokenOutBalanceFormatted =
         tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
 
-    const [{ mutate: sendTransaction, isPending: transactionIsPending }] = useAtom(sendTransactionMutationAtom);
+    const [{ mutate: sendTransaction, isPending: transactionIsPending, data: hash }] =
+        useAtom(sendTransactionMutationAtom);
 
     const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
     if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
@@ -195,9 +200,22 @@ function Index() {
         },
     });
 
+    useWatchContractEvent({
+        abi: [Transfer],
+        eventName: "Transfer",
+        chainId: tokenOut?.chainId ?? 0,
+        address: orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] ?? zeroAddress,
+        args: { to: walletAddress ?? zeroAddress },
+        enabled: !!tokenOut && !!orbiterParams && !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] && !!hash,
+        strict: true,
+        onLogs: (logs) => {
+            setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
+
     useWatchBlocks({
         chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams && true,
+        enabled: !!tokenOut && !!orbiterParams,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
