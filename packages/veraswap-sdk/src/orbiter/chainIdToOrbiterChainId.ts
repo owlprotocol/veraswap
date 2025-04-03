@@ -24,6 +24,6 @@ export const chainIdToOrbiterChainId = {
     [optimismSepolia.id]: 77,
     [sepolia.id]: 526,
     [baseSepolia.id]: 521,
-    [arbitrumSepolia.id]: 525,
+    [arbitrumSepolia.id]: 535,
     [bscTestnet.id]: 515,
 } as const satisfies Record<number, number>;
