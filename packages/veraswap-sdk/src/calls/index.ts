@@ -4,4 +4,5 @@ export * from "./getERC20TransferFromCalls.js";
 export * from "./getExecutorRouterSetOwnersCalls.js";
 export * from "./getOwnableExecutorAddOwnerCalls.js";
 export * from "./getPermit2ApproveCalls.js";
+export * from "./getPermit2PermitCalls.js";
 export * from "./getTransferRemoteCalls.js";
