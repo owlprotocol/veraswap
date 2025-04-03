@@ -104,7 +104,8 @@ export const swapStepAtom = atom((get) => {
     ) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (
-        transactionType?.type !== "BRIDGE" &&
+        tokenIn?.standard !== "NativeToken" &&
+        (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
         (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
