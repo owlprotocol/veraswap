@@ -4,10 +4,10 @@ import { atomWithQuery } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
 import { tokenInAmountAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
 
-export const orbiterRoutersAllAtom = atom((get) => {
-    const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
-    const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
+const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
+const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
 
+export const orbiterRoutersAllAtom = atom((get) => {
     return [...(get(orbiterRoutersMainnet).data ?? []), ...(get(orbiterRoutersTestnet).data ?? [])];
 });
 
@@ -60,7 +60,6 @@ export const orbiterParamsAtom = atom((get) => {
     return {
         endpoint,
         endpointContract,
-        withholdingFee,
         orbiterChainId,
     } as OrbiterParams;
 });
