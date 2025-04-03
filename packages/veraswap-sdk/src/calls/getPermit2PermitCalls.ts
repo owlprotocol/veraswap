@@ -1,7 +1,7 @@
 import { Config, signTypedData } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { readContractQueryOptions } from "wagmi/query";
-import { Address, bytesToNumber, encodeFunctionData, TypedDataDomain } from "viem";
+import { Address, encodeFunctionData, TypedDataDomain } from "viem";
 import invariant from "tiny-invariant";
 import { AllowanceTransfer } from "@uniswap/permit2-sdk";
 
@@ -57,7 +57,7 @@ export async function getPermit2PermitCalls(
         "approveExpiration must be >= (minExpiration ?? Date.now())",
     );
 
-    const [allowance, expiration, _] = await queryClient.fetchQuery(
+    const [allowance, expiration, nonce] = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: PERMIT2_ADDRESS,
@@ -74,7 +74,6 @@ export async function getPermit2PermitCalls(
     }
 
     //uint48 nonce
-    const nonce = bytesToNumber(crypto.getRandomValues(new Uint8Array(6)));
     const permitSingle: PermitSingle = {
         details: {
             token,
@@ -86,11 +85,12 @@ export async function getPermit2PermitCalls(
         sigDeadline: BigInt(Math.floor(Date.now() / 1000) + 24 * 60 * 60),
     };
     const permitData = AllowanceTransfer.getPermitData(permitSingle, PERMIT2_ADDRESS, chainId);
+    console.debug(permitData);
     const signature = await signTypedData(wagmiConfig, {
         account,
         domain: permitData.domain as TypedDataDomain,
         types: permitData.types,
-        primaryType: "PermitTransferFrom",
+        primaryType: "PermitSingle",
         message: permitData.values as unknown as Record<string, unknown>,
     });
 
@@ -99,7 +99,7 @@ export async function getPermit2PermitCalls(
         data: encodeFunctionData({
             abi: [permit_address___address_uint160_uint48_uint48__address_uint256__bytes],
             functionName: "permit",
-            args: [token, permitSingle, signature],
+            args: [account, permitSingle, signature],
         }),
         value: 0n,
     };
