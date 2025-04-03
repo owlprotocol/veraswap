@@ -1,32 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowUpDown } from "lucide-react";
+import { useAccount, useChainId, useSwitchChain, useWatchBlocks, useWatchContractEvent, useWriteContract } from "wagmi";
+import { getBlock } from "@wagmi/core";
 import {
-    useAccount,
-    useChainId,
-    useReadContract,
-    useSwitchChain,
-    useWatchContractEvent,
-    useWriteContract,
-} from "wagmi";
-import {
-    getSwapAndHyperlaneSweepBridgeTransaction,
-    getSwapExactInExecuteData,
     getHyperlaneMessageIdFromReceipt,
-    getSwapAndSuperchainBridgeTransaction,
-    getSuperchainMessageIdFromReceipt,
     getTransaction,
     TransactionParams,
-    HypERC20Token,
     HypERC20CollateralToken,
-    OrbiterParams,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
-import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
     MAX_UINT_160,
     MAX_UINT_256,
@@ -71,10 +58,8 @@ import { cn } from "@/lib/utils.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
-import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
-import { registerReferrals } from "@/abis/registerReferrals.js";
 import { TokenSelector } from "@/components/token-selector.js";
-import { chains } from "@/config.js";
+import { chains, config } from "@/config.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -196,6 +181,28 @@ function Index() {
         strict: true,
         onLogs: (logs) => {
             setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
+
+    useWatchBlocks({
+        chainId: tokenOut?.chainId ?? 0,
+        enabled: !!tokenOut && !!orbiterParams && true,
+        onBlock(block) {
+            const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
+            // Assume bridging only to same address
+            const to = walletAddress?.toLowerCase() ?? zeroAddress;
+
+            // TODO: Keep track of estimated value out and check that transaction value approximately matches to avoid issue if the address is receiving two bridging transactions from orbiter somewhat simultaneously
+            // TODO: use includeTransactions in useWatchBlocks when we figure out why block.transactions is undefined
+            // NOTE: This is a workaround for the issue with useWatchBlocks not returning transactions, even without includeTransactions
+            getBlock(config, { blockNumber: block.number, includeTransactions: true, chainId: tokenOut!.chainId }).then(
+                (block) => {
+                    const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
+                    if (tx) {
+                        setRemoteTransactionHash(tx.hash);
+                    }
+                },
+            );
         },
     });
 
