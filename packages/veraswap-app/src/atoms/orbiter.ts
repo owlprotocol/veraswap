@@ -16,9 +16,12 @@ export const orbiterRoutersEndpointContractsAtom = atom((get) => {
 
     return orbiterRoutersAll
         .filter((router) => router.srcToken === zeroAddress && !!router.endpointContract)
-        .reduce((acc, curr) => {
-            return acc.set(Number(curr.srcChain), curr.endpointContract as Address);
-        }, new Map<number, Address>());
+        .reduce(
+            (acc, curr) => {
+                return { ...acc, [Number(curr.srcChain)]: curr.endpointContract as Address };
+            },
+            {} as Record<number, Address>,
+        );
 });
 
 export const orbiterChainIdOutAtom = atom((get) => {
@@ -55,7 +58,7 @@ export const orbiterParamsAtom = atom((get) => {
 
     if (!router) return undefined;
 
-    const { endpoint, endpointContract, withholdingFee } = router;
+    const { endpoint, endpointContract } = router;
 
     return {
         endpoint,
