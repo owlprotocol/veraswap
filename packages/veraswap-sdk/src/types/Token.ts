@@ -1,7 +1,13 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 
 /** Common Token Standards */
-export type TokenStandard = "ERC20" | "MockERC20" | "HypERC20" | "HypERC20Collateral" | "SuperchainERC20";
+export type TokenStandard =
+    | "ERC20"
+    | "MockERC20"
+    | "HypERC20"
+    | "HypERC20Collateral"
+    | "SuperchainERC20"
+    | "NativeToken";
 
 /** Base Token interface with standard ERC20 metadata */
 export interface TokenBase<T extends string = TokenStandard> {
@@ -17,6 +23,11 @@ export interface TokenBase<T extends string = TokenStandard> {
         chainId: number;
         address: Address;
     }[];
+}
+
+export interface NativeToken extends TokenBase<"NativeToken"> {
+    // TODO: find a better way to do this
+    address: typeof zeroAddress;
 }
 
 /** HypERC20 Token with remote connections */
@@ -43,4 +54,5 @@ export type Token =
     | TokenBase<"MockERC20">
     | TokenBase<"SuperchainERC20">
     | HypERC20Token
-    | HypERC20CollateralToken;
+    | HypERC20CollateralToken
+    | NativeToken;

@@ -4,8 +4,8 @@ import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainL1 } from "../chains/index.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
-import { HypERC20CollateralToken, HypERC20Token, Token, TokenBase } from "../types/Token.js";
-import { optimismSepolia, sepolia } from "viem/chains";
+import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
+import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/chains";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -95,7 +95,19 @@ const localMockTokens: TokenBase<"MockERC20">[] = [
     },
 ];
 
-export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
+const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA].map(
+    (chain) =>
+        ({
+            chainId: chain.id,
+            ...chain.nativeCurrency,
+            name: "Ether",
+            standard: "NativeToken",
+            address: zeroAddress,
+            logoURI: "https://assets.coingecko.com/coins/images/279/standard/ethereum.png",
+        }) satisfies NativeToken,
+);
+
+export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToken)[] = [
     ...createMockERC20WarpRoute({
         token: localMockTokens[0],
         connectionChainIds: [opChainA.id],
@@ -104,6 +116,7 @@ export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
         token: localMockTokens[1],
         connectionChainIds: [opChainA.id],
     }),
+    ...ethNativeTokens,
 ];
 
 export function createTokenMap(tokens: Token[]): Record<number, Record<Address, Token>> {
@@ -123,6 +136,13 @@ export const LOCAL_POOLS = {
         createPoolKey({
             currency0: localMockTokens[0].address,
             currency1: localMockTokens[1].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: localMockTokens[0].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

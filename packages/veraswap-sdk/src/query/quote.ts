@@ -1,5 +1,5 @@
 import { Config } from "wagmi";
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 
 import { Currency, CurrencyAmount } from "@uniswap/sdk-core";
 import { readContract } from "@wagmi/core";
@@ -33,11 +33,16 @@ export function quoteQueryOptions(config: Config, params: QuoteParams) {
     return queryOptions({ queryKey: quoteQueryKey(params), queryFn: () => quote(config, params), retry: 1 });
 }
 
+function getCurrencyAddress(currency: Currency): Address {
+    return currency.isNative ? zeroAddress : (currency.wrapped.address as Address);
+}
+
 export function quoteQueryKey({ chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams) {
+    const currencyAddress = getCurrencyAddress(exactCurrencyAmount.currency);
     const zeroForOne =
         quoteType === "quoteExactInputSingle"
-            ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
-            : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
+            ? currencyAddress === poolKey.currency0
+            : currencyAddress === poolKey.currency1;
 
     return readContractQueryKey({
         chainId,
@@ -59,10 +64,11 @@ export function quote(
     config: Config,
     { chainId, quoterAddress, poolKey, quoteType, exactCurrencyAmount }: QuoteParams,
 ) {
+    const currencyAddress = getCurrencyAddress(exactCurrencyAmount.currency);
     const zeroForOne =
         quoteType === "quoteExactInputSingle"
-            ? exactCurrencyAmount.currency.wrapped.address === poolKey.currency0
-            : exactCurrencyAmount.currency.wrapped.address === poolKey.currency1;
+            ? currencyAddress === poolKey.currency0
+            : currencyAddress === poolKey.currency1;
 
     return readContract(config, {
         chainId,

@@ -1,32 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowUpDown, Wallet, Wallet2 } from "lucide-react";
+import { ArrowUpDown, Wallet } from "lucide-react";
 import {
     useAccount,
-    useReadContract,
     useSwitchChain,
     useWatchContractEvent,
     useWriteContract,
     useWatchAsset,
+    useWatchBlocks,
 } from "wagmi";
+import { getBlock } from "@wagmi/core";
 import {
-    getSwapAndHyperlaneSweepBridgeTransaction,
-    getSwapExactInExecuteData,
     getHyperlaneMessageIdFromReceipt,
-    getSwapAndSuperchainBridgeTransaction,
-    getSuperchainMessageIdFromReceipt,
     getTransaction,
     TransactionParams,
-    HypERC20Token,
     HypERC20CollateralToken,
     Token,
 } from "@owlprotocol/veraswap-sdk";
-import { Address, encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
-import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
     MAX_UINT_160,
     MAX_UINT_256,
@@ -60,6 +55,10 @@ import {
     hyperlaneMailboxChainOut,
     chainsTypeAtom,
     getSwapStepMessage,
+    orbiterParamsAtom,
+    orbiterAmountOutAtom,
+    orbiterRouterAtom,
+    orbiterRoutersEndpointContractsAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -68,10 +67,9 @@ import { cn } from "@/lib/utils.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
-import { isUserRegistered as isUserRegisteredAbi } from "@/abis/isUserRegistered.js";
-import { registerReferrals } from "@/abis/registerReferrals.js";
 import { TokenSelector } from "@/components/token-selector.js";
-import { chains } from "@/config.js";
+import { chains, config } from "@/config.js";
+import { Transfer } from "@/abis/events.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -94,6 +92,8 @@ function Index() {
 
     const chainIn = chains.find((c) => c.id === tokenIn?.chainId);
     const chainOut = chains.find((c) => c.id === tokenOut?.chainId);
+
+    const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
@@ -131,7 +131,8 @@ function Index() {
     const tokenOutBalanceFormatted =
         tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
 
-    const [{ mutate: sendTransaction, isPending: transactionIsPending }] = useAtom(sendTransactionMutationAtom);
+    const [{ mutate: sendTransaction, isPending: transactionIsPending, data: hash }] =
+        useAtom(sendTransactionMutationAtom);
 
     const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
     if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
@@ -141,6 +142,10 @@ function Index() {
     const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
 
     const { switchChain } = useSwitchChain();
+
+    const orbiterParams = useAtomValue(orbiterParamsAtom);
+    const orbiterRouter = useAtomValue(orbiterRouterAtom);
+    const orbiterAmountOut = useAtomValue(orbiterAmountOutAtom);
 
     /*
     //DISABLE DIVVY
@@ -154,14 +159,18 @@ function Index() {
     });
     */
 
-    /*
-    const { switchChain } = useSwitchChain();
-    useEffect(() => {
-        if (!chainIn) return;
-        switchChain({ chainId: chainIn.id });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chainIn]);
+    const { switchChainAsync } = useSwitchChain();
 
+    const amountOut =
+        transactionType?.type === "BRIDGE"
+            ? orbiterRouter
+                ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
+                : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
+            : quoterData
+              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+              : "";
+
+    /*
     useEffect(() => {
         if (!walletAddress) return;
         if (!chainIn) return;
@@ -188,6 +197,41 @@ function Index() {
         strict: true,
         onLogs: (logs) => {
             setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
+
+    useWatchContractEvent({
+        abi: [Transfer],
+        eventName: "Transfer",
+        chainId: tokenOut?.chainId ?? 0,
+        address: orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] ?? zeroAddress,
+        args: { to: walletAddress ?? zeroAddress },
+        enabled: !!tokenOut && !!orbiterParams && !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] && !!hash,
+        strict: true,
+        onLogs: (logs) => {
+            setRemoteTransactionHash(logs[0].transactionHash);
+        },
+    });
+
+    useWatchBlocks({
+        chainId: tokenOut?.chainId ?? 0,
+        enabled: !!tokenOut && !!orbiterParams,
+        onBlock(block) {
+            const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
+            // Assume bridging only to same address
+            const to = walletAddress?.toLowerCase() ?? zeroAddress;
+
+            // TODO: Keep track of estimated value out and check that transaction value approximately matches to avoid issue if the address is receiving two bridging transactions from orbiter somewhat simultaneously
+            // TODO: use includeTransactions in useWatchBlocks when we figure out why block.transactions is undefined
+            // NOTE: This is a workaround for the issue with useWatchBlocks not returning transactions, even without includeTransactions
+            getBlock(config, { blockNumber: block.number, includeTransactions: true, chainId: tokenOut!.chainId }).then(
+                (block) => {
+                    const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
+                    if (tx) {
+                        setRemoteTransactionHash(tx.hash);
+                    }
+                },
+            );
         },
     });
 
@@ -246,10 +290,11 @@ function Index() {
 
             const transaction = getTransaction({
                 ...transactionType,
-                amountIn: tokenInAmount,
-                amountOutMinimum,
-                walletAddress,
-                bridgePayment,
+                amountIn: tokenInAmount!,
+                amountOutMinimum: amountOutMinimum!,
+                walletAddress: walletAddress,
+                bridgePayment: bridgePayment!,
+                orbiterParams,
             } as TransactionParams);
 
             if (!transaction) {
@@ -261,35 +306,46 @@ function Index() {
                 return;
             }
 
-            sendTransaction(
-                { chainId: tokenIn!.chainId, ...transaction },
-                {
-                    onSuccess: (hash) => {
-                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
-                            updateTransactionStep({ id: "bridge", status: "processing" });
-                            return;
-                        }
+            const sendTransactionCall = () => {
+                sendTransaction(
+                    { chainId: tokenIn!.chainId, ...transaction },
+                    {
+                        onSuccess: (hash) => {
+                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                                setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
+                                updateTransactionStep({ id: "bridge", status: "processing" });
+                                return;
+                            }
 
-                        setTransactionHashes((prev) => ({ ...prev, swap: hash }));
-                        updateTransactionStep({ id: "swap", status: "processing" });
+                            setTransactionHashes((prev) => ({ ...prev, swap: hash }));
+                            updateTransactionStep({ id: "swap", status: "processing" });
+                        },
+                        onError: (error) => {
+                            console.log(error);
+                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                                updateTransactionStep({ id: "bridge", status: "error" });
+                            } else {
+                                updateTransactionStep({ id: "swap", status: "error" });
+                            }
+                            //TODO: show in UI instead
+                            toast({
+                                title: "Transaction Failed",
+                                description: "Your transaction has failed. Please try again.",
+                                variant: "destructive",
+                            });
+                        },
                     },
-                    onError: () => {
-                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                            updateTransactionStep({ id: "bridge", status: "error" });
-                        } else {
-                            updateTransactionStep({ id: "swap", status: "error" });
-                        }
-                        //TODO: show in UI instead
-                        toast({
-                            title: "Transaction Failed",
-                            description: "Your transaction has failed. Please try again.",
-                            variant: "destructive",
-                        });
-                    },
-                },
-            );
-            setTokenInAmountInput("");
+                );
+                setTokenInAmountInput("");
+            };
+
+            if (chainIn!.id !== chainId) {
+                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
+
+                return;
+            }
+
+            sendTransactionCall();
         }
     };
 
@@ -464,13 +520,7 @@ function Index() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    value={
-                                        transactionType?.type === "BRIDGE"
-                                            ? formatUnits(tokenInAmount ?? 0n, tokenIn?.decimals ?? 18)
-                                            : quoterData
-                                              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
-                                              : ""
-                                    }
+                                    value={amountOut}
                                     type="number"
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold p-0",

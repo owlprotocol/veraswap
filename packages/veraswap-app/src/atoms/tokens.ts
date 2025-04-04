@@ -1,14 +1,19 @@
-import { atom } from "jotai";
-import { atomWithQuery } from "jotai-tanstack-query";
+import { atom, WritableAtom } from "jotai";
+import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { parseUnits, zeroAddress } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
-import { getAccount } from "@wagmi/core";
-
-import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
-import { PERMIT2_ADDRESS, POOLS, TOKENS_MAP, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
+import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
+import { getAccount, GetBalanceReturnType } from "@wagmi/core";
+import { Token, getTransactionType, TransactionType, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
+import {
+    PERMIT2_ADDRESS,
+    UNISWAP_CONTRACTS,
+    LOCAL_POOLS,
+    LOCAL_TOKENS_MAP,
+    POOLS,
+    TOKENS_MAP,
+} from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
-
 import { chains, config } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -57,6 +62,7 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
     return parseUnits(tokenInAmountInput, tokenIn.decimals!);
 });
 /** tokenIn.balanceOf(account): QueryResult */
+// @ts-expect-error Bad type inference
 export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
@@ -69,6 +75,15 @@ export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
     const tokenAddress =
         tokenIn?.standard === "HypERC20Collateral" ? tokenIn?.collateralAddress : (tokenIn?.address ?? zeroAddress);
 
+    if (tokenIn?.standard === "NativeToken") {
+        return {
+            ...getBalanceQueryOptions(config, { address: account.address ?? zeroAddress, chainId: tokenIn.chainId }),
+            enabled: !!account.address,
+            refetchInterval: 2000,
+            select: (data: GetBalanceReturnType) => data.value,
+        };
+    }
+
     return {
         ...readContractQueryOptions(config, {
             abi: [balanceOfAbi],
@@ -80,7 +95,8 @@ export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
         enabled,
         refetchInterval: 2000,
     };
-});
+}) as any as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
+
 /** tokenIn.balanceOf(account): bigint */
 export const tokenInBalanceAtom = atom<bigint | null>((get) => {
     return get(tokenInBalanceQueryAtom).data ?? null;
@@ -90,7 +106,7 @@ export const tokenInPermit2AllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
     const tokenIn = get(tokenInAtom);
-    const enabled = !!tokenIn || !!account.address;
+    const enabled = !!tokenIn && tokenIn.standard !== "NativeToken" && !!account.address;
 
     // Query args MUST be defined
     const chainId = tokenIn?.chainId ?? 0;
@@ -119,7 +135,7 @@ export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
     const tokenIn = get(tokenInAtom);
-    const enabled = !!tokenIn || !!account.address;
+    const enabled = !!tokenIn && !!account.address && tokenIn.standard !== "NativeToken";
 
     // Query args MUST be defined
     const chainId = tokenIn?.chainId ?? 0;
@@ -187,6 +203,7 @@ export const chainOutAtom = atom((get) => {
     return chains.find((c) => c.id === tokenOut?.chainId) ?? null;
 });
 /** tokenOut.balanceOf(account): QueryResult */
+// @ts-expect-error Bad type inference
 export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
     const account = getAccount(config);
@@ -199,6 +216,15 @@ export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
     const tokenAddress =
         tokenOut?.standard === "HypERC20Collateral" ? tokenOut?.collateralAddress : (tokenOut?.address ?? zeroAddress);
 
+    if (tokenOut?.standard === "NativeToken") {
+        return {
+            ...getBalanceQueryOptions(config, { address: account.address ?? zeroAddress, chainId: tokenOut.chainId }),
+            enabled: !!account.address,
+            refetchInterval: 2000,
+            select: (data: GetBalanceReturnType) => data.value,
+        };
+    }
+
     return {
         ...readContractQueryOptions(config, {
             abi: [balanceOfAbi],
@@ -210,7 +236,8 @@ export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
         enabled,
         refetchInterval: 2000,
     };
-});
+}) as any as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
+
 /** tokenOut.balanceOf(account): bigint */
 export const tokenOutBalanceAtom = atom<bigint | null>((get) => {
     return get(tokenOutBalanceQueryAtom).data ?? null;
