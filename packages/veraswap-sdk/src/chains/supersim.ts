@@ -5,7 +5,7 @@ export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
 
 /*** Local Supersim Chains ***/
-export const opChainL1Port = 8547;
+export const opChainL1Port = 8545;
 export const opChainL1 = {
     ...localhost,
     id: 900,
