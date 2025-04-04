@@ -215,7 +215,7 @@ function Index() {
 
     useWatchBlocks({
         chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams,
+        enabled: !!tokenOut && !!orbiterParams && !!hash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
@@ -238,46 +238,74 @@ function Index() {
     const handleSwapSteps = () => {
         if (!swapStep || transactionIsPending) return;
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
-            sendTransaction({
-                to: tokenIn!.address,
-                chainId: tokenIn!.chainId,
-                data: encodeFunctionData({
-                    abi: IERC20.abi,
-                    functionName: "approve",
-                    args: [PERMIT2_ADDRESS, MAX_UINT_256],
-                }),
-            });
+            const sendTransactionCall = () =>
+                sendTransaction({
+                    to: tokenIn!.address,
+                    chainId: tokenIn!.chainId,
+                    data: encodeFunctionData({
+                        abi: IERC20.abi,
+                        functionName: "approve",
+                        args: [PERMIT2_ADDRESS, MAX_UINT_256],
+                    }),
+                });
+
+            if (chainIn!.id !== chainId) {
+                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
+
+                return;
+            }
+
+            sendTransactionCall();
+
             return;
         }
 
         if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
-            sendTransaction({
-                to: PERMIT2_ADDRESS,
-                chainId: tokenIn!.chainId,
-                data: encodeFunctionData({
-                    abi: IAllowanceTransfer.abi,
-                    functionName: "approve",
-                    args: [
-                        tokenIn!.address,
-                        UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
-                        MAX_UINT_160,
-                        MAX_UINT_48,
-                    ],
-                }),
-            });
+            const sendTransactionCall = () =>
+                sendTransaction({
+                    to: PERMIT2_ADDRESS,
+                    chainId: tokenIn!.chainId,
+                    data: encodeFunctionData({
+                        abi: IAllowanceTransfer.abi,
+                        functionName: "approve",
+                        args: [
+                            tokenIn!.address,
+                            UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
+                            MAX_UINT_160,
+                            MAX_UINT_48,
+                        ],
+                    }),
+                });
+
+            if (chainIn!.id !== chainId) {
+                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
+
+                return;
+            }
+
+            sendTransactionCall();
             return;
         }
 
         if (swapStep === SwapStep.APPROVE_BRIDGE) {
-            sendTransaction({
-                to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
-                chainId: tokenIn!.chainId,
-                data: encodeFunctionData({
-                    abi: IERC20.abi,
-                    functionName: "approve",
-                    args: [tokenIn!.address, MAX_UINT_256],
-                }),
-            });
+            const sendTransactionCall = () =>
+                sendTransaction({
+                    to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
+                    chainId: tokenIn!.chainId,
+                    data: encodeFunctionData({
+                        abi: IERC20.abi,
+                        functionName: "approve",
+                        args: [tokenIn!.address, MAX_UINT_256],
+                    }),
+                });
+
+            if (chainIn!.id !== chainId) {
+                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
+
+                return;
+            }
+
+            sendTransactionCall();
             return;
         }
 

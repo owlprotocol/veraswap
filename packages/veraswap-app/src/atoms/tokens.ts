@@ -142,9 +142,15 @@ export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
     const accountAddress = account.address ?? zeroAddress;
     const tokenAddress =
         tokenIn?.standard === "HypERC20Collateral" ? tokenIn?.collateralAddress : (tokenIn?.address ?? zeroAddress);
+
     const universalRouter = tokenIn?.chainId
-        ? UNISWAP_CONTRACTS[tokenIn.chainId as keyof typeof UNISWAP_CONTRACTS].universalRouter
+        ? // NOTE: Add zeroAddress fallback as since tokenIn.chainId is not guaranteed to be in UNISWAP_CONTRACTS
+          (UNISWAP_CONTRACTS[tokenIn.chainId as keyof typeof UNISWAP_CONTRACTS]?.universalRouter ?? zeroAddress)
         : zeroAddress;
+
+    if (tokenIn?.chainId && !(tokenIn.chainId in UNISWAP_CONTRACTS)) {
+        console.error(`UNISWAP_CONTRACTS addresses not set for chain ${tokenIn.chainId}`);
+    }
 
     return {
         ...readContractQueryOptions(config, {
