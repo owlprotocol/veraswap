@@ -8,15 +8,18 @@ import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionMa
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 
+import {MockMailbox} from "@hyperlane-xyz/core/mock/MockMailbox.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
+import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {PoolUtils} from "./utils/PoolUtils.sol";
 
 import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
+import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
 
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
@@ -74,6 +77,9 @@ contract DeployLocal is DeployCoreContracts {
                 contracts.uniswap.v4PositionManager,
                 contracts.uniswap.v4StateView
             );
+            tokens[chainIds[0]][keccak256("MockERC20A")] = tokenA;
+            tokens[chainIds[0]][keccak256("MockERC20B")] = tokenB;
+
             (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
                 tokenA,
                 contracts.hyperlane.mailbox
@@ -139,6 +145,70 @@ contract DeployLocal is DeployCoreContracts {
                     }
                 }
             }
+            vm.stopBroadcast();
+        }
+
+        /**** MockMailbox Environment *****/
+        {
+            // This deployment is used for crosschain unit tests and NOT by local development
+            // Everything is deployed on the main chain and the mailboxes are mocked
+            vm.selectFork(forks[0]);
+            vm.startBroadcast();
+
+            // Setup MockMailbox
+            uint32 chainL1Domain = uint32(chainIds[0]);
+            uint32 chainOpADomain = uint32(chainIds[1]);
+
+            (address mailboxL1, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainL1Domain);
+            (address mailboxOpA, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainOpADomain);
+            MockMailbox(mailboxL1).addRemoteMailbox(chainOpADomain, MockMailbox(mailboxOpA));
+            MockMailbox(mailboxOpA).addRemoteMailbox(chainL1Domain, MockMailbox(mailboxL1));
+            // MockMailbox HypERC20Collateral
+            (address hypMockERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
+                tokens[chainIds[0]][keccak256("MockERC20A")],
+                mailboxL1
+            );
+            (address hypMockERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
+                tokens[chainIds[0]][keccak256("MockERC20B")],
+                mailboxL1
+            );
+            // MockMaibox HypERC20
+            (address hypMockERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
+            (address hypMockERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
+            // Enroll remote routers
+            TokenRouter(hypMockERC20CollateralTokenA).enrollRemoteRouter(
+                chainOpADomain,
+                bytes32(uint256(uint160(hypMockERC20TokenA)))
+            );
+            TokenRouter(hypMockERC20CollateralTokenB).enrollRemoteRouter(
+                chainOpADomain,
+                bytes32(uint256(uint160(hypMockERC20TokenB)))
+            );
+            TokenRouter(hypMockERC20TokenA).enrollRemoteRouter(
+                chainL1Domain,
+                bytes32(uint256(uint160(hypMockERC20CollateralTokenA)))
+            );
+            TokenRouter(hypMockERC20TokenB).enrollRemoteRouter(
+                chainL1Domain,
+                bytes32(uint256(uint160(hypMockERC20CollateralTokenB)))
+            );
+            // ERC7579ExecutorRouter
+            CoreContracts storage contracts = chainContracts[chainIds[0]];
+            (address erc7579ExecutorRouterL1, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+                mailboxL1,
+                address(0),
+                //TODO: This might cause issues due to chainId verification for signatures
+                contracts.ownableSignatureExecutor,
+                //TODO: This might cause issues due to create2 conflicts (eg. deploy 2 same contracts on mock "L1" and "OPA")
+                contracts.kernelFactory
+            );
+            (address erc7579ExecutorRouterOpA, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+                mailboxOpA,
+                address(0),
+                contracts.ownableSignatureExecutor,
+                contracts.kernelFactory
+            );
+
             vm.stopBroadcast();
         }
     }
