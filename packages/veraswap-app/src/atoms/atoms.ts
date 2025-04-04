@@ -100,6 +100,7 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.APPROVE_BRIDGE;
     } else if (
         tokenIn.standard !== "NativeToken" &&
+        !(transactionType?.type === "BRIDGE" && tokenIn.standard === "HypERC20") &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
