@@ -64,7 +64,7 @@ export const getSwapStepMessage = (swapStep: SwapStep, transactionType: Transact
 
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
     const tokenInAmount = get(tokenInAmountAtom);

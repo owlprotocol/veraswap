@@ -2,7 +2,7 @@ import { atom, WritableAtom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { parseUnits, zeroAddress } from "viem";
 import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
-import { getAccount, GetBalanceReturnType } from "@wagmi/core";
+import { GetBalanceReturnType } from "@wagmi/core";
 import { Token, getTransactionType, TransactionType, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
 import {
     PERMIT2_ADDRESS,
@@ -14,6 +14,7 @@ import {
 } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
+import { accountAtom } from "./atoms.js";
 import { chains, config } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -65,7 +66,7 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 // @ts-expect-error Bad type inference
 export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenIn = get(tokenInAtom);
     const enabled = !!tokenIn && !!account.address;
 
@@ -104,7 +105,7 @@ export const tokenInBalanceAtom = atom<bigint | null>((get) => {
 /** tokenIn.allowance(account, PERMIT2): QueryResult */
 export const tokenInPermit2AllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenIn = get(tokenInAtom);
     const enabled = !!tokenIn && tokenIn.standard !== "NativeToken" && !!account.address;
 
@@ -133,7 +134,7 @@ export const tokenInPermit2AllowanceAtom = atom<bigint | null>((get) => {
 /** permit2.allowance(account, tokenIn, UniversalRouter): QueryResult */
 export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenIn = get(tokenInAtom);
     const enabled = !!tokenIn && !!account.address && tokenIn.standard !== "NativeToken";
 
@@ -167,7 +168,7 @@ export const tokenInUniswapRouterAllowanceAtom = atom<bigint | null>((get) => {
 /** Check if router is approved for token in if token in is collateral */
 export const tokenInBridgeAllowanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenIn = get(tokenInAtom);
     const enabled = !!tokenIn && !!account.address && tokenIn.standard === "HypERC20Collateral";
 
@@ -206,7 +207,7 @@ export const chainOutAtom = atom((get) => {
 // @ts-expect-error Bad type inference
 export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
     // TODO: Could cause issues on account change
-    const account = getAccount(config);
+    const account = get(accountAtom);
     const tokenOut = get(tokenOutAtom);
     const enabled = !!tokenOut && !!account.address;
 
