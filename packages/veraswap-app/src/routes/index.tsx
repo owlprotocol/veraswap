@@ -466,6 +466,7 @@ function Index() {
                                     value={tokenInAmountInput}
                                     onChange={(e) => setTokenInAmountInput(e.target.value)}
                                     type="number"
+                                    min="0"
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold p-0",
                                         "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
