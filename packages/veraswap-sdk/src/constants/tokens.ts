@@ -142,7 +142,7 @@ export const LOCAL_POOLS = {
         }),
         createPoolKey({
             currency0: zeroAddress,
-            currency1: mockTokens[0].address,
+            currency1: localMockTokens[0].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

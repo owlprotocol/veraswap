@@ -141,12 +141,7 @@ contract DeployTestnet is DeployCoreContracts {
 
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
-        PoolUtils.deployPool(
-            IERC20(tokenA),
-            IERC20(tokenB),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView)
-        );
+        PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
 
         console2.log("Token C:", tokenA);
         console2.log("Token D:", tokenB);
