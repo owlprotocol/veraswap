@@ -5,10 +5,10 @@ domainId: 900
 isTestnet: true
 name: opchainl1
 nativeToken:
-  decimals: 18
-  name: Ether
-  symbol: ETH
+    decimals: 18
+    name: Ether
+    symbol: ETH
 protocol: ethereum
 rpcUrls:
-  - http: http://127.0.0.1:8547
+    - http: http://127.0.0.1:8545
 technicalStack: other
