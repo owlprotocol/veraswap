@@ -1,7 +1,7 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { MockERC20 } from "../artifacts/MockERC20.js";
-import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
@@ -183,48 +183,66 @@ const testnetMockTokens = [
 
 //TODO: Helper to generate this using params (but not use bytecode)?
 const TESTNET_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
-    {
-        standard: "HypERC20Collateral",
-        chainId: sepolia.id,
-        address: "0x3127Fc42fD0a8fB9E1A342D01C5F89Dd84f78F50",
-        collateralAddress: testnetMockTokens[0].address,
-        connections: [
-            { vm: "evm", chainId: optimismSepolia.id, address: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954" },
-        ],
-        name: "Token C",
-        symbol: "C",
-        decimals: 18,
-    },
-    {
-        standard: "HypERC20",
-        chainId: optimismSepolia.id,
-        address: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
-        connections: [{ vm: "evm", chainId: sepolia.id, address: "0x3127Fc42fD0a8fB9E1A342D01C5F89Dd84f78F50" }],
-        name: "Token C",
-        symbol: "C",
-        decimals: 18,
-    },
-    {
-        standard: "HypERC20Collateral",
-        chainId: sepolia.id,
-        address: "0xc6BCbD4B62FA6f088DB0f3D668fbFE235CB014fC",
-        collateralAddress: testnetMockTokens[1].address,
-        connections: [
-            { vm: "evm", chainId: optimismSepolia.id, address: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb" },
-        ],
-        name: "Token D",
-        symbol: "D",
-        decimals: 18,
-    },
-    {
-        standard: "HypERC20",
-        chainId: optimismSepolia.id,
-        address: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
-        connections: [{ vm: "evm", chainId: sepolia.id, address: "0xc6BCbD4B62FA6f088DB0f3D668fbFE235CB014fC" }],
-        name: "Token D",
-        symbol: "D",
-        decimals: 18,
-    },
+    ...connectTokens([
+        {
+            standard: "HypERC20Collateral",
+            chainId: sepolia.id,
+            address: "0x3127Fc42fD0a8fB9E1A342D01C5F89Dd84f78F50",
+            collateralAddress: testnetMockTokens[0].address,
+            name: "Token C",
+            symbol: "C",
+            decimals: 18,
+            connections: [],
+        },
+        {
+            standard: "HypERC20",
+            chainId: optimismSepolia.id,
+            address: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
+            name: "Token C",
+            symbol: "C",
+            decimals: 18,
+            connections: [],
+        },
+        {
+            standard: "HypERC20",
+            chainId: unichainSepolia.id,
+            address: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
+            name: "Token C",
+            symbol: "C",
+            decimals: 18,
+            connections: [],
+        },
+    ] as (HypERC20CollateralToken | HypERC20Token)[]),
+    ...(connectTokens([
+        {
+            standard: "HypERC20Collateral",
+            chainId: sepolia.id,
+            address: "0xc6BCbD4B62FA6f088DB0f3D668fbFE235CB014fC",
+            collateralAddress: testnetMockTokens[1].address,
+            name: "Token D",
+            symbol: "D",
+            decimals: 18,
+            connections: [],
+        },
+        {
+            standard: "HypERC20",
+            chainId: optimismSepolia.id,
+            address: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
+            name: "Token D",
+            symbol: "D",
+            decimals: 18,
+            connections: [],
+        },
+        {
+            standard: "HypERC20",
+            chainId: unichainSepolia.id,
+            address: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
+            name: "Token D",
+            symbol: "D",
+            decimals: 18,
+            connections: [],
+        },
+    ]) as (HypERC20CollateralToken | HypERC20Token)[]),
 ];
 
 const TESTNET_TOKENS_MAP = createTokenMap([...testnetMockTokens, ...TESTNET_TOKENS]);
