@@ -1,6 +1,16 @@
 import { encodeFunctionData, Address, Hex, padHex, zeroAddress } from "viem";
 import { HypERC20 } from "../artifacts/HypERC20.js";
 
+export interface GetTransferRemoteCallParams {
+    address: Address;
+    destination: number;
+    recipient: Address;
+    amount: bigint;
+    hookMetadata?: Hex;
+    hook?: Address;
+    bridgePayment: bigint;
+}
+
 export function getTransferRemoteCall({
     address,
     destination,
@@ -9,15 +19,7 @@ export function getTransferRemoteCall({
     hookMetadata,
     hook,
     bridgePayment,
-}: {
-    address: Address;
-    destination: number;
-    recipient: Address;
-    amount: bigint;
-    hookMetadata?: Hex;
-    hook?: Address;
-    bridgePayment: bigint;
-}): { to: Address; data: Hex; value: bigint } {
+}: GetTransferRemoteCallParams): { to: Address; data: Hex; value: bigint } {
     let data: Hex;
     if (!hook && !hookMetadata) {
         // Slightly more gas efficient (smaller data)
