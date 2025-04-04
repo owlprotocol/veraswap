@@ -3,7 +3,8 @@ import { getBytecode, getClient } from "@wagmi/core";
 import { Client, LocalAccount } from "viem";
 import { kernelSmartAccountQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { chainInAtom, chainOutAtom } from "./tokens.js";
-import { accountAtom } from "./atoms.js";
+
+import { accountAtom } from "./account.js";
 import { config } from "@/config.js";
 
 export const kernelSmartAccountAddressAtom = atomWithQuery((get) => {

@@ -6,7 +6,7 @@ import { getAccount, GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { Address, zeroAddress } from "viem";
 import { Token } from "@owlprotocol/veraswap-sdk";
-import { tokensAtom } from "./index.js";
+import { accountAtom, tokensAtom } from "./index.js";
 import { config } from "@/config.js";
 
 export const tokenBalanceAtomFamily = atomFamily((token: Token) => {
@@ -37,7 +37,7 @@ export const tokenBalanceAtomFamily = atomFamily((token: Token) => {
 
 export const tokenBalancesAtom = atom((get) => {
     const allTokens = get(tokensAtom);
-    const account = getAccount(config);
+    const account = get(accountAtom);
 
     return allTokens.map((token) => ({
         token,
