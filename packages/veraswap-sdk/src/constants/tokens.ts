@@ -19,6 +19,30 @@ export function getMockERC20Address({ name, symbol, decimals }: { name: string; 
 }
 
 /**
+ * Generate the `connections` field in tokens by connecting them to each other
+ * @param tokens
+ * @returns
+ */
+export function connectTokens<T extends { chainId: number; address: Address } = { chainId: number; address: Address }>(
+    tokens: T[],
+) {
+    return tokens.map((token) => {
+        return {
+            ...token,
+            connections: tokens
+                .filter((t) => t.chainId != token.chainId)
+                .map((t) => {
+                    return {
+                        vm: "evm",
+                        chainId: t.chainId,
+                        address: t.address,
+                    };
+                }),
+        };
+    });
+}
+
+/**
  * Create a MockERC20, HypERC20Collateral, HypERC20Synthetic
  */
 export function createMockERC20WarpRoute({
@@ -60,19 +84,7 @@ export function createMockERC20WarpRoute({
         } as HypERC20Token;
     });
 
-    const tokens = [hypERC20Collateral, ...hypERC20s];
-    tokens.forEach((token) => {
-        token.connections = tokens
-            .filter((t) => t.chainId != token.chainId)
-            .map((t) => {
-                return {
-                    vm: "evm",
-                    chainId: t.chainId,
-                    address: t.address,
-                };
-            });
-    });
-
+    const tokens = connectTokens([hypERC20Collateral, ...hypERC20s]);
     return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
 }
 
