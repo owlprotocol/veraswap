@@ -6,11 +6,7 @@ import { Address, encodeFunctionData } from "viem";
 import invariant from "tiny-invariant";
 
 import { IERC20 } from "../artifacts/IERC20.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
-import { CallArgs } from "../smartaccount/ExecLib.js";
 
 export interface GetERC20TransferFromCallsParams extends GetCallsParams {
     token: Address;
@@ -24,9 +20,9 @@ export interface GetERC20TransferFromCallsReturnType extends GetCallsReturnType 
 }
 /**
  * Pull tokens from `funder` to `account`
- * Get balance and return `IERC20.transferFrom` or `IAllowanceTransfer.transferFrom` call if balance below `minAmount`
- * @dev Assumes `token.balanceOf(funder) > minAmount`
- * @dev **May request signature** from `funder` using `getPermit2PermitCalls` if `IAllowanceTransfer.allowance` is insufficient
+ * Get balance and return `IERC20.transferFrom` call if balance below `minAmount`
+ * @dev Assumes `token.allowance(funder, account) >= amount`
+ * @dev Assumes `token.balanceOf(funder) > amount`
  * @param queryClient
  * @param wagmiConfig
  * @param params
@@ -56,56 +52,17 @@ export async function getERC20TransferFromCalls(
     }
     // Transfer amount
     const amount = targetAmount - balance;
-
     // Regular ERC20 transferFrom
-    const allowance = await queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
-            chainId,
-            address: token,
-            abi: IERC20.abi,
-            functionName: "allowance",
-            args: [funder, account],
-        }),
-    );
-    if (allowance >= amount) {
-        const call = {
-            account,
-            to: token,
-            data: encodeFunctionData({
-                abi: IERC20.abi,
-                functionName: "transferFrom",
-                args: [funder, account, amount],
-            }),
-            value: 0n,
-        };
-
-        return { balance, calls: [call] };
-    }
-
-    // Increase Permit2 allowance if insufficient
-    const calls: (CallArgs & { account: Address })[] = [];
-    const permit2Calls = await getPermit2PermitCalls(queryClient, wagmiConfig, {
-        chainId,
-        token,
+    const call = {
         account,
-        spender: funder,
-        minAmount: amount,
-        approveExpiration: Date.now() + 60 * 60 * 24 * 30, // 30 days
-    });
-    calls.push(...permit2Calls.calls);
-
-    // Permit2 transferFrom
-    const transferFromCall = {
-        account,
-        to: PERMIT2_ADDRESS as Address,
+        to: token,
         data: encodeFunctionData({
-            abi: IAllowanceTransfer.abi,
+            abi: IERC20.abi,
             functionName: "transferFrom",
-            args: [funder, account, amount, token],
+            args: [funder, account, amount],
         }),
         value: 0n,
     };
-    calls.push(transferFromCall);
 
-    return { balance, calls };
+    return { balance, calls: [call] };
 }

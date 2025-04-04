@@ -10,10 +10,13 @@ import { localMockTokens } from "../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
-import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
 import { omit } from "lodash-es";
+import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
+import { getPermit2TransferFromCalls } from "./getPermit2TransferFromCalls.js";
+import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { MAX_UINT_160, MAX_UINT_48 } from "../constants/uint256.js";
 
-describe("calls/getERC20TransferFromCalls.test.ts", function () {
+describe("calls/getPermit2TransferFromCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
     const anvilClient = createWalletClient({
         account: anvilAccount,
@@ -64,35 +67,34 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
             }),
         });
     });
-
-    test("ERC20.transferFrom", async () => {
-        // Approve account as spender
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.writeContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "approve",
-                args: [account.address, 1n],
-            }),
-        });
-
+    test("Permit2.transferFrom", async () => {
+        // Permit2 already approved for funder(anvil0)
         // Transfer from anvilAccount to account
-        const transferFromCall = await getERC20TransferFromCalls(queryClient, config, {
+        // Set approvals to MAX
+        const transferFromCall = await getPermit2TransferFromCalls(queryClient, config, {
             chainId: opChainL1.id,
             token: tokenA.address,
             account: account.address,
             funder: anvilAccount.address,
             minAmount: 1n,
+            approveExpiration: "MAX_UINT_48",
+            approveAmount: "MAX_UINT_160",
         });
         expect(transferFromCall.balance).toBe(0n);
-        expect(transferFromCall.calls.length).toBe(1);
+        expect(transferFromCall.calls.length).toBe(2);
 
-        // Send from account `IERC20.transferFrom(anvilAccount, account, 1n)`
+        // Send from account `Permit2.permit(funder, permitSingle, signature)`
         expect(transferFromCall.calls[0]).toBeDefined();
-        expect(transferFromCall.calls[0].to).toBe(tokenA.address);
-
+        expect(transferFromCall.calls[0].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(transferFromCall.calls[0], "account")),
+        });
+
+        // Send from account `Permit2.transferFrom(funder, account, 1n, token)`
+        expect(transferFromCall.calls[1]).toBeDefined();
+        expect(transferFromCall.calls[1].to).toBe(PERMIT2_ADDRESS);
+        await opChainL1Client.waitForTransactionReceipt({
+            hash: await accountClient.sendTransaction(omit(transferFromCall.calls[1], "account")),
         });
 
         // Check balance of account
@@ -103,5 +105,14 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
             args: [account.address],
         });
         expect(balance).toBe(1n);
+        // Check allowance of spender
+        const allowance = await opChainL1Client.readContract({
+            address: PERMIT2_ADDRESS,
+            abi: IAllowanceTransfer.abi,
+            functionName: "allowance",
+            args: [anvilAccount.address, tokenA.address, account.address],
+        });
+        expect(allowance[0]).toBe(MAX_UINT_160);
+        expect(allowance[1]).toBe(MAX_UINT_48);
     });
 });

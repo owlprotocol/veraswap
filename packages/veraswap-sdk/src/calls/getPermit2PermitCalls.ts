@@ -110,6 +110,7 @@ export async function getPermit2PermitCalls(
     });
 
     const call = {
+        // Technically, this can be called from ANY account
         account,
         to: PERMIT2_ADDRESS as Address,
         data: encodeFunctionData({
