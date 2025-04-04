@@ -13,14 +13,16 @@ import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/uint256.js";
 
 export interface GetPermit2PermitCallsParams extends GetCallsParams {
     token: Address;
     spender: Address;
     minAmount: bigint;
-    approveAmount?: bigint;
+    approveAmount?: bigint | "MAX_UINT_160";
     minExpiration?: number;
-    approveExpiration: number;
+    approveExpiration: number | "MAX_UINT_48";
+    sigDeadline?: bigint;
 }
 
 export interface GetPermit2PermitCallsReturnType extends GetCallsReturnType {
@@ -42,21 +44,37 @@ export async function getPermit2PermitCalls(
     wagmiConfig: Config,
     params: GetPermit2PermitCallsParams,
 ): Promise<GetPermit2PermitCallsReturnType> {
-    const { chainId, token, account, spender, minAmount, approveExpiration } = params;
-    // Amount to approve if current allowance < minAmount
-    const approveAmount = params.approveAmount ?? minAmount;
-    invariant(approveAmount >= minAmount, "approveAmount must be >= minAmount");
+    const now = Math.floor(Date.now() / 1000) + 60; // +1min
 
-    // Expiration timestamp for Permit2 approval
+    const { chainId, token, account, spender, minAmount } = params;
+    const approveExpiration = params.approveExpiration === "MAX_UINT_48" ? MAX_UINT_48 : params.approveExpiration;
+    // Check amount invariants
+    invariant(minAmount <= MAX_UINT_160, "minAmount must be <= MAX_UINT_160");
     invariant(
-        params.minExpiration == undefined || params.minExpiration >= Date.now(),
-        "minExpiration must be undefined || >= Date.now()",
+        params.approveAmount === undefined ||
+        params.approveAmount === "MAX_UINT_160" ||
+        (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
+        "approveAmount must be minAmount <= approveAmount <= MAX_UINT_160",
+    );
+    const approveAmount = params.approveAmount == "MAX_UINT_160" ? MAX_UINT_160 : (params.approveAmount ?? minAmount);
+
+    // Check timestamp invariants
+    invariant(
+        params.minExpiration === undefined || (now <= params.minExpiration && params.minExpiration <= MAX_UINT_48),
+        "minExpiration must be now <= minExpiration <= MAX_UINT_48",
+    );
+    const minExpiration = params.minExpiration ?? now;
+    invariant(
+        minExpiration <= approveExpiration && approveExpiration <= MAX_UINT_48,
+        "approveExpiration must be minExpiration <= approveExpiration <= MAX_UINT_48",
     );
     invariant(
-        approveExpiration >= (params.minExpiration ?? Date.now()),
-        "approveExpiration must be >= (minExpiration ?? Date.now())",
+        params.sigDeadline === undefined || (now <= params.sigDeadline && params.sigDeadline <= MAX_UINT_256),
+        "sigDeadline must be Date.now + 1min +  <= approveExpiration <= MAX_UINT_256",
     );
+    const sigDeadline = params.sigDeadline ?? BigInt(now + 60 * 4); //5min (already 1min buffer);
 
+    // Check allowance
     const [allowance, expiration, nonce] = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
@@ -67,8 +85,6 @@ export async function getPermit2PermitCalls(
         }),
     );
 
-    // Default minExpiration to Date.now()
-    const minExpiration = params.minExpiration ?? Date.now();
     if (allowance >= minAmount && expiration > minExpiration) {
         return { allowance, expiration, calls: [] };
     }
@@ -78,11 +94,11 @@ export async function getPermit2PermitCalls(
         details: {
             token,
             amount: approveAmount,
-            expiration: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+            expiration: approveExpiration,
             nonce,
         },
         spender,
-        sigDeadline: BigInt(Math.floor(Date.now() / 1000) + 24 * 60 * 60),
+        sigDeadline,
     };
     const permitData = AllowanceTransfer.getPermitData(permitSingle, PERMIT2_ADDRESS, chainId);
     const signature = await signTypedData(wagmiConfig, {
@@ -94,6 +110,7 @@ export async function getPermit2PermitCalls(
     });
 
     const call = {
+        account,
         to: PERMIT2_ADDRESS as Address,
         data: encodeFunctionData({
             abi: [permit_address___address_uint160_uint48_uint48__address_uint256__bytes],

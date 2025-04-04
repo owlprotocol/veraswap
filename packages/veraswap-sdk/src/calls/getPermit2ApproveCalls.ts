@@ -11,14 +11,15 @@ import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
+import { MAX_UINT_160, MAX_UINT_48, MAX_UINT_256 } from "../constants/uint256.js";
 
 export interface GetPermit2ApproveCallsParams extends GetCallsParams {
     token: Address;
     spender: Address;
     minAmount: bigint;
-    approveAmount?: bigint;
+    approveAmount?: bigint | "MAX_UINT_160";
     minExpiration?: number;
-    approveExpiration: number;
+    approveExpiration: number | "MAX_UINT_48";
 }
 
 export interface GetPermit2ApproveCallsReturnType extends GetCallsReturnType {
@@ -39,34 +40,32 @@ export async function getPermit2ApproveCalls(
     wagmiConfig: Config,
     params: GetPermit2ApproveCallsParams,
 ): Promise<GetPermit2ApproveCallsReturnType> {
-    const { chainId, token, account, spender, minAmount, approveExpiration } = params;
-    // Amount to approve if current allowance < minAmount
-    const approveAmount = params.approveAmount ?? minAmount;
-    invariant(approveAmount >= minAmount, "approveAmount must be >= minAmount");
+    const now = Math.floor(Date.now() / 1000) + 60; // +1min
 
-    // Expiration timestamp for Permit2 approval
+    const { chainId, token, account, spender, minAmount } = params;
+    const approveExpiration = params.approveExpiration === "MAX_UINT_48" ? MAX_UINT_48 : params.approveExpiration;
+    // Check amount invariants
+    invariant(minAmount <= MAX_UINT_160, "minAmount must be <= MAX_UINT_160");
     invariant(
-        params.minExpiration == undefined || params.minExpiration >= Date.now(),
-        "minExpiration must be undefined || >= Date.now()",
+        params.approveAmount === undefined ||
+        params.approveAmount === "MAX_UINT_160" ||
+        (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
+        "approveAmount must be minAmount <= approveAmount <= MAX_UINT_160",
     );
+    const approveAmount = params.approveAmount === "MAX_UINT_160" ? MAX_UINT_160 : (params.approveAmount ?? minAmount);
+
+    // Check timestamp invariants
     invariant(
-        approveExpiration >= (params.minExpiration ?? Date.now()),
-        "approveExpiration must be >= (minExpiration ?? Date.now())",
+        params.minExpiration === undefined || (now <= params.minExpiration && params.minExpiration <= MAX_UINT_48),
+        "minExpiration must be now <= minExpiration <= MAX_UINT_48",
+    );
+    const minExpiration = params.minExpiration ?? now;
+    invariant(
+        minExpiration <= approveExpiration && approveExpiration <= MAX_UINT_48,
+        "approveExpiration must be minExpiration <= approveExpiration <= MAX_UINT_48",
     );
 
-    const calls: CallArgs[] = [];
-
-    //TODO: Make promises concurrent
-    // Check if PERMIT2 is approved
-    const erc20ApproveCalls = await getERC20ApproveCalls(queryClient, wagmiConfig, {
-        chainId,
-        token,
-        account,
-        spender: PERMIT2_ADDRESS,
-        minAmount,
-        approveAmount,
-    });
-    calls.push(...erc20ApproveCalls.calls);
+    const calls: (CallArgs & { account: Address })[] = [];
 
     const [allowance, expiration] = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
@@ -77,14 +76,25 @@ export async function getPermit2ApproveCalls(
             args: [account, token, spender],
         }),
     );
-
-    // Default minExpiration to Date.now()
-    const minExpiration = params.minExpiration ?? Date.now();
     if (allowance >= minAmount && expiration > minExpiration) {
+        // Assume ERC20 is sufficiently approved
         return { allowance, expiration, calls };
     }
 
+    // Check if PERMIT2 is approved
+    const erc20ApproveCalls = await getERC20ApproveCalls(queryClient, wagmiConfig, {
+        chainId,
+        token,
+        account,
+        spender: PERMIT2_ADDRESS,
+        //ERC20 has to be approved with approveAmount, some contracts have optimizations when allowance is infinite
+        minAmount: approveAmount,
+        approveAmount: approveAmount === MAX_UINT_160 ? MAX_UINT_256 : approveAmount,
+    });
+    calls.push(...erc20ApproveCalls.calls);
+
     const permit2ApproveCall = {
+        account,
         to: PERMIT2_ADDRESS as Address,
         data: encodeFunctionData({
             abi: IAllowanceTransfer.abi,

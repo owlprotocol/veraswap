@@ -37,7 +37,7 @@ export async function getTransferRemoteCalls(
 ): Promise<GetCallsReturnType> {
     const { chainId, account, funder, tokenStandard, token, destination, recipient, amount, hookMetadata, hook } =
         params;
-    const calls: CallArgs[] = [];
+    const calls: (CallArgs & { account: Address })[] = [];
 
     let wrappedToken = token;
     if (tokenStandard === "HypERC20Collateral") {
@@ -101,10 +101,10 @@ export async function getTransferRemoteWithApprovalCalls(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetTransferRemoteWithApprovalCallsParams,
-): Promise<{ calls: CallArgs[] }> {
+): Promise<{ calls: (CallArgs & { account: Address })[] }> {
     const { chainId, account, tokenStandard, token, destination, recipient, amount, hookMetadata, hook } = params;
 
-    const calls: CallArgs[] = [];
+    const calls: (CallArgs & { account: Address })[] = [];
 
     // Start fetching gas payment quote in background
     const gasPaymentPromise = queryClient.fetchQuery(
@@ -151,7 +151,7 @@ export async function getTransferRemoteWithApprovalCalls(
         hookMetadata,
         bridgePayment: gasPayment,
     });
-    calls.push(transferRemoteCall);
+    calls.push({ ...transferRemoteCall, account });
 
     return { calls };
 }

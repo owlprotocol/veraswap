@@ -69,6 +69,7 @@ export async function getERC20TransferFromCalls(
     );
     if (allowance >= amount) {
         const call = {
+            account,
             to: token,
             data: encodeFunctionData({
                 abi: IERC20.abi,
@@ -82,7 +83,7 @@ export async function getERC20TransferFromCalls(
     }
 
     // Increase Permit2 allowance if insufficient
-    const calls: CallArgs[] = [];
+    const calls: (CallArgs & { account: Address })[] = [];
     const permit2Calls = await getPermit2PermitCalls(queryClient, wagmiConfig, {
         chainId,
         token,
@@ -95,6 +96,7 @@ export async function getERC20TransferFromCalls(
 
     // Permit2 transferFrom
     const transferFromCall = {
+        account,
         to: PERMIT2_ADDRESS as Address,
         data: encodeFunctionData({
             abi: IAllowanceTransfer.abi,

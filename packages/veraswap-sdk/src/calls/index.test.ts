@@ -11,6 +11,7 @@ import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
+import { omit } from "lodash-es";
 
 describe("calls/index.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -98,7 +99,7 @@ describe("calls/index.test.ts", function () {
         // ERC20.transferFrom(anvilAccount, account, 1)
         expect(transferRemoteCalls.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferRemoteCalls.calls[0]),
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
         });
         const balanceAccount = await opChainL1Client.readContract({
             address: tokenA.address,
@@ -111,7 +112,7 @@ describe("calls/index.test.ts", function () {
         // ERC20.approve(HypERC20Collateral, 1)
         expect(transferRemoteCalls.calls[1].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferRemoteCalls.calls[1]),
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[1], "account")),
         });
         const allowance = await opChainL1Client.readContract({
             address: tokenA.address,
@@ -124,7 +125,7 @@ describe("calls/index.test.ts", function () {
         // HypERC20Collateral.transferRemote()
         expect(transferRemoteCalls.calls[2].to).toBe(tokenAHypERC20Collateral.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferRemoteCalls.calls[2]),
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[2], "account")),
         });
         const postCollateralBalance = await opChainL1Client.readContract({
             address: tokenA.address,

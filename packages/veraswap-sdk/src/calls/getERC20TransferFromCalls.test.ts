@@ -11,6 +11,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
+import { omit } from "lodash-es";
 
 describe("calls/getERC20TransferFromCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -91,7 +92,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         expect(transferFromCall.calls[0].to).toBe(tokenA.address);
 
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferFromCall.calls[0]),
+            hash: await accountClient.sendTransaction(omit(transferFromCall.calls[0], "account")),
         });
 
         // Check balance of account
