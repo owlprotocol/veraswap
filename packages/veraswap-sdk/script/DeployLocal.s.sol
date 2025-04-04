@@ -89,8 +89,18 @@ contract DeployLocal is DeployCoreContracts {
             tokens[chainIds[0]][keccak256("B")] = hypERC20CollateralTokenB;
 
             // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
-            HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
-            HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
+            if (IERC20(tokenA).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenA) == 0) {
+                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
+                    tokenA,
+                    hypERC20CollateralTokenA
+                );
+            }
+            if (IERC20(tokenB).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenB) == 0) {
+                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
+                    tokenB,
+                    hypERC20CollateralTokenB
+                );
+            }
             vm.stopBroadcast();
         }
 
