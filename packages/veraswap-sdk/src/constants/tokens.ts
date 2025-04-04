@@ -1,7 +1,7 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { MockERC20 } from "../artifacts/MockERC20.js";
-import { opChainA, opChainL1 } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
 import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
@@ -95,7 +95,7 @@ export const localMockTokens: TokenBase<"MockERC20">[] = [
     },
 ];
 
-const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA].map(
+const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA, opChainB].map(
     (chain) =>
         ({
             chainId: chain.id,
@@ -110,11 +110,11 @@ const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia,
 export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToken)[] = [
     ...createMockERC20WarpRoute({
         token: localMockTokens[0],
-        connectionChainIds: [opChainA.id],
+        connectionChainIds: [opChainA.id, opChainB.id],
     }),
     ...createMockERC20WarpRoute({
         token: localMockTokens[1],
-        connectionChainIds: [opChainA.id],
+        connectionChainIds: [opChainA.id, opChainB.id],
     }),
     ...ethNativeTokens,
 ];

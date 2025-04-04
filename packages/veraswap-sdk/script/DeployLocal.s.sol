@@ -10,6 +10,7 @@ import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
+import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {PoolUtils} from "./utils/PoolUtils.sol";
@@ -27,13 +28,16 @@ import {CoreContracts} from "./Structs.sol";
  * Similar pattern can be used to configure Testnet and Mainnet deployments
  */
 contract DeployLocal is DeployCoreContracts {
+    // Core contracts
     mapping(uint256 chainId => CoreContracts) public chainContracts;
+    // Tokens with bytes32 identifiers
+    mapping(uint256 chainId => mapping(bytes32 id => address)) public tokens;
 
     function run() external virtual override {
-        string[] memory chains = new string[](2);
+        string[] memory chains = new string[](3);
         chains[0] = "localhost";
         chains[1] = "OPChainA";
-        // chains[2] = "OPChainB";
+        chains[2] = "OPChainB";
 
         (uint256[] memory chainIds, uint256[] memory forks) = MultichainFork.getForks(chains);
 
@@ -60,76 +64,73 @@ contract DeployLocal is DeployCoreContracts {
 
         /***** Main Fork *****/
         // Create HypERC20Collateral for token A and B
-        vm.selectFork(forks[0]);
-        vm.startBroadcast();
-        CoreContracts storage contractsMain = chainContracts[chainIds[0]];
+        {
+            vm.selectFork(forks[0]);
+            vm.startBroadcast();
+            CoreContracts storage contracts = chainContracts[chainIds[0]];
 
-        (address tokenA, address tokenB) = deployTokensAndPools(
-            contractsMain.uniswap.universalRouter,
-            contractsMain.uniswap.v4PositionManager,
-            contractsMain.uniswap.v4StateView
-        );
-        (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
-            tokenA,
-            contractsMain.hyperlane.mailbox
-        );
-        console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
+            (address tokenA, address tokenB) = deployTokensAndPools(
+                contracts.uniswap.universalRouter,
+                contracts.uniswap.v4PositionManager,
+                contracts.uniswap.v4StateView
+            );
+            (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
+                tokenA,
+                contracts.hyperlane.mailbox
+            );
+            console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
 
-        (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
-            tokenB,
-            contractsMain.hyperlane.mailbox
-        );
-        console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
+            (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
+                tokenB,
+                contracts.hyperlane.mailbox
+            );
+            console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
+            tokens[chainIds[0]][keccak256("A")] = hypERC20CollateralTokenA;
+            tokens[chainIds[0]][keccak256("B")] = hypERC20CollateralTokenB;
 
-        // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
-        HypTokenRouterSweep(contractsMain.hyperlane.hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
-        HypTokenRouterSweep(contractsMain.hyperlane.hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
-        vm.stopBroadcast();
+            // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
+            HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(tokenA, hypERC20CollateralTokenA);
+            HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(tokenB, hypERC20CollateralTokenB);
+            vm.stopBroadcast();
+        }
 
-        /***** Remote Fork *****/
-        vm.selectFork(forks[1]);
-        vm.startBroadcast();
-        CoreContracts storage contractsRemote = chainContracts[chainIds[1]];
+        /***** Remote Fork(s) Deploy Tokens *****/
+        for (uint256 i = 1; i < chains.length; i++) {
+            vm.selectFork(forks[i]);
+            vm.startBroadcast();
+            CoreContracts storage contracts = chainContracts[chainIds[i]];
 
-        (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(
-            18,
-            contractsRemote.hyperlane.mailbox,
-            0,
-            "Token A",
-            "A"
-        );
-        console2.log("hypERC20TokenA:", hypERC20TokenA);
-        (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(
-            18,
-            contractsRemote.hyperlane.mailbox,
-            0,
-            "Token B",
-            "B"
-        );
-        console2.log("hypERC20TokenB:", hypERC20TokenB);
+            (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token A", "A");
+            console2.log("hypERC20TokenA:", hypERC20TokenA);
+            (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token B", "B");
+            console2.log("hypERC20TokenB:", hypERC20TokenB);
+            tokens[chainIds[i]][keccak256("A")] = hypERC20TokenA;
+            tokens[chainIds[i]][keccak256("B")] = hypERC20TokenB;
+            vm.stopBroadcast();
+        }
 
-        HypERC20(hypERC20TokenA).enrollRemoteRouter(
-            uint32(chainIds[0]),
-            bytes32(uint256(uint160(hypERC20CollateralTokenA)))
-        );
-        HypERC20(hypERC20TokenB).enrollRemoteRouter(
-            uint32(chainIds[0]),
-            bytes32(uint256(uint160(hypERC20CollateralTokenB)))
-        );
-        vm.stopBroadcast();
+        /***** Enroll Tokens *****/
+        for (uint256 i = 0; i < chains.length; i++) {
+            vm.selectFork(forks[i]);
+            vm.startBroadcast();
+            TokenRouter routerA = TokenRouter(tokens[chainIds[i]][keccak256("A")]);
+            TokenRouter routerB = TokenRouter(tokens[chainIds[i]][keccak256("B")]);
 
-        /***** Main Fork *****/
-        vm.selectFork(forks[0]);
-        vm.startBroadcast();
-        HypERC20Collateral(hypERC20CollateralTokenA).enrollRemoteRouter(
-            uint32(chainIds[1]),
-            bytes32(uint256(uint160(hypERC20TokenA)))
-        );
-        HypERC20Collateral(hypERC20CollateralTokenB).enrollRemoteRouter(
-            uint32(chainIds[1]),
-            bytes32(uint256(uint160(hypERC20TokenB)))
-        );
-        vm.stopBroadcast();
+            for (uint256 j = 0; j < chains.length; j++) {
+                if (i != j) {
+                    uint256 remoteChainId = chainIds[j];
+                    bytes32 remoteRouterA = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("A")])));
+                    if (routerA.routers(uint32(remoteChainId)) != remoteRouterA) {
+                        routerA.enrollRemoteRouter(uint32(remoteChainId), remoteRouterA);
+                    }
+                    bytes32 remoteRouterB = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("B")])));
+                    if (routerB.routers(uint32(remoteChainId)) != remoteRouterB) {
+                        routerB.enrollRemoteRouter(uint32(remoteChainId), remoteRouterB);
+                    }
+                }
+            }
+            vm.stopBroadcast();
+        }
     }
 
     function deployTokensAndPools(

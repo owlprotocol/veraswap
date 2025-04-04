@@ -5,8 +5,8 @@ import { getTransactionType } from "./getTransactionType.js";
 describe("utils/getTransactionType.test.ts", function () {
     const tokenA_900 = LOCAL_TOKENS[0];
     const tokenA_901 = LOCAL_TOKENS[1];
-    const tokenB_900 = LOCAL_TOKENS[2];
-    const tokenB_901 = LOCAL_TOKENS[3];
+    const tokenB_900 = LOCAL_TOKENS[3];
+    const tokenB_901 = LOCAL_TOKENS[4];
 
     test("BRIDGE", () => {
         const transaction = getTransactionType({
