@@ -14,12 +14,14 @@ if [ $? != 0 ]; then
     tmux new -s $session -d
     # tmux new-window  -t $session -n supersim;
     tmux new-window  -t $session -n anvil;
-    tmux split-window -t $session:anvil -h;
+    tmux split-window -t $session:anvil -h -l 66%;
+    tmux split-window -t $session:anvil -h -l 50%;
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
     # Start blockchains
     tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900" ENTER
     tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 901" ENTER
+    tmux send-keys -t $session:anvil.2 "cd $VERASWAP && anvil -p 9546 --chain-id 902" ENTER
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --l1.port 8547" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \

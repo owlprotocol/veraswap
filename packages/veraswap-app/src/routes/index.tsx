@@ -215,7 +215,7 @@ function Index() {
 
     useWatchBlocks({
         chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams,
+        enabled: !!tokenOut && !!orbiterParams && !!hash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
