@@ -46,7 +46,7 @@ optimism-sepolia = { url = "https://api-sepolia-optimism.etherscan.io/api", key 
 #base = { url = "https://basescan.org" }
 #base-sepolia = { url = "https://sepolia.basescan.org" }
 #unichain = { url = "https://uniscan.xyz" }
-#unichain-sepolia = { url = "https://sepolia.uniscan.xyz" }
+unichain-sepolia = { url = "https://api-sepolia.uniscan.xyz/api", key = "${ETHERSCAN_UNICHAIN_SEPOLIA_KEY}" }
 #zircuit = { url = "https://explorer.zircuit.com" }
 #zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
 #ink = { url = "https://explorer.inkonchain.com" }
