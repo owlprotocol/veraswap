@@ -20,6 +20,7 @@ export interface GetERC20ApproveCallsReturnType extends GetCallsReturnType {
 }
 
 /**
+ * Approve tokens from `account` to `spender`
  * Get spender allowance and return `IERC20.approve(account, spender)` call if allowance below `minAmount`
  * @dev Assumes `token.balanceOf(account) > minAmount`
  * @param queryClient

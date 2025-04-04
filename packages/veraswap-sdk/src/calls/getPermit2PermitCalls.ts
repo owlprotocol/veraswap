@@ -85,7 +85,6 @@ export async function getPermit2PermitCalls(
         sigDeadline: BigInt(Math.floor(Date.now() / 1000) + 24 * 60 * 60),
     };
     const permitData = AllowanceTransfer.getPermitData(permitSingle, PERMIT2_ADDRESS, chainId);
-    console.debug(permitData);
     const signature = await signTypedData(wagmiConfig, {
         account,
         domain: permitData.domain as TypedDataDomain,

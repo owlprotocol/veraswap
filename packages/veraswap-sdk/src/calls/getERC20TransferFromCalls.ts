@@ -9,6 +9,8 @@ import { IERC20 } from "../artifacts/IERC20.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
+import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
+import { CallArgs } from "../smartaccount/ExecLib.js";
 
 export interface GetERC20TransferFromCallsParams extends GetCallsParams {
     token: Address;
@@ -21,9 +23,10 @@ export interface GetERC20TransferFromCallsReturnType extends GetCallsReturnType 
     balance: bigint;
 }
 /**
+ * Pull tokens from `funder` to `account`
  * Get balance and return `IERC20.transferFrom` or `IAllowanceTransfer.transferFrom` call if balance below `minAmount`
  * @dev Assumes `token.balanceOf(funder) > minAmount`
- * @dev Assumes `allowance(funder, account) > minAmount` (ERC20 or Permit2 allowance)
+ * @dev **May request signature** from `funder` using `getPermit2PermitCalls` if `IAllowanceTransfer.allowance` is insufficient
  * @param queryClient
  * @param wagmiConfig
  * @param params
@@ -54,8 +57,8 @@ export async function getERC20TransferFromCalls(
     // Transfer amount
     const amount = targetAmount - balance;
 
-    // Queries
-    const allowancePromise = queryClient.fetchQuery(
+    // Regular ERC20 transferFrom
+    const allowance = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: token,
@@ -64,18 +67,6 @@ export async function getERC20TransferFromCalls(
             args: [funder, account],
         }),
     );
-    const permit2AllowancePromise = queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
-            chainId,
-            address: PERMIT2_ADDRESS,
-            abi: IAllowanceTransfer.abi,
-            functionName: "allowance",
-            args: [funder, token, account],
-        }),
-    );
-
-    // Regular ERC20 transferFrom
-    const allowance = await allowancePromise;
     if (allowance >= amount) {
         const call = {
             to: token,
@@ -90,21 +81,29 @@ export async function getERC20TransferFromCalls(
         return { balance, calls: [call] };
     }
 
+    // Increase Permit2 allowance if insufficient
+    const calls: CallArgs[] = [];
+    const permit2Calls = await getPermit2PermitCalls(queryClient, wagmiConfig, {
+        chainId,
+        token,
+        account,
+        spender: funder,
+        minAmount: amount,
+        approveExpiration: Date.now() + 60 * 60 * 24 * 30, // 30 days
+    });
+    calls.push(...permit2Calls.calls);
+
     // Permit2 transferFrom
-    const permit2Allowance = await permit2AllowancePromise;
-    if (permit2Allowance[0] >= amount && permit2Allowance[1] > Date.now()) {
-        const call = {
-            to: PERMIT2_ADDRESS as Address,
-            data: encodeFunctionData({
-                abi: IAllowanceTransfer.abi,
-                functionName: "transferFrom",
-                args: [funder, account, amount, token],
-            }),
-            value: 0n,
-        };
+    const transferFromCall = {
+        to: PERMIT2_ADDRESS as Address,
+        data: encodeFunctionData({
+            abi: IAllowanceTransfer.abi,
+            functionName: "transferFrom",
+            args: [funder, account, amount, token],
+        }),
+        value: 0n,
+    };
+    calls.push(transferFromCall);
 
-        return { balance, calls: [call] };
-    }
-
-    throw new Error("Not enough allowance for transferFrom");
+    return { balance, calls };
 }

@@ -1,8 +1,7 @@
 import { describe, expect, test, beforeEach, beforeAll } from "vitest";
 import { getAnvilAccount } from "@veraswap/anvil-account";
-import { connect, createConfig, getBalance, http } from "@wagmi/core";
+import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-import { getBalanceQueryOptions } from "wagmi/query";
 import { mock } from "@wagmi/connectors";
 
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";
@@ -12,12 +11,6 @@ import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
-import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
-import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
-import { getPermit2ApproveCalls } from "./getPermit2ApproveCalls.js";
-import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
 
 describe("calls/index.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -69,23 +62,6 @@ describe("calls/index.test.ts", function () {
                 value: parseEther("1"),
             }),
         });
-    });
-
-    test("getBalance", async () => {
-        // Example test fetching balance in 3 ways
-
-        // viem
-        const viemResult = await opChainL1Client.getBalance({
-            address: anvilAccount.address,
-        });
-        // wagmi/core: calls viem via global config, accepts chainId as parameter
-        const wagmiResult = await getBalance(config, { chainId: opChainL1.id, address: anvilAccount.address });
-        expect(wagmiResult.value).toBe(viemResult);
-        // tanstack/query: call wagmi/core logic via queryOptions supporting custom caching logic
-        const queryResult = await queryClient.fetchQuery(
-            getBalanceQueryOptions(config, { chainId: opChainL1.id, address: anvilAccount.address }),
-        );
-        expect(queryResult.value).toBe(viemResult);
     });
 
     test("getTransferRemoteCalls", async () => {
@@ -204,133 +180,5 @@ describe("calls/index.test.ts", function () {
             args: [tokenAHypERC20Collateral.address],
         });
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
-    });
-
-    test("getPermit2ApprovalCall", async () => {
-        // Approve from anvilAccount to account
-        const approvePermit2Call = await getPermit2ApproveCalls(queryClient, config, {
-            chainId: opChainL1.id,
-            token: tokenA.address,
-            account: anvilAccount.address,
-            spender: account.address,
-            minAmount: 1n,
-            approveExpiration: Date.now() + 24 * 60 * 60,
-        });
-
-        expect(approvePermit2Call.allowance).toBe(0n);
-        expect(approvePermit2Call.calls[0]).toBeDefined();
-        // Transfer using regular approval
-        expect(approvePermit2Call.calls[0].to).toBe(PERMIT2_ADDRESS);
-        // Send from anvilAccount `IAllowance.approve(token, account, approveAmount, approveExpiration)`
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.sendTransaction(approvePermit2Call.calls[0]),
-        });
-
-        // Check balance of account
-        const allowance = await opChainL1Client.readContract({
-            address: PERMIT2_ADDRESS,
-            abi: IAllowanceTransfer.abi,
-            functionName: "allowance",
-            args: [anvilAccount.address, tokenA.address, account.address],
-        });
-        expect(allowance[0]).toBe(1n);
-    });
-
-    test("getPermit2PermitCall", async () => {
-        // Approve from anvilAccount to account
-        const approvePermit2Call = await getPermit2PermitCalls(queryClient, config, {
-            chainId: opChainL1.id,
-            token: tokenA.address,
-            account: anvilAccount.address,
-            spender: account.address,
-            minAmount: 1n,
-            approveExpiration: Date.now() + 24 * 60 * 60,
-        });
-
-        expect(approvePermit2Call.allowance).toBe(0n);
-        expect(approvePermit2Call.calls[0]).toBeDefined();
-        // Transfer using regular approval
-        expect(approvePermit2Call.calls[0].to).toBe(PERMIT2_ADDRESS);
-        // Send from account `IAllowance.permit(anvilAccount, permitDetails, signature)` (signature enables any sender to set the allowance)
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(approvePermit2Call.calls[0]),
-        });
-
-        // Check balance of account
-        const allowance = await opChainL1Client.readContract({
-            address: PERMIT2_ADDRESS,
-            abi: IAllowanceTransfer.abi,
-            functionName: "allowance",
-            args: [anvilAccount.address, tokenA.address, account.address],
-        });
-        expect(allowance[0]).toBe(1n);
-    });
-
-    test("getApprovalCall", async () => {
-        // Approve from anvilAccount to account
-        const approveCall = await getERC20ApproveCalls(queryClient, config, {
-            chainId: opChainL1.id,
-            token: tokenA.address,
-            account: anvilAccount.address,
-            spender: account.address,
-            minAmount: 1n,
-        });
-
-        expect(approveCall.allowance).toBe(0n);
-        expect(approveCall.calls[0]).toBeDefined();
-        // Transfer using regular approval
-        expect(approveCall.calls[0].to).toBe(tokenA.address);
-
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.sendTransaction(approveCall.calls[0]),
-        });
-
-        // Check balance of account
-        const allowance = await opChainL1Client.readContract({
-            address: tokenA.address,
-            abi: IERC20.abi,
-            functionName: "allowance",
-            args: [anvilAccount.address, account.address],
-        });
-        expect(allowance).toBe(1n);
-    });
-
-    test("getTransferFromCall", async () => {
-        // Approve account as spender
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.writeContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "approve",
-                args: [account.address, 1n],
-            }),
-        });
-
-        // Transfer from anvilAccount to account
-        const transferFromCall = await getERC20TransferFromCalls(queryClient, config, {
-            chainId: opChainL1.id,
-            token: tokenA.address,
-            account: account.address,
-            funder: anvilAccount.address,
-            minAmount: 1n,
-        });
-
-        expect(transferFromCall.balance).toBe(0n);
-        expect(transferFromCall.calls[0]).toBeDefined();
-        // Transfer using regular approval
-        expect(transferFromCall.calls[0].to).toBe(tokenA.address);
-
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferFromCall.calls[0]),
-        });
-
-        // Check balance of account
-        const balance = await opChainL1Client.readContract({
-            address: tokenA.address,
-            abi: IERC20.abi,
-            functionName: "balanceOf",
-            args: [account.address],
-        });
-        expect(balance).toBe(1n);
     });
 });

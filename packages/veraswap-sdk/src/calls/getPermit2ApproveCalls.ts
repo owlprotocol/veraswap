@@ -9,6 +9,8 @@ import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
+import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
+import { CallArgs } from "../smartaccount/ExecLib.js";
 
 export interface GetPermit2ApproveCallsParams extends GetCallsParams {
     token: Address;
@@ -27,7 +29,7 @@ export interface GetPermit2ApproveCallsReturnType extends GetCallsReturnType {
 /**
  * Get spender Permit2 allowance and return `IAllowance.approve(token, spender, approveAmount, approveExpiration)` call if allowance below `minAmount` or expired
  * @dev Assumes `token.balanceOf(account) > minAmount`
- * @dev Assumes `token.allowance(account, PERMIT2) > minAmount`
+ * @dev Checks if `token.allowance(account, PERMIT2) > minAmount` (adds approval call before `IAllowance.approve`)
  * @param queryClient
  * @param wagmiConfig
  * @param params
@@ -52,7 +54,21 @@ export async function getPermit2ApproveCalls(
         "approveExpiration must be >= (minExpiration ?? Date.now())",
     );
 
-    const [allowance, expiration, _] = await queryClient.fetchQuery(
+    const calls: CallArgs[] = [];
+
+    //TODO: Make promises concurrent
+    // Check if PERMIT2 is approved
+    const erc20ApproveCalls = await getERC20ApproveCalls(queryClient, wagmiConfig, {
+        chainId,
+        token,
+        account,
+        spender: PERMIT2_ADDRESS,
+        minAmount,
+        approveAmount,
+    });
+    calls.push(...erc20ApproveCalls.calls);
+
+    const [allowance, expiration] = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: PERMIT2_ADDRESS,
@@ -65,10 +81,10 @@ export async function getPermit2ApproveCalls(
     // Default minExpiration to Date.now()
     const minExpiration = params.minExpiration ?? Date.now();
     if (allowance >= minAmount && expiration > minExpiration) {
-        return { allowance, expiration, calls: [] };
+        return { allowance, expiration, calls };
     }
 
-    const call = {
+    const permit2ApproveCall = {
         to: PERMIT2_ADDRESS as Address,
         data: encodeFunctionData({
             abi: IAllowanceTransfer.abi,
@@ -77,6 +93,7 @@ export async function getPermit2ApproveCalls(
         }),
         value: 0n,
     };
+    calls.push(permit2ApproveCall);
 
-    return { allowance, expiration, calls: [call] };
+    return { allowance, expiration, calls };
 }

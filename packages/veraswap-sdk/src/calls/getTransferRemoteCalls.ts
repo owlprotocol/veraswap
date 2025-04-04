@@ -53,7 +53,7 @@ export async function getTransferRemoteCalls(
         );
     }
 
-    // Fund owner if necessary
+    // Fund account if necessary
     const transferFromCall = await getERC20TransferFromCalls(queryClient, wagmiConfig, {
         chainId,
         token: wrappedToken,
