@@ -12,6 +12,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { omit } from "lodash-es";
+import { MAX_UINT_256 } from "../constants/uint256.js";
 
 describe("calls/index.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -153,6 +154,7 @@ describe("calls/index.test.ts", function () {
             destination: 901,
             recipient: account.address,
             amount: 1n,
+            approveAmount: "MAX_UINT_256",
         });
 
         expect(transferRemoteCalls.calls.length).toBe(2);
@@ -167,7 +169,7 @@ describe("calls/index.test.ts", function () {
             functionName: "allowance",
             args: [anvilAccount.address, tokenAHypERC20Collateral.address],
         });
-        expect(allowance).toBe(1n);
+        expect(allowance).toBe(MAX_UINT_256);
 
         // HypERC20Collateral.transferRemote()
         expect(transferRemoteCalls.calls[1].to).toBe(tokenAHypERC20Collateral.address);

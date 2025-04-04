@@ -21,6 +21,7 @@ export interface GetTransferRemoteCallsParams extends GetCallsParams {
     amount: bigint;
     hookMetadata?: Hex;
     hook?: Address;
+    approveAmount?: bigint | "MAX_UINT_256";
 }
 
 /**
@@ -74,6 +75,7 @@ export async function getTransferRemoteCalls(
         amount,
         hookMetadata,
         hook,
+        approveAmount: params.approveAmount,
     });
     calls.push(...transferRemoteCall.calls);
 
@@ -88,6 +90,7 @@ export interface GetTransferRemoteWithApprovalCallsParams extends GetCallsParams
     amount: bigint;
     hookMetadata?: Hex;
     hook?: Address;
+    approveAmount?: bigint | "MAX_UINT_256";
 }
 
 /**
@@ -134,6 +137,7 @@ export async function getTransferRemoteWithApprovalCalls(
             account,
             spender: token,
             minAmount: amount,
+            approveAmount: params.approveAmount,
         });
         // Add required approval
         calls.push(...approvalCall.calls);
