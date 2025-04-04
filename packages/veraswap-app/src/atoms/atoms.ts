@@ -20,6 +20,7 @@ import {
     transactionTypeAtom,
 } from "./tokens.js";
 import { chainsTypeAtom } from "./chains.js";
+import { accountAtom } from "./account.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
@@ -233,12 +234,3 @@ export const hyperlaneMailboxChainOut = atom((get) => {
     const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
     return mailbox;
 });
-
-export const accountAtom = atom(getAccount(config));
-
-accountAtom.onMount = (set) => {
-    const unsubscribe = watchAccount(config, {
-        onChange: (account) => set(account),
-    });
-    return unsubscribe;
-};

@@ -14,7 +14,7 @@ import {
 } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
-import { accountAtom } from "./atoms.js";
+import { accountAtom } from "./account.js";
 import { chains, config } from "@/config.js";
 
 /***** Tokens Fetch *****/
