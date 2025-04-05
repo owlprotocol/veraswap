@@ -13,6 +13,13 @@ export interface GetBridgeSwapCallsParams extends GetCallsParams {
     amount: bigint;
     hookMetadata?: Hex;
     hook?: Address;
+    approveAmount?: bigint | "MAX_UINT_256";
+    permit2: {
+        approveAmount?: bigint | "MAX_UINT_160";
+        minExpiration?: number;
+        approveExpiration: number | "MAX_UINT_48";
+        sigDeadline?: bigint;
+    };
 }
 
 /**

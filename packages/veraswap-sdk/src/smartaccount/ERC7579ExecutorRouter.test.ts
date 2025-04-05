@@ -1,19 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import {
-    Account,
-    Address,
-    createWalletClient,
-    encodeDeployData,
-    encodeFunctionData,
-    http,
-    padHex,
-    zeroAddress,
-    zeroHash,
-} from "viem";
+import { Account, Address, createWalletClient, encodeFunctionData, http, padHex, zeroAddress, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
-import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
