@@ -15,7 +15,7 @@ import { omit } from "lodash-es";
 import { MAX_UINT_256 } from "../constants/uint256.js";
 import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 
-describe("calls/index.test.ts", function () {
+describe("calls/getTransferRemoteCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
     const anvilClient = createWalletClient({
         account: anvilAccount,
