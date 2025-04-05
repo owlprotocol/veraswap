@@ -4,6 +4,7 @@ import { Kernel } from "../artifacts/Kernel.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { ECDSAValidator } from "../artifacts/ECDSAValidator.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
+import { Execute } from "../artifacts/Execute.js";
 
 /*** Kernel Constants ***/
 
@@ -38,11 +39,17 @@ export function getKernelContracts() {
         salt: zeroHash,
     });
 
+    const execute = getDeployDeterministicAddress({
+        bytecode: Execute.bytecode,
+        salt: zeroHash,
+    });
+
     return {
         kernel,
         kernelFactory,
         ecdsaValidator,
         ownableSignatureExecutor,
+        execute,
     };
 }
 

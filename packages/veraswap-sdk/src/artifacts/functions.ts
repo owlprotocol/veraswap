@@ -2890,4 +2890,26 @@ export const functions = [
         outputs: [],
         stateMutability: "nonpayable",
     },
+    {
+        type: "function",
+        name: "execute",
+        inputs: [
+            { name: "target", type: "address", internalType: "address" },
+            { name: "value", type: "uint256", internalType: "uint256" },
+            { name: "data", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "executeBatch",
+        inputs: [
+            { name: "target", type: "address[]", internalType: "address[]" },
+            { name: "value", type: "uint256[]", internalType: "uint256[]" },
+            { name: "data", type: "bytes[]", internalType: "bytes[]" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
 ] as const;

@@ -28,6 +28,7 @@ import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 // Kernel Account (custom)
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
+import {ExecuteUtils} from "./utils/ExecuteUtils.sol";
 
 import {HyperlaneDeployParams, UniswapContracts, HyperlaneContracts, CoreContracts} from "./Structs.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";
@@ -195,11 +196,13 @@ contract DeployCoreContracts is DeployParameters {
             ownableSignatureExecutor,
             kernelFactory
         );
+        (address execute, ) = ExecuteUtils.getOrCreate2();
 
         contracts.kernel = kernel;
         contracts.kernelFactory = kernelFactory;
         contracts.ecdsaValidator = ecdsaValidator;
         contracts.ownableSignatureExecutor = ownableSignatureExecutor;
         contracts.erc7579ExecutorRouter = erc7579ExecutorRouter;
+        contracts.execute = execute;
     }
 }

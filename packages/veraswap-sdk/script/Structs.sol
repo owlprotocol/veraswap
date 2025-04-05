@@ -42,4 +42,5 @@ struct CoreContracts {
     address ecdsaValidator;
     address ownableSignatureExecutor;
     address erc7579ExecutorRouter;
+    address execute;
 }
