@@ -87,7 +87,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         expect(transferFromCall.balance).toBe(0n);
         expect(transferFromCall.calls.length).toBe(1);
 
-        // Send from account `IERC20.transferFrom(anvilAccount, account, 1n)`
+        // ERC20.transferFrom(anvilAccount, account, 1n)
         expect(transferFromCall.calls[0]).toBeDefined();
         expect(transferFromCall.calls[0].to).toBe(tokenA.address);
 

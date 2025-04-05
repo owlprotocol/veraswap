@@ -7,10 +7,10 @@ import { Address, Hex } from "viem";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { getTransferRemoteCall } from "../swap/getTransferRemoteCall.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
-import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
 import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
+import { getPermit2TransferFromCalls } from "./getPermit2TransferFromCalls.js";
 
 export interface GetTransferRemoteCallsParams extends GetCallsParams {
     funder: Address;
@@ -22,6 +22,12 @@ export interface GetTransferRemoteCallsParams extends GetCallsParams {
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
+    permit2: {
+        approveAmount?: bigint | "MAX_UINT_160";
+        minExpiration?: number;
+        approveExpiration: number | "MAX_UINT_48";
+        sigDeadline?: bigint;
+    };
 }
 
 /**
@@ -55,12 +61,14 @@ export async function getTransferRemoteCalls(
     }
 
     // Fund account if necessary
-    const transferFromCall = await getERC20TransferFromCalls(queryClient, wagmiConfig, {
+    //TODO: Use Permit2 HERE
+    const transferFromCall = await getPermit2TransferFromCalls(queryClient, wagmiConfig, {
         chainId,
         token: wrappedToken,
         account,
         funder,
         minAmount: amount,
+        ...params.permit2,
     });
     calls.push(...transferFromCall.calls);
 

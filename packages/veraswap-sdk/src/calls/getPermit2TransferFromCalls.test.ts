@@ -83,14 +83,14 @@ describe("calls/getPermit2TransferFromCalls.test.ts", function () {
         expect(transferFromCall.balance).toBe(0n);
         expect(transferFromCall.calls.length).toBe(2);
 
-        // Send from account `Permit2.permit(funder, permitSingle, signature)`
+        // Permit2.permit(funder, permitSingle, signature)
         expect(transferFromCall.calls[0]).toBeDefined();
         expect(transferFromCall.calls[0].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(transferFromCall.calls[0], "account")),
         });
 
-        // Send from account `Permit2.transferFrom(funder, account, 1n, token)`
+        // Permit2.transferFrom(funder, account, 1n, token)
         expect(transferFromCall.calls[1]).toBeDefined();
         expect(transferFromCall.calls[1].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({

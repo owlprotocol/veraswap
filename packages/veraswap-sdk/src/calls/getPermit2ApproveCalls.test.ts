@@ -77,14 +77,14 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         expect(approvePermit2Call.allowance).toBe(0n);
         expect(approvePermit2Call.calls.length).toBe(2);
 
-        // Approve PERMIT2 `IERC20.approve(PERMIT2_ADDRESS, 1)`
+        // ERC20.approve(PERMIT2_ADDRESS, 1)
         expect(approvePermit2Call.calls[0]).toBeDefined();
         expect(approvePermit2Call.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(approvePermit2Call.calls[0], "account")),
         });
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approvePermit2Call.calls[1]).toBeDefined();
         expect(approvePermit2Call.calls[1].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
@@ -115,14 +115,14 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         expect(approvePermit2Call.allowance).toBe(0n);
         expect(approvePermit2Call.calls.length).toBe(2);
 
-        // Approve PERMIT2 `IERC20.approve(PERMIT2_ADDRESS, 1)`
+        // ERC20.approve(PERMIT2_ADDRESS, 1)
         expect(approvePermit2Call.calls[0]).toBeDefined();
         expect(approvePermit2Call.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(approvePermit2Call.calls[0], "account")),
         });
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approvePermit2Call.calls[1]).toBeDefined();
         expect(approvePermit2Call.calls[1].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
@@ -162,7 +162,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         expect(approvePermit2Call.allowance).toBe(0n);
         expect(approvePermit2Call.calls.length).toBe(1);
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approvePermit2Call.calls[0]).toBeDefined();
         expect(approvePermit2Call.calls[0].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({

@@ -73,7 +73,7 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
         expect(approveCall.allowance).toBe(0n);
         expect(approveCall.calls.length).toBe(1);
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approveCall.calls[0]).toBeDefined();
         expect(approveCall.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
@@ -103,7 +103,7 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
         expect(approveCall.allowance).toBe(0n);
         expect(approveCall.calls.length).toBe(1);
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approveCall.calls[0]).toBeDefined();
         expect(approveCall.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({

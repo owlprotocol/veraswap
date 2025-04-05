@@ -13,6 +13,7 @@ import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient
 import { IERC20 } from "../artifacts/IERC20.js";
 import { omit } from "lodash-es";
 import { MAX_UINT_256 } from "../constants/uint256.js";
+import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
 
 describe("calls/index.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -74,17 +75,6 @@ describe("calls/index.test.ts", function () {
             args: [tokenAHypERC20Collateral.address],
         });
 
-        // Approve account as spender
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.writeContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "approve",
-                args: [account.address, 1n],
-            }),
-        });
-
-        // Approve from anvilAccount to account
         const transferRemoteCalls = await getTransferRemoteCalls(queryClient, config, {
             chainId: opChainL1.id,
             token: tokenAHypERC20Collateral.address,
@@ -94,13 +84,26 @@ describe("calls/index.test.ts", function () {
             destination: 901,
             recipient: account.address,
             amount: 1n,
+            approveAmount: "MAX_UINT_256",
+            permit2: {
+                approveExpiration: "MAX_UINT_48",
+                approveAmount: "MAX_UINT_160",
+            },
         });
-        expect(transferRemoteCalls.calls.length).toBe(3);
+        expect(transferRemoteCalls.calls.length).toBe(4);
 
-        // ERC20.transferFrom(anvilAccount, account, 1)
-        expect(transferRemoteCalls.calls[0].to).toBe(tokenA.address);
+        // Permit2.permit(funder, permitSingle, signature)
+        expect(transferRemoteCalls.calls[0]).toBeDefined();
+        expect(transferRemoteCalls.calls[0].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
+        });
+
+        // Permit2.transferFrom(funder, account, 1n, token)
+        expect(transferRemoteCalls.calls[1]).toBeDefined();
+        expect(transferRemoteCalls.calls[1].to).toBe(PERMIT2_ADDRESS);
+        await opChainL1Client.waitForTransactionReceipt({
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[1], "account")),
         });
         const balanceAccount = await opChainL1Client.readContract({
             address: tokenA.address,
@@ -111,9 +114,10 @@ describe("calls/index.test.ts", function () {
         expect(balanceAccount).toBe(1n);
 
         // ERC20.approve(HypERC20Collateral, 1)
-        expect(transferRemoteCalls.calls[1].to).toBe(tokenA.address);
+        expect(transferRemoteCalls.calls[2]).toBeDefined();
+        expect(transferRemoteCalls.calls[2].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[1], "account")),
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[2], "account")),
         });
         const allowance = await opChainL1Client.readContract({
             address: tokenA.address,
@@ -121,12 +125,13 @@ describe("calls/index.test.ts", function () {
             functionName: "allowance",
             args: [account.address, tokenAHypERC20Collateral.address],
         });
-        expect(allowance).toBe(1n);
+        expect(allowance).toBe(MAX_UINT_256);
 
-        // HypERC20Collateral.transferRemote()
-        expect(transferRemoteCalls.calls[2].to).toBe(tokenAHypERC20Collateral.address);
+        // HypERC20Collateral.transferRemote(...)
+        expect(transferRemoteCalls.calls[3]).toBeDefined();
+        expect(transferRemoteCalls.calls[3].to).toBe(tokenAHypERC20Collateral.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[2], "account")),
+            hash: await accountClient.sendTransaction(omit(transferRemoteCalls.calls[3], "account")),
         });
         const postCollateralBalance = await opChainL1Client.readContract({
             address: tokenA.address,
