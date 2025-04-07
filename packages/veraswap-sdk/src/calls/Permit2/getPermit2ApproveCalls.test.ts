@@ -4,17 +4,17 @@ import { createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { omit } from "lodash-es";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { getPermit2ApproveCalls } from "./getPermit2ApproveCalls.js";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
-import { MockERC20 } from "../artifacts/MockERC20.js";
-import { MAX_UINT_160 } from "../constants/uint256.js";
+import { MockERC20 } from "../../artifacts/MockERC20.js";
+import { MAX_UINT_160 } from "../../constants/uint256.js";
 
 describe("calls/getPermit2ApproveCall.test.ts", function () {
     const config = createConfig({

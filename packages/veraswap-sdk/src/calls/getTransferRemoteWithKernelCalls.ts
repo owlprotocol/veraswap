@@ -23,10 +23,10 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
-    permit2: {
+    permit2?: {
         approveAmount?: bigint | "MAX_UINT_160";
         minExpiration?: number;
-        approveExpiration: number | "MAX_UINT_48";
+        approveExpiration?: number | "MAX_UINT_48";
         sigDeadline?: bigint;
     };
     createAccount: {

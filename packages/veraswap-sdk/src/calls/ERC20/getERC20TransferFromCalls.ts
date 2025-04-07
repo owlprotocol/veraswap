@@ -5,8 +5,8 @@ import { readContractQueryOptions } from "wagmi/query";
 import { Address, encodeFunctionData } from "viem";
 import invariant from "tiny-invariant";
 
-import { IERC20 } from "../artifacts/IERC20.js";
-import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
+import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
 
 export interface GetERC20TransferFromCallsParams extends GetCallsParams {
     token: Address;

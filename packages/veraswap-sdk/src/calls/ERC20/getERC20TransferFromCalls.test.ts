@@ -4,12 +4,12 @@ import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { mock } from "@wagmi/connectors";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { IERC20 } from "../artifacts/IERC20.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
 import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
 import { omit } from "lodash-es";
 

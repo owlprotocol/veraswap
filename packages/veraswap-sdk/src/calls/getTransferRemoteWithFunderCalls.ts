@@ -8,7 +8,7 @@ import { CallArgs } from "../smartaccount/ExecLib.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { getPermit2TransferFromCalls } from "./getPermit2TransferFromCalls.js";
+import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCalls.js";
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
 
 export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
@@ -21,10 +21,10 @@ export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
-    permit2: {
+    permit2?: {
         approveAmount?: bigint | "MAX_UINT_160";
         minExpiration?: number;
-        approveExpiration: number | "MAX_UINT_48";
+        approveExpiration?: number | "MAX_UINT_48";
         sigDeadline?: bigint;
     };
 }
@@ -43,6 +43,15 @@ export async function getTransferRemoteWithFunderCalls(
 ): Promise<GetCallsReturnType> {
     const { chainId, account, funder, tokenStandard, token, destination, recipient, amount, hookMetadata, hook } =
         params;
+
+    // Default to MAX_UINT_160 if not provided
+    const permit2 = {
+        approveAmount: params.permit2?.approveAmount ?? "MAX_UINT_160",
+        minExpiration: params.permit2?.minExpiration,
+        approveExpiration: params.permit2?.approveExpiration ?? "MAX_UINT_48",
+        sigDeadline: params.permit2?.sigDeadline,
+    };
+
     const calls: (CallArgs & { account: Address })[] = [];
 
     let wrappedToken = token;
@@ -66,7 +75,7 @@ export async function getTransferRemoteWithFunderCalls(
         account,
         funder,
         minAmount: amount,
-        ...params.permit2,
+        ...permit2,
     });
     calls.push(...transferFromCall.calls);
 

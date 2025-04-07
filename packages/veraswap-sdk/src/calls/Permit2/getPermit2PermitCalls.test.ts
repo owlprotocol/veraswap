@@ -3,16 +3,16 @@ import { getAnvilAccount } from "@veraswap/anvil-account";
 import { connect, createConfig, http, mock } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, createWalletClient } from "viem";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
-import { MAX_UINT_160 } from "../constants/uint256.js";
+import { MAX_UINT_160 } from "../../constants/uint256.js";
 
 describe("calls/getPermit2PermitCall.test.ts", function () {
     const anvilAccount = getAnvilAccount();

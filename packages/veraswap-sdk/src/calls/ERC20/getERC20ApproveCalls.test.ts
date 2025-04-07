@@ -4,15 +4,15 @@ import { createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { omit } from "lodash-es";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { MockERC20 } from "../artifacts/MockERC20.js";
+import { MockERC20 } from "../../artifacts/MockERC20.js";
 import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
-import { IERC20 } from "../artifacts/IERC20.js";
-import { MAX_UINT_256 } from "../constants/uint256.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
+import { MAX_UINT_256 } from "../../constants/uint256.js";
 
 describe("calls/getERC20ApproveCall.test.ts", function () {
     const config = createConfig({

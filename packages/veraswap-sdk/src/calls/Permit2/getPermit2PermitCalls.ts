@@ -8,12 +8,12 @@ import { AllowanceTransfer } from "@uniswap/permit2-sdk";
 import {
     IAllowanceTransfer,
     permit_address___address_uint160_uint48_uint48__address_uint256__bytes,
-} from "../artifacts/IAllowanceTransfer.js";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
+} from "../../artifacts/IAllowanceTransfer.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
 
-import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/uint256.js";
+import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
+import { PermitSingle } from "../../types/AllowanceTransfer.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../../constants/uint256.js";
 
 export interface GetPermit2PermitCallsParams extends GetCallsParams {
     token: Address;

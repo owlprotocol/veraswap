@@ -7,7 +7,7 @@ import { Address, Hex } from "viem";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { getTransferRemoteCall } from "../swap/getTransferRemoteCall.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
-import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
+import { getERC20ApproveCalls } from "./ERC20/getERC20ApproveCalls.js";
 
 import { GetCallsParams } from "./getCalls.js";
 
@@ -66,7 +66,7 @@ export async function getTransferRemoteWithApproveCalls(
             account,
             spender: token,
             minAmount: amount,
-            approveAmount: params.approveAmount,
+            approveAmount: params.approveAmount ?? "MAX_UINT_256", // default to MAX_UINT_256 approval for HypERC20Collateral
         });
         // Add required approval
         calls.push(...approvalCall.calls);

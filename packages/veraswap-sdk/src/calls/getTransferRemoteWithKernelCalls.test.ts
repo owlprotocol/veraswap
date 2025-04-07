@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, beforeAll } from "vitest";
+import { describe, expect, test, beforeEach, beforeAll, afterEach } from "vitest";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
@@ -28,6 +28,8 @@ import { omit } from "lodash-es";
 import { getExecMode } from "@zerodev/sdk";
 import { Execute } from "../artifacts/Execute.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
+import { MAX_UINT_160, MAX_UINT_256 } from "../constants/uint256.js";
+import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 
 describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -135,11 +137,6 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 destination: 901,
                 recipient: kernelAddress,
                 amount: 1n,
-                approveAmount: "MAX_UINT_256",
-                permit2: {
-                    approveExpiration: "MAX_UINT_48",
-                    approveAmount: "MAX_UINT_160",
-                },
                 createAccount: {
                     initData: kernelInitData,
                     salt: kernelSalt,
@@ -241,11 +238,6 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 destination: 901,
                 recipient: kernelAddress,
                 amount: 1n,
-                approveAmount: "MAX_UINT_256",
-                permit2: {
-                    approveExpiration: "MAX_UINT_48",
-                    approveAmount: "MAX_UINT_160",
-                },
                 createAccount: {
                     initData: kernelInitData,
                     salt: kernelSalt,
@@ -378,5 +370,36 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             });
             expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         });
+    });
+
+    afterEach(async () => {
+        const bytecode = await opChainL1Client.getCode({ address: kernelAddress });
+        expect(bytecode, "smart account deployed").toBeDefined();
+
+        const owners = await opChainL1Client.readContract({
+            address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+            abi: OwnableSignatureExecutor.abi,
+            functionName: "getOwners",
+            args: [kernelAddress],
+        });
+        expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(owner)").toContain(anvilAccount.address);
+
+        const hypERC20CollateralAllowance = await opChainL1Client.readContract({
+            address: tokenA.address,
+            abi: IERC20.abi,
+            functionName: "allowance",
+            args: [kernelAddress, tokenAHypERC20Collateral.address],
+        });
+        expect(hypERC20CollateralAllowance, "ERC20(tokenA).allowance(kernelAddress, tokenACollateral) == max").toBe(
+            MAX_UINT_256,
+        );
+
+        const permit2Allowance = await opChainL1Client.readContract({
+            address: PERMIT2_ADDRESS,
+            abi: IAllowanceTransfer.abi,
+            functionName: "allowance",
+            args: [anvilAccount.address, tokenA.address, kernelAddress],
+        });
+        expect(permit2Allowance[0], "Permit2.allowance(funder, token, kernelAddress) == max").toBe(MAX_UINT_160);
     });
 });
