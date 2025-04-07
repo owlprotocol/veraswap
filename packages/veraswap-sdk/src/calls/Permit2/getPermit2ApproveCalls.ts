@@ -48,8 +48,8 @@ export async function getPermit2ApproveCalls(
     invariant(minAmount <= MAX_UINT_160, "minAmount must be <= MAX_UINT_160");
     invariant(
         params.approveAmount === undefined ||
-        params.approveAmount === "MAX_UINT_160" ||
-        (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
+            params.approveAmount === "MAX_UINT_160" ||
+            (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
         "approveAmount must be minAmount <= approveAmount <= MAX_UINT_160",
     );
     const approveAmount = params.approveAmount === "MAX_UINT_160" ? MAX_UINT_160 : (params.approveAmount ?? minAmount);

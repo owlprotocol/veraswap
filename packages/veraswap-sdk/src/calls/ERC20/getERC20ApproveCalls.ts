@@ -38,8 +38,8 @@ export async function getERC20ApproveCalls(
     invariant(minAmount <= MAX_UINT_256, "minAmount must be <= MAX_UINT_256");
     invariant(
         params.approveAmount === undefined ||
-        params.approveAmount === "MAX_UINT_256" ||
-        (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_256),
+            params.approveAmount === "MAX_UINT_256" ||
+            (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_256),
         "approveAmount must be minAmount <= approveAmount <= MAX_UINT_256",
     );
     const approveAmount = params.approveAmount === "MAX_UINT_256" ? MAX_UINT_256 : (params.approveAmount ?? minAmount);
