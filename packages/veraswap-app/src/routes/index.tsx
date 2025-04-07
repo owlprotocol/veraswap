@@ -479,6 +479,23 @@ function Index() {
         }
     };
 
+    const setMaxToken = (token: Token, tokenBalance: bigint) => {
+        const isNative = token.address === zeroAddress;
+        const decimals = token.decimals;
+
+        let max = tokenBalance;
+
+        if (isNative) {
+            const unit = 10_000n;
+            const mod = max % unit;
+            const code = 9000n + BigInt(tokenOut?.chainId ?? 0);
+
+            max = mod > code ? (max / unit) * unit : (max / unit - 1n) * unit;
+        }
+
+        setTokenInAmountInput(formatUnits(max, decimals));
+    };
+
     return (
         <div className="max-w-xl mx-auto px-4">
             <MainnetTestnetButtons />
@@ -524,10 +541,8 @@ function Index() {
                                     <Button
                                         variant="link"
                                         className="h-auto p-0 text-sm"
-                                        onClick={() =>
-                                            tokenInBalance &&
-                                            setTokenInAmountInput(formatUnits(tokenInBalance, tokenIn!.decimals))
-                                        }
+                                        disabled={!tokenInBalance}
+                                        onClick={() => setMaxToken(tokenIn!, tokenInBalance!)}
                                     >
                                         Max
                                     </Button>
