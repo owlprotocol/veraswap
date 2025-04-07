@@ -29,6 +29,7 @@ import {
     PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
+import { useQueryClient } from "@tanstack/react-query";
 import {
     hyperlaneGasPaymentAtom,
     quoteInAtom,
@@ -61,6 +62,7 @@ import {
     orbiterAmountOutAtom,
     orbiterRouterAtom,
     orbiterRoutersEndpointContractsAtom,
+    kernelSmartAccountInitDataAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -86,6 +88,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+    const queryClient = useQueryClient();
     const { address: walletAddress, chainId } = useAccount();
 
     const { watchAsset } = useWatchAsset();
@@ -107,6 +110,8 @@ function Index() {
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
 
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
+
+    const { data: kernelSmartAccountInitData } = useAtomValue(kernelSmartAccountInitDataAtom);
 
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
@@ -230,7 +235,7 @@ function Index() {
         },
     });
 
-    const handleSwapSteps = () => {
+    const handleSwapSteps = async () => {
         if (!swapStep || transactionIsPending) return;
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             const sendTransactionCall = () =>
@@ -311,13 +316,16 @@ function Index() {
 
             initializeTransactionSteps(transactionType);
 
-            const transaction = getTransaction({
+            const transaction = await getTransaction({
                 ...transactionType,
                 amountIn: tokenInAmount!,
                 amountOutMinimum: amountOutMinimum!,
                 walletAddress: walletAddress,
                 bridgePayment: bridgePayment!,
                 orbiterParams,
+                queryClient: queryClient,
+                wagmiConfig: config,
+                initData: kernelSmartAccountInitData,
             } as TransactionParams);
 
             if (!transaction) {

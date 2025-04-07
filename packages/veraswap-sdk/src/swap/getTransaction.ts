@@ -1,4 +1,4 @@
-import { Address, Hex } from "viem";
+import { Address, Hex, zeroHash } from "viem";
 import {
     TransactionTypeSwap,
     TransactionTypeBridge,
@@ -11,6 +11,13 @@ import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlane
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import {
+    getTransferRemoteWithKernelCalls,
+    GetTransferRemoteWithKernelCallsParams,
+} from "../calls/getTransferRemoteWithKernelCalls.js";
+import { QueryClient } from "@tanstack/react-query";
+import { Config } from "@wagmi/core";
+import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -47,8 +54,13 @@ export interface TransactionSwapBridgeOptions {
     uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface TransactionBridgeSwapOptions {}
+export interface TransactionBridgeSwapOptions {
+    queryClient: QueryClient;
+    wagmiConfig: Config;
+    walletAddress: Address;
+    amountIn: bigint;
+    initData: Hex;
+}
 
 export type TransactionParams =
     | (TransactionTypeSwap & TransactionSwapOptions)
@@ -57,10 +69,10 @@ export type TransactionParams =
     | (TransactionTypeSwapBridge & TransactionSwapBridgeOptions)
     | (TransactionTypeBridgeSwap & TransactionBridgeSwapOptions);
 
-export function getTransaction(
+export async function getTransaction(
     params: TransactionParams,
     constants?: { uniswapContracts: Record<number, { universalRouter: Address }> },
-): { to: Address; data: Hex; value: bigint } | null {
+): Promise<{ to: Address; data: Hex; value: bigint } | null> {
     const uniswapContracts = constants?.uniswapContracts ?? UNISWAP_CONTRACTS;
 
     switch (params.type) {
@@ -120,8 +132,33 @@ export function getTransaction(
         }
 
         case "BRIDGE_SWAP": {
-            // TODO: Implement this case
-            return null;
+            const { bridge, queryClient, wagmiConfig, walletAddress, amountIn, initData } = params;
+
+            const { tokenIn, tokenOut } = bridge;
+
+            const bridgeSwapParms: GetTransferRemoteWithKernelCallsParams = {
+                chainId: tokenIn.chainId,
+                token: tokenIn.address,
+                tokenStandard: tokenIn.standard as "HypERC20" | "HypERC20Collateral",
+
+                account: walletAddress,
+                destination: tokenOut.chainId,
+                recipient: walletAddress,
+                amount: amountIn,
+                createAccount: {
+                    initData,
+                    salt: zeroHash,
+                    factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                },
+            };
+
+            const result = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParms);
+            //TODO: data and value are optional
+            return result.calls[0] as {
+                to: Address;
+                data: Hex;
+                value: bigint;
+            };
         }
 
         default:
