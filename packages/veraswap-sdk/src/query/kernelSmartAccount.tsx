@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { zeroHash, Address, zeroAddress, LocalAccount, Client } from "viem";
+import { zeroHash, Address, zeroAddress, LocalAccount, Client, Hash } from "viem";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { entryPoint07Address } from "viem/account-abstraction";
@@ -9,12 +9,12 @@ import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 
-interface KernelAddressParams {
+interface KernelParams {
     signer: LocalAccount | undefined;
     client: Client | undefined;
 }
 
-async function getKernelSmartAccountAddress({ signer, client }: KernelAddressParams): Promise<Address | null> {
+export async function getInitData({ signer, client }: KernelParams): Promise<Hash | null> {
     if (!signer || !client) {
         return null;
     }
@@ -34,7 +34,7 @@ async function getKernelSmartAccountAddress({ signer, client }: KernelAddressPar
         chainId: client.chain?.id,
     });
 
-    const initData = await getKernelInitData({
+    return getKernelInitData({
         kernelPluginManager,
         initHook: false,
         initConfig: [
@@ -44,19 +44,31 @@ async function getKernelSmartAccountAddress({ signer, client }: KernelAddressPar
             }),
         ],
     });
+}
 
+export function getKernelSmartAccountAddress(initData: Hash | null): Address {
     return getKernelAddress({
-        data: initData,
+        data: initData ?? zeroAddress,
         salt: zeroHash,
         implementation: LOCAL_KERNEL_CONTRACTS.kernel,
         factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
     });
 }
 
-export function kernelSmartAccountQueryOptions(params: KernelAddressParams) {
+export function kernelSmartAccountInitDataQueryOptions(params: KernelParams) {
     return queryOptions({
-        queryKey: ["kernelSmartAccount", params.signer?.address, params.client?.chain?.id],
-        queryFn: () => getKernelSmartAccountAddress(params),
+        queryKey: ["kernelInitData", params.signer?.address, params.client?.chain?.id],
+        queryFn: () => getInitData(params),
         enabled: !!params.signer?.address && !!params.client?.chain?.id,
+        staleTime: Infinity,
+    });
+}
+
+export function kernelSmartAccountAddressQueryOptions(initData: Hash | null) {
+    return queryOptions({
+        queryKey: ["kernelSmartAccountAddress", initData],
+        queryFn: () => getKernelSmartAccountAddress(initData),
+        enabled: !!initData,
+        staleTime: Infinity,
     });
 }
