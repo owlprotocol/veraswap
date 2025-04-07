@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { Chain } from "viem";
 import { TOKENS } from "@owlprotocol/veraswap-sdk/constants";
-import { tokenInAtom, tokenOutAtom } from "./tokens.js";
+import { tokenInAmountInputAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
 import { localChains, mainnetChains, testnetChains } from "@/config.js";
 
 export type ChainsType = "local" | "testnet" | "mainnet";
@@ -16,6 +16,7 @@ export const chainsTypeWriteAtom = atom(
         if (currChainsType != update) {
             set(chainsTypeAtom, update);
             set(tokenInAtom, null);
+            set(tokenInAmountInputAtom, "");
             set(tokenOutAtom, null);
         }
     },
