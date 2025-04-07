@@ -14,6 +14,7 @@ export interface GetKernelFactoryCreateAccountParams extends GetCallsParams {
 }
 
 export interface GetKernelFactoryCreateAccountReturnType extends GetCallsReturnType {
+    exists: boolean;
     kernelAddress: Address;
 }
 
@@ -45,7 +46,7 @@ export async function getKernelFactoryCreateAccountCalls(
     );
 
     if (code && code !== "0x") {
-        return { kernelAddress, calls: [] };
+        return { kernelAddress, exists: true, calls: [] };
     }
 
     const call = {
@@ -59,5 +60,5 @@ export async function getKernelFactoryCreateAccountCalls(
         value: 0n,
     };
 
-    return { kernelAddress, calls: [call] };
+    return { kernelAddress, exists: false, calls: [call] };
 }
