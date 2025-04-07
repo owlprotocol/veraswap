@@ -504,7 +504,7 @@ function Index() {
                                         "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
                                         "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                                     )}
-                                    placeholder="0.0"
+                                    placeholder="0"
                                     disabled={!tokenIn}
                                 />
                                 {tokenIn && chainId && tokenIn.address != zeroAddress && (
@@ -565,7 +565,7 @@ function Index() {
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
                                               ? "Fetching quote..."
-                                              : "0.0"
+                                              : "0"
                                     }
                                     disabled={true}
                                 />
