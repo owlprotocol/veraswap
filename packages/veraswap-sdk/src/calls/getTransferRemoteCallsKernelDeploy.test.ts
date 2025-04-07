@@ -8,7 +8,7 @@ import { getExecMode } from "@zerodev/sdk";
 
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";
 
-import { getTransferRemoteCalls } from "./getTransferRemoteCalls.js";
+import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
 import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
 import { bytesToHex, createWalletClient, encodeFunctionData, LocalAccount, padHex } from "viem";
 import { getRandomValues } from "crypto";
@@ -108,7 +108,7 @@ describe("calls/getTransferRemoteCallsKernelDeploy.test.ts", function () {
         expect(createAccountCalls.calls[0]).toBeDefined();
         expect(createAccountCalls.calls[0].to).toBe(LOCAL_KERNEL_CONTRACTS.kernelFactory);
 
-        const transferRemoteCalls = await getTransferRemoteCalls(queryClient, config, {
+        const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, config, {
             chainId: opChainL1.id,
             token: tokenAHypERC20Collateral.address,
             tokenStandard: "HypERC20Collateral",
