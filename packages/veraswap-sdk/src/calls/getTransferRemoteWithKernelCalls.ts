@@ -120,7 +120,8 @@ export async function getTransferRemoteWithKernelCalls(
                 address: contracts.ownableSignatureExecutor,
                 abi: OwnableSignatureExecutor.abi,
                 functionName: "getNonce",
-                args: [kernelAddress, 0n],
+                //@ts-expect-error encoding error with bigint but that is the expected type (and not number)
+                args: [kernelAddress, 0],
             }),
         );
         const signatureParams = {
