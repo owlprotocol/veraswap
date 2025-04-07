@@ -13,6 +13,7 @@ import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { Execute } from "../artifacts/Execute.js";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
+import { readContractQueryOptions } from "wagmi/query";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     tokenStandard: "HypERC20" | "HypERC20Collateral";
@@ -113,10 +114,19 @@ export async function getTransferRemoteWithKernelCalls(
         // Deploy account, and execute via signature
         // Execute batched calls
         // TODO: Add helper function to create the signatureData from list of calls
+        const nonce = await queryClient.fetchQuery(
+            readContractQueryOptions(wagmiConfig, {
+                chainId: chainId,
+                address: contracts.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getNonce",
+                args: [kernelAddress, 0n],
+            }),
+        );
         const signatureParams = {
             chainId: BigInt(chainId),
             ownedAccount: kernelAddress,
-            nonce: 0n,
+            nonce,
             validAfter: 0,
             validUntil: 2 ** 48 - 1,
             msgValue: 0n,
