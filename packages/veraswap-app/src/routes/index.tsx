@@ -11,13 +11,13 @@ import {
 } from "wagmi";
 import { getBlock } from "@wagmi/core";
 import {
-    getHyperlaneMessageIdFromReceipt,
+    getHyperlaneMessageIdsFromReceipt,
     getTransaction,
     TransactionParams,
     HypERC20CollateralToken,
     Token,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
@@ -49,8 +49,10 @@ import {
     updateTransactionStepAtom,
     initializeTransactionStepsAtom,
     waitForReceiptQueryAtom,
-    messageIdAtom,
-    remoteTransactionHashAtom,
+    bridgeMessageIdAtom,
+    swapMessageIdAtom,
+    bridgeRemoteTransactionHashAtom,
+    swapRemoteTransactionHashAtom,
     transactionTypeAtom,
     hyperlaneMailboxChainOut,
     chainsTypeAtom,
@@ -70,6 +72,7 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
+import { useWatchMessageProcessed } from "@/hooks/useWatchMessageProcessed.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -100,7 +103,8 @@ function Index() {
 
     const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
 
-    const [messageId, setMessageId] = useAtom(messageIdAtom);
+    const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
+    const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
 
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
@@ -139,7 +143,8 @@ function Index() {
 
     const networkType = useAtomValue(chainsTypeAtom);
 
-    const [remoteTransactionHash, setRemoteTransactionHash] = useAtom(remoteTransactionHashAtom);
+    const [bridgeRemoteTransactionHash, setBridgeRemoteTransactionHash] = useAtom(bridgeRemoteTransactionHashAtom);
+    const [swapRemoteTransactionHash, setSwapRemoteTransactionHash] = useAtom(swapRemoteTransactionHashAtom);
 
     const { switchChain } = useSwitchChain();
 
@@ -187,18 +192,8 @@ function Index() {
     }, [walletAddress, chainIn?.id, chainIn]);
     */
 
-    useWatchContractEvent({
-        abi: [ProcessId],
-        eventName: "ProcessId",
-        chainId: tokenOut?.chainId ?? 0,
-        address: hyperlaneMailboxAddress ?? zeroAddress,
-        args: { messageId: messageId ?? "0x" },
-        enabled: !!tokenOut && !!messageId && !!hyperlaneMailboxAddress,
-        strict: true,
-        onLogs: (logs) => {
-            setRemoteTransactionHash(logs[0].transactionHash);
-        },
-    });
+    useWatchMessageProcessed(bridgeMessageId, tokenOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
+    useWatchMessageProcessed(swapMessageId, tokenOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);
 
     useWatchContractEvent({
         abi: [Transfer],
@@ -209,7 +204,7 @@ function Index() {
         enabled: !!tokenOut && !!orbiterParams && !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] && !!hash,
         strict: true,
         onLogs: (logs) => {
-            setRemoteTransactionHash(logs[0].transactionHash);
+            setBridgeRemoteTransactionHash(logs[0].transactionHash);
         },
     });
 
@@ -228,7 +223,7 @@ function Index() {
                 (block) => {
                     const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
                     if (tx) {
-                        setRemoteTransactionHash(tx.hash);
+                        setBridgeRemoteTransactionHash(tx.hash);
                     }
                 },
             );
@@ -413,41 +408,75 @@ function Index() {
     }, [receipt]);
 
     useEffect(() => {
-        if (!receipt) return;
-        if (receipt.status === "reverted") return;
-        if (!(transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE")) return;
-        const messageId = getHyperlaneMessageIdFromReceipt(receipt);
+        if (!receipt || receipt.status === "reverted" || !transactionType) return;
+        if (transactionType.type === "SWAP") return;
 
-        setMessageId(messageId);
-        setTransactionHashes((prev) => ({ ...prev, bridge: messageId }));
-        updateTransactionStep({ id: "bridge", status: "processing" });
+        const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+
+        const setMessage = (id: "bridge" | "swap", hash: Hex | undefined) => {
+            if (!hash) return;
+            if (id === "bridge") {
+                setBridgeMessageId(hash);
+            } else {
+                setSwapMessageId(hash);
+            }
+            setTransactionHashes((prev) => ({ ...prev, [id]: hash }));
+            updateTransactionStep({ id, status: "processing" });
+        };
+
+        switch (transactionType.type) {
+            case "BRIDGE":
+            case "SWAP_BRIDGE":
+                setMessage("bridge", bridge);
+                break;
+            case "BRIDGE_SWAP":
+                setMessage("bridge", bridge);
+                setMessage("swap", swap);
+                break;
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [receipt, networkType]);
 
     useEffect(() => {
-        if (!remoteTransactionHash) return;
-        if (!(transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE")) return;
+        if (!transactionType) return;
 
-        updateTransactionStep({ id: "bridge", status: "success" });
-        updateTransactionStep({ id: "transfer", status: "success" });
-        setTransactionHashes((prev) => ({ ...prev, transfer: remoteTransactionHash }));
+        if (
+            (transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
+            bridgeRemoteTransactionHash
+        ) {
+            updateTransactionStep({ id: "bridge", status: "success" });
+            updateTransactionStep({ id: "transfer", status: "success" });
+            setTransactionHashes((prev) => ({ ...prev, transfer: bridgeRemoteTransactionHash }));
 
-        if (transactionType.type === "BRIDGE") {
             toast({
-                title: "Bridge Complete",
-                description: "Your bridge has been completed successfully",
+                title: transactionType.type === "BRIDGE" ? "Bridge Complete" : "Transaction Complete",
+                description:
+                    transactionType.type === "BRIDGE"
+                        ? "Your bridge has been completed successfully"
+                        : "Your transaction has been completed successfully",
                 variant: "default",
             });
-            return;
         }
 
-        toast({
-            title: "Transaction Complete",
-            description: "Your swap and bridge has been completed successfully",
-            variant: "default",
-        });
+        if (transactionType.type === "BRIDGE_SWAP" && swapRemoteTransactionHash && bridgeRemoteTransactionHash) {
+            updateTransactionStep({ id: "bridge", status: "success" });
+            updateTransactionStep({ id: "swap", status: "success" });
+            updateTransactionStep({ id: "transfer", status: "success" });
+
+            setTransactionHashes((prev) => ({
+                ...prev,
+                transfer: swapRemoteTransactionHash,
+            }));
+
+            toast({
+                title: "Transaction Complete",
+                description: "Your transaction has been completed successfully",
+                variant: "default",
+            });
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [remoteTransactionHash]);
+    }, [bridgeRemoteTransactionHash, swapRemoteTransactionHash]);
 
     const importToken = (token: Token) => {
         if (!chainId || !token.chainId) return;

@@ -221,9 +221,11 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
     set(transactionModalOpenAtom, true);
 });
 
-export const messageIdAtom = atom<Hash | undefined>(undefined);
+export const bridgeMessageIdAtom = atom<Hash | null>(null);
+export const swapMessageIdAtom = atom<Hash | null>(null);
 
-export const remoteTransactionHashAtom = atom<Hash | null>(null);
+export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
+export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
 
 export const hyperlaneMailboxChainOut = atom((get) => {
     const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
