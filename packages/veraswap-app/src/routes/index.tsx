@@ -502,7 +502,7 @@ function Index() {
                                     placeholder="0.0"
                                     disabled={!tokenIn}
                                 />
-                                {tokenIn && chainId && (
+                                {tokenIn && chainId && tokenIn.address != zeroAddress && (
                                     <button
                                         onClick={() => importToken(tokenIn)}
                                         className="flex items-center gap-1 text-sm"
@@ -564,7 +564,7 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
-                                {tokenOut && chainId && (
+                                {tokenOut && chainId && tokenOut.address != zeroAddress && (
                                     <button
                                         onClick={() => importToken(tokenOut)}
                                         className="flex items-center gap-1 text-sm"
