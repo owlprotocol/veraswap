@@ -1,13 +1,15 @@
 import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
-import { useAtomValue } from "jotai";
-import { Hex, zeroAddress } from "viem";
+import { Address, Hex, zeroAddress } from "viem";
 import { useWatchContractEvent } from "wagmi";
+import { Token } from "@owlprotocol/veraswap-sdk";
 import { tokenOutAtom, hyperlaneMailboxChainOut } from "@/atoms/index.js";
 
-export function useWatchMessageProcessed(messageId: Hex | undefined, setter: (txHash: Hex) => void) {
-    const tokenOut = useAtomValue(tokenOutAtom);
-    const mailbox = useAtomValue(hyperlaneMailboxChainOut);
-
+export function useWatchMessageProcessed(
+    messageId: Hex | null,
+    tokenOut: Token | null,
+    mailbox: Address | null,
+    setter: (txHash: Hex) => void,
+) {
     useWatchContractEvent({
         abi: [ProcessId],
         eventName: "ProcessId",

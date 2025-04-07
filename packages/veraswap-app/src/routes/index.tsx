@@ -192,8 +192,8 @@ function Index() {
     }, [walletAddress, chainIn?.id, chainIn]);
     */
 
-    useWatchMessageProcessed(bridgeMessageId, setBridgeRemoteTransactionHash);
-    useWatchMessageProcessed(swapMessageId, setSwapRemoteTransactionHash);
+    useWatchMessageProcessed(bridgeMessageId, tokenOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
+    useWatchMessageProcessed(swapMessageId, tokenOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);
 
     useWatchContractEvent({
         abi: [Transfer],

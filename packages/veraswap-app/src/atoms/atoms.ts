@@ -221,8 +221,8 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
     set(transactionModalOpenAtom, true);
 });
 
-export const bridgeMessageIdAtom = atom<Hash | undefined>(undefined);
-export const swapMessageIdAtom = atom<Hash | undefined>(undefined);
+export const bridgeMessageIdAtom = atom<Hash | null>(null);
+export const swapMessageIdAtom = atom<Hash | null>(null);
 
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
