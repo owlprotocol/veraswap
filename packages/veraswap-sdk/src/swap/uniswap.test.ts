@@ -20,7 +20,8 @@ import { RoutePlanner } from "../uniswap/index.js";
 export const UNISWAP_API_KEY: string = process.env.VITE_UNISWAP_API_KEY ?? "JoyCGj29tT4pymvhaGciK4r1aIPvqW6W53xT1fwo";
 
 describe("uniswap.test.ts", function () {
-    test("Get quote", async () => {
+    //TODO: This test uses a real API key and makes a real request. It should be skipped in CI.
+    test.skip("Get quote", async () => {
         const slippageTolerance = new Percent(1, 100);
 
         const quoteArgs: GetQuoteArgs = {
