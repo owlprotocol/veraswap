@@ -46,6 +46,7 @@ export async function getExecutorRouterSetOwnersCalls(
     const ownerUpdates = owners.filter((owner, idx) => owner.enabled != isOwner[idx]);
 
     const call = {
+        account,
         to: router,
         data: encodeFunctionData({
             abi: ERC7579ExecutorRouter.abi,

@@ -1,19 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import {
-    Account,
-    Address,
-    createWalletClient,
-    encodeDeployData,
-    encodeFunctionData,
-    http,
-    padHex,
-    zeroAddress,
-    zeroHash,
-} from "viem";
+import { Account, Address, createWalletClient, encodeFunctionData, http, padHex, zeroAddress, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { getAnvilAccount } from "@veraswap/anvil-account";
-import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
@@ -31,7 +20,7 @@ import { ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { ERC7579ExecutionMode, ERC7579RouterMessage } from "./ERC7579ExecutorRouter.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
-
+import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
 /**
  * TODO: ERC7579 Router Tests
  * - Deploy Router with Mailbox set as the walletClient (fake Mailbox)
@@ -51,19 +40,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
     let routerAddress: Address;
 
     beforeAll(async () => {
-        // Deploy MockMailbox
-        const mailboxDeployment = await getOrDeployDeterministicContract(walletClient, {
-            bytecode: encodeDeployData({
-                abi: MockMailbox.abi,
-                bytecode: MockMailbox.bytecode,
-                args: [opChainL1Client.chain.id],
-            }),
-            salt: zeroHash,
-        });
-        if (mailboxDeployment.hash) {
-            await opChainL1Client.waitForTransactionReceipt({ hash: mailboxDeployment.hash });
-        }
-        mockMailbox = mailboxDeployment.address;
+        mockMailbox = MOCK_MAILBOX_CONTRACTS[opChainL1Client.chain.id].mailbox;
         // Add self as remote mailbox for domain
         const addRemoteMailboxHash = await walletClient.writeContract({
             abi: MockMailbox.abi,
@@ -74,23 +51,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         await opChainL1Client.waitForTransactionReceipt({ hash: addRemoteMailboxHash });
 
         // Deploy Router with MockMailbox
-        const routerDeployResult = await getOrDeployDeterministicContract(walletClient, {
-            bytecode: encodeDeployData({
-                abi: ERC7579ExecutorRouter.abi,
-                bytecode: ERC7579ExecutorRouter.bytecode,
-                args: [
-                    mockMailbox,
-                    zeroAddress, //no ISM needed
-                    LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                    LOCAL_KERNEL_CONTRACTS.kernelFactory,
-                ],
-            }),
-            salt: zeroHash,
-        });
-        if (routerDeployResult.hash) {
-            await opChainL1Client.waitForTransactionReceipt({ hash: routerDeployResult.hash });
-        }
-        routerAddress = routerDeployResult.address;
+        routerAddress = MOCK_MAILBOX_CONTRACTS[opChainL1Client.chain.id].erc7579Router;
     });
 
     test("Create account - Deploy NOOP", async () => {

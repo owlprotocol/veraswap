@@ -5,14 +5,15 @@ import { readContractQueryOptions } from "wagmi/query";
 import { Address, encodeFunctionData } from "viem";
 import invariant from "tiny-invariant";
 
-import { IERC20 } from "../artifacts/IERC20.js";
-import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
+import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
+import { MAX_UINT_256 } from "../../constants/uint256.js";
 
 export interface GetERC20ApproveCallsParams extends GetCallsParams {
     token: Address;
     spender: Address;
     minAmount: bigint;
-    approveAmount?: bigint;
+    approveAmount?: bigint | "MAX_UINT_256";
 }
 
 export interface GetERC20ApproveCallsReturnType extends GetCallsReturnType {
@@ -33,9 +34,15 @@ export async function getERC20ApproveCalls(
     params: GetERC20ApproveCallsParams,
 ): Promise<GetERC20ApproveCallsReturnType> {
     const { chainId, token, account, spender, minAmount } = params;
-    // Amount to approve if current allowance < minAmount
-    const approveAmount = params.approveAmount ?? minAmount;
-    invariant(approveAmount >= minAmount, "approveAmount must be >= minAmount");
+    // Check amount invariants
+    invariant(minAmount <= MAX_UINT_256, "minAmount must be <= MAX_UINT_256");
+    invariant(
+        params.approveAmount === undefined ||
+            params.approveAmount === "MAX_UINT_256" ||
+            (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_256),
+        "approveAmount must be minAmount <= approveAmount <= MAX_UINT_256",
+    );
+    const approveAmount = params.approveAmount === "MAX_UINT_256" ? MAX_UINT_256 : (params.approveAmount ?? minAmount);
 
     const allowance = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
@@ -52,6 +59,7 @@ export async function getERC20ApproveCalls(
     }
 
     const call = {
+        account,
         to: token,
         data: encodeFunctionData({
             abi: IERC20.abi,

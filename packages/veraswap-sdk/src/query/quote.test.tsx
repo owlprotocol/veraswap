@@ -10,12 +10,12 @@ import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
-import { port } from "../test/constants.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
     const chainId = chain.id;
+    const port = 8545; //TODO: incorrect port
     const transport = http(`http://127.0.0.1:${port}`);
     const publicClient = createPublicClient({
         chain,

@@ -15,7 +15,7 @@ export interface GetCallsParams {
  * Common return type for all `get...Calls` functions that return list of `calls`
  */
 export interface GetCallsReturnType {
-    calls: CallArgs[];
+    calls: (CallArgs & { account: Address })[];
 }
 
 /**

@@ -3,15 +3,16 @@ import { getAnvilAccount } from "@veraswap/anvil-account";
 import { connect, createConfig, http, mock } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, createWalletClient } from "viem";
-import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
+import { MAX_UINT_160 } from "../../constants/uint256.js";
 
 describe("calls/getPermit2PermitCall.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -59,7 +60,7 @@ describe("calls/getPermit2PermitCall.test.ts", function () {
         spender = privateKeyToAccount(generatePrivateKey());
     });
 
-    test("getPermit2PermitCall - PERMIT2 Already approved", async () => {
+    test("PERMIT2 Already approved, approve minAmount", async () => {
         // Approve PERMIT2 with MAX_UINT256
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.writeContract({
@@ -82,7 +83,7 @@ describe("calls/getPermit2PermitCall.test.ts", function () {
         expect(approvePermit2Call.allowance).toBe(0n);
         expect(approvePermit2Call.calls.length).toBe(1);
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approvePermit2Call.calls[0]).toBeDefined();
         expect(approvePermit2Call.calls[0].to).toBe(PERMIT2_ADDRESS);
         await opChainL1Client.waitForTransactionReceipt({
@@ -98,5 +99,47 @@ describe("calls/getPermit2PermitCall.test.ts", function () {
             args: [account.address, tokenA.address, spender.address],
         });
         expect(allowance[0]).toBe(1n);
+    });
+
+    test("PERMIT2 Already approved, approve MAX_UINT_160", async () => {
+        // Approve PERMIT2 with MAX_UINT256
+        await opChainL1Client.waitForTransactionReceipt({
+            hash: await accountClient.writeContract({
+                address: tokenA.address,
+                abi: IERC20.abi,
+                functionName: "approve",
+                args: [PERMIT2_ADDRESS, 2n ** 256n - 1n],
+            }),
+        });
+
+        // Approve from account to spender
+        const approvePermit2Call = await getPermit2PermitCalls(queryClient, config, {
+            chainId: opChainL1.id,
+            token: tokenA.address,
+            account: account.address,
+            spender: spender.address,
+            minAmount: 1n,
+            approveExpiration: Date.now() + 24 * 60 * 60,
+            approveAmount: "MAX_UINT_160",
+        });
+        expect(approvePermit2Call.allowance).toBe(0n);
+        expect(approvePermit2Call.calls.length).toBe(1);
+
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
+        expect(approvePermit2Call.calls[0]).toBeDefined();
+        expect(approvePermit2Call.calls[0].to).toBe(PERMIT2_ADDRESS);
+        await opChainL1Client.waitForTransactionReceipt({
+            // Transaction sent from anvil account but works because of signature
+            hash: await anvilClient.sendTransaction(approvePermit2Call.calls[0]),
+        });
+
+        // Check allowance of spender
+        const allowance = await opChainL1Client.readContract({
+            address: PERMIT2_ADDRESS,
+            abi: IAllowanceTransfer.abi,
+            functionName: "allowance",
+            args: [account.address, tokenA.address, spender.address],
+        });
+        expect(allowance[0]).toBe(MAX_UINT_160);
     });
 });

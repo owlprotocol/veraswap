@@ -4,13 +4,14 @@ import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { mock } from "@wagmi/connectors";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { IERC20 } from "../artifacts/IERC20.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
 import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
+import { omit } from "lodash-es";
 
 describe("calls/getERC20TransferFromCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -64,7 +65,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         });
     });
 
-    test("ERC20.approve", async () => {
+    test("ERC20.transferFrom", async () => {
         // Approve account as spender
         await opChainL1Client.waitForTransactionReceipt({
             hash: await anvilClient.writeContract({
@@ -86,12 +87,12 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         expect(transferFromCall.balance).toBe(0n);
         expect(transferFromCall.calls.length).toBe(1);
 
-        // Send from account `IERC20.transferFrom(anvilAccount, account, 1n)`
+        // ERC20.transferFrom(anvilAccount, account, 1n)
         expect(transferFromCall.calls[0]).toBeDefined();
         expect(transferFromCall.calls[0].to).toBe(tokenA.address);
 
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(transferFromCall.calls[0]),
+            hash: await accountClient.sendTransaction(omit(transferFromCall.calls[0], "account")),
         });
 
         // Check balance of account

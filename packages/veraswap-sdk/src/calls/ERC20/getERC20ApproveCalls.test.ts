@@ -2,15 +2,17 @@ import { describe, expect, test, beforeEach } from "vitest";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
+import { omit } from "lodash-es";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 
-import { localMockTokens } from "../constants/tokens.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { MockERC20 } from "../artifacts/MockERC20.js";
+import { MockERC20 } from "../../artifacts/MockERC20.js";
 import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
-import { IERC20 } from "../artifacts/IERC20.js";
+import { IERC20 } from "../../artifacts/IERC20.js";
+import { MAX_UINT_256 } from "../../constants/uint256.js";
 
 describe("calls/getERC20ApproveCall.test.ts", function () {
     const config = createConfig({
@@ -59,7 +61,7 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
             }),
         });
     });
-    test("getERC20ApproveCalls", async () => {
+    test("approve minAmount", async () => {
         // Approve from account to spender
         const approveCall = await getERC20ApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
@@ -71,11 +73,11 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
         expect(approveCall.allowance).toBe(0n);
         expect(approveCall.calls.length).toBe(1);
 
-        // Send from account `IAllowance.approve(token, spender, approveAmount, approveExpiration)`
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
         expect(approveCall.calls[0]).toBeDefined();
         expect(approveCall.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await accountClient.sendTransaction(approveCall.calls[0]),
+            hash: await accountClient.sendTransaction(omit(approveCall.calls[0], "account")),
         });
 
         // Check allowance of spender
@@ -86,5 +88,35 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
             args: [account.address, spender.address],
         });
         expect(allowance).toBe(1n);
+    });
+
+    test("approve MAX_UINT_256", async () => {
+        // Approve from account to spender
+        const approveCall = await getERC20ApproveCalls(queryClient, config, {
+            chainId: opChainL1.id,
+            token: tokenA.address,
+            account: account.address,
+            spender: spender.address,
+            minAmount: 1n,
+            approveAmount: "MAX_UINT_256",
+        });
+        expect(approveCall.allowance).toBe(0n);
+        expect(approveCall.calls.length).toBe(1);
+
+        // Permit2.approve(token, spender, approveAmount, approveExpiration)
+        expect(approveCall.calls[0]).toBeDefined();
+        expect(approveCall.calls[0].to).toBe(tokenA.address);
+        await opChainL1Client.waitForTransactionReceipt({
+            hash: await accountClient.sendTransaction(omit(approveCall.calls[0], "account")),
+        });
+
+        // Check allowance of spender
+        const allowance = await opChainL1Client.readContract({
+            address: tokenA.address,
+            abi: IERC20.abi,
+            functionName: "allowance",
+            args: [account.address, spender.address],
+        });
+        expect(allowance).toBe(MAX_UINT_256);
     });
 });
