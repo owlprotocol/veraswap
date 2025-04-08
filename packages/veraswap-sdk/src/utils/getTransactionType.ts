@@ -116,7 +116,7 @@ export function getSharedChainPools({
     tokenIn,
     tokenOut,
 }: {
-    tokens: Record<number, Record<Address, Token>>;
+    tokens: Record<number, Record<Address, Token | undefined>>;
     poolKeys: Record<number, PoolKey[]>;
     tokenIn: Token;
     tokenOut: Token;
@@ -133,6 +133,9 @@ export function getSharedChainPools({
         // Get tokens
         const tokenIn = tokens[pair.chainId][pair.tokenIn];
         const tokenOut = tokens[pair.chainId][pair.tokenOut];
+
+        if (!tokenIn || !tokenOut) return;
+
         // Search for poolKey
         const chainPoolKeys = poolKeys[tokenIn.chainId];
         if (!chainPoolKeys) return;
