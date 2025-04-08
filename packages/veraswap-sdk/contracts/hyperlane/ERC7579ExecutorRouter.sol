@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {IPostDispatchHook} from "@hyperlane-xyz/core/interfaces/hooks/IPostDispatchHook.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/libs/TypeCasts.sol";
-import {OwnableSignatureExecutor} from "@rhinestone/core-modules/OwnableSignatureExecutor/OwnableSignatureExecutor.sol";
+import {OwnableSignatureExecutor} from "../executors/OwnableSignatureExecutor.sol";
 import {MailboxClientStatic} from "./MailboxClientStatic.sol";
 import {IAccountFactory} from "./IAccountFactory.sol";
 import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
