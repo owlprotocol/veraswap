@@ -156,7 +156,7 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
         const hash = await walletClient2.writeContract({
             address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             abi: OwnableSignatureExecutor.abi,
-            functionName: "executeOnOwnedAccount",
+            functionName: "executeOnOwnedAccountWithSignature",
             args: [
                 signatureParams.ownedAccount,
                 signatureParams.nonce,
@@ -204,7 +204,7 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
         const hash = await walletClient2.writeContract({
             address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             abi: OwnableSignatureExecutor.abi,
-            functionName: "executeBatchOnOwnedAccount",
+            functionName: "executeBatchOnOwnedAccountWithSignature",
             args: [
                 signatureParams.ownedAccount,
                 signatureParams.nonce,

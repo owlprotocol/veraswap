@@ -200,7 +200,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             // No execution, useful for simple deployment
         } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE_SIGNATURE) {
             // Execute with signature, no checks on origin/router/owner
-            executor.executeOnOwnedAccount{value: msg.value}(
+            executor.executeOnOwnedAccountWithSignature{value: msg.value}(
                 account,
                 nonce,
                 validAfter,
@@ -210,7 +210,7 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             );
         } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.BATCH_SIGNATURE) {
             // Execute with signature, no checks on origin/router/owner
-            executor.executeBatchOnOwnedAccount{value: msg.value}(
+            executor.executeBatchOnOwnedAccountWithSignature{value: msg.value}(
                 account,
                 nonce,
                 validAfter,

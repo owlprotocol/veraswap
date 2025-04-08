@@ -33,7 +33,7 @@ contract OwnableSignatureExecutor is OwnableExecutor, NonceManager {
      * @param callData encoded data containing the transaction to execute
      * @param signature encoded signature of chainId, ownedAccount, nonce, validAfter, validUntil msg.value, callData
      */
-    function executeOnOwnedAccount(
+    function executeOnOwnedAccountWithSignature(
         address ownedAccount,
         uint256 nonce,
         uint48 validAfter,
@@ -73,7 +73,7 @@ contract OwnableSignatureExecutor is OwnableExecutor, NonceManager {
      * @param callData encoded data containing the transactions to execute
      * @param signature encoded signature of ownedAccount, msg.value, callData
      */
-    function executeBatchOnOwnedAccount(
+    function executeBatchOnOwnedAccountWithSignature(
         address ownedAccount,
         uint256 nonce,
         uint48 validAfter,

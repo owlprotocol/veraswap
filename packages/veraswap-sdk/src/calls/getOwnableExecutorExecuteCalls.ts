@@ -19,7 +19,7 @@ export interface GetOwnableExecutorExecuteCallsParams extends GetCallsParams {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType {}
+export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType { }
 
 /**
  * Call `OwnableExecutor.execute`, use batch mode if `calls.length > 0`, use signature if `account != owner`
@@ -40,10 +40,10 @@ export async function getOwnableExecutorExecuteCalls(
     const smartAccountCallData = calls.length > 1 ? encodeCallArgsBatch(calls) : encodeCallArgsSingle(calls[0]);
     // Sum value of all calls
     const value = calls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
-    // Executor function batch / single
-    const functionName = calls.length > 1 ? "executeBatchOnOwnedAccount" : "executeOnOwnedAccount";
 
     if (account === owner) {
+        // Executor function batch / single
+        const functionName = calls.length > 1 ? "executeBatchOnOwnedAccount" : "executeOnOwnedAccount";
         // Account is owner, execute directly
         const executeOnOwnedAccountCall = {
             account,
@@ -58,6 +58,8 @@ export async function getOwnableExecutorExecuteCalls(
 
         return { calls: [executeOnOwnedAccountCall] };
     } else {
+        const functionName =
+            calls.length > 1 ? "executeBatchOnOwnedAccountWithSignature" : "executeOnOwnedAccountWithSignature";
         // Account is not owner, execute via signature
         const nonce = await queryClient.fetchQuery(
             readContractQueryOptions(wagmiConfig, {
