@@ -12,9 +12,12 @@ import { Execute } from "../artifacts/Execute.js";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
+import { TokenStandard } from "../types/Token.js";
+import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { OrbiterParams } from "../swap/getTransaction.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
-    tokenStandard: "HypERC20" | "HypERC20Collateral";
+    tokenStandard: TokenStandard;
     token: Address;
     destination: number;
     recipient: Address;
@@ -37,6 +40,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         execute: Address;
         ownableSignatureExecutor: Address;
     };
+    orbiterParams?: OrbiterParams;
 }
 
 /**
@@ -69,6 +73,10 @@ export async function getTransferRemoteWithKernelCalls(
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
     };
 
+    if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
+        throw new Error(`Unsupported standard for bridge and swap: ${tokenStandard}`);
+    }
+
     // Create account if needed
     const createAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
         chainId,
@@ -77,21 +85,35 @@ export async function getTransferRemoteWithKernelCalls(
     });
     const kernelAddress = createAccountCalls.kernelAddress;
 
-    // Encode transferRemote calls, pull funds from account if needed
-    const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
-        chainId,
-        token,
-        tokenStandard,
-        account: kernelAddress,
-        funder: account,
-        destination,
-        recipient,
-        amount,
-        hookMetadata,
-        hook,
-        approveAmount,
-        permit2,
-    });
+    let transferRemoteCalls: GetCallsReturnType;
+    if (tokenStandard === "NativeToken") {
+        // Assume that if the token is native, we are using the Orbiter bridge
+        const orbiterCall = getOrbiterETHTransferTransaction({
+            recipient,
+            amount,
+            ...params.orbiterParams!,
+        });
+
+        transferRemoteCalls = { calls: [{ ...orbiterCall, account: kernelAddress }] };
+    } else {
+        // TODO: handle future case where we bridge USDC with orbiter
+
+        // Encode transferRemote calls, pull funds from account if needed
+        transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
+            chainId,
+            token,
+            tokenStandard,
+            account: kernelAddress,
+            funder: account,
+            destination,
+            recipient,
+            amount,
+            hookMetadata,
+            hook,
+            approveAmount,
+            permit2,
+        });
+    }
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly

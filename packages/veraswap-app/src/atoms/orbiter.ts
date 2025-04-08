@@ -2,7 +2,14 @@ import { atom } from "jotai";
 import { chainIdToOrbiterChainId, OrbiterParams, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
-import { tokenInAmountAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
+import {
+    chainInAtom,
+    chainOutAtom,
+    tokenInAmountAtom,
+    tokenInAtom,
+    tokenOutAtom,
+    transactionTypeAtom,
+} from "./tokens.js";
 
 const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
 const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
@@ -31,23 +38,36 @@ export const orbiterChainIdOutAtom = atom((get) => {
     return chainIdToOrbiterChainId[tokenOut.chainId] as number | undefined;
 });
 
+// TODO: Handle USDC
 export const orbiterRouterAtom = atom((get) => {
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
     const orbiterRoutersAll = get(orbiterRoutersAllAtom);
 
-    // Only fetch params for native ETH token bridging
-    if (
-        !(
-            tokenIn?.standard == "NativeToken" &&
-            tokenOut?.standard == "NativeToken" &&
-            tokenIn.symbol === "ETH" &&
-            tokenOut.symbol === "ETH"
-        )
-    )
-        return undefined;
+    const tokenIn = get(tokenInAtom);
+    const chainIn = get(chainInAtom);
+    const tokenOut = get(tokenOutAtom);
+    const chainOut = get(chainOutAtom);
 
-    const line = `${tokenIn.chainId}/${tokenOut.chainId}-${tokenIn.symbol}/${tokenOut.symbol}`;
+    const transactionType = get(transactionTypeAtom);
+
+    if (!tokenIn || !tokenOut || !chainIn || !chainOut || !transactionType) return undefined;
+
+    if (transactionType.type === "SWAP") return undefined;
+
+    const chainOutSymbol = chainOut.nativeCurrency.symbol;
+    const chainInSymbol = chainIn.nativeCurrency.symbol;
+
+    if (transactionType.type === "SWAP_BRIDGE") {
+        if (tokenOut.standard === "NativeToken" && (tokenOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
+            // If bridging on output a native token, must be ETH on both chains
+            return undefined;
+        }
+        // Type is either "BRIDGE" or "BRIDGE_SWAP"
+    } else if (tokenIn.standard !== "NativeToken" || tokenIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
+        // If bridging on input a native token, must be ETH on both chains
+        return undefined;
+    }
+
+    const line = `${tokenIn.chainId}/${chainOut.id}-${tokenIn.symbol}/${chainOutSymbol}`;
 
     return orbiterRoutersAll.find((router) => router.line === line);
 });
