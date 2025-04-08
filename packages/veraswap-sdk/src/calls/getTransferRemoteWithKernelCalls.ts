@@ -1,4 +1,4 @@
-import { Config, signMessage } from "@wagmi/core";
+import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { Address, encodeFunctionData, Hex } from "viem";
 
@@ -7,13 +7,11 @@ import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
-import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { encodeExecuteSignature } from "../smartaccount/OwnableExecutor.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { Execute } from "../artifacts/Execute.js";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
-import { readContractQueryOptions } from "wagmi/query";
+import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     tokenStandard: "HypERC20" | "HypERC20Collateral";
@@ -95,67 +93,35 @@ export async function getTransferRemoteWithKernelCalls(
         permit2,
     });
 
-    const smartAccountCallData = encodeCallArgsBatch(transferRemoteCalls.calls);
-
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
-        const executeBatchOnOwnedAccountCall = {
+        const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+            chainId,
             account,
-            to: contracts.ownableSignatureExecutor,
-            data: encodeFunctionData({
-                abi: OwnableSignatureExecutor.abi,
-                functionName: "executeBatchOnOwnedAccount",
-                args: [kernelAddress, smartAccountCallData],
-            }),
-        };
+            calls: transferRemoteCalls.calls,
+            executor: contracts.ownableSignatureExecutor,
+            owner: account,
+            kernelAddress,
+        });
 
-        return { calls: [executeBatchOnOwnedAccountCall] };
+        return { calls: executeOnOwnedAccount.calls };
     } else {
-        // Deploy account, and execute via signature
+        // Deploy account, and execute via signature using the Execute contract
+        const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+            chainId,
+            account: contracts.execute,
+            calls: transferRemoteCalls.calls,
+            executor: contracts.ownableSignatureExecutor,
+            owner: account,
+            kernelAddress,
+        });
+
+        //TODO: Additional util for Execute.sol contract
         // Execute batched calls
-        // TODO: Add helper function to create the signatureData from list of calls
-        const nonce = await queryClient.fetchQuery(
-            readContractQueryOptions(wagmiConfig, {
-                chainId: chainId,
-                address: contracts.ownableSignatureExecutor,
-                abi: OwnableSignatureExecutor.abi,
-                functionName: "getNonce",
-                //@ts-expect-error encoding error with bigint but that is the expected type (and not number)
-                args: [kernelAddress, 0],
-            }),
-        );
-        const signatureParams = {
-            chainId: BigInt(chainId),
-            ownedAccount: kernelAddress,
-            nonce,
-            validAfter: 0,
-            validUntil: 2 ** 48 - 1,
-            msgValue: 0n,
-            callData: smartAccountCallData,
-        };
-        const signatureData = encodeExecuteSignature(signatureParams);
-        const signature = await signMessage(wagmiConfig, { account, message: { raw: signatureData } });
-
-        const executeBatchOnOwnedAccountCall = {
-            to: contracts.ownableSignatureExecutor,
-            data: encodeFunctionData({
-                abi: OwnableSignatureExecutor.abi,
-                functionName: "executeBatchOnOwnedAccount",
-                args: [
-                    signatureParams.ownedAccount,
-                    signatureParams.nonce,
-                    signatureParams.validAfter,
-                    signatureParams.validUntil,
-                    signatureParams.callData,
-                    signature,
-                ],
-            }),
-        };
-
-        const deployAndExecuteCalls = encodeCallArgsBatch([
-            ...createAccountCalls.calls,
-            executeBatchOnOwnedAccountCall,
-        ]);
+        const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
+        const deployAndExecuteCalls = encodeCallArgsBatch(executeCalls);
+        // Sum value of all calls
+        const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
         // Execute batch
         const executeCall = {
@@ -166,6 +132,7 @@ export async function getTransferRemoteWithKernelCalls(
                 functionName: "execute",
                 args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), deployAndExecuteCalls],
             }),
+            value,
         };
         return { calls: [executeCall] };
     }
