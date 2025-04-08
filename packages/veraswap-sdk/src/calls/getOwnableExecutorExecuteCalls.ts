@@ -19,7 +19,7 @@ export interface GetOwnableExecutorExecuteCallsParams extends GetCallsParams {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType { }
+export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType {}
 
 /**
  * Call `OwnableExecutor.execute`, use batch mode if `calls.length > 0`, use signature if `account != owner`
