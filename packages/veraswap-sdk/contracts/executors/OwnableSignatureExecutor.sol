@@ -7,6 +7,8 @@ import {ModeLib} from "modulekit/accounts/common/lib/ModeLib.sol";
 import {SentinelListLib} from "sentinellist/SentinelList.sol";
 import {NonceManager} from "@ERC4337/account-abstraction/contracts/core/NonceManager.sol";
 import {OwnableExecutor} from "@rhinestone/core-modules/OwnableExecutor/OwnableExecutor.sol";
+import {SignatureExecutionLib} from "./SignatureExecutionLib.sol";
+import {SignatureExecutorEIP712} from "./SignatureExecutorEIP712.sol";
 
 /**
  * @title OwnableSignatureExecutor
@@ -14,8 +16,9 @@ import {OwnableExecutor} from "@rhinestone/core-modules/OwnableExecutor/OwnableE
  * and pays for gas. Signature based transactions have their own internal shared nonce counter, validUntil and validAfter timestamps.
  * @author Leo Vigna
  */
-contract OwnableSignatureExecutor is OwnableExecutor, NonceManager {
+contract OwnableSignatureExecutor is OwnableExecutor, SignatureExecutorEIP712, NonceManager {
     using SentinelListLib for SentinelListLib.SentinelList;
+    using SignatureExecutionLib for SignatureExecutionLib.SignatureExecution;
 
     error InvalidNonce(uint256 nonce);
     error InvalidTimestamp(uint48 validUntil, uint48 validAfter);
@@ -26,81 +29,69 @@ contract OwnableSignatureExecutor is OwnableExecutor, NonceManager {
     /**
      * Executes a transaction on the owned account
      *
-     * @param ownedAccount address of the account to execute the transaction on
-     * @param nonce 2D Nonce (similar to ERC4337) to enable transaction ordering
-     * @param validAfter signature valid after timestamp
-     * @param validUntil signature valid until timestamp
-     * @param callData encoded data containing the transaction to execute
-     * @param signature encoded signature of chainId, ownedAccount, nonce, validAfter, validUntil msg.value, callData
+     * @param signatureExecution execution payload
+     * @param signature EIP712 signature of the execution payload
      */
     function executeOnOwnedAccountWithSignature(
-        address ownedAccount,
-        uint256 nonce,
-        uint48 validAfter,
-        uint48 validUntil,
-        bytes calldata callData,
+        SignatureExecutionLib.SignatureExecution calldata signatureExecution,
         bytes calldata signature
     ) external payable {
-        if (block.timestamp > validUntil || block.timestamp < validAfter) {
-            revert InvalidTimestamp(validUntil, validAfter);
-        }
+        _checkValidExecution(signatureExecution);
 
-        if (!_validateAndUpdateNonce(ownedAccount, nonce)) {
-            revert InvalidNonce(nonce);
-        }
-
-        bytes32 execHash = ECDSA.toEthSignedMessageHash(
-            abi.encode(block.chainid, ownedAccount, nonce, validAfter, validUntil, msg.value, callData)
-        );
+        bytes32 execHash = _hashTypedData(signatureExecution.hash());
         address owner = ECDSA.recoverCalldata(execHash, signature);
 
         // check if the signer is an owner
-        if (!accountOwners[ownedAccount].contains(owner)) {
+        if (!accountOwners[signatureExecution.account].contains(owner)) {
             revert UnauthorizedAccess();
         }
 
         // execute the transaction on the owned account
-        IERC7579Account(ownedAccount).executeFromExecutor{value: msg.value}(ModeLib.encodeSimpleSingle(), callData);
+        IERC7579Account(signatureExecution.account).executeFromExecutor{value: signatureExecution.value}(
+            ModeLib.encodeSimpleSingle(),
+            signatureExecution.callData
+        );
     }
 
     /**
      * Executes a batch of transactions on the owned account
      *
-     * @param ownedAccount address of the account to execute the transaction on
-     * @param nonce 2D Nonce (similar to ERC4337) to enable transaction ordering
-     * @param validAfter signature valid after timestamp
-     * @param validUntil signature valid until timestamp
-     * @param callData encoded data containing the transactions to execute
-     * @param signature encoded signature of ownedAccount, msg.value, callData
+     * @param signatureExecution execution payload
+     * @param signature EIP712 signature of the execution payload
      */
     function executeBatchOnOwnedAccountWithSignature(
-        address ownedAccount,
-        uint256 nonce,
-        uint48 validAfter,
-        uint48 validUntil,
-        bytes calldata callData,
+        SignatureExecutionLib.SignatureExecution calldata signatureExecution,
         bytes calldata signature
     ) external payable {
-        if (block.timestamp > validUntil || block.timestamp < validAfter) {
-            revert InvalidTimestamp(validUntil, validAfter);
-        }
+        _checkValidExecution(signatureExecution);
 
-        if (!_validateAndUpdateNonce(ownedAccount, nonce)) {
-            revert InvalidNonce(nonce);
-        }
-
-        bytes32 execHash = ECDSA.toEthSignedMessageHash(
-            abi.encode(block.chainid, ownedAccount, nonce, validAfter, validUntil, msg.value, callData)
-        );
+        bytes32 execHash = _hashTypedData(signatureExecution.hash());
         address owner = ECDSA.recoverCalldata(execHash, signature);
 
         // check if the signer is an owner
-        if (!accountOwners[ownedAccount].contains(owner)) {
+        if (!accountOwners[signatureExecution.account].contains(owner)) {
             revert UnauthorizedAccess();
         }
 
         // execute the batch of transaction on the owned account
-        IERC7579Account(ownedAccount).executeFromExecutor{value: msg.value}(ModeLib.encodeSimpleBatch(), callData);
+        IERC7579Account(signatureExecution.account).executeFromExecutor{value: msg.value}(
+            ModeLib.encodeSimpleBatch(),
+            signatureExecution.callData
+        );
+    }
+
+    /**
+     * @dev Check if execution timestamp is valid (validAfter, validUntil) and update nonce
+     * @param signatureExecution execution payload
+     */
+    function _checkValidExecution(SignatureExecutionLib.SignatureExecution memory signatureExecution) internal {
+        if (block.timestamp > signatureExecution.validUntil || block.timestamp < signatureExecution.validAfter) {
+            revert InvalidTimestamp(signatureExecution.validUntil, signatureExecution.validAfter);
+        }
+
+        if (!_validateAndUpdateNonce(signatureExecution.account, signatureExecution.nonce)) {
+            revert InvalidNonce(signatureExecution.nonce);
+        }
     }
 
     /*//////////////////////////////////////////////////////////////////////////
