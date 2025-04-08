@@ -395,9 +395,7 @@ function Index() {
             return;
         }
 
-        if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
-            return;
-        }
+        if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") return;
 
         updateTransactionStep({ id: "swap", status: "success" });
 
