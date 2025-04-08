@@ -18,7 +18,7 @@ import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
-import { encodeExecuteSignature, installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
+import { getSignatureExecutionData, installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { CALL_TYPE, EXEC_TYPE, KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { entryPoint07Address } from "viem/account-abstraction";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
@@ -316,31 +316,28 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             // Execute batched calls
             const smartAccountCallData = encodeCallArgsBatch(transferRemoteCalls.calls);
             // TODO: Add helper function to create the signatureData from list of calls
-            const signatureParams = {
-                chainId: BigInt(opChainL1Client.chain.id),
-                ownedAccount: kernelAddress,
+            const signatureExecution = {
+                account: kernelAddress,
                 nonce: 0n,
                 validAfter: 0,
                 validUntil: 2 ** 48 - 1,
-                msgValue: 0n,
+                value: 0n,
                 callData: smartAccountCallData,
             };
-            const signatureData = encodeExecuteSignature(signatureParams);
-            const signature = await anvilAccount.signMessage({ message: { raw: signatureData } });
+            const signature = await anvilAccount.signTypedData(
+                getSignatureExecutionData(
+                    signatureExecution,
+                    LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    opChainL1Client.chain.id,
+                ),
+            );
 
             const executeBatchOnOwnedAccountCall = {
                 to: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
                 data: encodeFunctionData({
                     abi: OwnableSignatureExecutor.abi,
-                    functionName: "executeBatchOnOwnedAccount",
-                    args: [
-                        signatureParams.ownedAccount,
-                        signatureParams.nonce,
-                        signatureParams.validAfter,
-                        signatureParams.validUntil,
-                        signatureParams.callData,
-                        signature,
-                    ],
+                    functionName: "executeBatchOnOwnedAccountWithSignature",
+                    args: [signatureExecution, signature],
                 }),
             };
 

@@ -2796,20 +2796,6 @@ export const functions = [
         name: "executeBatchOnOwnedAccount",
         inputs: [
             { name: "ownedAccount", type: "address", internalType: "address" },
-            { name: "nonce", type: "uint256", internalType: "uint256" },
-            { name: "validAfter", type: "uint48", internalType: "uint48" },
-            { name: "validUntil", type: "uint48", internalType: "uint48" },
-            { name: "callData", type: "bytes", internalType: "bytes" },
-            { name: "signature", type: "bytes", internalType: "bytes" },
-        ],
-        outputs: [],
-        stateMutability: "payable",
-    },
-    {
-        type: "function",
-        name: "executeBatchOnOwnedAccount",
-        inputs: [
-            { name: "ownedAccount", type: "address", internalType: "address" },
             { name: "callData", type: "bytes", internalType: "bytes" },
         ],
         outputs: [],
@@ -2817,13 +2803,21 @@ export const functions = [
     },
     {
         type: "function",
-        name: "executeOnOwnedAccount",
+        name: "executeBatchOnOwnedAccountWithSignature",
         inputs: [
-            { name: "ownedAccount", type: "address", internalType: "address" },
-            { name: "nonce", type: "uint256", internalType: "uint256" },
-            { name: "validAfter", type: "uint48", internalType: "uint48" },
-            { name: "validUntil", type: "uint48", internalType: "uint48" },
-            { name: "callData", type: "bytes", internalType: "bytes" },
+            {
+                name: "signatureExecution",
+                type: "tuple",
+                internalType: "struct SignatureExecutionLib.SignatureExecution",
+                components: [
+                    { name: "account", type: "address", internalType: "address" },
+                    { name: "nonce", type: "uint256", internalType: "uint256" },
+                    { name: "validAfter", type: "uint48", internalType: "uint48" },
+                    { name: "validUntil", type: "uint48", internalType: "uint48" },
+                    { name: "value", type: "uint256", internalType: "uint256" },
+                    { name: "callData", type: "bytes", internalType: "bytes" },
+                ],
+            },
             { name: "signature", type: "bytes", internalType: "bytes" },
         ],
         outputs: [],
@@ -2835,6 +2829,28 @@ export const functions = [
         inputs: [
             { name: "ownedAccount", type: "address", internalType: "address" },
             { name: "callData", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "executeOnOwnedAccountWithSignature",
+        inputs: [
+            {
+                name: "signatureExecution",
+                type: "tuple",
+                internalType: "struct SignatureExecutionLib.SignatureExecution",
+                components: [
+                    { name: "account", type: "address", internalType: "address" },
+                    { name: "nonce", type: "uint256", internalType: "uint256" },
+                    { name: "validAfter", type: "uint48", internalType: "uint48" },
+                    { name: "validUntil", type: "uint48", internalType: "uint48" },
+                    { name: "value", type: "uint256", internalType: "uint256" },
+                    { name: "callData", type: "bytes", internalType: "bytes" },
+                ],
+            },
+            { name: "signature", type: "bytes", internalType: "bytes" },
         ],
         outputs: [],
         stateMutability: "payable",

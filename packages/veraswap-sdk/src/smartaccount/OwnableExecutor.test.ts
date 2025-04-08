@@ -10,7 +10,7 @@ import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { opChainL1Client } from "../chains/index.js";
 import { getKernelInitData } from "./getKernelInitData.js";
-import { encodeExecuteSignature, installOwnableExecutor } from "./OwnableExecutor.js";
+import { getSignatureExecutionData, installOwnableExecutor } from "./OwnableExecutor.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { getKernelAddress } from "./getKernelAddress.js";
 import { Kernel } from "../artifacts/Kernel.js";
@@ -141,30 +141,28 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
             functionName: "getNonce",
             args: [kernelAddress, 0n],
         });
-        const signatureParams = {
-            chainId: BigInt(opChainL1Client.chain.id),
-            ownedAccount: kernelAddress,
-            nonce: nonce,
+        const signatureExecution = {
+            account: kernelAddress,
+            nonce,
             validAfter: 0,
             validUntil: 2 ** 48 - 1,
-            msgValue: 0n,
+            value: 0n,
             callData,
         };
-        const signatureData = encodeExecuteSignature(signatureParams);
-        const signature = await account.signMessage({ message: { raw: signatureData } });
+
+        const signature = await account.signTypedData(
+            getSignatureExecutionData(
+                signatureExecution,
+                LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                opChainL1Client.chain.id,
+            ),
+        );
 
         const hash = await walletClient2.writeContract({
             address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             abi: OwnableSignatureExecutor.abi,
-            functionName: "executeOnOwnedAccount",
-            args: [
-                signatureParams.ownedAccount,
-                signatureParams.nonce,
-                signatureParams.validAfter,
-                signatureParams.validUntil,
-                signatureParams.callData,
-                signature,
-            ],
+            functionName: "executeOnOwnedAccountWithSignature",
+            args: [signatureExecution, signature],
         });
         await opChainL1Client.waitForTransactionReceipt({ hash });
     });
@@ -189,30 +187,27 @@ describe("smartaccount/OwnableExecutor.test.ts", function () {
             functionName: "getNonce",
             args: [kernelAddress, 0n],
         });
-        const signatureParams = {
-            chainId: BigInt(opChainL1Client.chain.id),
-            ownedAccount: kernelAddress,
-            nonce: nonce,
+        const signatureExecution = {
+            account: kernelAddress,
+            nonce,
             validAfter: 0,
             validUntil: 2 ** 48 - 1,
-            msgValue: 0n,
+            value: 0n,
             callData,
         };
-        const signatureData = encodeExecuteSignature(signatureParams);
-        const signature = await account.signMessage({ message: { raw: signatureData } });
+        const signature = await account.signTypedData(
+            getSignatureExecutionData(
+                signatureExecution,
+                LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                opChainL1Client.chain.id,
+            ),
+        );
 
         const hash = await walletClient2.writeContract({
             address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             abi: OwnableSignatureExecutor.abi,
-            functionName: "executeBatchOnOwnedAccount",
-            args: [
-                signatureParams.ownedAccount,
-                signatureParams.nonce,
-                signatureParams.validAfter,
-                signatureParams.validUntil,
-                signatureParams.callData,
-                signature,
-            ],
+            functionName: "executeBatchOnOwnedAccountWithSignature",
+            args: [signatureExecution, signature],
         });
         await opChainL1Client.waitForTransactionReceipt({ hash });
     });

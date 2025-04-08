@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {Vm} from "forge-std/Vm.sol";
 
-import {OwnableSignatureExecutor} from "@rhinestone/core-modules/OwnableSignatureExecutor/OwnableSignatureExecutor.sol";
+import {OwnableSignatureExecutor} from "../../contracts/executors/OwnableSignatureExecutor.sol";
 import {Create2Utils} from "./Create2Utils.sol";
 
 library OwnableSignatureExecutorUtils {

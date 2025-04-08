@@ -3,10 +3,11 @@ pragma solidity ^0.8.24;
 
 import {IPostDispatchHook} from "@hyperlane-xyz/core/interfaces/hooks/IPostDispatchHook.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/libs/TypeCasts.sol";
-import {OwnableSignatureExecutor} from "@rhinestone/core-modules/OwnableSignatureExecutor/OwnableSignatureExecutor.sol";
+import {OwnableSignatureExecutor} from "../executors/OwnableSignatureExecutor.sol";
 import {MailboxClientStatic} from "./MailboxClientStatic.sol";
 import {IAccountFactory} from "./IAccountFactory.sol";
 import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
+import {SignatureExecutionLib} from "../executors/SignatureExecutionLib.sol";
 
 /// @title ERC7579ExecutorRouter
 /// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
@@ -200,24 +201,15 @@ contract ERC7579ExecutorRouter is MailboxClientStatic {
             // No execution, useful for simple deployment
         } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.SINGLE_SIGNATURE) {
             // Execute with signature, no checks on origin/router/owner
-            executor.executeOnOwnedAccount{value: msg.value}(
-                account,
-                nonce,
-                validAfter,
-                validUntil,
-                callData,
-                signature
-            );
+            SignatureExecutionLib.SignatureExecution memory signatureExecution = SignatureExecutionLib
+                .SignatureExecution(account, nonce, validAfter, validUntil, msg.value, callData);
+
+            executor.executeOnOwnedAccountWithSignature{value: msg.value}(signatureExecution, signature);
         } else if (executionMode == ERC7579ExecutorMessage.ExecutionMode.BATCH_SIGNATURE) {
             // Execute with signature, no checks on origin/router/owner
-            executor.executeBatchOnOwnedAccount{value: msg.value}(
-                account,
-                nonce,
-                validAfter,
-                validUntil,
-                callData,
-                signature
-            );
+            SignatureExecutionLib.SignatureExecution memory signatureExecution = SignatureExecutionLib
+                .SignatureExecution(account, nonce, validAfter, validUntil, msg.value, callData);
+            executor.executeBatchOnOwnedAccountWithSignature{value: msg.value}(signatureExecution, signature);
         } else {
             if (block.timestamp > validUntil || block.timestamp < validAfter) {
                 revert InvalidTimestamp(validUntil, validAfter);

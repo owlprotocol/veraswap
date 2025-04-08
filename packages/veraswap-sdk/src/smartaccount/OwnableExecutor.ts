@@ -1,4 +1,4 @@
-import { Address, encodeAbiParameters, encodeFunctionData, encodePacked, Hex } from "viem";
+import { Address, encodeFunctionData, encodePacked, Hash, hashTypedData, Hex, TypedDataDomain } from "viem";
 import { Kernel } from "../artifacts/Kernel.js";
 import { encodeInstallExecutorData, ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 
@@ -40,35 +40,51 @@ export function getInstallOwnableExecutorCall({
     };
 }
 
-export interface SignedCallArgs {
-    chainId: bigint;
-    ownedAccount: Address;
+export interface SignatureExecution {
+    account: Address;
     nonce: bigint;
     validAfter: number;
     validUntil: number;
-    msgValue: bigint;
+    value: bigint;
     callData: Hex;
 }
+export const SIGNATURE_EXECUTION_ABI = [
+    { name: "account", type: "address", internalType: "address" },
+    { name: "nonce", type: "uint256", internalType: "uint256" },
+    { name: "validAfter", type: "uint48", internalType: "uint48" },
+    { name: "validUntil", type: "uint48", internalType: "uint48" },
+    { name: "value", type: "uint256", internalType: "uint256" },
+    { name: "callData", type: "bytes", internalType: "bytes" },
+] as const;
 
-export function encodeExecuteSignature({
-    chainId,
-    ownedAccount,
-    nonce,
-    validAfter,
-    validUntil,
-    msgValue,
-    callData,
-}: SignedCallArgs): Hex {
-    return encodeAbiParameters(
-        [
-            { type: "uint256", name: "chainId" },
-            { type: "address", name: "ownedAccount" },
-            { type: "uint256", name: "nonce" },
-            { type: "uint48", name: "validAfter" },
-            { type: "uint48", name: "validUntil" },
-            { type: "uint256", name: "msgValue" },
-            { type: "bytes", name: "callData" },
-        ],
-        [chainId, ownedAccount, nonce, validAfter, validUntil, msgValue, callData],
-    );
+export const SIGNATURE_EXECUTOR_DOMAIN_NAME = "SignatureExecutor";
+export function signatureExecutorDomain(signatureExecutorAddress: Address, chainId: number): TypedDataDomain {
+    return {
+        name: SIGNATURE_EXECUTOR_DOMAIN_NAME,
+        chainId,
+        verifyingContract: signatureExecutorAddress,
+    };
+}
+
+export function getSignatureExecutionData(
+    signatureExecution: SignatureExecution,
+    signatureExecutorAddress: Address,
+    chainId: number,
+) {
+    return {
+        domain: signatureExecutorDomain(signatureExecutorAddress, chainId),
+        types: {
+            SignatureExecution: SIGNATURE_EXECUTION_ABI,
+        },
+        primaryType: "SignatureExecution",
+        message: signatureExecution,
+    } as const;
+}
+
+export function getSignatureExecutionHash(
+    signatureExecution: SignatureExecution,
+    signatureExecutorAddress: Address,
+    chainId: number,
+): Hash {
+    return hashTypedData(getSignatureExecutionData(signatureExecution, signatureExecutorAddress, chainId));
 }

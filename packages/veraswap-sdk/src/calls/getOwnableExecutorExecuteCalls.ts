@@ -1,4 +1,4 @@
-import { Config, signMessage } from "@wagmi/core";
+import { Config, signTypedData } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 
 import { readContractQueryOptions } from "wagmi/query";
@@ -9,7 +9,7 @@ import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { CallArgs, encodeCallArgsBatch, encodeCallArgsSingle } from "../smartaccount/ExecLib.js";
 import invariant from "tiny-invariant";
-import { encodeExecuteSignature } from "../smartaccount/OwnableExecutor.js";
+import { getSignatureExecutionData } from "../smartaccount/OwnableExecutor.js";
 
 export interface GetOwnableExecutorExecuteCallsParams extends GetCallsParams {
     calls: CallArgs[];
@@ -40,10 +40,10 @@ export async function getOwnableExecutorExecuteCalls(
     const smartAccountCallData = calls.length > 1 ? encodeCallArgsBatch(calls) : encodeCallArgsSingle(calls[0]);
     // Sum value of all calls
     const value = calls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
-    // Executor function batch / single
-    const functionName = calls.length > 1 ? "executeBatchOnOwnedAccount" : "executeOnOwnedAccount";
 
     if (account === owner) {
+        // Executor function batch / single
+        const functionName = calls.length > 1 ? "executeBatchOnOwnedAccount" : "executeOnOwnedAccount";
         // Account is owner, execute directly
         const executeOnOwnedAccountCall = {
             account,
@@ -58,6 +58,8 @@ export async function getOwnableExecutorExecuteCalls(
 
         return { calls: [executeOnOwnedAccountCall] };
     } else {
+        const functionName =
+            calls.length > 1 ? "executeBatchOnOwnedAccountWithSignature" : "executeOnOwnedAccountWithSignature";
         // Account is not owner, execute via signature
         const nonce = await queryClient.fetchQuery(
             readContractQueryOptions(wagmiConfig, {
@@ -69,18 +71,19 @@ export async function getOwnableExecutorExecuteCalls(
                 args: [kernelAddress, 0],
             }),
         );
-        const signatureParams = {
-            chainId: BigInt(chainId),
-            ownedAccount: kernelAddress,
+        const signatureExecution = {
+            account: kernelAddress,
             nonce,
             //TODO: Parametrize these
             validAfter: 0,
             validUntil: 2 ** 48 - 1,
-            msgValue: value,
+            value,
             callData: smartAccountCallData,
         };
-        const signatureData = encodeExecuteSignature(signatureParams);
-        const signature = await signMessage(wagmiConfig, { account: owner, message: { raw: signatureData } });
+        const signature = await signTypedData(wagmiConfig, {
+            account: owner,
+            ...getSignatureExecutionData(signatureExecution, executor, chainId),
+        });
 
         const executeOnOwnedAccountCall = {
             account,
@@ -88,14 +91,7 @@ export async function getOwnableExecutorExecuteCalls(
             data: encodeFunctionData({
                 abi: OwnableSignatureExecutor.abi,
                 functionName,
-                args: [
-                    signatureParams.ownedAccount,
-                    signatureParams.nonce,
-                    signatureParams.validAfter,
-                    signatureParams.validUntil,
-                    signatureParams.callData,
-                    signature,
-                ],
+                args: [signatureExecution, signature],
             }),
             value,
         };

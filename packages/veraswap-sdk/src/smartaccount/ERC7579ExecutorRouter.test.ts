@@ -10,7 +10,7 @@ import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { opChainL1Client } from "../chains/index.js";
 import { getKernelInitData } from "./getKernelInitData.js";
-import { encodeExecuteSignature, installOwnableExecutor } from "./OwnableExecutor.js";
+import { getSignatureExecutionData, installOwnableExecutor } from "./OwnableExecutor.js";
 import { getKernelAddress } from "./getKernelAddress.js";
 import { Kernel } from "../artifacts/Kernel.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
@@ -217,27 +217,33 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
             args: [kernelAddress, 0n],
         });
         // Sign execution data
-        const signatureParams = {
-            chainId: BigInt(opChainL1Client.chain.id),
-            ownedAccount: kernelAddress,
-            nonce: nonce,
+        const signatureExecution = {
+            account: kernelAddress,
+            nonce,
             validAfter: 0,
             validUntil: 2 ** 48 - 1,
-            msgValue: 0n,
+            value: 0n,
             callData,
         };
-        const signatureData = encodeExecuteSignature(signatureParams);
-        const signature = await account.signMessage({ message: { raw: signatureData } });
+
+        const signature = await account.signTypedData(
+            getSignatureExecutionData(
+                signatureExecution,
+                LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                opChainL1Client.chain.id,
+            ),
+        );
+
         const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH_SIGNATURE> = {
             owner: account.address,
             account: kernelAddress,
             executionMode: ERC7579ExecutionMode.BATCH_SIGNATURE,
             initData: initData,
             initSalt: salt,
-            callData: signatureParams.callData,
-            nonce: signatureParams.nonce,
-            validAfter: signatureParams.validAfter,
-            validUntil: signatureParams.validUntil,
+            callData: signatureExecution.callData,
+            nonce: signatureExecution.nonce,
+            validAfter: signatureExecution.validAfter,
+            validUntil: signatureExecution.validUntil,
             signature,
         };
         // Dispatch Hyperlane Message
