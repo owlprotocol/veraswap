@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowUpDown, Wallet } from "lucide-react";
-import {
-    useAccount,
-    useSwitchChain,
-    useWatchContractEvent,
-    useWriteContract,
-    useWatchAsset,
-    useWatchBlocks,
-} from "wagmi";
+import { useAccount, useSwitchChain, useWatchContractEvent, useWatchAsset, useWatchBlocks } from "wagmi";
 import { getBlock } from "@wagmi/core";
 import {
     getHyperlaneMessageIdsFromReceipt,
@@ -16,12 +9,13 @@ import {
     TransactionParams,
     HypERC20CollateralToken,
     Token,
+    chainIdToOrbiterChainId,
+    TransactionType,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
-import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import {
     MAX_UINT_160,
     MAX_UINT_256,
@@ -143,8 +137,8 @@ function Index() {
     const [{ mutate: sendTransaction, isPending: transactionIsPending, data: hash }] =
         useAtom(sendTransactionMutationAtom);
 
-    const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
-    if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
+    // const { writeContract: writeContractRegisterUser, data: registerUserHash } = useWriteContract();
+    // if (registerUserHash) console.log(`Successfully registered user with hash: ${registerUserHash}`);
 
     const networkType = useAtomValue(chainsTypeAtom);
 
@@ -522,19 +516,29 @@ function Index() {
         }
     };
 
-    const setMaxToken = (token: Token, tokenBalance: bigint) => {
-        const isNative = token.address === zeroAddress;
+    // TODO: clean this up more, but not urgent. Should we wait until token out is specified to handle max?
+    const setMaxToken = (token: Token, tokenBalance: bigint, transactionTypeType: TransactionType["type"] | null) => {
+        const isNative = token.standard === "NativeToken";
         const decimals = token.decimals;
 
         let max = tokenBalance;
-
-        if (isNative) {
-            const unit = 10_000n;
-            const mod = max % unit;
-            const code = 9000n + BigInt(tokenOut?.chainId ?? 0);
-
-            max = mod > code ? (max / unit) * unit : (max / unit - 1n) * unit;
+        if (
+            !isNative ||
+            !transactionTypeType ||
+            !(transactionTypeType === "BRIDGE" || transactionTypeType === "BRIDGE_SWAP")
+        ) {
+            setTokenInAmountInput(formatUnits(max, decimals));
+            return;
         }
+
+        const unit = 10_000n;
+        const mod = max % unit;
+
+        const maxOrbiterChainId = 999;
+        const orbiterChainId: number = chainIdToOrbiterChainId[tokenOut?.chainId ?? 0] ?? maxOrbiterChainId;
+        const code = 9000n + BigInt(orbiterChainId);
+
+        max = mod > code ? (max / unit) * unit : (max / unit - 1n) * unit;
 
         setTokenInAmountInput(formatUnits(max, decimals));
     };
@@ -585,7 +589,9 @@ function Index() {
                                         variant="link"
                                         className="h-auto p-0 text-sm"
                                         disabled={!tokenInBalance}
-                                        onClick={() => setMaxToken(tokenIn!, tokenInBalance!)}
+                                        onClick={() =>
+                                            setMaxToken(tokenIn!, tokenInBalance!, transactionType?.type ?? null)
+                                        }
                                     >
                                         Max
                                     </Button>
