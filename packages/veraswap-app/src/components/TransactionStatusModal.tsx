@@ -19,6 +19,7 @@ type TransactionStatusModalProps = {
     hashes?: { swap?: string; bridge?: string; transfer?: string };
     chains?: { source?: Chain; destination?: Chain };
     networkType: "local" | "testnet" | "mainnet";
+    isNativeBridge?: boolean;
 };
 
 export function TransactionStatusModal({
@@ -29,6 +30,7 @@ export function TransactionStatusModal({
     hashes,
     chains,
     networkType,
+    isNativeBridge,
 }: TransactionStatusModalProps) {
     const getExplorerUrl = (stepId: "swap" | "bridge" | "transfer") => {
         if (networkType === "local") return undefined;
@@ -46,7 +48,12 @@ export function TransactionStatusModal({
                     // TODO: fix messageId return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
                 }
                 */
-                return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
+                return isNativeBridge
+                    ? networkType === "testnet"
+                        ? `https://test.orbiter.finance/en?src_chain=${chains?.source?.id}&tgt_chain=${chains?.destination?.id}&src_token=ETH`
+                        : `https://www.orbiter.finance/history?src_chain=${chains?.source?.id}&tgt_chain=${chains?.destination?.id}&src_token=ETH`
+                    : `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
+
             case "transfer":
                 return hashes?.transfer && chains?.destination
                     ? `${chains.destination.blockExplorers?.default?.url}/tx/${hashes.transfer}`
