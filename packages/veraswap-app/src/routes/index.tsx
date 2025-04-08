@@ -384,11 +384,9 @@ function Index() {
         if (!receipt) return;
 
         if (receipt.status === "reverted") {
-            if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
-                updateTransactionStep({ id: "bridge", status: "error" });
-            } else {
-                updateTransactionStep({ id: "swap", status: "error" });
-            }
+            const failedStep =
+                transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP" ? "bridge" : "swap";
+            updateTransactionStep({ id: failedStep, status: "error" });
             toast({
                 title: "Transaction Failed",
                 description: "Your transaction has failed. Please try again.",
@@ -397,14 +395,12 @@ function Index() {
             return;
         }
 
-        if (transactionType?.type === "BRIDGE") return;
+        if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") return;
 
         updateTransactionStep({ id: "swap", status: "success" });
 
         if (transactionType?.type !== "SWAP_BRIDGE") {
-            if (swapStep !== SwapStep.EXECUTE_SWAP) {
-                return;
-            }
+            if (swapStep !== SwapStep.EXECUTE_SWAP) return;
 
             toast({
                 title: "Swap Complete",
@@ -467,21 +463,31 @@ function Index() {
             });
         }
 
-        if (transactionType.type === "BRIDGE_SWAP" && swapRemoteTransactionHash && bridgeRemoteTransactionHash) {
-            updateTransactionStep({ id: "bridge", status: "success" });
-            updateTransactionStep({ id: "swap", status: "success" });
-            updateTransactionStep({ id: "transfer", status: "success" });
+        if (transactionType.type === "BRIDGE_SWAP") {
+            if (bridgeRemoteTransactionHash && !swapRemoteTransactionHash) {
+                updateTransactionStep({ id: "bridge", status: "success" });
+                updateTransactionStep({ id: "transfer", status: "success" });
+                updateTransactionStep({ id: "swap", status: "processing" });
+                setTransactionHashes((prev) => ({
+                    ...prev,
+                    bridge: bridgeRemoteTransactionHash,
+                }));
+            }
 
-            setTransactionHashes((prev) => ({
-                ...prev,
-                transfer: swapRemoteTransactionHash,
-            }));
+            if (bridgeRemoteTransactionHash && swapRemoteTransactionHash) {
+                updateTransactionStep({ id: "swap", status: "success" });
 
-            toast({
-                title: "Transaction Complete",
-                description: "Your transaction has been completed successfully",
-                variant: "default",
-            });
+                setTransactionHashes((prev) => ({
+                    ...prev,
+                    swap: swapRemoteTransactionHash,
+                }));
+
+                toast({
+                    title: "Transaction Complete",
+                    description: "Your transaction has been completed successfully",
+                    variant: "default",
+                });
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bridgeRemoteTransactionHash, swapRemoteTransactionHash]);
