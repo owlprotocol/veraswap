@@ -1,4 +1,4 @@
-import { Config, signMessage } from "@wagmi/core";
+import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { Address, encodeFunctionData, Hex } from "viem";
 
@@ -7,13 +7,10 @@ import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
-import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { encodeExecuteSignature } from "../smartaccount/OwnableExecutor.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { Execute } from "../artifacts/Execute.js";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
-import { readContractQueryOptions } from "wagmi/query";
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
