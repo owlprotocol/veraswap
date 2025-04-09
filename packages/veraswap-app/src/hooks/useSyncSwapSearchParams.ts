@@ -46,15 +46,19 @@ export function useSyncSwapSearchParams(allTokens: Token[]) {
     }, [allTokens, search]);
 
     useEffect(() => {
-        if (!tokenIn || !tokenOut) return;
+        if (!tokenIn && !tokenOut) return;
 
         navigate({
             search: (prev) => ({
                 ...prev,
-                tokenIn: tokenIn.symbol,
-                chainIdIn: tokenIn.chainId,
-                tokenOut: tokenOut.symbol,
-                chainIdOut: tokenOut.chainId,
+                ...(tokenIn && {
+                    tokenIn: tokenIn.symbol,
+                    chainIdIn: tokenIn.chainId,
+                }),
+                ...(tokenOut && {
+                    tokenOut: tokenOut.symbol,
+                    chainIdOut: tokenOut.chainId,
+                }),
             }),
             replace: true,
         });
