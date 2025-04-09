@@ -7,7 +7,6 @@ import {
     sendTransactionMutationOptions,
     waitForTransactionReceiptQueryOptions,
 } from "wagmi/query";
-import { getAccount, watchAccount } from "@wagmi/core";
 import {
     chainOutAtom,
     tokenInAmountAtom,
@@ -100,6 +99,7 @@ export const swapStepAtom = atom((get) => {
     ) {
         return SwapStep.APPROVE_BRIDGE;
     } else if (
+        // tokenIn is not native, and we are not bridging a synthetic token, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&
         !(transactionType?.type === "BRIDGE" && tokenIn.standard === "HypERC20") &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)

@@ -18,16 +18,11 @@ import {
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
+import { OrbiterParams } from "../types/OrbiterParams.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
-}
-
-export interface OrbiterParams {
-    endpoint: Address;
-    endpointContract: Address;
-    orbiterChainId: number;
 }
 
 export interface TransactionBridgeOptions {
@@ -60,6 +55,7 @@ export interface TransactionBridgeSwapOptions {
     walletAddress: Address;
     amountIn: bigint;
     initData: Hex;
+    orbiterParams?: OrbiterParams;
 }
 
 export type TransactionParams =
@@ -132,15 +128,18 @@ export async function getTransaction(
         }
 
         case "BRIDGE_SWAP": {
-            const { bridge, queryClient, wagmiConfig, walletAddress, amountIn, initData } = params;
+            const { bridge, queryClient, wagmiConfig, walletAddress, amountIn, initData, orbiterParams } = params;
 
             const { tokenIn, tokenOut } = bridge;
+
+            if (tokenIn.standard === "NativeToken" && !orbiterParams) {
+                throw new Error("Orbiter params are required for Orbiter bridging");
+            }
 
             const bridgeSwapParms: GetTransferRemoteWithKernelCallsParams = {
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
-                tokenStandard: tokenIn.standard as "HypERC20" | "HypERC20Collateral",
-
+                tokenStandard: tokenIn.standard,
                 account: walletAddress,
                 destination: tokenOut.chainId,
                 recipient: walletAddress,
@@ -150,6 +149,7 @@ export async function getTransaction(
                     salt: zeroHash,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                orbiterParams,
             };
 
             const result = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParms);

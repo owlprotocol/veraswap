@@ -10,10 +10,11 @@ import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCalls.js";
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
+import { TokenStandard } from "../types/Token.js";
 
 export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
     funder: Address;
-    tokenStandard: "HypERC20" | "HypERC20Collateral";
+    tokenStandard: TokenStandard & ("HypERC20" | "HypERC20Collateral");
     token: Address;
     destination: number;
     recipient: Address;
