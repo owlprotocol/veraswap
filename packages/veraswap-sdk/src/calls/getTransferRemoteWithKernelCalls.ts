@@ -14,7 +14,7 @@ import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
 import { TokenStandard } from "../types/Token.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
-import { OrbiterParams } from "../swap/getTransaction.js";
+import { OrbiterParams } from "../types/OrbiterParams.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     tokenStandard: TokenStandard;

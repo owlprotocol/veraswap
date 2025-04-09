@@ -7,7 +7,6 @@ import {
     sendTransactionMutationOptions,
     waitForTransactionReceiptQueryOptions,
 } from "wagmi/query";
-import { getAccount, watchAccount } from "@wagmi/core";
 import {
     chainOutAtom,
     tokenInAmountAtom,

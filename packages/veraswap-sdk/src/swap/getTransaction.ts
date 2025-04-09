@@ -18,16 +18,11 @@ import {
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
+import { OrbiterParams } from "../types/OrbiterParams.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
-}
-
-export interface OrbiterParams {
-    endpoint: Address;
-    endpointContract: Address;
-    orbiterChainId: number;
 }
 
 export interface TransactionBridgeOptions {
