@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils.js";
 
 export type TransactionStep = {
-    id: "swap" | "bridge" | "transfer";
+    id: "swap" | "bridge" | "sendOrigin" | "transferRemote";
     title: string;
     description: string;
     status: "pending" | "processing" | "success" | "error";
@@ -30,7 +30,7 @@ export function TransactionStatusModal({
     chains,
     networkType,
 }: TransactionStatusModalProps) {
-    const getExplorerUrl = (stepId: "swap" | "bridge" | "transfer") => {
+    const getExplorerUrl = (stepId: "swap" | "bridge" | "sendOrigin" | "transferRemote") => {
         if (networkType === "local") return undefined;
         switch (stepId) {
             case "swap":
@@ -47,7 +47,11 @@ export function TransactionStatusModal({
                 }
                 */
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
-            case "transfer":
+            case "sendOrigin":
+                return hashes?.transfer && chains?.source
+                    ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.transfer}`
+                    : undefined;
+            case "transferRemote":
                 return hashes?.transfer && chains?.destination
                     ? `${chains.destination.blockExplorers?.default?.url}/tx/${hashes.transfer}`
                     : undefined;

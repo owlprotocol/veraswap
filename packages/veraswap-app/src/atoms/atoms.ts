@@ -163,10 +163,19 @@ export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
 export const transactionModalOpenAtom = atom<boolean>(false);
 export const transactionStepsAtom = atom<TransactionStep[]>([]);
 export const currentTransactionStepIdAtom = atom<string | undefined>(undefined);
-export const transactionHashesAtom = atom<{ swap?: string; bridge?: string; transfer?: string }>({});
+export const transactionHashesAtom = atom<{
+    swap?: string;
+    bridge?: string;
+    sendOrigin?: string;
+    transferRemote?: string;
+}>({});
 export const updateTransactionStepAtom = atom(
     null,
-    (get, set, update: { id: "swap" | "bridge" | "transfer"; status: TransactionStep["status"] }) => {
+    (
+        get,
+        set,
+        update: { id: "swap" | "bridge" | "sendOrigin" | "transferRemote"; status: TransactionStep["status"] },
+    ) => {
         const steps = get(transactionStepsAtom);
         const updatedSteps = steps.map((step) => (step.id === update.id ? { ...step, status: update.status } : step));
         set(transactionStepsAtom, updatedSteps);
@@ -185,20 +194,26 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
         status: "pending",
     };
 
-    const bridgeSteps: TransactionStep[] = [
-        {
-            id: "bridge",
-            title: "🚀 Bridge",
-            description: "Your token is traveling...",
-            status: "pending",
-        },
-        {
-            id: "transfer",
-            title: "🕊️ Transfer Token",
-            description: "We're freeing your token. Don't be impatient!",
-            status: "pending",
-        },
-    ];
+    const sendOriginStep: TransactionStep = {
+        id: "sendOrigin",
+        title: "📤 Yeeting Token from Origin",
+        description: "Catapulting your token into the void. Hope it packed a lunch 🪐🍱",
+        status: "pending",
+    };
+
+    const bridgeStep: TransactionStep = {
+        id: "bridge",
+        title: "🚀 Bridge",
+        description: "Your token is traveling...",
+        status: "pending",
+    };
+
+    const transferRemoteStep: TransactionStep = {
+        id: "transferRemote",
+        title: "🕊️ Transfer Token",
+        description: "We're freeing your token. Don't be impatient!",
+        status: "pending",
+    };
 
     let steps: TransactionStep[] = [];
 
@@ -207,13 +222,13 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
             steps = [swapStep];
             break;
         case "BRIDGE":
-            steps = [...bridgeSteps];
+            steps = [sendOriginStep, bridgeStep, transferRemoteStep];
             break;
         case "SWAP_BRIDGE":
-            steps = [swapStep, ...bridgeSteps];
+            steps = [swapStep, bridgeStep, transferRemoteStep];
             break;
         case "BRIDGE_SWAP":
-            steps = [...bridgeSteps, swapStep];
+            steps = [sendOriginStep, bridgeStep, transferRemoteStep, swapStep];
             break;
     }
 

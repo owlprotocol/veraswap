@@ -320,8 +320,8 @@ function Index() {
                 {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
-                            updateTransactionStep({ id: "bridge", status: "processing" });
+                            setTransactionHashes((prev) => ({ ...prev, sendOrigin: hash }));
+                            updateTransactionStep({ id: "sendOrigin", status: "processing" });
                             return;
                         }
 
@@ -385,6 +385,11 @@ function Index() {
 
         const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
 
+        setTransactionHashes((prev) => ({
+            ...prev,
+            bridge,
+        }));
+
         const setMessage = (id: "bridge" | "swap", hash: Hex | undefined) => {
             if (!hash) return;
             if (id === "bridge") {
@@ -392,7 +397,6 @@ function Index() {
             } else {
                 setSwapMessageId(hash);
             }
-            setTransactionHashes((prev) => ({ ...prev, [id]: hash }));
             updateTransactionStep({ id, status: "processing" });
         };
 
@@ -417,9 +421,10 @@ function Index() {
             (transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
             bridgeRemoteTransactionHash
         ) {
+            updateTransactionStep({ id: "sendOrigin", status: "success" });
             updateTransactionStep({ id: "bridge", status: "success" });
-            updateTransactionStep({ id: "transfer", status: "success" });
-            setTransactionHashes((prev) => ({ ...prev, transfer: bridgeRemoteTransactionHash }));
+            setTransactionHashes((prev) => ({ ...prev, transferRemote: bridgeRemoteTransactionHash }));
+            updateTransactionStep({ id: "transferRemote", status: "success" });
 
             toast({
                 title: transactionType.type === "BRIDGE" ? "Bridge Complete" : "Transaction Complete",
@@ -433,22 +438,18 @@ function Index() {
 
         if (transactionType.type === "BRIDGE_SWAP") {
             if (bridgeRemoteTransactionHash && !swapRemoteTransactionHash) {
+                updateTransactionStep({ id: "sendOrigin", status: "success" });
                 updateTransactionStep({ id: "bridge", status: "success" });
-                updateTransactionStep({ id: "transfer", status: "success" });
+                updateTransactionStep({ id: "transferRemote", status: "success" });
                 updateTransactionStep({ id: "swap", status: "processing" });
-                setTransactionHashes((prev) => ({
-                    ...prev,
-                    bridge: bridgeRemoteTransactionHash,
-                }));
             }
 
             if (bridgeRemoteTransactionHash && swapRemoteTransactionHash) {
-                updateTransactionStep({ id: "swap", status: "success" });
-
                 setTransactionHashes((prev) => ({
                     ...prev,
                     swap: swapRemoteTransactionHash,
                 }));
+                updateTransactionStep({ id: "swap", status: "success" });
 
                 toast({
                     title: "Transaction Complete",
