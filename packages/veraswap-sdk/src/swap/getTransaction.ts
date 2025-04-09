@@ -30,15 +30,31 @@ export interface TransactionBridgeOptions {
     walletAddress: Address;
     bridgePayment: bigint;
     orbiterParams?: OrbiterParams;
+    initData?: Hex;
+    queryClient?: QueryClient;
+    wagmiConfig?: Config;
+}
+
+export interface TransactionBridgeHyperlaneCollateralOptions {
+    amountIn: bigint;
+    walletAddress: Address;
+    bridgePayment?: bigint;
+    orbiterParams?: OrbiterParams;
+    initData: Hex;
+    queryClient: QueryClient;
+    wagmiConfig: Config;
 }
 
 export interface TransactionBridgeOrbiterOptions {
     amountIn: bigint;
-    walletAddress?: Address;
+    walletAddress: Address;
     orbiterParams?: OrbiterParams;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
+    initData?: Hex;
+    queryClient?: QueryClient;
+    wagmiConfig?: Config;
 }
 
 export interface TransactionSwapBridgeOptions {
@@ -62,6 +78,7 @@ export type TransactionParams =
     | (TransactionTypeSwap & TransactionSwapOptions)
     | (TransactionTypeBridge & TransactionBridgeOptions)
     | (TransactionTypeBridge & TransactionBridgeOrbiterOptions)
+    | (TransactionTypeBridge & TransactionBridgeHyperlaneCollateralOptions)
     | (TransactionTypeSwapBridge & TransactionSwapBridgeOptions)
     | (TransactionTypeBridgeSwap & TransactionBridgeSwapOptions);
 
@@ -97,10 +114,43 @@ export async function getTransaction(
                 });
             }
 
+            if (tokenIn.standard === "HypERC20Collateral") {
+                const { queryClient, wagmiConfig, initData } = params;
+
+                if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
+                    throw new Error(
+                        "Query client, wagmi config, init data and wallet address are required for bridging",
+                    );
+                }
+
+                const bridgeParams: GetTransferRemoteWithKernelCallsParams = {
+                    chainId: tokenIn.chainId,
+                    token: tokenIn.address,
+                    tokenStandard: tokenIn.standard,
+                    account: walletAddress,
+                    destination: tokenOut.chainId,
+                    recipient: walletAddress,
+                    amount: amountIn,
+                    createAccount: {
+                        initData,
+                        salt: zeroHash,
+                        factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    },
+                };
+
+                const result = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, bridgeParams);
+                //TODO: data and value are optional
+                return result.calls[0] as {
+                    to: Address;
+                    data: Hex;
+                    value: bigint;
+                };
+            }
+
             return getTransferRemoteCall({
                 address: tokenIn.address,
                 destination: tokenOut.chainId,
-                recipient: walletAddress!,
+                recipient: walletAddress,
                 amount: amountIn,
                 bridgePayment: params.bridgePayment!,
             });

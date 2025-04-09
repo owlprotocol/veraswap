@@ -11,6 +11,10 @@ import {
     Token,
     chainIdToOrbiterChainId,
     TransactionType,
+    TransactionTypeBridge,
+    TransactionTypeBridgeSwap,
+    TransactionTypeSwap,
+    TransactionTypeSwapBridge,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
 import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -230,97 +234,92 @@ function Index() {
     });
 
     const handleSwapSteps = async () => {
-        if (!swapStep || transactionIsPending) return;
+        // Check transaction type here for swaps to avoid changing chains if not needed
+        if (!swapStep || transactionIsPending || (swapStep === SwapStep.EXECUTE_SWAP && !transactionType)) return;
+
+        if (chainIn!.id !== chainId) {
+            await switchChainAsync({ chainId: chainIn!.id });
+        }
+
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
-            const sendTransactionCall = () =>
-                sendTransaction({
-                    to: tokenIn!.address,
-                    chainId: tokenIn!.chainId,
-                    data: encodeFunctionData({
-                        abi: IERC20.abi,
-                        functionName: "approve",
-                        args: [PERMIT2_ADDRESS, MAX_UINT_256],
-                    }),
-                });
-
-            if (chainIn!.id !== chainId) {
-                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
-
-                return;
-            }
-
-            sendTransactionCall();
+            sendTransaction({
+                to: tokenIn!.address,
+                chainId: tokenIn!.chainId,
+                data: encodeFunctionData({
+                    abi: IERC20.abi,
+                    functionName: "approve",
+                    args: [PERMIT2_ADDRESS, MAX_UINT_256],
+                }),
+            });
 
             return;
         }
 
         if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
-            const sendTransactionCall = () =>
-                sendTransaction({
-                    to: PERMIT2_ADDRESS,
-                    chainId: tokenIn!.chainId,
-                    data: encodeFunctionData({
-                        abi: IAllowanceTransfer.abi,
-                        functionName: "approve",
-                        args: [
-                            tokenIn!.address,
-                            UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
-                            MAX_UINT_160,
-                            MAX_UINT_48,
-                        ],
-                    }),
-                });
+            sendTransaction({
+                to: PERMIT2_ADDRESS,
+                chainId: tokenIn!.chainId,
+                data: encodeFunctionData({
+                    abi: IAllowanceTransfer.abi,
+                    functionName: "approve",
+                    args: [
+                        tokenIn!.address,
+                        UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
+                        MAX_UINT_160,
+                        MAX_UINT_48,
+                    ],
+                }),
+            });
 
-            if (chainIn!.id !== chainId) {
-                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
-
-                return;
-            }
-
-            sendTransactionCall();
             return;
         }
 
         if (swapStep === SwapStep.APPROVE_BRIDGE) {
-            const sendTransactionCall = () =>
-                sendTransaction({
-                    to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
-                    chainId: tokenIn!.chainId,
-                    data: encodeFunctionData({
-                        abi: IERC20.abi,
-                        functionName: "approve",
-                        args: [tokenIn!.address, MAX_UINT_256],
-                    }),
-                });
+            sendTransaction({
+                to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
+                chainId: tokenIn!.chainId,
+                data: encodeFunctionData({
+                    abi: IERC20.abi,
+                    functionName: "approve",
+                    args: [tokenIn!.address, MAX_UINT_256],
+                }),
+            });
 
-            if (chainIn!.id !== chainId) {
-                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
-
-                return;
-            }
-
-            sendTransactionCall();
             return;
         }
 
         if (swapStep === SwapStep.EXECUTE_SWAP) {
+            // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
 
-            const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
+            // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
+            const amountOutMinimum =
+                transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE" ? quoterData![0] : null;
 
             initializeTransactionSteps(transactionType);
 
-            const transaction = await getTransaction({
-                ...transactionType,
-                amountIn: tokenInAmount!,
-                amountOutMinimum: amountOutMinimum!,
-                walletAddress: walletAddress,
-                bridgePayment: bridgePayment!,
-                orbiterParams,
-                queryClient: queryClient,
-                wagmiConfig: config,
-                initData: kernelSmartAccountInitData,
-            } as TransactionParams);
+            // We split the params into two to keep the types clean
+            const transactionParams =
+                transactionType.type === "BRIDGE_SWAP" || transactionType.type === "BRIDGE"
+                    ? ({
+                          ...transactionType,
+                          amountIn: tokenInAmount!,
+                          walletAddress: walletAddress!,
+                          bridgePayment: bridgePayment,
+                          orbiterParams,
+                          queryClient: queryClient,
+                          wagmiConfig: config,
+                          initData: kernelSmartAccountInitData,
+                      } as TransactionParams & (TransactionTypeBridge | TransactionTypeBridgeSwap))
+                    : ({
+                          ...transactionType,
+                          amountIn: tokenInAmount!,
+                          amountOutMinimum: amountOutMinimum!,
+                          walletAddress: walletAddress!,
+                          bridgePayment: bridgePayment,
+                      } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
+
+            const transaction = await getTransaction(transactionParams);
 
             if (!transaction) {
                 toast({
@@ -331,46 +330,36 @@ function Index() {
                 return;
             }
 
-            const sendTransactionCall = () => {
-                sendTransaction(
-                    { chainId: tokenIn!.chainId, ...transaction },
-                    {
-                        onSuccess: (hash) => {
-                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                                setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
-                                updateTransactionStep({ id: "bridge", status: "processing" });
-                                return;
-                            }
+            sendTransaction(
+                { chainId: tokenIn!.chainId, ...transaction },
+                {
+                    onSuccess: (hash) => {
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            setTransactionHashes((prev) => ({ ...prev, bridge: hash }));
+                            updateTransactionStep({ id: "bridge", status: "processing" });
+                            return;
+                        }
 
-                            setTransactionHashes((prev) => ({ ...prev, swap: hash }));
-                            updateTransactionStep({ id: "swap", status: "processing" });
-                        },
-                        onError: (error) => {
-                            console.log(error);
-                            if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
-                                updateTransactionStep({ id: "bridge", status: "error" });
-                            } else {
-                                updateTransactionStep({ id: "swap", status: "error" });
-                            }
-                            //TODO: show in UI instead
-                            toast({
-                                title: "Transaction Failed",
-                                description: "Your transaction has failed. Please try again.",
-                                variant: "destructive",
-                            });
-                        },
+                        setTransactionHashes((prev) => ({ ...prev, swap: hash }));
+                        updateTransactionStep({ id: "swap", status: "processing" });
                     },
-                );
-                setTokenInAmountInput("");
-            };
-
-            if (chainIn!.id !== chainId) {
-                switchChainAsync({ chainId: chainIn!.id }).then(() => sendTransactionCall());
-
-                return;
-            }
-
-            sendTransactionCall();
+                    onError: (error) => {
+                        console.log(error);
+                        if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            updateTransactionStep({ id: "bridge", status: "error" });
+                        } else {
+                            updateTransactionStep({ id: "swap", status: "error" });
+                        }
+                        //TODO: show in UI instead
+                        toast({
+                            title: "Transaction Failed",
+                            description: "Your transaction has failed. Please try again.",
+                            variant: "destructive",
+                        });
+                    },
+                },
+            );
+            setTokenInAmountInput("");
         }
     };
 
