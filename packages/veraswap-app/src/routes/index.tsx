@@ -321,7 +321,8 @@ function Index() {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
                             setTransactionHashes((prev) => ({ ...prev, sendOrigin: hash }));
-                            updateTransactionStep({ id: "sendOrigin", status: "processing" });
+                            updateTransactionStep({ id: "sendOrigin", status: "success" });
+                            updateTransactionStep({ id: "bridge", status: "processing" });
                             return;
                         }
 
@@ -331,6 +332,7 @@ function Index() {
                     onError: (error) => {
                         console.log(error);
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
+                            updateTransactionStep({ id: "sendOrigin", status: "error" });
                             updateTransactionStep({ id: "bridge", status: "error" });
                         } else {
                             updateTransactionStep({ id: "swap", status: "error" });
