@@ -8,4 +8,5 @@ export * from "./getKernelFactoryCreateAccountCalls.js";
 export * from "./getOwnableExecutorAddOwnerCalls.js";
 export * from "./getOwnableExecutorExecuteCalls.js";
 export * from "./getTransferRemoteWithApproveCalls.js";
-export * from "./getTransferRemoteWithFunderCalls.js";
+export * from "./getTransferRemoteWithApproveCalls.js";
+export * from "./getTransferRemoteWithKernelCalls.js";
