@@ -535,7 +535,7 @@ function Index() {
     return (
         <div className="max-w-xl mx-auto px-4">
             <MainnetTestnetButtons />
-            <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl">
+            <Card className="w-full backdrop-blur-sm shadow-xl">
                 <CardContent className="p-4 space-y-6">
                     <div className="space-y-4">
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
