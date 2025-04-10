@@ -96,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     dustingResults.forEach((res, idx) => {
         const chain = chains[idx];
-        const chainId = chain?.id ?? -1;
+        const chainId = chain.id;
 
         if (res.status === "fulfilled") {
             results[res.value.chainId] = res.value.result;
