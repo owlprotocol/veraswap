@@ -5,6 +5,7 @@ import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
 import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { tokenInAmountAtom, transactionTypeAtom } from "./tokens.js";
+import { orbiterAmountOutAtom } from "./orbiter.js";
 import { config } from "@/config.js";
 
 // const emptyToken = new Token(1, zeroAddress, 1);
@@ -20,7 +21,10 @@ const emptyPoolKey = {
 /** v4Quoter.quoteExactInputSingle(...): QueryResult */
 export const quoteInAtom = atomWithQuery((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
+
     const transactionType = get(transactionTypeAtom);
+
+    const orbiterAmountOut = get(orbiterAmountOutAtom);
 
     let chainId: number = 0;
     let poolKey: PoolKey = emptyPoolKey;
@@ -43,10 +47,21 @@ export const quoteInAtom = atomWithQuery((get) => {
 
     const enabled = chainId != 0 && poolKey != emptyPoolKey && !!tokenInAmount;
 
+    let amountIn = tokenInAmount;
+
+    // TODO: generalize to any bridging that involves orbiter (e.g. USDC)
+    if (
+        transactionType?.type === "BRIDGE_SWAP" &&
+        transactionType?.bridge.tokenIn.standard === "NativeToken" &&
+        orbiterAmountOut
+    ) {
+        amountIn = orbiterAmountOut;
+    }
+
     // Query args MUST be defined
     const currencyIn =
         tokenInAddress === zeroAddress ? Ether.onChain(chainId) : new Token(chainId, tokenInAddress, tokenInDecimals);
-    const exactCurrencyAmount = CurrencyAmount.fromRawAmount(currencyIn, (tokenInAmount ?? 0).toString());
+    const exactCurrencyAmount = CurrencyAmount.fromRawAmount(currencyIn, (amountIn ?? 0).toString());
     const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].v4Quoter : zeroAddress;
 
     return {
