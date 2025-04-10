@@ -321,11 +321,9 @@ function Index() {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
                             setTransactionHashes((prev) => ({ ...prev, sendOrigin: hash }));
-                            updateTransactionStep({ id: "sendOrigin", status: "success" });
                             updateTransactionStep({ id: "bridge", status: "processing" });
                             return;
                         }
-
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
                     },
@@ -385,6 +383,8 @@ function Index() {
         if (!receipt || receipt.status === "reverted" || !transactionType) return;
         if (transactionType.type === "SWAP") return;
 
+        updateTransactionStep({ id: "sendOrigin", status: "success" });
+
         const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
 
         setTransactionHashes((prev) => ({
@@ -423,7 +423,6 @@ function Index() {
             (transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
             bridgeRemoteTransactionHash
         ) {
-            updateTransactionStep({ id: "sendOrigin", status: "success" });
             updateTransactionStep({ id: "bridge", status: "success" });
             setTransactionHashes((prev) => ({ ...prev, transferRemote: bridgeRemoteTransactionHash }));
             updateTransactionStep({ id: "transferRemote", status: "success" });
