@@ -544,6 +544,9 @@ importers:
       '@owlprotocol/veraswap-sdk':
         specifier: workspace:*
         version: link:../veraswap-sdk
+      '@zerodev/sdk':
+        specifier: ^5.4.26
+        version: 5.4.26(viem@2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))
       next:
         specifier: 15.2.0
         version: 15.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -17899,6 +17902,11 @@ snapshots:
     dependencies:
       semver: 7.7.1
       viem: 2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.22.4)
+
+  '@zerodev/sdk@5.4.26(viem@2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2))':
+    dependencies:
+      semver: 7.7.1
+      viem: 2.21.19(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.2)
 
   JSONStream@1.3.2:
     dependencies:

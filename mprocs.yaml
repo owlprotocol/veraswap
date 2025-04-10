@@ -17,3 +17,6 @@ procs:
   frontend:
     cwd: packages/veraswap-app
     shell: pnpm dev
+  duster:
+    cwd: packages/veraswap-test-duster
+    shell: pnpm dev

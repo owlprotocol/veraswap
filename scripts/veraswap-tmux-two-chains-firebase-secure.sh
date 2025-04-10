@@ -18,6 +18,8 @@ if [ $? != 0 ]; then
     tmux split-window -t $session:anvil -h -l 50%;
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
+    tmux new-window -t $session -n duster;
+
     # Start blockchains
     tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900" ENTER
     tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 901" ENTER
@@ -30,6 +32,8 @@ HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,o
 
     # Start auth dev mode
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
+     # Start duster
+    tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && pnpm dev" ENTER
 fi
 
 if [ -n "${TMUX+1}" ]; then

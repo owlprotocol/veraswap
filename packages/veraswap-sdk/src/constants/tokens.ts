@@ -162,7 +162,7 @@ export const LOCAL_POOLS = {
     ],
 };
 
-const testnetMockTokens = [
+export const testnetMockTokens = [
     {
         standard: "MockERC20",
         chainId: sepolia.id,
