@@ -17,10 +17,10 @@ import {
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { ERC7579RouterMessage, ERC7579ExecutionMode } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { PoolKey } from "@uniswap/v4-sdk";
+import { TokenStandard } from "../types/Token.js";
 
 export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCallsParams {
-    funder: Address;
-    tokenStandard: "HypERC20" | "HypERC20Collateral";
+    tokenStandard: TokenStandard;
     token: Address;
     destination: number;
     recipient: Address;
@@ -28,12 +28,6 @@ export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCal
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
-    permit2: {
-        approveAmount?: bigint | "MAX_UINT_160";
-        minExpiration?: number;
-        approveExpiration: number | "MAX_UINT_48";
-        sigDeadline?: bigint;
-    };
     remoteERC7579ExecutorRouter: Address;
     remoteSwapParams: {
         amountIn: bigint;
@@ -43,7 +37,7 @@ export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCal
         universalRouter: Address;
         receiver: Address;
         callTargetAfter?: [Address, bigint, Hex];
-        routerPayment: bigint;
+        routerPayment?: bigint;
         hookData?: Hex;
         approveExpiration?: number | "MAX_UINT_48";
     };

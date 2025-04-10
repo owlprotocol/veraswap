@@ -17,7 +17,7 @@ export interface GetSwapCallsParams extends GetCallsParams {
     universalRouter: Address;
     receiver: Address;
     callTargetAfter?: [Address, bigint, Hex];
-    routerPayment: bigint;
+    routerPayment?: bigint;
     hookData?: Hex;
     approveExpiration?: number | "MAX_UINT_48";
 }
@@ -37,10 +37,11 @@ export async function getSwapCalls(
         receiver,
         zeroForOne,
         callTargetAfter,
-        routerPayment,
         hookData,
         approveExpiration,
     } = params;
+    const routerPayment = params.routerPayment ?? 0n;
+
     const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
 
     const calls: (CallArgs & { account: Address })[] = [];
@@ -74,10 +75,7 @@ export async function getSwapCalls(
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
     const isNative = currencyIn === zeroAddress;
-    let routerExecuteValue = isNative ? amountIn : 0n;
-    if (routerPayment) {
-        routerExecuteValue += routerPayment + 10n;
-    }
+    const routerExecuteValue = isNative ? amountIn + routerPayment : routerPayment;
 
     const routerExecuteData: (typeof calls)[number] = {
         account,

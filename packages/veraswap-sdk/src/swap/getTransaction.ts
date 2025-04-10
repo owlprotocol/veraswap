@@ -20,6 +20,7 @@ import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import { getBridgeSwapCalls, GetBridgeSwapCallsParams } from "../calls/getBridgeSwapCalls.js";
+import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -71,8 +72,10 @@ export interface TransactionBridgeSwapOptions {
     wagmiConfig: Config;
     walletAddress: Address;
     amountIn: bigint;
+    amountOutMinimum: bigint;
     initData: Hex;
     orbiterParams?: OrbiterParams;
+    orbiterAmountOut?: bigint;
 }
 
 export type TransactionParams =
@@ -179,15 +182,34 @@ export async function getTransaction(
         }
 
         case "BRIDGE_SWAP": {
-            const { bridge, queryClient, wagmiConfig, walletAddress, amountIn, initData, orbiterParams } = params;
+            const {
+                bridge,
+                swap,
+                queryClient,
+                wagmiConfig,
+                walletAddress,
+                amountIn,
+                amountOutMinimum,
+                initData,
+                orbiterParams,
+                orbiterAmountOut,
+            } = params;
 
             const { tokenIn, tokenOut } = bridge;
+            const { poolKey, zeroForOne } = swap;
 
-            if (tokenIn.standard === "NativeToken" && !orbiterParams) {
-                throw new Error("Orbiter params are required for Orbiter bridging");
+            if (tokenIn.standard === "NativeToken" && (!orbiterParams || !orbiterAmountOut)) {
+                throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
-            const bridgeSwapParms: GetBridgeSwapCallsParams = {
+            const remoteERC7579ExecutorRouter =
+                MOCK_MAILBOX_CONTRACTS[tokenOut.chainId as keyof typeof MOCK_MAILBOX_CONTRACTS]?.erc7579Router;
+
+            if (!remoteERC7579ExecutorRouter) {
+                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenOut.chainId}`);
+            }
+
+            const bridgeSwapParams: GetBridgeSwapCallsParams = {
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
                 tokenStandard: tokenIn.standard,
@@ -200,10 +222,20 @@ export async function getTransaction(
                     salt: zeroHash,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                remoteERC7579ExecutorRouter,
+                remoteSwapParams: {
+                    // Adjust amount in if using orbiter to account for fees
+                    amountIn: orbiterAmountOut ?? amountIn,
+                    amountOutMinimum,
+                    poolKey,
+                    receiver: walletAddress,
+                    universalRouter: uniswapContracts[tokenOut.chainId].universalRouter,
+                    zeroForOne,
+                },
                 orbiterParams,
             };
 
-            const result = await getBridgeSwapCalls(queryClient, wagmiConfig, params);
+            const result = await getBridgeSwapCalls(queryClient, wagmiConfig, bridgeSwapParams);
 
             return result.calls[0] as {
                 to: Address;

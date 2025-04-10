@@ -235,7 +235,13 @@ function Index() {
 
     const handleSwapSteps = async () => {
         // Check transaction type here for swaps to avoid changing chains if not needed
-        if (!swapStep || transactionIsPending || (swapStep === SwapStep.EXECUTE_SWAP && !transactionType)) return;
+        if (
+            !swapStep ||
+            transactionIsPending ||
+            !walletAddress ||
+            (swapStep === SwapStep.EXECUTE_SWAP && !transactionType)
+        )
+            return;
 
         if (chainIn!.id !== chainId) {
             await switchChainAsync({ chainId: chainIn!.id });
@@ -293,31 +299,45 @@ function Index() {
             if (!transactionType) return;
 
             // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
-            const amountOutMinimum =
-                transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE" ? quoterData![0] : null;
+            const amountOutMinimum = quoterData?.[0] ?? null;
+            if (transactionType.type !== "BRIDGE" && !amountOutMinimum) {
+                throw new Error("amountOutMinimum is required for this transaction type");
+            }
 
             initializeTransactionSteps(transactionType);
 
             // We split the params into two to keep the types clean
             const transactionParams =
-                transactionType.type === "BRIDGE_SWAP" || transactionType.type === "BRIDGE"
+                transactionType.type === "BRIDGE"
                     ? ({
                           ...transactionType,
                           amountIn: tokenInAmount!,
-                          walletAddress: walletAddress!,
+                          walletAddress,
                           bridgePayment: bridgePayment,
                           orbiterParams,
                           queryClient: queryClient,
                           wagmiConfig: config,
                           initData: kernelSmartAccountInitData,
-                      } as TransactionParams & (TransactionTypeBridge | TransactionTypeBridgeSwap))
-                    : ({
-                          ...transactionType,
-                          amountIn: tokenInAmount!,
-                          amountOutMinimum: amountOutMinimum!,
-                          walletAddress: walletAddress!,
-                          bridgePayment: bridgePayment,
-                      } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
+                      } as TransactionParams & TransactionTypeBridge)
+                    : transactionType.type === "BRIDGE_SWAP"
+                      ? ({
+                            ...transactionType,
+                            amountIn: tokenInAmount!,
+                            amountOutMinimum,
+                            walletAddress,
+                            orbiterAmountOut,
+                            orbiterParams,
+                            queryClient: queryClient,
+                            wagmiConfig: config,
+                            initData: kernelSmartAccountInitData,
+                        } as TransactionParams & TransactionTypeBridgeSwap)
+                      : ({
+                            ...transactionType,
+                            amountIn: tokenInAmount!,
+                            amountOutMinimum: amountOutMinimum!,
+                            walletAddress,
+                            bridgePayment: bridgePayment,
+                        } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const transaction = await getTransaction(transactionParams);
 
