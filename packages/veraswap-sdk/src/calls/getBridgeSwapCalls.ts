@@ -54,7 +54,16 @@ export async function getBridgeSwapCalls(
     wagmiConfig: Config,
     params: GetBridgeSwapCallsParams,
 ): Promise<GetCallsReturnType> {
-    const { destination, createAccount, chainId, account, remoteERC7579ExecutorRouter, remoteSwapParams } = params;
+    const {
+        amount,
+        destination,
+        createAccount,
+        chainId,
+        account,
+        remoteERC7579ExecutorRouter,
+        remoteSwapParams,
+        tokenStandard,
+    } = params;
     //TODO: Add swap calls
     const calls = [] as (CallArgs & { account: Address })[];
     const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, params);
@@ -145,12 +154,14 @@ export async function getBridgeSwapCalls(
         ],
     });
 
+    // TODO: estimate remote expense
+    const bridgePayment = 1000000000n;
+
     const callRemote = {
         account: kernelAddress,
         to: remoteERC7579ExecutorRouter,
         data: callRemoteData,
-        // TODO: estimate remote expense
-        value: 1000000000n,
+        value: tokenStandard === "NativeToken" ? amount + bridgePayment : bridgePayment,
     };
 
     calls.push(callRemote);
