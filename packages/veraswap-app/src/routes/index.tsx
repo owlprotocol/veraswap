@@ -178,7 +178,7 @@ function Index() {
               ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
               : "";
 
-    useDustAccount(walletAddress, chainIn?.id);
+    useDustAccount(walletAddress);
 
     useWatchMessageProcessed(bridgeMessageId, tokenOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
     useWatchMessageProcessed(swapMessageId, tokenOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);
