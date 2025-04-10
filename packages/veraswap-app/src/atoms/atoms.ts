@@ -196,8 +196,9 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
 
     const sendOriginStep: TransactionStep = {
         id: "sendOrigin",
-        title: "📤 Yeeting Token from Origin",
-        description: "Catapulting your token into the void. Hope it packed a lunch 🪐🍱",
+        title: "📤 Initiating Origin Transfer",
+        description:
+            "Catapulting your tokens across the blockchain abyss. Please keep arms and legs inside the vehicle. 🌌🎢",
         status: "pending",
     };
 
