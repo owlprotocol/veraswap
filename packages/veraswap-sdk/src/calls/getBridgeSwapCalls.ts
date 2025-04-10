@@ -180,6 +180,7 @@ export async function getBridgeSwapCalls(
         signature,
     };
 
+    // TODO: change this instead into a getOwnableExecutorExecuteCalls
     const callRemoteData = encodeFunctionData({
         abi: ERC7579ExecutorRouter.abi,
         functionName: "callRemote",
