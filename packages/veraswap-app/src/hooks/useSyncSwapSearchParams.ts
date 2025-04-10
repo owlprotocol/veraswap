@@ -8,8 +8,9 @@ import { Route } from "@/routes/index.js";
 export function useSyncSwapSearchParams(allTokens: Token[]) {
     const navigate = Route.useNavigate();
     const search = useSearch({ from: "/" });
-    const [, setTokenIn] = useAtom(tokenInAtom);
-    const [, setTokenOut] = useAtom(tokenOutAtom);
+
+    const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
+    const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
     const [, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const [enabledChains] = useAtom(chainsAtom);
 
@@ -17,6 +18,21 @@ export function useSyncSwapSearchParams(allTokens: Token[]) {
         const { tokenIn: tokenInSymbol, chainIdIn, tokenOut: tokenOutSymbol, chainIdOut, type } = search;
 
         const chainsType = type ?? "mainnet";
+        setNetworkType(chainsType);
+
+        const enabledChainIds = enabledChains.map((c) => c.id);
+        const tokensInNetwork = allTokens.filter((t) => enabledChainIds.includes(t.chainId));
+
+        if (tokenInSymbol && chainIdIn) {
+            const foundTokenIn = tokensInNetwork.find((t) => t.symbol === tokenInSymbol && t.chainId === chainIdIn);
+            if (foundTokenIn) setTokenIn(foundTokenIn);
+        }
+
+        if (tokenOutSymbol && chainIdOut) {
+            const foundTokenOut = tokensInNetwork.find((t) => t.symbol === tokenOutSymbol && t.chainId === chainIdOut);
+            if (foundTokenOut) setTokenOut(foundTokenOut);
+        }
+
         if (!type) {
             navigate({
                 search: {
@@ -25,27 +41,27 @@ export function useSyncSwapSearchParams(allTokens: Token[]) {
                 },
                 replace: true,
             });
-            return;
-        }
-
-        setNetworkType(chainsType);
-
-        const enabledChainIds = enabledChains.map((c) => c.id);
-        const tokensInNetwork = allTokens.filter((t) => enabledChainIds.includes(t.chainId));
-
-        if (tokenInSymbol && chainIdIn) {
-            const foundTokenIn = tokensInNetwork.find((t) => t.symbol === tokenInSymbol && t.chainId === chainIdIn);
-            if (foundTokenIn) {
-                setTokenIn(foundTokenIn);
-            }
-        }
-
-        if (tokenOutSymbol && chainIdOut) {
-            const foundTokenOut = tokensInNetwork.find((t) => t.symbol === tokenOutSymbol && t.chainId === chainIdOut);
-            if (foundTokenOut) {
-                setTokenOut(foundTokenOut);
-            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allTokens, search]);
+
+    useEffect(() => {
+        if (!tokenIn && !tokenOut) return;
+
+        navigate({
+            search: (prev) => ({
+                ...prev,
+                ...(tokenIn && {
+                    tokenIn: tokenIn.symbol,
+                    chainIdIn: tokenIn.chainId,
+                }),
+                ...(tokenOut && {
+                    tokenOut: tokenOut.symbol,
+                    chainIdOut: tokenOut.chainId,
+                }),
+            }),
+            replace: true,
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tokenIn, tokenOut]);
 }
