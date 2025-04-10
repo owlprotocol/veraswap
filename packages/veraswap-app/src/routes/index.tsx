@@ -321,9 +321,10 @@ function Index() {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
                             setTransactionHashes((prev) => ({ ...prev, sendOrigin: hash }));
-                            updateTransactionStep({ id: "bridge", status: "processing" });
+                            updateTransactionStep({ id: "sendOrigin", status: "processing" });
                             return;
                         }
+
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
                     },
@@ -331,7 +332,6 @@ function Index() {
                         console.log(error);
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
                             updateTransactionStep({ id: "sendOrigin", status: "error" });
-                            updateTransactionStep({ id: "bridge", status: "error" });
                         } else {
                             updateTransactionStep({ id: "swap", status: "error" });
                         }
@@ -349,11 +349,11 @@ function Index() {
     };
 
     useEffect(() => {
-        if (!receipt) return;
+        if (!receipt || !transactionType) return;
 
         if (receipt.status === "reverted") {
             const failedStep =
-                transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP" ? "bridge" : "swap";
+                transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP" ? "sendOrigin" : "swap";
             updateTransactionStep({ id: failedStep, status: "error" });
             toast({
                 title: "Transaction Failed",
@@ -363,58 +363,54 @@ function Index() {
             return;
         }
 
-        if (transactionType?.type === "BRIDGE" || transactionType?.type === "BRIDGE_SWAP") return;
+        if (transactionType.type !== "BRIDGE" && transactionType.type !== "BRIDGE_SWAP") {
+            updateTransactionStep({ id: "swap", status: "success" });
 
-        updateTransactionStep({ id: "swap", status: "success" });
+            if (transactionType.type !== "SWAP_BRIDGE") {
+                if (swapStep !== SwapStep.EXECUTE_SWAP) return;
 
-        if (transactionType?.type !== "SWAP_BRIDGE") {
-            if (swapStep !== SwapStep.EXECUTE_SWAP) return;
-
-            toast({
-                title: "Swap Complete",
-                description: "Your swap has been completed successfully",
-                variant: "default",
-            });
+                toast({
+                    title: "Swap Complete",
+                    description: "Your swap has been completed successfully",
+                    variant: "default",
+                });
+            }
         }
+
+        if (transactionType.type !== "SWAP") {
+            updateTransactionStep({ id: "sendOrigin", status: "success" });
+
+            const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+
+            setTransactionHashes((prev) => ({
+                ...prev,
+                bridge,
+            }));
+
+            const setMessage = (id: "bridge" | "swap", hash: Hex | undefined) => {
+                if (!hash) return;
+                if (id === "bridge") {
+                    setBridgeMessageId(hash);
+                } else {
+                    setSwapMessageId(hash);
+                }
+                updateTransactionStep({ id, status: "processing" });
+            };
+
+            switch (transactionType.type) {
+                case "BRIDGE":
+                case "SWAP_BRIDGE":
+                    setMessage("bridge", bridge);
+                    break;
+                case "BRIDGE_SWAP":
+                    setMessage("bridge", bridge);
+                    setMessage("swap", swap);
+                    break;
+            }
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [receipt]);
-
-    useEffect(() => {
-        if (!receipt || receipt.status === "reverted" || !transactionType) return;
-        if (transactionType.type === "SWAP") return;
-
-        updateTransactionStep({ id: "sendOrigin", status: "success" });
-
-        const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
-
-        setTransactionHashes((prev) => ({
-            ...prev,
-            bridge,
-        }));
-
-        const setMessage = (id: "bridge" | "swap", hash: Hex | undefined) => {
-            if (!hash) return;
-            if (id === "bridge") {
-                setBridgeMessageId(hash);
-            } else {
-                setSwapMessageId(hash);
-            }
-            updateTransactionStep({ id, status: "processing" });
-        };
-
-        switch (transactionType.type) {
-            case "BRIDGE":
-            case "SWAP_BRIDGE":
-                setMessage("bridge", bridge);
-                break;
-            case "BRIDGE_SWAP":
-                setMessage("bridge", bridge);
-                setMessage("swap", swap);
-                break;
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [receipt, networkType]);
 
     useEffect(() => {
         if (!transactionType) return;
