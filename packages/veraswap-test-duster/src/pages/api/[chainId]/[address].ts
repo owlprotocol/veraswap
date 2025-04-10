@@ -64,8 +64,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
 
-    if (calls.length === 0) res.status(200).send("Nothing to dust");
-
+    if (calls.length === 0) {
+        res.status(200).send("Nothing to dust");
+        return;
+    }
     if (calls.length === 1) {
         const call = calls[0];
         if (!call.data) {
