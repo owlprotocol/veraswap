@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
-import { signTypedData } from "@wagmi/core";
+import { signTypedData, switchChain } from "@wagmi/core";
+import { hashFn } from "@wagmi/core/query";
 import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
 import { Config } from "wagmi";
 import { readContractQueryOptions } from "wagmi/query";
@@ -81,15 +82,18 @@ export async function getBridgeSwapCalls(
 
     const remoteCallData = encodeCallArgsBatch(swapRemoteCalls);
 
-    const nonce = await queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
+    await switchChain(wagmiConfig, { chainId: destination });
+    // @ts-expect-error  queryKeyHashFn should exist and is needed to serialize a bigint
+    const nonce = await queryClient.fetchQuery({
+        ...readContractQueryOptions(wagmiConfig, {
             chainId: destination,
             address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             abi: OwnableSignatureExecutor.abi,
             functionName: "getNonce",
             args: [kernelAddress, 0n],
         }),
-    );
+        queryKeyHashFn: hashFn,
+    });
 
     // Sign execution data
     const signatureExecution = {
@@ -105,6 +109,8 @@ export async function getBridgeSwapCalls(
         account,
         ...getSignatureExecutionData(signatureExecution, LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor, destination),
     });
+
+    await switchChain(wagmiConfig, { chainId });
 
     const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH_SIGNATURE> = {
         owner: account,
