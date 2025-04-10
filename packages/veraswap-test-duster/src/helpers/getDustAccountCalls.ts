@@ -11,7 +11,8 @@ import {
 } from "viem";
 
 
-const MIN_ETH = parseEther("0.0005");
+const DUST_MIN_ETH = parseEther("0.0005");
+const DUST_AMOUNT_ETH = (DUST_MIN_ETH * 150n) / 100n
 
 export async function getDustAccountCalls({
     account,
@@ -43,10 +44,10 @@ export async function getDustAccountCalls({
         ...tokenBalancePromises,
     ]);
 
-    if (ethBalance < MIN_ETH) {
+    if (ethBalance < DUST_MIN_ETH) {
         calls.push({
             to: account,
-            value: (MIN_ETH * 150n) / 100n,
+            value: DUST_AMOUNT_ETH,
             data: "0x",
         });
     }
