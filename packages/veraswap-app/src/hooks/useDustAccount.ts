@@ -1,16 +1,14 @@
 import { useEffect } from "react";
 import { Address } from "viem";
 
+const DUSTER_BASE_URL =
+    import.meta.env.MODE === "development" ? "http://localhost:3000" : "https://veraswap-test-duster.vercel.app";
+
 export function useDustAccount(walletAddress?: Address, chainId?: number) {
     useEffect(() => {
         if (!walletAddress || !chainId) return;
 
-        const baseUrl =
-            import.meta.env.MODE === "development"
-                ? "http://localhost:3000"
-                : "https://veraswap-test-duster.vercel.app";
-
-        const url = `${baseUrl}/api/${chainId}/${walletAddress}`;
+        const url = `${DUSTER_BASE_URL}/api/${chainId}/${walletAddress}`;
 
         fetch(url, { method: "POST" })
             .then((res) => {

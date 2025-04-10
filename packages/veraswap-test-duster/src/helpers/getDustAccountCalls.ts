@@ -11,7 +11,7 @@ import {
 } from "viem";
 
 
-const MIN_ETH = process.env.NODE_ENV === "development" ? parseEther("1") : parseEther("0.0005");
+const MIN_ETH = parseEther("0.0005");
 
 export async function getDustAccountCalls({
     account,

@@ -1,5 +1,5 @@
 import { prodChains, localChains } from "@/config/chains";
-import { MockERC20, Execute } from "@owlprotocol/veraswap-sdk/artifacts";
+import { Execute } from "@owlprotocol/veraswap-sdk/artifacts";
 import { localMockTokens, testnetMockTokens } from "@owlprotocol/veraswap-sdk/constants";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getExecMode } from "@zerodev/sdk";
@@ -16,7 +16,6 @@ import {
     http,
     isAddress,
     nonceManager,
-    parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Token, LOCAL_KERNEL_CONTRACTS, encodeCallArgsBatch } from "@owlprotocol/veraswap-sdk";
@@ -64,28 +63,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
 
-    if (calls.length === 0) {
-        res.status(200).send("Nothing to dust");
-        return;
-    }
+    if (calls.length === 0) return res.status(200).send("Nothing to dust");
+
+
     if (calls.length === 1) {
         const call = calls[0];
-        if (!call.data) {
-            const hash = await walletClient.sendTransaction({
-                to: call.to,
-                value: call.value!,
-            });
-            await publicClient.waitForTransactionReceipt({ hash });
-        } else {
-            const hash = await walletClient.writeContract({
-                address: call.to,
-                abi: MockERC20.abi,
-                functionName: "mint",
-                args: [receiver, parseUnits("100", 18)],
-            });
-            await publicClient.waitForTransactionReceipt({ hash });
-        }
-        res.status(200).send("Successfully dusted");
+
+        const hash = await walletClient.sendTransaction({
+            to: call.to,
+            value: call.value ?? 0n,
+            data: call.data ?? "0x",
+        });
+
+        await publicClient.waitForTransactionReceipt({ hash });
+
+        return res.status(200).send("Successfully dusted");
     }
 
 
@@ -106,5 +98,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     await publicClient.waitForTransactionReceipt({ hash });
 
-    res.status(200).send("Successfully dusted with batching");
+    return res.status(200).send("Successfully dusted with batching");
 }
