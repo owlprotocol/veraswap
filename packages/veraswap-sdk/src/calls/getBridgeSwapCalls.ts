@@ -4,32 +4,39 @@ import { hashFn } from "@wagmi/core/query";
 import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
 import { Config } from "wagmi";
 import { readContractQueryOptions } from "wagmi/query";
-import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
-import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
+import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getSignatureExecutionData } from "../smartaccount/OwnableExecutor.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { GetCallsReturnType } from "./getCalls.js";
-import {
-    getTransferRemoteWithKernelCalls,
-    GetTransferRemoteWithKernelCallsParams,
-} from "./getTransferRemoteWithKernelCalls.js";
+import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithKernelCalls.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { ERC7579RouterMessage, ERC7579ExecutionMode } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { PoolKey } from "@uniswap/v4-sdk";
 import { TokenStandard } from "../types/Token.js";
+import { Execute } from "../artifacts/Execute.js";
+import { getExecMode } from "@zerodev/sdk";
+import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
+import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
+import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
+import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
 
 export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
     token: Address;
     destination: number;
-    recipient: Address;
     amount: bigint;
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
     remoteERC7579ExecutorRouter: Address;
+    originERC7579ExecutorRouter: Address;
+    contracts?: {
+        execute: Address;
+        ownableSignatureExecutor: Address;
+    };
     remoteSwapParams: {
         amountIn: bigint;
         amountOutMinimum: bigint;
@@ -57,29 +64,67 @@ export async function getBridgeSwapCalls(
     const {
         amount,
         destination,
-        createAccount,
+        hook,
+        hookMetadata,
+        token,
         chainId,
         account,
+        originERC7579ExecutorRouter,
         remoteERC7579ExecutorRouter,
         remoteSwapParams,
         tokenStandard,
+        approveAmount,
+        permit2,
     } = params;
-    //TODO: Add swap calls
-    const calls = [] as (CallArgs & { account: Address })[];
-    const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, params);
-    calls.push(...transferRemoteCalls.calls);
+    const { initData, salt } = params.createAccount;
+    const contracts = params.contracts ?? {
+        execute: LOCAL_KERNEL_CONTRACTS.execute,
+        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+    };
 
-    const { initData, salt, factoryAddress } = createAccount;
-    const kernelAddress = await queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
+    if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
+        throw new Error(`Unsupported standard for bridge and swap: ${tokenStandard}`);
+    }
+
+    // Create account if needed
+    const createAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
+        chainId,
+        account,
+        ...params.createAccount,
+    });
+    const kernelAddress = createAccountCalls.kernelAddress;
+
+    let transferRemoteCalls: GetCallsReturnType;
+    if (tokenStandard === "NativeToken") {
+        // Assume that if the token is native, we are using the Orbiter bridge
+        const orbiterCall = getOrbiterETHTransferTransaction({
+            recipient: kernelAddress,
+            amount,
+            ...params.orbiterParams!,
+        });
+
+        transferRemoteCalls = { calls: [{ ...orbiterCall, account: kernelAddress }] };
+    } else {
+        // TODO: handle future case where we bridge USDC with orbiter
+
+        // Encode transferRemote calls, pull funds from account if needed
+        transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
             chainId,
-            address: factoryAddress,
-            abi: KernelFactory.abi,
-            functionName: "getAddress",
-            args: [initData, salt],
-        }),
-    );
+            token,
+            tokenStandard,
+            account: kernelAddress,
+            funder: account,
+            destination,
+            recipient: kernelAddress,
+            amount,
+            hookMetadata,
+            hook,
+            approveAmount,
+            permit2,
+        });
+    }
 
+    // From here refactor into a function
     const swapParams: GetSwapCallsParams = {
         account: kernelAddress,
         chainId: destination,
@@ -160,12 +205,52 @@ export async function getBridgeSwapCalls(
 
     const callRemote = {
         account: kernelAddress,
-        to: remoteERC7579ExecutorRouter,
+        to: originERC7579ExecutorRouter,
         data: callRemoteData,
         value: tokenStandard === "NativeToken" ? amount + bridgePayment : bridgePayment,
     };
+    // Until here refactor into a function
 
-    calls.push(callRemote);
+    if (createAccountCalls.exists) {
+        // Account already exists, execute directly
+        const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+            chainId,
+            account,
+            calls: [...transferRemoteCalls.calls, callRemote],
+            executor: contracts.ownableSignatureExecutor,
+            owner: account,
+            kernelAddress,
+        });
 
-    return { calls };
+        return { calls: executeOnOwnedAccount.calls };
+    }
+    // Deploy account, and execute via signature using the Execute contract
+    const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+        chainId,
+        account: contracts.execute,
+        calls: [...transferRemoteCalls.calls, callRemote],
+        executor: contracts.ownableSignatureExecutor,
+        owner: account,
+        kernelAddress,
+    });
+
+    // Execute batched calls
+    const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
+
+    const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
+    const executeCallsBatched = encodeCallArgsBatch(executeCalls);
+
+    // Execute batch
+    const executeCall = {
+        account,
+        to: contracts.execute,
+        data: encodeFunctionData({
+            abi: Execute.abi,
+            functionName: "execute",
+            args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), executeCallsBatched],
+        }),
+        value,
+    };
+
+    return { calls: [executeCall] };
 }
