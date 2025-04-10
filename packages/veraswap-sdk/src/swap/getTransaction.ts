@@ -19,6 +19,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
+import { getBridgeSwapCalls, GetBridgeSwapCallsParams } from "../calls/getBridgeSwapCalls.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -186,7 +187,7 @@ export async function getTransaction(
                 throw new Error("Orbiter params are required for Orbiter bridging");
             }
 
-            const bridgeSwapParms: GetTransferRemoteWithKernelCallsParams = {
+            const bridgeSwapParms: GetBridgeSwapCallsParams = {
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
                 tokenStandard: tokenIn.standard,
@@ -202,8 +203,8 @@ export async function getTransaction(
                 orbiterParams,
             };
 
-            const result = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParms);
-            //TODO: data and value are optional
+            const result = await getBridgeSwapCalls(queryClient, wagmiConfig, params);
+
             return result.calls[0] as {
                 to: Address;
                 data: Hex;
