@@ -367,8 +367,6 @@ function Index() {
             updateTransactionStep({ id: "swap", status: "success" });
 
             if (transactionType.type !== "SWAP_BRIDGE") {
-                if (swapStep !== SwapStep.EXECUTE_SWAP) return;
-
                 toast({
                     title: "Swap Complete",
                     description: "Your swap has been completed successfully",
