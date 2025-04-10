@@ -74,7 +74,7 @@ export async function getTransferRemoteWithKernelCalls(
     };
 
     if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
-        throw new Error(`Unsupported standard for bridge and swap: ${tokenStandard}`);
+        throw new Error(`Unsupported standard for bridging: ${tokenStandard}`);
     }
 
     // Create account if needed
@@ -127,35 +127,35 @@ export async function getTransferRemoteWithKernelCalls(
         });
 
         return { calls: executeOnOwnedAccount.calls };
-    } else {
-        // Deploy account, and execute via signature using the Execute contract
-        const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
-            chainId,
-            account: contracts.execute,
-            calls: transferRemoteCalls.calls,
-            executor: contracts.ownableSignatureExecutor,
-            owner: account,
-            kernelAddress,
-        });
-
-        //TODO: Additional util for Execute.sol contract
-        // Execute batched calls
-        const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
-        const deployAndExecuteCalls = encodeCallArgsBatch(executeCalls);
-        // Sum value of all calls
-        const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
-
-        // Execute batch
-        const executeCall = {
-            account,
-            to: contracts.execute,
-            data: encodeFunctionData({
-                abi: Execute.abi,
-                functionName: "execute",
-                args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), deployAndExecuteCalls],
-            }),
-            value,
-        };
-        return { calls: [executeCall] };
     }
+
+    // Deploy account, and execute via signature using the Execute contract
+    const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+        chainId,
+        account: contracts.execute,
+        calls: transferRemoteCalls.calls,
+        executor: contracts.ownableSignatureExecutor,
+        owner: account,
+        kernelAddress,
+    });
+
+    //TODO: Additional util for Execute.sol contract
+    // Execute batched calls
+    const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
+    const deployAndExecuteCalls = encodeCallArgsBatch(executeCalls);
+    // Sum value of all calls
+    const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
+
+    // Execute batch
+    const executeCall = {
+        account,
+        to: contracts.execute,
+        data: encodeFunctionData({
+            abi: Execute.abi,
+            functionName: "execute",
+            args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), deployAndExecuteCalls],
+        }),
+        value,
+    };
+    return { calls: [executeCall] };
 }

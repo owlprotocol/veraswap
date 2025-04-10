@@ -202,8 +202,14 @@ export async function getTransaction(
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
+            const originERC7579ExecutorRouter =
+                MOCK_MAILBOX_CONTRACTS[tokenIn.chainId as keyof typeof MOCK_MAILBOX_CONTRACTS]?.erc7579Router;
             const remoteERC7579ExecutorRouter =
                 MOCK_MAILBOX_CONTRACTS[tokenOut.chainId as keyof typeof MOCK_MAILBOX_CONTRACTS]?.erc7579Router;
+
+            if (!originERC7579ExecutorRouter) {
+                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenIn.chainId}`);
+            }
 
             if (!remoteERC7579ExecutorRouter) {
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenOut.chainId}`);
@@ -223,6 +229,7 @@ export async function getTransaction(
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
                 remoteERC7579ExecutorRouter,
+                originERC7579ExecutorRouter,
                 remoteSwapParams: {
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: orbiterAmountOut ?? amountIn,
