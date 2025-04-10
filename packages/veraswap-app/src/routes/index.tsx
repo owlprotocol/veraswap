@@ -72,7 +72,7 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
-import { useWatchMessageProcessed } from "@/hooks/useWatchMessageProcessed.js";
+import { useDustAccount, useWatchMessageProcessed } from "@/hooks/index.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -178,22 +178,7 @@ function Index() {
               ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
               : "";
 
-    /*
-    useEffect(() => {
-        if (!walletAddress) return;
-        if (!chainIn) return;
-
-        if (import.meta.env.MODE === "development") {
-            console.log(
-                "would be dusting: ",
-                `https://veraswap-test-duster.vercel.app/api/${chainIn.id}/${walletAddress}`,
-            );
-            return;
-        }
-
-        fetch(`https://veraswap-test-duster.vercel.app/api/${chainIn.id}/${walletAddress}`, { method: "POST" });
-    }, [walletAddress, chainIn?.id, chainIn]);
-    */
+    useDustAccount(walletAddress, chainIn?.id);
 
     useWatchMessageProcessed(bridgeMessageId, tokenOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
     useWatchMessageProcessed(swapMessageId, tokenOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);

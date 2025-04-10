@@ -10,6 +10,7 @@ export const opChainL1 = {
     ...localhost,
     id: 900,
     name: "OP Chain L1",
+    testnet: true,
     rpcUrls: {
         default: { http: [`http://127.0.0.1:${opChainL1Port}`], webSocket: [`ws://127.0.0.1:${opChainL1Port}`] },
     },
@@ -21,6 +22,7 @@ export const opChainA = {
     ...localhost,
     id: 901,
     name: "OP Chain A",
+    testnet: true,
     rpcUrls: {
         default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
     },
@@ -32,6 +34,7 @@ export const opChainB = {
     ...localhost,
     id: 902,
     name: "OP Chain B",
+    testnet: true,
     rpcUrls: {
         default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
     },

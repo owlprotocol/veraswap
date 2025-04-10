@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@owlprotocol/veraswap-sdk": "workspace:*",
+    "@zerodev/sdk": "^5.4.26",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "next": "15.2.0",
