@@ -197,16 +197,19 @@ contract DeployLocal is DeployCoreContracts {
             (address erc7579ExecutorRouterL1, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxL1,
                 address(0),
-                //TODO: This might cause issues due to chainId verification for signatures
                 contracts.ownableSignatureExecutor,
-                //TODO: This might cause issues due to create2 conflicts (eg. deploy 2 same contracts on mock "L1" and "OPA")
                 contracts.kernelFactory
             );
+
+            // New implementations to avoid collisions
+            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(901));
+            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(901));
+
             (address erc7579ExecutorRouterOpA, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxOpA,
                 address(0),
-                contracts.ownableSignatureExecutor,
-                contracts.kernelFactory
+                ownableSignatureExecutorOpA,
+                kernelFactoryOpA
             );
 
             vm.stopBroadcast();

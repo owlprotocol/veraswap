@@ -1,11 +1,13 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { encodeDeployData, numberToHex, zeroAddress, zeroHash } from "viem";
 import { opChainA, opChainL1 } from "../chains/supersim.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { getHypERC7579RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { createMockERC20WarpRoute, getMockERC20Address } from "../constants/tokens.js";
 import { HypERC20CollateralToken, HypERC20Token, TokenBase } from "../types/Token.js";
+import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
+import { KernelFactory } from "../artifacts/KernelFactory.js";
 
 export function getMockMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({
@@ -35,15 +37,37 @@ export const MOCK_MAILBOX_CONTRACTS = {
     },
     [opChainA.id]: {
         mailbox: getMockMailboxAddress({ chainId: opChainA.id }),
-        //TODO: Re-deploy with salt(1)
-        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-        kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+        //Re-deploy with salt(901) to avoid collisions
+        ownableSignatureExecutor: getDeployDeterministicAddress({
+            bytecode: OwnableSignatureExecutor.bytecode,
+            salt: numberToHex(901, { size: 32 }),
+        }),
+        //Re-deploy with salt(901) to avoid collisions
+        kernelFactory: getDeployDeterministicAddress({
+            bytecode: encodeDeployData({
+                abi: KernelFactory.abi,
+                bytecode: KernelFactory.bytecode,
+                args: [LOCAL_KERNEL_CONTRACTS.kernel],
+            }),
+            salt: numberToHex(901, { size: 32 }),
+        }),
         erc7579Router: getHypERC7579RouterAddress({
             mailbox: getMockMailboxAddress({ chainId: opChainA.id }),
             ism: zeroAddress,
-            //TODO: Re-deploy with salt(1)
-            executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-            factory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+            //Re-deploy with salt(901) to avoid collisions
+            executor: getDeployDeterministicAddress({
+                bytecode: OwnableSignatureExecutor.bytecode,
+                salt: numberToHex(901, { size: 32 }),
+            }),
+            //Re-deploy with salt(901) to avoid collisions
+            factory: getDeployDeterministicAddress({
+                bytecode: encodeDeployData({
+                    abi: KernelFactory.abi,
+                    bytecode: KernelFactory.bytecode,
+                    args: [LOCAL_KERNEL_CONTRACTS.kernel],
+                }),
+                salt: numberToHex(901, { size: 32 }),
+            }),
         }),
     },
 };
