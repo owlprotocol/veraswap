@@ -141,8 +141,6 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
 
             const amount = parseUnits("1", tokenA.decimals);
 
-            // TODO: app
-
             const bridgeParams: GetTransferRemoteWithKernelCallsParams = {
                 chainId: opChainL1.id,
                 token: tokenAHypERC20Collateral.address,
@@ -226,7 +224,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             expect(bridgeSwapCalls.calls.length).toBe(1);
             // OwnableExecutor.executeBatchOnOwnedAccount(kernelAddress, calls)
             expect(bridgeSwapCalls.calls[0]).toBeDefined();
-            expect(bridgeSwapCalls.calls[0].to).toBe(LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor);
+            expect(bridgeSwapCalls.calls[0].to).toBe(LOCAL_KERNEL_CONTRACTS.execute);
 
             const bridgeAndSwapReceipt = await opChainAClient.waitForTransactionReceipt({
                 hash: await anvilClientRemote.sendTransaction(omit(bridgeSwapCalls.calls[0], "account")),
