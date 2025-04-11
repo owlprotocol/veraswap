@@ -132,13 +132,13 @@ export async function getBridgeSwapCalls(
         ...remoteSwapParams,
     };
 
+    await switchChain(wagmiConfig, { chainId: destination });
+
     const { calls: swapRemoteCalls } = await getSwapCalls(queryClient, wagmiConfig, swapParams);
 
     const remoteCallData = encodeCallArgsBatch(swapRemoteCalls);
 
-    await switchChain(wagmiConfig, { chainId: destination });
-
-    // @ts-expect-error  queryKeyHashFn should exist and is needed to serialize a bigint
+    // @ts-expect-error queryKeyHashFn should exist and is needed to serialize a bigint
     const nonce = await queryClient.fetchQuery({
         ...readContractQueryOptions(wagmiConfig, {
             chainId: destination,
