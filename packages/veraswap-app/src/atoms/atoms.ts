@@ -25,6 +25,8 @@ import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
+export type TransactionStepId = "swap" | "bridge" | "sendOrigin" | "transferRemote";
+
 export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
 
 export enum SwapStep {
@@ -162,20 +164,14 @@ export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
 
 export const transactionModalOpenAtom = atom<boolean>(false);
 export const transactionStepsAtom = atom<TransactionStep[]>([]);
-export const currentTransactionStepIdAtom = atom<string | undefined>(undefined);
-export const transactionHashesAtom = atom<{
-    swap?: string;
-    bridge?: string;
-    sendOrigin?: string;
-    transferRemote?: string;
-}>({});
+export const currentTransactionStepIdAtom = atom<TransactionStepId | undefined>(undefined);
+export const transactionHashesAtom = atom<Record<TransactionStepId, string | undefined>>(
+    {} as Record<TransactionStepId, string | undefined>,
+);
+
 export const updateTransactionStepAtom = atom(
     null,
-    (
-        get,
-        set,
-        update: { id: "swap" | "bridge" | "sendOrigin" | "transferRemote"; status: TransactionStep["status"] },
-    ) => {
+    (get, set, update: { id: TransactionStepId; status: TransactionStep["status"] }) => {
         const steps = get(transactionStepsAtom);
         const updatedSteps = steps.map((step) => (step.id === update.id ? { ...step, status: update.status } : step));
         set(transactionStepsAtom, updatedSteps);

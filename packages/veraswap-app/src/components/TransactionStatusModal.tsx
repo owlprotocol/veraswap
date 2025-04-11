@@ -3,9 +3,10 @@ import { Chain } from "viem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { cn } from "@/lib/utils.js";
+import { TransactionStepId } from "@/atoms/atoms.js";
 
 export type TransactionStep = {
-    id: "swap" | "bridge" | "sendOrigin" | "transferRemote";
+    id: TransactionStepId;
     title: string;
     description: string;
     status: "pending" | "processing" | "success" | "error";
