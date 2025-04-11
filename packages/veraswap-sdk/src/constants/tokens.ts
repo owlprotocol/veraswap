@@ -2,10 +2,11 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
-import { getHypERC20Address, getHypERC20CollateralAddress, getMailboxAddress } from "./hyperlane.js";
+import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
 import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/chains";
+import invariant from "tiny-invariant";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -47,16 +48,19 @@ export function connectTokens<T extends { chainId: number; address: Address } = 
  */
 export function createMockERC20WarpRoute({
     token,
-    connectionChainIds,
+    mailboxByChain,
     msgSender,
 }: {
     token: TokenBase<"MockERC20">;
-    connectionChainIds: number[];
+    mailboxByChain: Record<number, Address>;
     msgSender?: Address;
 }): [HypERC20CollateralToken, ...HypERC20Token[]] {
+    const mailbox = mailboxByChain[token.chainId];
+    invariant(mailbox != undefined, `Mailbox not found for token chainId ${token.chainId}`);
+
     const hypERC20CollateralAddress = getHypERC20CollateralAddress({
         erc20: token.address,
-        mailbox: getMailboxAddress({ chainId: token.chainId }),
+        mailbox,
     });
     const hypERC20Collateral: HypERC20CollateralToken = {
         ...token,
@@ -66,10 +70,16 @@ export function createMockERC20WarpRoute({
         connections: [],
     };
 
-    const hypERC20s = connectionChainIds.map((chainId) => {
+    const connections = Object.entries(mailboxByChain)
+        .filter(([chainId]) => chainId != `${token.chainId}`)
+        .map(([chainId, mailbox]) => {
+            return { chainId: parseInt(chainId), mailbox };
+        });
+
+    const hypERC20s = connections.map(({ chainId, mailbox }) => {
         const address = getHypERC20Address({
             decimals: token.decimals,
-            mailbox: getMailboxAddress({ chainId }),
+            mailbox,
             totalSupply: 0n,
             name: token.name,
             symbol: token.symbol,
@@ -122,11 +132,19 @@ const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia,
 export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToken)[] = [
     ...createMockERC20WarpRoute({
         token: localMockTokens[0],
-        connectionChainIds: [opChainA.id, opChainB.id],
+        mailboxByChain: {
+            [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
+            [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
+            [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
+        },
     }),
     ...createMockERC20WarpRoute({
         token: localMockTokens[1],
-        connectionChainIds: [opChainA.id, opChainB.id],
+        mailboxByChain: {
+            [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
+            [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
+            [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
+        },
     }),
     ...ethNativeTokens,
 ];
