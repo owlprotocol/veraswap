@@ -74,10 +74,14 @@ export async function getTransferRemoteWithKernelCalls(
         approveAmount,
         permit2,
     } = params;
+    invariant(
+        tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken",
+        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral or NativeToken`,
+    );
+
     if (!params.contracts) {
         invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
     }
-
     const contracts = params.contracts ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -85,10 +89,7 @@ export async function getTransferRemoteWithKernelCalls(
     };
     const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
-    if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
-        throw new Error(`Unsupported standard for bridging: ${tokenStandard}`);
-    }
-
+    // KERNEL ACCOUNT CONFIGURATION
     // Create account if needed
     const createAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
         chainId,
@@ -96,7 +97,6 @@ export async function getTransferRemoteWithKernelCalls(
         ...params.createAccount,
     });
     const kernelAddress = createAccountCalls.kernelAddress;
-
     // Add ERC7579Router as owner of the kernelAddress calls
     const executorAddOwnerCallsPromise = getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
         chainId,
@@ -111,7 +111,8 @@ export async function getTransferRemoteWithKernelCalls(
         router: contracts.erc7579Router,
         owners: erc7579RouterOwners,
     });
-    // Bridge calls
+
+    // BRIDGE CALLS
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
         // Assume that if the token is native, we are using the Orbiter bridge
