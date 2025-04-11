@@ -28,7 +28,7 @@ import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
 } from "./getTransferRemoteWithKernelCalls.js";
-import { getMailboxAddress, LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
+import { getMailboxAddress } from "../constants/hyperlane.js";
 
 describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -209,6 +209,11 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                createAccountRemote: {
+                    initData: kernelInitData,
+                    salt: kernelSalt,
+                    factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                },
                 remoteSwapParams: {
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: amount,
@@ -218,8 +223,6 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
                     zeroForOne,
                 },
-                originERC7579ExecutorRouter: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].erc7579Router,
-                remoteERC7579ExecutorRouter: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
             });
             expect(bridgeSwapCalls.calls.length).toBe(1);
             // OwnableExecutor.executeBatchOnOwnedAccount(kernelAddress, calls)
@@ -235,7 +238,6 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             expect(bridgeMessage2).toBeDefined();
             expect(swapMessage).toBeDefined();
 
-            // TODO: relay message
             const relayBridgeMessage2Hash = await relayHyperlaneMessage({
                 mailboxAddress: opL1Mailbox,
                 message: bridgeMessage2,

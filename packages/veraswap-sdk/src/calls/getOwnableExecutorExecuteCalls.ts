@@ -64,9 +64,9 @@ export async function getOwnableExecutorExecuteCalls(
                 : "executeOnOwnedAccountWithSignature";
         const signatureExecution = {
             account: ownableExecutorCallData.account,
-            nonce: ownableExecutorCallData.nonce,
-            validAfter: ownableExecutorCallData.validAfter,
-            validUntil: ownableExecutorCallData.validUntil,
+            nonce: ownableExecutorCallData.nonce!,
+            validAfter: ownableExecutorCallData.validAfter!,
+            validUntil: ownableExecutorCallData.validUntil!,
             value: ownableExecutorCallData.value,
             callData: ownableExecutorCallData.callData,
         };

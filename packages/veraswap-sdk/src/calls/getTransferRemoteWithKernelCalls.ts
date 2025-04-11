@@ -175,8 +175,7 @@ export async function getTransferRemoteWithKernelCalls(
     //TODO: Additional util for Execute.sol contract
     // Execute batched calls
     const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
-    const deployAndExecuteCalls = encodeCallArgsBatch(executeCalls);
-    // Sum value of all calls
+    const executeCallsBatched = encodeCallArgsBatch(executeCalls);
     const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     // Execute batch
@@ -186,7 +185,7 @@ export async function getTransferRemoteWithKernelCalls(
         data: encodeFunctionData({
             abi: Execute.abi,
             functionName: "execute",
-            args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), deployAndExecuteCalls],
+            args: [getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }), executeCallsBatched],
         }),
         value,
     };

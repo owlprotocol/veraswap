@@ -232,8 +232,11 @@ export async function getTransaction(
                     salt: zeroHash,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
-                remoteERC7579ExecutorRouter,
-                originERC7579ExecutorRouter,
+                createAccountRemote: {
+                    initData,
+                    salt: zeroHash,
+                    factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                },
                 remoteSwapParams: {
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: orbiterAmountOut ?? amountIn,
