@@ -64,4 +64,4 @@
 	url = https://github.com/zerodevapp/kernel
 [submodule "tools/scoutup"]
 	path = tools/scoutup
-	url = https://github.com/blockscout/scoutup.git
+	url = https://github.com/owlprotocol/scoutup.git
