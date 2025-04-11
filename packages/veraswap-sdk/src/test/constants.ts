@@ -4,6 +4,8 @@ import { opChainA, opChainL1 } from "../chains/supersim.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { getHypERC7570RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
+import { createMockERC20WarpRoute, getMockERC20Address } from "../constants/tokens.js";
+import { HypERC20CollateralToken, HypERC20Token, TokenBase } from "../types/Token.js";
 
 export function getMockMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({
@@ -45,3 +47,41 @@ export const MOCK_MAILBOX_CONTRACTS = {
         }),
     },
 };
+
+// Same MockERC20 tokens as in local development but we copy over data
+// in case we change anything there that could break tests
+export const mockMailboxMockERC20Tokens: TokenBase<"MockERC20">[] = [
+    {
+        standard: "MockERC20",
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Token A", symbol: "A", decimals: 18 }),
+        name: "Token A",
+        symbol: "A",
+        decimals: 18,
+    },
+    {
+        standard: "MockERC20",
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Token B", symbol: "B", decimals: 18 }),
+        name: "Token B",
+        symbol: "B",
+        decimals: 18,
+    },
+];
+
+export const MOCK_MAILBOX_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
+    ...createMockERC20WarpRoute({
+        token: mockMailboxMockERC20Tokens[0],
+        mailboxByChain: {
+            [opChainL1.id]: MOCK_MAILBOX_CONTRACTS[opChainL1.id].mailbox,
+            [opChainA.id]: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
+        },
+    }),
+    ...createMockERC20WarpRoute({
+        token: mockMailboxMockERC20Tokens[1],
+        mailboxByChain: {
+            [opChainL1.id]: MOCK_MAILBOX_CONTRACTS[opChainL1.id].mailbox,
+            [opChainA.id]: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
+        },
+    }),
+];
