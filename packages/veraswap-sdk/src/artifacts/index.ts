@@ -21,6 +21,7 @@ export { KernelFactory } from "./KernelFactory.js";
 export { Mailbox } from "./Mailbox.js";
 export { MockERC20 } from "./MockERC20.js";
 export { MockMailbox } from "./MockMailbox.js";
+export { MockSuperchainERC20 } from "./MockSuperchainERC20.js";
 export { NoopIsm } from "./NoopIsm.js";
 export { OwnableSignatureExecutor } from "./OwnableSignatureExecutor.js";
 export { PausableHook } from "./PausableHook.js";
