@@ -23,7 +23,7 @@ import {
     getBridgeSwapWithKernelCalls,
     GetBridgeSwapWithKernelCallsParams,
 } from "../calls/getBridgeSwapWithKernelCalls.js";
-import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
+import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -205,10 +205,11 @@ export async function getTransaction(
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
+            // TODO: fix this for non local env
             const originERC7579ExecutorRouter =
-                MOCK_MAILBOX_CONTRACTS[tokenIn.chainId as keyof typeof MOCK_MAILBOX_CONTRACTS]?.erc7579Router;
+                LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as keyof typeof LOCAL_HYPERLANE_CONTRACTS]?.erc7579Router;
             const remoteERC7579ExecutorRouter =
-                MOCK_MAILBOX_CONTRACTS[tokenOut.chainId as keyof typeof MOCK_MAILBOX_CONTRACTS]?.erc7579Router;
+                LOCAL_HYPERLANE_CONTRACTS[tokenOut.chainId as keyof typeof LOCAL_HYPERLANE_CONTRACTS]?.erc7579Router;
 
             if (!originERC7579ExecutorRouter) {
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenIn.chainId}`);

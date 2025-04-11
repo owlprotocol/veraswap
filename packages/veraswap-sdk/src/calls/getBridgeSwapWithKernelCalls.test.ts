@@ -22,13 +22,13 @@ import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { entryPoint07Address } from "viem/account-abstraction";
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
 import { omit } from "lodash-es";
-import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
 import { getHyperlaneMessagesFromReceipt } from "../utils/getHyperlaneMessagesFromReceipt.js";
 import { relayHyperlaneMessage } from "../hyperlane/relayHyperlaneMessage.js";
 import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
 } from "./getTransferRemoteWithKernelCalls.js";
+import { getMailboxAddress, LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 
 describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -136,6 +136,9 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 args: [tokenAHypERC20Collateral.address],
             });
 
+            const opChainAMailbox = getMailboxAddress({ chainId: opChainA.id });
+            const opL1Mailbox = getMailboxAddress({ chainId: opChainL1.id });
+
             const amount = parseUnits("1", tokenA.decimals);
 
             // TODO: app
@@ -172,7 +175,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             const emptyMetadata = "0x";
 
             const relayBridgeMessageHash = await relayHyperlaneMessage({
-                mailboxAddress: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
+                mailboxAddress: opChainAMailbox,
                 message: bridgeMessage,
                 metadata: emptyMetadata,
                 walletClient: anvilClientRemote,
@@ -217,8 +220,8 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
                     zeroForOne,
                 },
-                originERC7579ExecutorRouter: MOCK_MAILBOX_CONTRACTS[opChainA.id].erc7579Router,
-                remoteERC7579ExecutorRouter: MOCK_MAILBOX_CONTRACTS[opChainL1.id].erc7579Router,
+                originERC7579ExecutorRouter: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].erc7579Router,
+                remoteERC7579ExecutorRouter: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
             });
             expect(bridgeSwapCalls.calls.length).toBe(1);
             // OwnableExecutor.executeBatchOnOwnedAccount(kernelAddress, calls)
@@ -236,25 +239,25 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
 
             // TODO: relay message
             const relayBridgeMessage2Hash = await relayHyperlaneMessage({
-                mailboxAddress: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
+                mailboxAddress: opL1Mailbox,
                 message: bridgeMessage2,
                 metadata: emptyMetadata,
                 walletClient: anvilClientRemote,
             });
 
-            await opChainAClient.waitForTransactionReceipt({ hash: relayBridgeMessage2Hash });
+            await opChainL1Client.waitForTransactionReceipt({ hash: relayBridgeMessage2Hash });
 
             const relaySwapMessageHash = await relayHyperlaneMessage({
-                mailboxAddress: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
+                mailboxAddress: opL1Mailbox,
                 message: swapMessage,
                 metadata: emptyMetadata,
                 walletClient: anvilClientRemote,
             });
 
-            await opChainAClient.waitForTransactionReceipt({ hash: relaySwapMessageHash });
+            await opChainL1Client.waitForTransactionReceipt({ hash: relaySwapMessageHash });
 
             // TODO: check balance of token B on op l1
-            const postCollateralBalance = await opChainAClient.readContract({
+            const postCollateralBalance = await opChainL1Client.readContract({
                 address: tokenB.address,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
