@@ -8,11 +8,7 @@ import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { GetCallsReturnType } from "./getCalls.js";
 import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithKernelCalls.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
-import {
-    ERC7579RouterMessage,
-    ERC7579ExecutionMode,
-    ERC7579RouterBaseMessage,
-} from "../smartaccount/ERC7579ExecutorRouter.js";
+import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { PoolKey } from "@uniswap/v4-sdk";
 import { TokenStandard } from "../types/Token.js";
 import { Execute } from "../artifacts/Execute.js";
@@ -192,18 +188,10 @@ export async function getBridgeSwapWithKernelCalls(
 
     const { calls: swapRemoteCalls } = await getSwapCalls(queryClient, wagmiConfig, swapParams);
 
-    const [
-        executorAddOwnerCalls,
-        erc7579RouterSetOwnerCalls,
-        executorAddOwnerRemoteCalls,
-        erc7579RouterSetOwnerRemoteCalls,
-    ] = await Promise.all([
-        executorAddOwnerCallsPromise,
-        erc7579RouterSetOwnerCallsPromise,
+    const [executorAddOwnerRemoteCalls, erc7579RouterSetOwnerRemoteCalls] = await Promise.all([
         executorAddOwnerCallsRemotePromise,
         erc7579RouterSetOwnerCallsRemotePromise,
     ]);
-    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
     const kernelRemoteCalls = [
         ...executorAddOwnerRemoteCalls.calls,
         ...erc7579RouterSetOwnerRemoteCalls.calls,
@@ -224,21 +212,22 @@ export async function getBridgeSwapWithKernelCalls(
 
     if (!executorAddOwnerRemoteCalls.isOwner || !isERC7579Owner) {
         // Use signature execution on ERC7579Router (requires chain switch)
-        await switchChain(wagmiConfig, { chainId: destination });
+        //TODO: Is this needed ???
+        // await switchChain(wagmiConfig, { chainId: destination });
     }
 
-    // ERC7579 Router execution on remote account
+    // ERC7579 Router execution data on remote account
     const remoteExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, {
         chainId: destination,
         account: contractsRemote.erc7579Router, // caller is erc7579Router
-        calls: swapRemoteCalls,
+        calls: kernelRemoteCalls,
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress: kernelAddressRemote,
     });
 
     let executionMode: ERC7579ExecutionMode;
-    if ("signature" in remoteExecutorCallData) {
+    if (remoteExecutorCallData.signature) {
         executionMode =
             remoteExecutorCallData.callType === CALL_TYPE.BATCH
                 ? ERC7579ExecutionMode.BATCH_SIGNATURE
@@ -249,7 +238,7 @@ export async function getBridgeSwapWithKernelCalls(
                 ? ERC7579ExecutionMode.BATCH
                 : ERC7579ExecutionMode.SINGLE;
     }
-
+    // ERC7579 Router message
     const messageParams: ERC7579RouterBaseMessage = {
         owner: account,
         account: remoteExecutorCallData.account,
@@ -273,11 +262,11 @@ export async function getBridgeSwapWithKernelCalls(
             messageParams.initData ?? "0x",
             messageParams.initSalt ?? zeroHash,
             messageParams.executionMode,
-            messageParams.callData!, //optional because of NOOP
-            messageParams.nonce!,
-            messageParams.validAfter!,
-            messageParams.validUntil!,
-            messageParams.signature!,
+            messageParams.callData ?? "0x", //optional because of NOOP
+            messageParams.nonce ?? 0n,
+            messageParams.validAfter!, //should be defined
+            messageParams.validUntil!, //should be defined
+            messageParams.signature ?? "0x",
             "0x",
             zeroAddress,
         ],
@@ -293,12 +282,23 @@ export async function getBridgeSwapWithKernelCalls(
         value: tokenStandard === "NativeToken" ? amount + bridgePayment : bridgePayment,
     };
 
+    const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([
+        executorAddOwnerCallsPromise,
+        erc7579RouterSetOwnerCallsPromise,
+    ]);
+    const kernelCalls = [
+        ...executorAddOwnerCalls.calls,
+        ...erc7579RouterSetOwnerCalls.calls,
+        ...bridgeCalls,
+        callRemote,
+    ];
+
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
         const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
             chainId,
             account,
-            calls: [...transferRemoteCalls.calls, callRemote],
+            calls: kernelCalls,
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
@@ -306,21 +306,22 @@ export async function getBridgeSwapWithKernelCalls(
 
         return { calls: executeOnOwnedAccount.calls };
     }
+
     // Deploy account, and execute via signature using the Execute contract
     const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
         chainId,
         account: contracts.execute,
-        calls: [...transferRemoteCalls.calls, callRemote],
+        calls: kernelCalls,
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,
     });
 
+    //TODO: Additional util for Execute.sol contract
     // Execute batched calls
     const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
-
-    const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
     const executeCallsBatched = encodeCallArgsBatch(executeCalls);
+    const value = executeCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     // Execute batch
     const executeCall = {
