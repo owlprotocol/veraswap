@@ -2,7 +2,6 @@ import { ProcessId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
 import { Address, Hex, zeroAddress } from "viem";
 import { useWatchContractEvent } from "wagmi";
 import { Token } from "@owlprotocol/veraswap-sdk";
-import { tokenOutAtom, hyperlaneMailboxChainOut } from "@/atoms/index.js";
 
 export function useWatchMessageProcessed(
     messageId: Hex | null,

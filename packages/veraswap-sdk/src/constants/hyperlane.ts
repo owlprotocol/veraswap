@@ -43,7 +43,7 @@ export function getHyperlaneContracts({ chainId }: { chainId: number }) {
     };
 }
 
-export function getHypERC7570RouterAddress({
+export function getHypERC7579RouterAddress({
     mailbox,
     ism,
     executor,
@@ -73,7 +73,7 @@ const hyperlaneCoreContracts = {
 export const LOCAL_HYPERLANE_CONTRACTS = {
     [opChainL1.id]: {
         ...hyperlaneCoreContracts[opChainL1.id],
-        erc7579Router: getHypERC7570RouterAddress({
+        erc7579Router: getHypERC7579RouterAddress({
             mailbox: hyperlaneCoreContracts[opChainL1.id].mailbox,
             ism: zeroAddress,
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -82,7 +82,7 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
     },
     [opChainA.id]: {
         ...hyperlaneCoreContracts[opChainA.id],
-        erc7579Router: getHypERC7570RouterAddress({
+        erc7579Router: getHypERC7579RouterAddress({
             mailbox: hyperlaneCoreContracts[opChainA.id].mailbox,
             ism: zeroAddress,
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -91,7 +91,7 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
     },
     [opChainB.id]: {
         ...hyperlaneCoreContracts[opChainB.id],
-        erc7579Router: getHypERC7570RouterAddress({
+        erc7579Router: getHypERC7579RouterAddress({
             mailbox: hyperlaneCoreContracts[opChainB.id].mailbox,
             ism: zeroAddress,
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,

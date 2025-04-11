@@ -14,6 +14,8 @@ export interface GetOwnableExecutorAddOwnerCallsParams extends GetCallsParams {
 }
 
 export interface GetOwnableExecutorAddOwnerCallsReturnType extends GetCallsReturnType {
+    isOwner: boolean;
+    isInitialized: boolean;
     owners: readonly Address[];
 }
 
@@ -30,6 +32,31 @@ export async function getOwnableExecutorAddOwnerCalls(
 ): Promise<GetOwnableExecutorAddOwnerCallsReturnType> {
     const { chainId, account, executor, owner } = params;
 
+    const isInitialized = await queryClient.fetchQuery(
+        readContractQueryOptions(wagmiConfig, {
+            chainId,
+            address: executor,
+            abi: OwnableSignatureExecutor.abi,
+            functionName: "isInitialized",
+            args: [account],
+        }),
+    );
+
+    if (!isInitialized) {
+        // Skip `getOwners` call as it will revert
+        const call = {
+            account,
+            to: executor,
+            data: encodeFunctionData({
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "addOwner",
+                args: [owner],
+            }),
+            value: 0n,
+        };
+        return { isInitialized, isOwner: false, owners: [], calls: [call] };
+    }
+
     const owners = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
@@ -41,7 +68,7 @@ export async function getOwnableExecutorAddOwnerCalls(
     );
 
     if (owners.includes(owner)) {
-        return { owners, calls: [] };
+        return { isInitialized, isOwner: true, owners, calls: [] };
     }
 
     const call = {
@@ -54,5 +81,5 @@ export async function getOwnableExecutorAddOwnerCalls(
         }),
         value: 0n,
     };
-    return { owners, calls: [call] };
+    return { isInitialized, isOwner: false, owners, calls: [call] };
 }

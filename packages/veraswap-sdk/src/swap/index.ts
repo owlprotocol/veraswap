@@ -3,6 +3,7 @@ export * from "./getPermitTransferFromData.js";
 export * from "./getSmartAccountSwapCalls.js";
 export * from "./getHyperlaneSweepBridgeCallTargetParams.js";
 export * from "./getSuperchainBridgeCallTargetParams.js";
+export * from "./getSwapCalls.js";
 export * from "./getSwapAndSuperchainBridgeTransaction.js";
 export * from "./getSwapAndHyperlaneBridgeTransaction.js";
 export * from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
