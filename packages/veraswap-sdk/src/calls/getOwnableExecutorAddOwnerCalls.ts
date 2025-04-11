@@ -14,6 +14,7 @@ export interface GetOwnableExecutorAddOwnerCallsParams extends GetCallsParams {
 }
 
 export interface GetOwnableExecutorAddOwnerCallsReturnType extends GetCallsReturnType {
+    isOwner: boolean;
     isInitialized: boolean;
     owners: readonly Address[];
 }
@@ -53,7 +54,7 @@ export async function getOwnableExecutorAddOwnerCalls(
             }),
             value: 0n,
         };
-        return { isInitialized, owners: [], calls: [call] };
+        return { isInitialized, isOwner: false, owners: [], calls: [call] };
     }
 
     const owners = await queryClient.fetchQuery(
@@ -67,7 +68,7 @@ export async function getOwnableExecutorAddOwnerCalls(
     );
 
     if (owners.includes(owner)) {
-        return { isInitialized, owners, calls: [] };
+        return { isInitialized, isOwner: true, owners, calls: [] };
     }
 
     const call = {
@@ -80,5 +81,5 @@ export async function getOwnableExecutorAddOwnerCalls(
         }),
         value: 0n,
     };
-    return { isInitialized, owners, calls: [call] };
+    return { isInitialized, isOwner: false, owners, calls: [call] };
 }
