@@ -2336,6 +2336,26 @@ export const functions = [
     },
     {
         type: "function",
+        name: "crosschainBurn",
+        inputs: [
+            { name: "_from", type: "address", internalType: "address" },
+            { name: "_amount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "crosschainMint",
+        inputs: [
+            { name: "_to", type: "address", internalType: "address" },
+            { name: "_amount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "accountId",
         inputs: [],
         outputs: [{ name: "accountImplementationId", type: "string", internalType: "string" }],

@@ -431,6 +431,26 @@ export const events = [
     },
     {
         type: "event",
+        name: "CrosschainBurn",
+        inputs: [
+            { name: "from", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "CrosschainMint",
+        inputs: [
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "ModuleInstalled",
         inputs: [
             { name: "moduleTypeId", type: "uint256", indexed: false, internalType: "uint256" },
