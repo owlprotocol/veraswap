@@ -2,7 +2,7 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { opChainA, opChainL1 } from "../chains/supersim.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
-import { getHypERC7570RouterAddress } from "../constants/hyperlane.js";
+import { getHypERC7579RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { createMockERC20WarpRoute, getMockERC20Address } from "../constants/tokens.js";
 import { HypERC20CollateralToken, HypERC20Token, TokenBase } from "../types/Token.js";
@@ -26,7 +26,7 @@ export const MOCK_MAILBOX_CONTRACTS = {
         mailbox: getMockMailboxAddress({ chainId: opChainL1.id }),
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
         kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
-        erc7579Router: getHypERC7570RouterAddress({
+        erc7579Router: getHypERC7579RouterAddress({
             mailbox: getMockMailboxAddress({ chainId: opChainL1.id }),
             ism: zeroAddress,
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -38,7 +38,7 @@ export const MOCK_MAILBOX_CONTRACTS = {
         //TODO: Re-deploy with salt(1)
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
         kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
-        erc7579Router: getHypERC7570RouterAddress({
+        erc7579Router: getHypERC7579RouterAddress({
             mailbox: getMockMailboxAddress({ chainId: opChainA.id }),
             ism: zeroAddress,
             //TODO: Re-deploy with salt(1)
