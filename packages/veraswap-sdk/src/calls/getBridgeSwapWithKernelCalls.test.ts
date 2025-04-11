@@ -167,6 +167,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             });
 
             const [bridgeMessage] = getHyperlaneMessagesFromReceipt(bridgeReceipt);
+            expect(bridgeMessage).toBeDefined();
 
             const emptyMetadata = "0x";
 
