@@ -1,13 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
-import { signTypedData, switchChain } from "@wagmi/core";
-import { hashFn } from "@wagmi/core/query";
+import { switchChain } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
 import { Config } from "wagmi";
-import { readContractQueryOptions } from "wagmi/query";
-import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
-import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
-import { getSignatureExecutionData } from "../smartaccount/OwnableExecutor.js";
+import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { GetCallsReturnType } from "./getCalls.js";
 import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithKernelCalls.js";
@@ -36,6 +32,8 @@ export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCal
     contracts?: {
         execute: Address;
         ownableSignatureExecutor: Address;
+        remoteExecute: Address;
+        remoteOwnableSignatureExecutor: Address;
     };
     remoteSwapParams: {
         amountIn: bigint;
@@ -80,6 +78,8 @@ export async function getBridgeSwapCalls(
     const contracts = params.contracts ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+        remoteExecute: LOCAL_KERNEL_CONTRACTS.execute,
+        remoteOwnableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
     };
 
     if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
@@ -124,7 +124,16 @@ export async function getBridgeSwapCalls(
         });
     }
 
-    // From here refactor into a function
+    await switchChain(wagmiConfig, { chainId: destination });
+
+    // Create remote account if needed
+    const remoteCreateAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
+        chainId: destination,
+        account,
+        ...params.createAccount,
+    });
+    const remoteKernelAddress = remoteCreateAccountCalls.kernelAddress;
+
     const swapParams: GetSwapCallsParams = {
         account: kernelAddress,
         chainId: destination,
@@ -132,55 +141,66 @@ export async function getBridgeSwapCalls(
         ...remoteSwapParams,
     };
 
-    await switchChain(wagmiConfig, { chainId: destination });
-
     const { calls: swapRemoteCalls } = await getSwapCalls(queryClient, wagmiConfig, swapParams);
 
-    const remoteCallData = encodeCallArgsBatch(swapRemoteCalls);
-
-    // @ts-expect-error queryKeyHashFn should exist and is needed to serialize a bigint
-    const nonce = await queryClient.fetchQuery({
-        ...readContractQueryOptions(wagmiConfig, {
+    let remoteExecuteOnOwnedAccountCalls: CallArgs[];
+    if (remoteCreateAccountCalls.exists) {
+        const remoteExecuteCalls = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
             chainId: destination,
-            address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-            abi: OwnableSignatureExecutor.abi,
-            functionName: "getNonce",
-            args: [kernelAddress, 0n],
-        }),
-        queryKeyHashFn: hashFn,
-    });
+            account,
+            calls: swapRemoteCalls,
+            executor: contracts.ownableSignatureExecutor,
+            owner: account,
+            kernelAddress: remoteKernelAddress,
+        });
 
-    // Sign execution data
-    const signatureExecution = {
-        account: kernelAddress,
-        nonce,
-        validAfter: 0,
-        validUntil: 2 ** 48 - 1,
-        value: 0n,
-        callData: remoteCallData,
-    };
+        remoteExecuteOnOwnedAccountCalls = remoteExecuteCalls.calls;
+    } else {
+        // Deploy account, and execute via signature using the Execute contract
+        const remoteExecuteOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
+            chainId,
+            account: contracts.remoteExecute,
+            calls: swapRemoteCalls,
+            executor: contracts.remoteOwnableSignatureExecutor,
+            owner: account,
+            kernelAddress,
+        });
 
-    const signature = await signTypedData(wagmiConfig, {
-        account,
-        ...getSignatureExecutionData(signatureExecution, LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor, destination),
-    });
+        // Execute batched calls
+        const remoteExecuteCalls = [...remoteCreateAccountCalls.calls, ...remoteExecuteOnOwnedAccount.calls];
+
+        const value = remoteExecuteCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
+        const remoteExecuteCallsBatched = encodeCallArgsBatch(remoteExecuteCalls);
+
+        // Execute batch
+        const remoteExecuteCall = {
+            account,
+            to: contracts.execute,
+            data: encodeFunctionData({
+                abi: Execute.abi,
+                functionName: "execute",
+                args: [
+                    getExecMode({ callType: CALL_TYPE.BATCH, execType: EXEC_TYPE.DEFAULT }),
+                    remoteExecuteCallsBatched,
+                ],
+            }),
+            value,
+        };
+
+        remoteExecuteOnOwnedAccountCalls = [remoteExecuteCall];
+    }
 
     await switchChain(wagmiConfig, { chainId });
 
-    const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH_SIGNATURE> = {
+    const messageParams: ERC7579RouterMessage<ERC7579ExecutionMode.BATCH> = {
         owner: account,
         account: kernelAddress,
-        executionMode: ERC7579ExecutionMode.BATCH_SIGNATURE,
+        executionMode: ERC7579ExecutionMode.BATCH,
         initData: initData,
         initSalt: salt,
-        callData: signatureExecution.callData,
-        nonce: signatureExecution.nonce,
-        validAfter: signatureExecution.validAfter,
-        validUntil: signatureExecution.validUntil,
-        signature,
+        callData: encodeCallArgsBatch(remoteExecuteOnOwnedAccountCalls),
     };
 
-    // TODO: change this instead into a getOwnableExecutorExecuteCalls
     const callRemoteData = encodeFunctionData({
         abi: ERC7579ExecutorRouter.abi,
         functionName: "callRemote",
@@ -192,10 +212,10 @@ export async function getBridgeSwapCalls(
             messageParams.initSalt ?? zeroHash,
             messageParams.executionMode,
             messageParams.callData,
-            messageParams.nonce,
-            messageParams.validAfter,
-            messageParams.validUntil,
-            messageParams.signature,
+            0n,
+            0,
+            0,
+            "0x",
             "0x",
             zeroAddress,
         ],
@@ -210,7 +230,6 @@ export async function getBridgeSwapCalls(
         data: callRemoteData,
         value: tokenStandard === "NativeToken" ? amount + bridgePayment : bridgePayment,
     };
-    // Until here refactor into a function
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
