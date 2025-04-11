@@ -2,7 +2,7 @@ import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { Address, encodeFunctionData, Hex } from "viem";
 
-import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
+import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
@@ -15,6 +15,10 @@ import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls
 import { TokenStandard } from "../types/Token.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
+import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
+import invariant from "tiny-invariant";
+import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
+import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     tokenStandard: TokenStandard;
@@ -39,7 +43,9 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     contracts?: {
         execute: Address;
         ownableSignatureExecutor: Address;
+        erc7579Router: Address;
     };
+    erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
     orbiterParams?: OrbiterParams;
 }
 
@@ -68,10 +74,16 @@ export async function getTransferRemoteWithKernelCalls(
         approveAmount,
         permit2,
     } = params;
+    if (!params.contracts) {
+        invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
+    }
+
     const contracts = params.contracts ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].erc7579Router,
     };
+    const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
     if (!(tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken")) {
         throw new Error(`Unsupported standard for bridging: ${tokenStandard}`);
@@ -85,7 +97,23 @@ export async function getTransferRemoteWithKernelCalls(
     });
     const kernelAddress = createAccountCalls.kernelAddress;
 
-    let transferRemoteCalls: GetCallsReturnType;
+    //TODO: Make concurrent (executor, erc7579Router, bridge calls)
+    // Add ERC7579Router as owner of the kernelAddress calls
+    const executorAddOwnerCalls = await getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
+        chainId,
+        account: kernelAddress, // Kernel address
+        executor: contracts.ownableSignatureExecutor,
+        owner: contracts.erc7579Router,
+    });
+    // Set owners on erc7579Router calls
+    const erc7579RouterSetOwnerCalls = await getExecutorRouterSetOwnersCalls(queryClient, wagmiConfig, {
+        chainId,
+        account: kernelAddress,
+        router: contracts.erc7579Router,
+        owners: erc7579RouterOwners,
+    });
+    // Bridge calls
+    let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
         // Assume that if the token is native, we are using the Orbiter bridge
         const orbiterCall = getOrbiterETHTransferTransaction({
@@ -93,13 +121,11 @@ export async function getTransferRemoteWithKernelCalls(
             amount,
             ...params.orbiterParams!,
         });
-
-        transferRemoteCalls = { calls: [{ ...orbiterCall, account: kernelAddress }] };
+        bridgeCalls = [{ ...orbiterCall, account: kernelAddress }];
     } else {
         // TODO: handle future case where we bridge USDC with orbiter
-
         // Encode transferRemote calls, pull funds from account if needed
-        transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
+        const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
             chainId,
             token,
             tokenStandard,
@@ -113,14 +139,17 @@ export async function getTransferRemoteWithKernelCalls(
             approveAmount,
             permit2,
         });
+        bridgeCalls = transferRemoteCalls.calls;
     }
+
+    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
         const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
             chainId,
             account,
-            calls: transferRemoteCalls.calls,
+            calls: kernelCalls,
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
@@ -133,7 +162,7 @@ export async function getTransferRemoteWithKernelCalls(
     const executeOnOwnedAccount = await getOwnableExecutorExecuteCalls(queryClient, wagmiConfig, {
         chainId,
         account: contracts.execute,
-        calls: transferRemoteCalls.calls,
+        calls: kernelCalls,
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,

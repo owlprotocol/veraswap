@@ -7,7 +7,6 @@ import { mock } from "@wagmi/connectors";
 import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
 
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
-import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
 import { Address, bytesToHex, createWalletClient, encodeFunctionData, Hex, LocalAccount, padHex } from "viem";
 import { getRandomValues } from "crypto";
 import { IERC20 } from "../artifacts/IERC20.js";
@@ -33,6 +32,8 @@ import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { mockMailboxMockERC20Tokens, MOCK_MAILBOX_TOKENS, MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
+import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 
 describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -150,6 +151,15 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                // Pre-configure account for future calls to support execution from 901
+                erc7579RouterOwners: [
+                    {
+                        owner: anvilAccount.address,
+                        domain: 901,
+                        router: LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router,
+                        enabled: true,
+                    },
+                ],
             });
             expect(transferRemoteCalls.calls.length).toBe(1);
             // OwnableExecutor.executeBatchOnOwnedAccount(kernelAddress, calls)
@@ -159,6 +169,26 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             await opChainL1Client.waitForTransactionReceipt({
                 hash: await anvilClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
             });
+
+            // Check owner set on Executor
+            const owners = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getOwners",
+                args: [kernelAddress],
+            });
+            expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(erc7579Router)").toContain(
+                LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+            );
+
+            // Check owners set on 7579Router
+            const isOwner = await opChainL1Client.readContract({
+                address: LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+                abi: ERC7579ExecutorRouter.abi,
+                functionName: "owners",
+                args: [kernelAddress, 901, LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router, anvilAccount.address],
+            });
+            expect(isOwner, `ERC7579Router.owner(kernelAddress, 901, erc7579Router 901, owner) == true`).toBe(true);
         });
 
         test("manual", async () => {
@@ -221,6 +251,15 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                // Pre-configure account for future calls to support execution from 901
+                erc7579RouterOwners: [
+                    {
+                        owner: anvilAccount.address,
+                        domain: 901,
+                        router: LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router,
+                        enabled: true,
+                    },
+                ],
             });
             expect(transferRemoteCalls.calls.length).toBe(1);
             // Execute.execute(...)
@@ -230,6 +269,26 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             await opChainL1Client.waitForTransactionReceipt({
                 hash: await anvilClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
             });
+
+            // Check owner set on Executor
+            const owners = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getOwners",
+                args: [kernelAddress],
+            });
+            expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(erc7579Router)").toContain(
+                LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+            );
+
+            // Check owners set on 7579Router
+            const isOwner = await opChainL1Client.readContract({
+                address: LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+                abi: ERC7579ExecutorRouter.abi,
+                functionName: "owners",
+                args: [kernelAddress, 901, LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router, anvilAccount.address],
+            });
+            expect(isOwner, `ERC7579Router.owner(kernelAddress, 901, erc7579Router 901, owner) == true`).toBe(true);
         });
 
         test("manual", async () => {

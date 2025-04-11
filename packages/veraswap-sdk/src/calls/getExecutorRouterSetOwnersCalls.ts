@@ -44,6 +44,10 @@ export async function getExecutorRouterSetOwnersCalls(
     );
     // Find all owner configs that do not match
     const ownerUpdates = owners.filter((owner, idx) => owner.enabled != isOwner[idx]);
+    if (ownerUpdates.length == 0) {
+        // Skip update if all owners are already in desired state
+        return { isOwner, calls: [] };
+    }
 
     const call = {
         account,
