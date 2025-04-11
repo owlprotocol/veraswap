@@ -97,16 +97,15 @@ export async function getTransferRemoteWithKernelCalls(
     });
     const kernelAddress = createAccountCalls.kernelAddress;
 
-    //TODO: Make concurrent (executor, erc7579Router, bridge calls)
     // Add ERC7579Router as owner of the kernelAddress calls
-    const executorAddOwnerCalls = await getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
+    const executorAddOwnerCallsPromise = getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
         chainId,
         account: kernelAddress, // Kernel address
         executor: contracts.ownableSignatureExecutor,
         owner: contracts.erc7579Router,
     });
     // Set owners on erc7579Router calls
-    const erc7579RouterSetOwnerCalls = await getExecutorRouterSetOwnersCalls(queryClient, wagmiConfig, {
+    const erc7579RouterSetOwnerCallsPromise = getExecutorRouterSetOwnersCalls(queryClient, wagmiConfig, {
         chainId,
         account: kernelAddress,
         router: contracts.erc7579Router,
@@ -142,6 +141,10 @@ export async function getTransferRemoteWithKernelCalls(
         bridgeCalls = transferRemoteCalls.calls;
     }
 
+    const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([
+        executorAddOwnerCallsPromise,
+        erc7579RouterSetOwnerCallsPromise,
+    ]);
     const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
 
     if (createAccountCalls.exists) {
