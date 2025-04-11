@@ -4,6 +4,7 @@ import { Address, zeroAddress } from "viem";
 export type TokenStandard =
     | "ERC20"
     | "MockERC20"
+    | "MockSuperchainERC20"
     | "HypERC20"
     | "HypERC20Collateral"
     | "SuperchainERC20"
@@ -52,6 +53,7 @@ export interface HypERC20CollateralToken extends TokenBase<"HypERC20Collateral">
 export type Token =
     | TokenBase<"ERC20">
     | TokenBase<"MockERC20">
+    | TokenBase<"MockSuperchainERC20">
     | TokenBase<"SuperchainERC20">
     | HypERC20Token
     | HypERC20CollateralToken
