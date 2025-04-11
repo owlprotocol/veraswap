@@ -19,7 +19,10 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
-import { getBridgeSwapCalls, GetBridgeSwapCallsParams } from "../calls/getBridgeSwapCalls.js";
+import {
+    getBridgeSwapWithKernelCalls,
+    GetBridgeSwapWithKernelCallsParams,
+} from "../calls/getBridgeSwapWithKernelCalls.js";
 import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
 
 export interface TransactionSwapOptions {
@@ -215,7 +218,7 @@ export async function getTransaction(
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenOut.chainId}`);
             }
 
-            const bridgeSwapParams: GetBridgeSwapCallsParams = {
+            const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
                 tokenStandard: tokenIn.standard,
@@ -242,7 +245,7 @@ export async function getTransaction(
                 orbiterParams,
             };
 
-            const result = await getBridgeSwapCalls(queryClient, wagmiConfig, bridgeSwapParams);
+            const result = await getBridgeSwapWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParams);
 
             return result.calls[0] as {
                 to: Address;

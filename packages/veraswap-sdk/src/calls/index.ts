@@ -1,7 +1,7 @@
 export * from "./ERC20/index.js";
 export * from "./Permit2/index.js";
 
-export * from "./getBridgeSwapCalls.js";
+export * from "./getBridgeSwapWithKernelCalls.js";
 export * from "./getCalls.js";
 export * from "./getExecutorRouterSetOwnersCalls.js";
 export * from "./getKernelFactoryCreateAccountCalls.js";
