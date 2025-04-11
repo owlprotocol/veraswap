@@ -19,7 +19,7 @@ import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAcco
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
 
-export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCallsParams {
+export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
     token: Address;
     destination: number;
@@ -54,10 +54,10 @@ export interface GetBridgeSwapCallsParams extends GetTransferRemoteWithKernelCal
  * @param _queryClient
  * @param _wagmiConfig
  */
-export async function getBridgeSwapCalls(
+export async function getBridgeSwapWithKernelCalls(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetBridgeSwapCallsParams,
+    params: GetBridgeSwapWithKernelCallsParams,
 ): Promise<GetCallsReturnType> {
     const {
         amount,
