@@ -184,7 +184,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 address: tokenARemoteAddress,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
+                args: [anvilAccount.address],
             });
 
             expect(postBridgeBalance).toBe(amount);
@@ -258,7 +258,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 address: tokenB.address,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
+                args: [anvilAccount.address],
             });
             expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         });
