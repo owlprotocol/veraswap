@@ -118,12 +118,7 @@ describe("smartaccount/ERC7579ExecutorRouter.test.ts", function () {
         });
         await opChainL1Client.waitForTransactionReceipt({ hash: hashCallRemote });
         // Process Hyperlane Message
-        const hashProcess = await walletClient.writeContract({
-            address: mockMailbox,
-            abi: MockMailbox.abi,
-            functionName: "processNextInboundMessage",
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: hashProcess });
+        await processNextInboundMessage(walletClient, { mailbox: mockMailbox });
 
         // Check account deployed
         const bytecode = await opChainL1Client.getCode({ address: kernelAddress });

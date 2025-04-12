@@ -30,7 +30,7 @@ import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAcco
 import { MAX_UINT_160, MAX_UINT_256 } from "../constants/uint256.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { mockMailboxMockERC20Tokens, MOCK_MAILBOX_TOKENS, MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
-import { MockMailbox } from "../artifacts/MockMailbox.js";
+import { processNextInboundMessage } from "../utils/MockMailbox.js";
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
@@ -393,13 +393,8 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         });
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         // Process Hyperlane Message
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.writeContract({
-                address: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
-                abi: MockMailbox.abi,
-                functionName: "processNextInboundMessage",
-            }),
-        });
+        await processNextInboundMessage(anvilClient, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox });
+
         // hypERC20 balance of recipient
         const hypERC20Balance = await opChainL1Client.readContract({
             address: tokenAHypERC20.address,

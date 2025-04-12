@@ -13,7 +13,7 @@ import { IERC20 } from "../artifacts/IERC20.js";
 import { omit } from "lodash-es";
 import { MAX_UINT_256 } from "../constants/uint256.js";
 import { PERMIT2_ADDRESS } from "../constants/uniswap.js";
-import { MockMailbox } from "../artifacts/MockMailbox.js";
+import { processNextInboundMessage } from "../utils/MockMailbox.js";
 import { MOCK_MAILBOX_TOKENS, MOCK_MAILBOX_CONTRACTS, mockMailboxMockERC20Tokens } from "../test/constants.js";
 
 describe("calls/getTransferRemoteCalls.test.ts", function () {
@@ -146,13 +146,7 @@ describe("calls/getTransferRemoteCalls.test.ts", function () {
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
 
         // Process Hyperlane Message
-        await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.writeContract({
-                address: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox,
-                abi: MockMailbox.abi,
-                functionName: "processNextInboundMessage",
-            }),
-        });
+        await processNextInboundMessage(anvilClient, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox });
 
         // hypERC20 balance of recipient
         const hypERC20Balance = await opChainL1Client.readContract({
