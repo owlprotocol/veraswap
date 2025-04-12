@@ -11,10 +11,6 @@ import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlane
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
-import {
-    getTransferRemoteWithKernelCalls,
-    GetTransferRemoteWithKernelCallsParams,
-} from "../calls/getTransferRemoteWithKernelCalls.js";
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
@@ -121,6 +117,8 @@ export async function getTransaction(
                 });
             }
 
+            // Disable for now to test out bridge_swap when kernel not deployed
+            /*
             if (tokenIn.standard === "HypERC20Collateral") {
                 const { queryClient, wagmiConfig, initData } = params;
 
@@ -153,6 +151,7 @@ export async function getTransaction(
                     value: bigint;
                 };
             }
+            */
 
             return getTransferRemoteCall({
                 address: tokenIn.address,
@@ -227,6 +226,16 @@ export async function getTransaction(
                 destination: tokenOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
+                contracts: {
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].erc7579Router,
+                },
+                contractsRemote: {
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenOut.chainId as 900 | 901].erc7579Router,
+                },
                 createAccount: {
                     initData,
                     salt: zeroHash,
@@ -237,6 +246,8 @@ export async function getTransaction(
                     salt: zeroHash,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                // erc7579RouterOwners: [],
+                // erc7579RouterOwnersRemote: [],
                 remoteSwapParams: {
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: orbiterAmountOut ?? amountIn,
