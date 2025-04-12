@@ -65,8 +65,8 @@ export async function getOwnableExecutorExecuteCalls(
         const signatureExecution = {
             account: ownableExecutorCallData.account,
             nonce: ownableExecutorCallData.nonce!,
-            validAfter: ownableExecutorCallData.validAfter!,
-            validUntil: ownableExecutorCallData.validUntil!,
+            validAfter: ownableExecutorCallData.validAfter,
+            validUntil: ownableExecutorCallData.validUntil,
             value: ownableExecutorCallData.value,
             callData: ownableExecutorCallData.callData,
         };
@@ -90,8 +90,8 @@ export type OwnableExecutorExecuteData =
     | {
         account: Address;
         nonce?: undefined;
-        validAfter?: undefined;
-        validUntil?: undefined;
+        validAfter: number;
+        validUntil: number;
         value: bigint;
         callData: Hex;
         callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE;
@@ -121,7 +121,15 @@ export async function getOwnableExecutorExecuteData(
     const callType = calls.length > 1 ? CALL_TYPE.BATCH : CALL_TYPE.SINGLE;
 
     if (account === owner) {
-        return { account: kernelAddress, value, callData: smartAccountCallData, callType };
+        return {
+            account: kernelAddress,
+            //TODO: Parametrize these
+            validAfter: 0,
+            validUntil: 2 ** 48 - 1,
+            value,
+            callData: smartAccountCallData,
+            callType,
+        };
     } else {
         // Account is not owner, execute via signature
         const nonce = await queryClient.fetchQuery(

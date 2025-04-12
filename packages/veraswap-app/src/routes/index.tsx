@@ -326,7 +326,10 @@ function Index() {
 
             const transaction = await getTransaction(transactionParams);
             // Switch back to chainIn (in case chain was changed when requesting signature)
-            await switchChainAsync({ chainId: chainIn!.id });
+            if (tokenIn) {
+                // Kinda weird to check this here
+                await switchChainAsync({ chainId: tokenIn.chainId });
+            }
 
             if (!transaction) {
                 toast({

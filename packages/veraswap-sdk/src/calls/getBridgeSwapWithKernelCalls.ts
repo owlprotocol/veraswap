@@ -238,11 +238,11 @@ export async function getBridgeSwapWithKernelCalls(
             address: contractsRemote.erc7579Router,
             abi: ERC7579ExecutorRouter.abi,
             functionName: "owners",
-            args: [account, chainId, contracts.erc7579Router, account],
+            args: [kernelAddressRemote, chainId, contracts.erc7579Router, account],
         }),
     );
     // If remote erc7579Router is an owner & it accepts messages from origin erc7579Router, use it as the executor owner
-    const remoteExecutorDirect = executorAddOwnerRemoteCalls.isOwner && !isERC7579Owner;
+    const remoteExecutorDirect = executorAddOwnerRemoteCalls.isOwner && isERC7579Owner;
 
     const remoteExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, {
         chainId: destination,
