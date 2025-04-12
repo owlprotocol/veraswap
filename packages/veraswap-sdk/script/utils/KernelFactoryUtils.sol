@@ -18,7 +18,7 @@ library KernelFactoryUtils {
     }
 
     function getOrCreate2(address implementation, bytes32 salt) internal returns (address addr, bool exists) {
-        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(implementation));
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(implementation), salt);
         if (!exists) {
             address deployed = address(new KernelFactory{salt: salt}(implementation));
             vm.assertEq(deployed, addr);

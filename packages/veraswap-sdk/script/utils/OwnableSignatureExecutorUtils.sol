@@ -18,7 +18,7 @@ library OwnableSignatureExecutorUtils {
     }
 
     function getOrCreate2(bytes32 salt) internal returns (address addr, bool exists) {
-        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode());
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(), salt);
         if (!exists) {
             address deployed = address(new OwnableSignatureExecutor{salt: salt}());
             vm.assertEq(deployed, addr);

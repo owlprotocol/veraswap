@@ -21,6 +21,8 @@ import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
+import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
+import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
@@ -194,7 +196,9 @@ contract DeployLocal is DeployCoreContracts {
             );
             // ERC7579ExecutorRouter
             CoreContracts storage contracts = chainContracts[chainIds[0]];
-            (address erc7579ExecutorRouterL1, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+
+            // L1 Executor Router
+            ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxL1,
                 address(0),
                 contracts.ownableSignatureExecutor,
@@ -202,10 +206,11 @@ contract DeployLocal is DeployCoreContracts {
             );
 
             // New implementations to avoid collisions
-            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(901));
-            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(901));
+            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
+            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
 
-            (address erc7579ExecutorRouterOpA, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+            // OPA Executor Router
+            ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxOpA,
                 address(0),
                 ownableSignatureExecutorOpA,
