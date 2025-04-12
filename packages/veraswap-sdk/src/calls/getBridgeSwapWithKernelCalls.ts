@@ -21,7 +21,6 @@ import invariant from "tiny-invariant";
 import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
-import { readContractQueryOptions } from "wagmi/query";
 
 export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
@@ -198,23 +197,6 @@ export async function getBridgeSwapWithKernelCalls(
     ];
 
     // REMOTE ERC7579Router swap execution
-    // Check if account set as owner on remote ERC7579Router
-    const isERC7579Owner = await queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
-            chainId,
-            address: contractsRemote.erc7579Router,
-            abi: ERC7579ExecutorRouter.abi,
-            functionName: "owners",
-            args: [account, chainId, contracts.erc7579Router, account],
-        }),
-    );
-
-    if (!executorAddOwnerRemoteCalls.isOwner || !isERC7579Owner) {
-        // Use signature execution on ERC7579Router (requires chain switch)
-        //TODO: Is this needed ???
-        // await switchChain(wagmiConfig, { chainId: destination });
-    }
-
     // ERC7579 Router execution data on remote account
     const remoteExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, {
         chainId: destination,

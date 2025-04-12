@@ -1,4 +1,4 @@
-import { Config, signTypedData } from "@wagmi/core";
+import { Config, signTypedData, switchChain } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { readContractQueryOptions } from "wagmi/query";
 import { Address, encodeFunctionData, TypedDataDomain } from "viem";
@@ -52,8 +52,8 @@ export async function getPermit2PermitCalls(
     invariant(minAmount <= MAX_UINT_160, "minAmount must be <= MAX_UINT_160");
     invariant(
         params.approveAmount === undefined ||
-            params.approveAmount === "MAX_UINT_160" ||
-            (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
+        params.approveAmount === "MAX_UINT_160" ||
+        (minAmount <= params.approveAmount && params.approveAmount <= MAX_UINT_160),
         "approveAmount must be minAmount <= approveAmount <= MAX_UINT_160",
     );
     const approveAmount = params.approveAmount == "MAX_UINT_160" ? MAX_UINT_160 : (params.approveAmount ?? minAmount);
@@ -101,6 +101,8 @@ export async function getPermit2PermitCalls(
         sigDeadline,
     };
     const permitData = AllowanceTransfer.getPermitData(permitSingle, PERMIT2_ADDRESS, chainId);
+
+    await switchChain(wagmiConfig, { chainId }); //signature request must be on same active chain
     const signature = await signTypedData(wagmiConfig, {
         account,
         domain: permitData.domain as TypedDataDomain,

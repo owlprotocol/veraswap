@@ -1,4 +1,4 @@
-import { Config, signTypedData } from "@wagmi/core";
+import { Config, signTypedData, switchChain } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 
 import { readContractQueryOptions } from "wagmi/query";
@@ -33,7 +33,7 @@ export async function getOwnableExecutorExecuteCalls(
     wagmiConfig: Config,
     params: GetOwnableExecutorExecuteCallsParams,
 ): Promise<GetOwnableExecutorExecuteCallsReturnType> {
-    const { chainId, account, executor, owner } = params;
+    const { account, executor } = params;
 
     // Compute execution data depending on if `account` === `owner`
     const ownableExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, params);
@@ -70,10 +70,6 @@ export async function getOwnableExecutorExecuteCalls(
             value: ownableExecutorCallData.value,
             callData: ownableExecutorCallData.callData,
         };
-        const signature = await signTypedData(wagmiConfig, {
-            account: owner,
-            ...getSignatureExecutionData(signatureExecution, executor, chainId),
-        });
 
         const executeOnOwnedAccountCall = {
             account,
@@ -81,7 +77,7 @@ export async function getOwnableExecutorExecuteCalls(
             data: encodeFunctionData({
                 abi: OwnableSignatureExecutor.abi,
                 functionName,
-                args: [signatureExecution, signature],
+                args: [signatureExecution, ownableExecutorCallData.signature!],
             }),
             value: signatureExecution.value,
         };
@@ -147,6 +143,8 @@ export async function getOwnableExecutorExecuteData(
             value,
             callData: smartAccountCallData,
         };
+
+        await switchChain(wagmiConfig, { chainId }); //signature request must be on same active chain
         const signature = await signTypedData(wagmiConfig, {
             account: owner,
             ...getSignatureExecutionData(signatureExecution, executor, chainId),
