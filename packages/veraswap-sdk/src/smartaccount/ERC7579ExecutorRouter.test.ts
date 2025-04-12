@@ -21,6 +21,7 @@ import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { ERC7579ExecutionMode, ERC7579RouterMessage } from "./ERC7579ExecutorRouter.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
+import { processNextInboundMessage } from "../utils/MockMailbox.js";
 /**
  * TODO: ERC7579 Router Tests
  * - Deploy Router with Mailbox set as the walletClient (fake Mailbox)

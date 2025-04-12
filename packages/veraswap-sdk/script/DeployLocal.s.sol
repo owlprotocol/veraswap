@@ -27,6 +27,7 @@ import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
@@ -177,6 +178,8 @@ contract DeployLocal is DeployCoreContracts {
             // MockMaibox HypERC20
             (address hypMockERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
             (address hypMockERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
+            IERC20(hypMockERC20TokenA).approve(address(Permit2Utils.permit2), type(uint256).max);
+            IERC20(hypMockERC20TokenB).approve(address(Permit2Utils.permit2), type(uint256).max);
             // Enroll remote routers
             TokenRouter(hypMockERC20CollateralTokenA).enrollRemoteRouter(
                 chainOpADomain,

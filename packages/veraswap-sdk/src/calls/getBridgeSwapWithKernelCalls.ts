@@ -169,7 +169,7 @@ export async function getBridgeSwapWithKernelCalls(
             account: kernelAddress,
             funder: account,
             destination,
-            recipient: kernelAddress,
+            recipient: kernelAddressRemote,
             amount,
             hookMetadata,
             hook,
@@ -221,7 +221,7 @@ export async function getBridgeSwapWithKernelCalls(
         chainId: destination,
         account: contractsRemote.erc7579Router, // caller is erc7579Router
         calls: kernelRemoteCalls,
-        executor: contracts.ownableSignatureExecutor,
+        executor: contractsRemote.ownableSignatureExecutor,
         owner: account,
         kernelAddress: kernelAddressRemote,
     });
