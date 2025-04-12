@@ -225,7 +225,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
 
             // 1. Send transaction on OpA
             // On chainA technically but here we are mocking with MockMailbox
-            const bridgeAndSwapReceipt = await opChainL1Client.waitForTransactionReceipt({
+            await opChainL1Client.waitForTransactionReceipt({
                 hash: await anvilClientL1.sendTransaction(omit(bridgeSwapCalls.calls[0], "account")),
             });
             await expect(

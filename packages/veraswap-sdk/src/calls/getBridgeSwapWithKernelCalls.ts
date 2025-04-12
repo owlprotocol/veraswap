@@ -1,5 +1,4 @@
 import { QueryClient } from "@tanstack/react-query";
-import { switchChain } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
 import { Config } from "wagmi";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";

@@ -10,7 +10,6 @@ import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, createWalletClient, parseEther } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
-import { MAX_UINT_256 } from "../constants/uint256.js";
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
