@@ -22,6 +22,7 @@ import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
 
+//TODO: Remove optional with hard-coded defaults
 export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
     token: Address;
@@ -87,7 +88,10 @@ export async function getBridgeSwapWithKernelCalls(
         invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
     }
     if (!params.contractsRemote) {
-        invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default remoteContracts");
+        invariant(
+            destination === 900 || destination === 901,
+            "Destination Chain ID must be 900 or 901 for default remoteContracts",
+        );
     }
     const contracts = params.contracts ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
@@ -97,12 +101,10 @@ export async function getBridgeSwapWithKernelCalls(
     const contractsRemote = params.contractsRemote ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].erc7579Router,
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[destination as 900 | 901].erc7579Router,
     };
-    const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
-    const erc7579RouterOwnersRemote = params.erc7579RouterOwnersRemote ?? [];
 
-    // KERNEL ACCOUNT CONFIGURATION
+    // KERNEL ACCOUNT CREATE
     // Create account if needed
     const createAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
         chainId,
@@ -110,6 +112,45 @@ export async function getBridgeSwapWithKernelCalls(
         ...params.createAccount,
     });
     const kernelAddress = createAccountCalls.kernelAddress;
+    // Create account if needed on remote chain
+    const createAccountRemoteCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
+        chainId: destination,
+        account, //TODO: This will get overriden
+        ...params.createAccountRemote,
+    });
+    const kernelAddressRemote = createAccountRemoteCalls.kernelAddress;
+
+    // KERNEL ACCOUNT CONFIGURATION
+    // Default to adding account & kernelAddress as owners
+    const erc7579RouterOwners = params.erc7579RouterOwners ?? [
+        {
+            domain: destination,
+            router: contractsRemote.erc7579Router,
+            owner: account,
+            enabled: true,
+        },
+        {
+            domain: destination,
+            router: contractsRemote.erc7579Router,
+            owner: kernelAddressRemote,
+            enabled: true,
+        },
+    ];
+    const erc7579RouterOwnersRemote = params.erc7579RouterOwnersRemote ?? [
+        {
+            domain: chainId,
+            router: contracts.erc7579Router,
+            owner: account,
+            enabled: true,
+        },
+        {
+            domain: chainId,
+            router: contracts.erc7579Router,
+            owner: kernelAddress,
+            enabled: true,
+        },
+    ];
+
     // Add ERC7579Router as owner of the kernelAddress calls
     const executorAddOwnerCallsPromise = getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
         chainId,
@@ -124,24 +165,16 @@ export async function getBridgeSwapWithKernelCalls(
         router: contracts.erc7579Router,
         owners: erc7579RouterOwners,
     });
-    // REMOTE KERNEL ACCOUNT CONFIGURATION
-    // Create account if needed on remote chain
-    const createAccountRemoteCalls = await getKernelFactoryCreateAccountCalls(queryClient, wagmiConfig, {
-        chainId: destination,
-        account, //TODO: This will get overriden
-        ...params.createAccountRemote,
-    });
-    const kernelAddressRemote = createAccountRemoteCalls.kernelAddress;
     // Add ERC7579Router as owner of the kernelAddress calls
     const executorAddOwnerCallsRemotePromise = getOwnableExecutorAddOwnerCalls(queryClient, wagmiConfig, {
-        chainId,
+        chainId: destination,
         account: kernelAddressRemote,
         executor: contractsRemote.ownableSignatureExecutor,
         owner: contractsRemote.erc7579Router,
     });
     // Set owners on erc7579Router calls
     const erc7579RouterSetOwnerCallsRemotePromise = getExecutorRouterSetOwnersCalls(queryClient, wagmiConfig, {
-        chainId,
+        chainId: destination,
         account: kernelAddressRemote,
         router: contractsRemote.erc7579Router,
         owners: erc7579RouterOwnersRemote,
@@ -198,6 +231,7 @@ export async function getBridgeSwapWithKernelCalls(
 
     // REMOTE ERC7579Router swap execution
     // ERC7579 Router execution data on remote account
+    // TODO: If remote erc7579Router is an owner, use it as the executor owner
     const remoteExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, {
         chainId: destination,
         account: contractsRemote.erc7579Router, // caller is erc7579Router
