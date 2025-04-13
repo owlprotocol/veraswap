@@ -1,6 +1,7 @@
 import { KernelPluginManager } from "@zerodev/sdk";
-import { Kernel } from "../artifacts/Kernel.js";
 import { encodeFunctionData, Hex, zeroAddress } from "viem";
+
+import { Kernel } from "../artifacts/Kernel.js";
 
 /**
  * Get Kernel v3.1 Init Data

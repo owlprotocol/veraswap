@@ -1,4 +1,5 @@
 import { parseEventLogs, TransactionReceipt } from "viem";
+
 import { Dispatch as dispatchEvent } from "../artifacts/Mailbox.js";
 
 export function getHyperlaneMessagesFromReceipt(receipt: TransactionReceipt) {

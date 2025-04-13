@@ -1,28 +1,29 @@
+import { IERC20 } from "@owlprotocol/contracts-hyperlane";
+import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
+import { Pool, Position, priceToClosestTick, V4PositionPlanner } from "@uniswap/v4-sdk";
 import {
+    Address,
     Chain,
     createPublicClient,
     createWalletClient,
+    encodeAbiParameters,
+    encodeFunctionData,
     Hex,
     http,
-    parseUnits,
-    nonceManager,
-    Address,
-    encodeFunctionData,
-    zeroAddress,
-    encodeAbiParameters,
     keccak256,
+    nonceManager,
+    parseUnits,
+    zeroAddress,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { IERC20 } from "@owlprotocol/contracts-hyperlane";
-import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
-import { Pool, V4PositionPlanner, priceToClosestTick, Position } from "@uniswap/v4-sdk";
-import { MockERC20 } from "../artifacts/MockERC20.js";
+
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
-import { IPositionManager } from "../artifacts/IPositionManager.js";
 import { IMulticall_v4 } from "../artifacts/IMulticall_v4.js";
-import { PoolKeyAbi } from "../types/PoolKey.js";
+import { IPositionManager } from "../artifacts/IPositionManager.js";
 import { IStateView } from "../artifacts/IStateView.js";
+import { MockERC20 } from "../artifacts/MockERC20.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, PERMIT2_ADDRESS, UNISWAP_CONTRACTS } from "../constants/index.js";
+import { PoolKeyAbi } from "../types/PoolKey.js";
 
 /**
  * Deploys:

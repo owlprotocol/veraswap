@@ -1,4 +1,5 @@
-import { WalletClient, Transport, Chain, Account, Hex, Address } from "viem";
+import { Account, Address, Chain, Hex, Transport, WalletClient } from "viem";
+
 import { Mailbox } from "../artifacts/Mailbox.js";
 
 export async function relayHyperlaneMessage(params: {

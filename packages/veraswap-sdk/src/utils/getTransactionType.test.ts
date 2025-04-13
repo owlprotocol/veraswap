@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
+
 import { LOCAL_POOLS, LOCAL_TOKENS, LOCAL_TOKENS_MAP } from "../constants/tokens.js";
+
 import { getTransactionType } from "./getTransactionType.js";
 
 describe("utils/getTransactionType.test.ts", function () {

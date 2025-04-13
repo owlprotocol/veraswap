@@ -1,18 +1,18 @@
-import { describe, expect, test, beforeEach } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { createConfig, http } from "@wagmi/core";
-import { QueryClient } from "@tanstack/react-query";
 import { omit } from "lodash-es";
-
-import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
-
-import { localMockTokens } from "../../constants/tokens.js";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, Chain, createWalletClient, parseEther, Transport, WalletClient } from "viem";
-import { MockERC20 } from "../../artifacts/MockERC20.js";
-import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { beforeEach, describe, expect, test } from "vitest";
+
 import { IERC20 } from "../../artifacts/IERC20.js";
+import { MockERC20 } from "../../artifacts/MockERC20.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { MAX_UINT_256 } from "../../constants/uint256.js";
+
+import { getERC20ApproveCalls } from "./getERC20ApproveCalls.js";
 
 describe("calls/getERC20ApproveCall.test.ts", function () {
     const config = createConfig({

@@ -1,11 +1,11 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
+import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
+
+import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 
 export interface GetExecutorRouterSetOwnersParams extends GetCallsParams {
     router: Address;

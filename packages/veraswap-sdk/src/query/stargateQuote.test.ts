@@ -1,6 +1,7 @@
 import { parseEther, zeroAddress } from "viem";
-import { stargateQuote, StargateQuoteParams } from "./stargateQuote.js";
 import { describe, expect, test } from "vitest";
+
+import { stargateQuote, StargateQuoteParams } from "./stargateQuote.js";
 
 describe("stargateQuote.test.ts", function () {
     test("Get quote", async () => {

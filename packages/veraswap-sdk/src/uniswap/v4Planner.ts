@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { encodeAbiParameters, Hex } from "viem";
 import { AbiParametersToPrimitiveTypes } from "abitype";
+import { encodeAbiParameters, Hex } from "viem";
 /**
  * Actions
  * @description Constants that define what action to perform

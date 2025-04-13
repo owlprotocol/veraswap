@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-case-declarations */
-import { encodeAbiParameters, Hex } from "viem";
 import type { AbiParametersToPrimitiveTypes } from "abitype";
+import { encodeAbiParameters, Hex } from "viem";
 
 /**
  * CommandTypes

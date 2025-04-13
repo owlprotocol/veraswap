@@ -1,17 +1,15 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
-import { Address, encodeFunctionData } from "viem";
+import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
+import { Address, encodeFunctionData } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
 
 import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../../constants/uint256.js";
 import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
-
-import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
-import { getERC20ApproveCalls } from "../ERC20/getERC20ApproveCalls.js";
 import { CallArgs } from "../../smartaccount/ExecLib.js";
-import { MAX_UINT_160, MAX_UINT_48, MAX_UINT_256 } from "../../constants/uint256.js";
+import { getERC20ApproveCalls } from "../ERC20/getERC20ApproveCalls.js";
+import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
 
 export interface GetPermit2ApproveCallsParams extends GetCallsParams {
     token: Address;

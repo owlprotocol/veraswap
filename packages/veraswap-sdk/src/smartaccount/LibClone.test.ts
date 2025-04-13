@@ -1,6 +1,7 @@
-import { describe, expect, test } from "vitest";
-import { initCodeERC1967, initCodeHashERC1967, predictDeterministicAddressERC1967 } from "./LibClone.js";
 import { Address, zeroAddress, zeroHash } from "viem";
+import { describe, expect, test } from "vitest";
+
+import { initCodeERC1967, initCodeHashERC1967, predictDeterministicAddressERC1967 } from "./LibClone.js";
 
 describe("smartaccount/LibClone.test.ts", () => {
     const implementation = "0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF".toLowerCase() as Address;

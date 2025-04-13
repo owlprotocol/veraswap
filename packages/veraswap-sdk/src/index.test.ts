@@ -1,45 +1,46 @@
-import { describe, test, expect, beforeAll, beforeEach } from "vitest";
+import { getRandomValues } from "crypto";
+
+import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
+import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
+import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
+import { Actions, Pool, Position, priceToClosestTick, V4Planner, V4PositionPlanner } from "@uniswap/v4-sdk";
+import { getAnvilAccount } from "@veraswap/anvil-account";
+import { getDeployDeterministicAddress, getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 import {
+    Address,
     createPublicClient,
     createWalletClient,
-    http,
-    zeroHash,
-    encodeDeployData,
-    zeroAddress,
-    Address,
-    Hex,
-    parseEther,
-    encodePacked,
-    keccak256,
     encodeAbiParameters,
+    encodeDeployData,
+    encodeFunctionData,
+    encodePacked,
+    Hex,
+    http,
+    keccak256,
     nonceManager,
     numberToHex,
     padHex,
+    parseEther,
+    zeroAddress,
+    zeroHash,
 } from "viem";
-import { getOrDeployDeterministicContract, getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { getAnvilAccount } from "@veraswap/anvil-account";
-import { Actions, Pool, Position, V4Planner, V4PositionPlanner, priceToClosestTick } from "@uniswap/v4-sdk";
-import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
-import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
-import { encodeFunctionData } from "viem";
-import { SimpleAccount, SimpleAccountFactory } from "@owlprotocol/contracts-account-abstraction/artifacts";
-import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
-import { IERC20 } from "./artifacts/IERC20.js";
-import { IPositionManager } from "./artifacts/IPositionManager.js";
 import { IAllowanceTransfer } from "./artifacts/IAllowanceTransfer.js";
+import { IERC20 } from "./artifacts/IERC20.js";
 import { IMulticall_v4 as IMulticall } from "./artifacts/IMulticall_v4.js";
-import { quoteExactInputSingle as quoteExactInputSingleAbi } from "./artifacts/IV4Quoter.js";
-import { IUniversalRouter } from "./artifacts/IUniversalRouter.js";
+import { IPositionManager } from "./artifacts/IPositionManager.js";
 import { IStateView } from "./artifacts/IStateView.js";
-import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
-import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
-import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
-import { getRandomValues } from "crypto";
-import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
-import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, V4_SWAP } from "./constants/index.js";
+import { IUniversalRouter } from "./artifacts/IUniversalRouter.js";
+import { quoteExactInputSingle as quoteExactInputSingleAbi } from "./artifacts/IV4Quoter.js";
+import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { opChainL1 } from "./chains/index.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, V4_SWAP } from "./constants/index.js";
+import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
+import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
+import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
+import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
+import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;

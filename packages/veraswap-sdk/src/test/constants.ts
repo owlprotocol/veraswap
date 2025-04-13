@@ -1,13 +1,14 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { encodeDeployData, numberToHex, zeroAddress, zeroHash } from "viem";
-import { opChainA, opChainL1 } from "../chains/supersim.js";
+
+import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
+import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
+import { opChainA, opChainL1 } from "../chains/supersim.js";
 import { getHypERC7579RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { createMockERC20WarpRoute, getMockERC20Address } from "../constants/tokens.js";
 import { HypERC20CollateralToken, HypERC20Token, TokenBase } from "../types/Token.js";
-import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { KernelFactory } from "../artifacts/KernelFactory.js";
 
 export function getMockMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({

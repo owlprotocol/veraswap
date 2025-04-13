@@ -1,16 +1,15 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
+import { Config } from "@wagmi/core";
 import { Address, Hex } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
 
-import { CallArgs } from "../smartaccount/ExecLib.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
+import { CallArgs } from "../smartaccount/ExecLib.js";
+import { TokenStandard } from "../types/Token.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCalls.js";
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
-import { TokenStandard } from "../types/Token.js";
+import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCalls.js";
 
 export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
     funder: Address;

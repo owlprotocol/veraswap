@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { isExactInput, transformQuoteToTrade } from "./routing/utils.js";
 import { UNISWAP_API_KEY } from "../swap/uniswap.test.js";
 import {
-    Protocol,
     GetQuoteArgs,
-    URAQuoteType,
-    RouterPreference,
     INTERNAL_ROUTER_PREFERENCE_PRICE,
+    Protocol,
     QuoteIntent,
-    QuoteState,
-    URAQuoteResponse,
     QuoteMethod,
+    QuoteState,
+    RouterPreference,
+    URAQuoteResponse,
+    URAQuoteType,
 } from "../types/uniswapRouting.js";
+
+import { isExactInput, transformQuoteToTrade } from "./routing/utils.js";
 
 const UNISWAP_GATEWAY_DNS_URL = "https://trading-api-labs.interface.gateway.uniswap.org/v1";
 

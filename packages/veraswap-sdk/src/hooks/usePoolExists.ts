@@ -1,6 +1,7 @@
 import { useMemo } from "react";
+import { Address, encodeAbiParameters, keccak256 } from "viem";
 import { useReadContract } from "wagmi";
-import { keccak256, encodeAbiParameters, Address } from "viem";
+
 import { IStateView } from "../artifacts/IStateView.js";
 import { PoolKey } from "../types/PoolKey.js";
 

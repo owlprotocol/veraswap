@@ -1,29 +1,31 @@
-import { PoolType } from "@uniswap/universal-router-sdk";
-import { Currency, CurrencyAmount, Percent, Token, TradeType } from "@uniswap/sdk-core";
 import { BigNumber } from "@ethersproject/bignumber";
-import { Route as V3Route, Pool, FeeAmount } from "@uniswap/v3-sdk";
-import { Route as V2Route, Pair } from "@uniswap/v2-sdk";
 import { MixedRouteSDK } from "@uniswap/router-sdk";
-import { getApproveInfo } from "./gas.js";
+import { Currency, CurrencyAmount, Percent, Token, TradeType } from "@uniswap/sdk-core";
+import { PoolType } from "@uniswap/universal-router-sdk";
+import { Pair, Route as V2Route } from "@uniswap/v2-sdk";
+import { FeeAmount, Pool, Route as V3Route } from "@uniswap/v3-sdk";
+
 import {
-    RouterPreference,
-    URAQuoteType,
-    QuoteState,
-    URAQuoteResponse,
-    TradeResult,
-    ClassicTrade,
     ClassicQuoteData,
-    QuoteMethod,
-    TokenInRoute,
-    SwapRouterNativeAssets,
-    SwapFeeInfo,
-    isClassicQuoteResponse,
-    V3PoolInRoute,
-    V2PoolInRoute,
+    ClassicTrade,
     GetQuoteArgs,
+    isClassicQuoteResponse,
+    QuoteMethod,
+    QuoteState,
+    RouterPreference,
+    SwapFeeInfo,
+    SwapRouterNativeAssets,
+    TokenInRoute,
+    TradeResult,
+    URAQuoteResponse,
+    URAQuoteType,
+    V2PoolInRoute,
+    V3PoolInRoute,
 } from "../../types/uniswapRouting.js";
-import { nativeOnChain } from "../constants/tokens.js";
 import { BIPS_BASE } from "../constants/misc.js";
+import { nativeOnChain } from "../constants/tokens.js";
+
+import { getApproveInfo } from "./gas.js";
 
 // TODO(WEB-2050): Convert other instances of tradeType comparison to use this utility function
 export function isExactInput(tradeType: TradeType): boolean {
@@ -93,23 +95,23 @@ export function getTradeCurrencies(
     const currencyIn = tokenInIsNative
         ? nativeOnChain(tokenInChainId)
         : parseToken({
-              address: tokenInAddress,
-              chainId: tokenInChainId,
-              decimals: tokenInDecimals,
-              symbol: tokenInSymbol,
-              buyFeeBps: serializedTokenIn?.buyFeeBps,
-              sellFeeBps: serializedTokenIn?.sellFeeBps,
-          });
+            address: tokenInAddress,
+            chainId: tokenInChainId,
+            decimals: tokenInDecimals,
+            symbol: tokenInSymbol,
+            buyFeeBps: serializedTokenIn?.buyFeeBps,
+            sellFeeBps: serializedTokenIn?.sellFeeBps,
+        });
     const currencyOut = tokenOutIsNative
         ? nativeOnChain(tokenOutChainId)
         : parseToken({
-              address: tokenOutAddress,
-              chainId: tokenOutChainId,
-              decimals: tokenOutDecimals,
-              symbol: tokenOutSymbol,
-              buyFeeBps: serializedTokenOut?.buyFeeBps,
-              sellFeeBps: serializedTokenOut?.sellFeeBps,
-          });
+            address: tokenOutAddress,
+            chainId: tokenOutChainId,
+            decimals: tokenOutDecimals,
+            symbol: tokenOutSymbol,
+            buyFeeBps: serializedTokenOut?.buyFeeBps,
+            sellFeeBps: serializedTokenOut?.sellFeeBps,
+        });
 
     return [currencyIn, currencyOut];
 

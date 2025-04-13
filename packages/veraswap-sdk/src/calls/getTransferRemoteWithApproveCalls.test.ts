@@ -1,17 +1,17 @@
-import { describe, expect, test, beforeEach, beforeAll } from "vitest";
-import { getAnvilAccount } from "@veraswap/anvil-account";
-import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
+import { getAnvilAccount } from "@veraswap/anvil-account";
 import { mock } from "@wagmi/connectors";
-
-import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
-
-import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { connect, createConfig, http } from "@wagmi/core";
 import { Account, createWalletClient, parseEther } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+
 import { IERC20 } from "../artifacts/IERC20.js";
-import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
+import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
+
+import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
 
 describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();

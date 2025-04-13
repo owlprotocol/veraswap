@@ -1,42 +1,43 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
-import {
-    Chain,
-    createPublicClient,
-    createWalletClient,
-    encodeDeployData,
-    Hex,
-    http,
-    parseUnits,
-    zeroHash,
-    nonceManager,
-    Address,
-    encodeFunctionData,
-    zeroAddress,
-    encodeAbiParameters,
-    keccak256,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import { GithubRegistry } from "@hyperlane-xyz/registry";
 import { IERC20 } from "@owlprotocol/contracts-hyperlane";
 import { CurrencyAmount, Price, Token } from "@uniswap/sdk-core";
-import { Pool, V4PositionPlanner, priceToClosestTick, Position } from "@uniswap/v4-sdk";
-import { MockERC20 } from "../artifacts/MockERC20.js";
-import { getChainNameAndMailbox } from "../utils/getChainNameAndMailbox.js";
-import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
-import { IPositionManager } from "../artifacts/IPositionManager.js";
-import { IMulticall_v4 } from "../artifacts/IMulticall_v4.js";
-import { PoolKeyAbi } from "../types/PoolKey.js";
-import { IStateView } from "../artifacts/IStateView.js";
+import { Pool, Position, priceToClosestTick, V4PositionPlanner } from "@uniswap/v4-sdk";
+import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic";
 import {
-    PERMIT2_ADDRESS,
-    UNISWAP_CONTRACTS,
+    Address,
+    Chain,
+    createPublicClient,
+    createWalletClient,
+    encodeAbiParameters,
+    encodeDeployData,
+    encodeFunctionData,
+    Hex,
+    http,
+    keccak256,
+    nonceManager,
+    parseUnits,
+    zeroAddress,
+    zeroHash,
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+
+import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { IMulticall_v4 } from "../artifacts/IMulticall_v4.js";
+import { IPositionManager } from "../artifacts/IPositionManager.js";
+import { IStateView } from "../artifacts/IStateView.js";
+import { MockERC20 } from "../artifacts/MockERC20.js";
+import {
     MAX_UINT_160,
     MAX_UINT_256,
     MAX_UINT_48,
+    PERMIT2_ADDRESS,
     testHyperlaneRegistry,
+    UNISWAP_CONTRACTS,
 } from "../constants/index.js";
+import { PoolKeyAbi } from "../types/PoolKey.js";
+import { getChainNameAndMailbox } from "../utils/getChainNameAndMailbox.js";
 
 // TODO: just have this in the sdk, and import later in app
 const fetchGithubRegistryData = async () => {

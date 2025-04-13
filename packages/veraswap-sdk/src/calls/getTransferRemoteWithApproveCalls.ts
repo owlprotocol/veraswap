@@ -1,14 +1,13 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
+import { Config } from "@wagmi/core";
 import { Address, Hex } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
 
+import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { getTransferRemoteCall } from "../swap/getTransferRemoteCall.js";
-import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
-import { getERC20ApproveCalls } from "./ERC20/getERC20ApproveCalls.js";
 
+import { getERC20ApproveCalls } from "./ERC20/getERC20ApproveCalls.js";
 import { GetCallsParams } from "./getCalls.js";
 
 export interface GetTransferRemoteWithApproveCallsParams extends GetCallsParams {

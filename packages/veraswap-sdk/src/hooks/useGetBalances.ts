@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import { useReadContracts } from "wagmi";
 import { Address } from "viem";
+import { useReadContracts } from "wagmi";
 
-import { PoolKey } from "../types/PoolKey.js";
 import { MockERC20 } from "../artifacts/MockERC20.js";
+import { PoolKey } from "../types/PoolKey.js";
 
 export function useGetBalances(poolKey?: PoolKey, walletAddress?: Address) {
     const isValid = !!poolKey?.currency0 && !!poolKey?.currency1 && !!walletAddress;

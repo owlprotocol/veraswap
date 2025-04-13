@@ -1,8 +1,7 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
+import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
 
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 

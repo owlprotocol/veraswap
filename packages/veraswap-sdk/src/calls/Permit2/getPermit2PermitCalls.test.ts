@@ -1,18 +1,18 @@
-import { describe, expect, test, beforeEach, beforeAll } from "vitest";
+import { IERC20 } from "@owlprotocol/contracts-hyperlane";
+import { QueryClient } from "@tanstack/react-query";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { connect, createConfig, http, mock } from "@wagmi/core";
-import { QueryClient } from "@tanstack/react-query";
-
-import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
-
-import { localMockTokens } from "../../constants/tokens.js";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, createWalletClient } from "viem";
-import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+
 import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
-import { IERC20 } from "@owlprotocol/contracts-hyperlane";
-import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
+import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
+import { localMockTokens } from "../../constants/tokens.js";
 import { MAX_UINT_160 } from "../../constants/uint256.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+
+import { getPermit2PermitCalls } from "./getPermit2PermitCalls.js";
 
 describe("calls/getPermit2PermitCall.test.ts", function () {
     const anvilAccount = getAnvilAccount();

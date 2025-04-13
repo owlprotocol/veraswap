@@ -1,10 +1,11 @@
-import { Address, encodeDeployData, zeroHash } from "viem";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import { Address, encodeDeployData, zeroHash } from "viem";
+
+import { ECDSAValidator } from "../artifacts/ECDSAValidator.js";
+import { Execute } from "../artifacts/Execute.js";
 import { Kernel } from "../artifacts/Kernel.js";
 import { KernelFactory } from "../artifacts/KernelFactory.js";
-import { ECDSAValidator } from "../artifacts/ECDSAValidator.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { Execute } from "../artifacts/Execute.js";
 
 /*** Kernel Constants ***/
 

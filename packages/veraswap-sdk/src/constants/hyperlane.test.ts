@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+
+import { opChainAClient, opChainL1Client } from "../chains/index.js";
+
 import { LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
-import { opChainL1Client, opChainAClient } from "../chains/index.js";
 
 describe("constants/hyperlane.test.ts", function () {
     const clients = {
