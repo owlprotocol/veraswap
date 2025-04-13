@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.26;
 
 import {SuperchainERC20} from "@interop-lib/SuperchainERC20.sol";

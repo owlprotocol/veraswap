@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.24;
 
 // Command implementations
@@ -35,7 +35,7 @@ import {DispatcherApprovedReentrant} from "./DispatcherApprovedReentrant.sol";
  * - Add APPROVE_REENTRANT, CALL_TARGET commands to CommandsReentrant.sol
  * - Update `Dispatch.dispatch()` to implement new commands in DispatcherReentrant.sol
  * - Update `Dispatch.msgSender()` to from MSG_SENDER
- * - Replace `Lock.isNotLocked` modifier with `LockWithApprovedReentrant` which has `isNotLockedOrApprovedReentrant` modifier and `setApprovedReentrant`/`getApprovedReentrant` utils  
+ * - Replace `Lock.isNotLocked` modifier with `LockWithApprovedReentrant` which has `isNotLockedOrApprovedReentrant` modifier and `setApprovedReentrant`/`getApprovedReentrant` utils
  *
  * The changes introduce the following invariants
  * - `getLocker` / `msgSender` behaviour are unchanged: the msgSender is ALWAYS the first `msg.sender` value to call `execute` (and "lock")
