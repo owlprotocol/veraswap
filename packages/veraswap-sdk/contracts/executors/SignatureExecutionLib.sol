@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.26;
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
 /// @title SignatureExecutionLib

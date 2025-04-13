@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.24;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.26;
 
 /// @title Commands with added APPROVE_REENTRANT, CALL_TARGET commands
 /// @notice Command Flags used to decode commands

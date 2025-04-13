@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.26;
 
 library Permit2CreationCode {
     bytes internal constant PERMIT2_CREATION_CODE =
