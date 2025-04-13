@@ -20,7 +20,7 @@ export interface GetOwnableExecutorExecuteCallsParams extends GetCallsParams {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType { }
+export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType {}
 
 /**
  * Call `OwnableExecutor.execute`, use batch mode if `calls.length > 0`, use signature if `account != owner`
@@ -88,15 +88,15 @@ export async function getOwnableExecutorExecuteCalls(
 
 export type OwnableExecutorExecuteData =
     | {
-        account: Address;
-        nonce?: undefined;
-        validAfter: number;
-        validUntil: number;
-        value: bigint;
-        callData: Hex;
-        callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE;
-        signature?: undefined;
-    }
+          account: Address;
+          nonce?: undefined;
+          validAfter: number;
+          validUntil: number;
+          value: bigint;
+          callData: Hex;
+          callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE;
+          signature?: undefined;
+      }
     | (SignatureExecution & { callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE; signature: Hex });
 /**
  * Call `OwnableExecutor`, exection data, use batch mode if `calls.length > 0`, use signature if `account != owner`
