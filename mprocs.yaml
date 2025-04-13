@@ -17,6 +17,9 @@ procs:
   frontend:
     cwd: packages/veraswap-app
     shell: pnpm dev
+  sdk:
+    cwd: packages/veraswap-sdk
+    shell: pnpm build:watch
   duster:
     cwd: packages/veraswap-test-duster
     shell: pnpm dev
