@@ -4,13 +4,13 @@ import { Address } from "viem";
 
 import { Token, TokenData } from "./token.js";
 
-type TokenType = "ERC20" | "SuperERC20" | "HypERC20";
+export type TokenStandard = "ERC20" | "SuperERC20" | "HypERC20";
 
 export interface MultichainTokenData extends TokenData {
     /**
      * The type of the token
      */
-    type: TokenType;
+    standard: TokenStandard;
     /**
      * The address of the HypERC20Collateral, if applicable
      */
@@ -26,20 +26,20 @@ export interface MultichainTokenData extends TokenData {
  * This is useful for tokens like USDC, USDT, etc. that have the same address across multiple chains.
  */
 export class MultichainToken extends Token {
-    public readonly type: TokenType;
+    public readonly standard: TokenStandard;
     private hypERC20Collateral: Address | null;
 
     private remoteTokens: Record<number, MultichainToken>;
 
     protected constructor(data: MultichainTokenData) {
         super(data);
-        const { type, hypERC20Collateral, remoteTokens } = data;
+        const { standard: type, hypERC20Collateral, remoteTokens } = data;
 
         if (type === "HypERC20") {
             invariant(hypERC20Collateral === null, "HypERC20 tokens may not be linked to a HypERC20Collateral");
         }
 
-        this.type = type;
+        this.standard = type;
         this.hypERC20Collateral = hypERC20Collateral ?? null;
         this.remoteTokens = remoteTokens ? mapValues(remoteTokens, (token) => new MultichainToken(token)) : {};
     }
@@ -49,15 +49,15 @@ export class MultichainToken extends Token {
     }
 
     public static createHypERC20(data: Omit<MultichainTokenData, "type" | "hypERC20Collateral">): MultichainToken {
-        return this.create({ ...data, type: "HypERC20" });
+        return this.create({ ...data, standard: "HypERC20" });
     }
 
     public static createSuperERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
-        return this.create({ ...data, type: "SuperERC20" });
+        return this.create({ ...data, standard: "SuperERC20" });
     }
 
     public static createERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
-        return this.create({ ...data, type: "ERC20" });
+        return this.create({ ...data, standard: "ERC20" });
     }
 
     public static connect(tokens: MultichainToken[]): void {
@@ -74,11 +74,11 @@ export class MultichainToken extends Token {
     }
 
     public isSuperERC20(): boolean {
-        return this.type === "SuperERC20";
+        return this.standard === "SuperERC20";
     }
 
     public isHypERC20(): boolean {
-        return this.type === "HypERC20";
+        return this.standard === "HypERC20";
     }
 
     public get hyperlaneAddress(): Address | null {
