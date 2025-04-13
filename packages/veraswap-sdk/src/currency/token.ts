@@ -1,8 +1,18 @@
 import invariant from "tiny-invariant";
 import { Address } from "viem";
 
-import { BaseCurrency } from "./baseCurrency.js";
+import { BaseCurrency, BaseCurrencyData } from "./baseCurrency.js";
 import { Currency } from "./currency.js";
+
+/**
+ * The token data
+ */
+export interface TokenData extends BaseCurrencyData {
+    /**
+     * The contract address on the chain on which this token lives
+     */
+    address: Address;
+}
 
 /**
  * Represents an ERC20 token with a unique address and some metadata.
@@ -18,15 +28,11 @@ export class Token extends BaseCurrency {
 
     /**
      *
-     * @param chainId {@link BaseCurrency#chainId}
-     * @param address The contract address on the chain on which this token lives
-     * @param decimals {@link BaseCurrency#decimals}
-     * @param symbol {@link BaseCurrency#symbol}
-     * @param name {@link BaseCurrency#name}
+     * @param data the token data
      */
-    public constructor(chainId: number, address: Address, decimals: number, symbol?: string, name?: string) {
-        super(chainId, decimals, symbol, name);
-        this.address = address;
+    public constructor(data: TokenData) {
+        super(data);
+        this.address = data.address;
     }
 
     /**

@@ -1,9 +1,25 @@
+import { mapValues } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address } from "viem";
 
-import { Token } from "./token.js";
+import { Token, TokenData } from "./token.js";
 
 type TokenType = "ERC20" | "SuperERC20" | "HypERC20";
+
+export interface MultichainTokenData extends TokenData {
+    /**
+     * The type of the token
+     */
+    type: TokenType;
+    /**
+     * The address of the HypERC20Collateral, if applicable
+     */
+    hypERC20Collateral?: Address | null;
+    /**
+     * The remote tokens of the multichain token
+     */
+    remoteTokens?: Record<number, MultichainTokenData>;
+}
 
 /**
  * Represents a token that exists on multiple chains with the same address.
@@ -11,71 +27,37 @@ type TokenType = "ERC20" | "SuperERC20" | "HypERC20";
  */
 export class MultichainToken extends Token {
     public readonly type: TokenType;
-
-    private remoteTokens: Record<number, MultichainToken>;
     private hypERC20Collateral: Address | null;
 
-    protected constructor(
-        chainId: number,
-        address: Address,
-        decimals: number,
-        type: TokenType,
-        hypERC20Collateral: Address | null = null,
-        symbol?: string,
-        name?: string,
-    ) {
-        super(chainId, address, decimals, symbol, name);
+    private remoteTokens: Record<number, MultichainToken>;
+
+    protected constructor(data: MultichainTokenData) {
+        super(data);
+        const { type, hypERC20Collateral, remoteTokens } = data;
+
         if (type === "HypERC20") {
             invariant(hypERC20Collateral === null, "HypERC20 tokens may not be linked to a HypERC20Collateral");
         }
 
         this.type = type;
-        this.remoteTokens = {};
-        this.hypERC20Collateral = hypERC20Collateral;
+        this.hypERC20Collateral = hypERC20Collateral ?? null;
+        this.remoteTokens = remoteTokens ? mapValues(remoteTokens, (token) => new MultichainToken(token)) : {};
     }
 
-    private static create(
-        chainId: number,
-        address: Address,
-        decimals: number,
-        type: TokenType,
-        hypERC20Collateral: Address | null = null,
-        symbol?: string,
-        name?: string,
-    ): MultichainToken {
-        return new MultichainToken(chainId, address, decimals, type, hypERC20Collateral, symbol, name);
+    public static create(data: MultichainTokenData): MultichainToken {
+        return new MultichainToken(data);
     }
 
-    public static createHypERC20(
-        chainId: number,
-        address: Address,
-        decimals: number,
-        symbol: string,
-        name: string,
-    ): MultichainToken {
-        return this.create(chainId, address, decimals, "HypERC20", null, symbol, name);
+    public static createHypERC20(data: Omit<MultichainTokenData, "type" | "hypERC20Collateral">): MultichainToken {
+        return this.create({ ...data, type: "HypERC20" });
     }
 
-    public static createSuperERC20(
-        chainId: number,
-        address: Address,
-        decimals: number,
-        symbol: string,
-        name: string,
-        hypERC20Collateral: Address,
-    ): MultichainToken {
-        return this.create(chainId, address, decimals, "SuperERC20", hypERC20Collateral, symbol, name);
+    public static createSuperERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
+        return this.create({ ...data, type: "SuperERC20" });
     }
 
-    public static createERC20(
-        chainId: number,
-        address: Address,
-        decimals: number,
-        symbol: string,
-        name: string,
-        hypERC20Collateral: Address,
-    ): MultichainToken {
-        return this.create(chainId, address, decimals, "ERC20", hypERC20Collateral, symbol, name);
+    public static createERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
+        return this.create({ ...data, type: "ERC20" });
     }
 
     public static connect(tokens: MultichainToken[]): void {

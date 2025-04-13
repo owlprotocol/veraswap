@@ -57,12 +57,10 @@ export abstract class BaseCurrency {
 
     /**
      * Constructs an instance of the base class `BaseCurrency`.
-     * @param chainId the chain ID on which this currency resides
-     * @param decimals decimals of the currency
-     * @param symbol symbol of the currency
-     * @param name of the currency
+     * @param data the currency data
      */
-    protected constructor(chainId: number, decimals: number, symbol?: string, name?: string) {
+    protected constructor(data: BaseCurrencyData) {
+        const { chainId, decimals, symbol, name } = data;
         invariant(Number.isSafeInteger(chainId), "CHAIN_ID");
         invariant(decimals >= 0 && decimals < 255 && Number.isInteger(decimals), "DECIMALS");
 
