@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 /// @notice A library to implement an approved reentrant in transient storage.
 /// @dev The approved reentrant's address is stored to allow the contract to know if the caller is approved

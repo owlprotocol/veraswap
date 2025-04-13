@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IMailbox} from "@hyperlane-xyz/core/interfaces/IMailbox.sol";
