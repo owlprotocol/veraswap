@@ -1,5 +1,6 @@
 import invariant from "tiny-invariant";
 import { Address } from "viem";
+
 import { BaseCurrency } from "./baseCurrency.js";
 import { Currency } from "./currency.js";
 
@@ -22,8 +23,6 @@ export class Token extends BaseCurrency {
      * @param decimals {@link BaseCurrency#decimals}
      * @param symbol {@link BaseCurrency#symbol}
      * @param name {@link BaseCurrency#name}
-     * @param buyFeeBps Buy fee tax for FOT tokens, in basis points
-     * @param sellFeeBps Sell fee tax for FOT tokens, in basis points
      */
     public constructor(chainId: number, address: Address, decimals: number, symbol?: string, name?: string) {
         super(chainId, decimals, symbol, name);

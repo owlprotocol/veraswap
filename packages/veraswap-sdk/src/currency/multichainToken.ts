@@ -1,6 +1,7 @@
-import { Token } from "./token.js";
-import { Address } from "viem";
 import invariant from "tiny-invariant";
+import { Address } from "viem";
+
+import { Token } from "./token.js";
 
 type TokenType = "ERC20" | "SuperERC20" | "HypERC20";
 
@@ -10,19 +11,24 @@ type TokenType = "ERC20" | "SuperERC20" | "HypERC20";
  */
 export class MultichainToken extends Token {
     public readonly type: TokenType;
+
     private remoteTokens: Record<number, MultichainToken>;
     private hypERC20Collateral: Address | null;
 
-    constructor(
+    protected constructor(
         chainId: number,
         address: Address,
         decimals: number,
-        symbol: string,
-        name: string,
         type: TokenType,
-        hypERC20Collateral: Address | null,
+        hypERC20Collateral: Address | null = null,
+        symbol?: string,
+        name?: string,
     ) {
         super(chainId, address, decimals, symbol, name);
+        if (type === "HypERC20") {
+            invariant(hypERC20Collateral === null, "HypERC20 tokens may not be linked to a HypERC20Collateral");
+        }
+
         this.type = type;
         this.remoteTokens = {};
         this.hypERC20Collateral = hypERC20Collateral;
@@ -32,18 +38,12 @@ export class MultichainToken extends Token {
         chainId: number,
         address: Address,
         decimals: number,
-        symbol: string,
-        name: string,
         type: TokenType,
-        hypERC20Collateral: Address | null,
+        hypERC20Collateral: Address | null = null,
+        symbol?: string,
+        name?: string,
     ): MultichainToken {
-        invariant(
-            (type === "HypERC20" && hypERC20Collateral === null) ||
-                (type !== "HypERC20" && hypERC20Collateral !== null),
-            "HypERC20 tokens must have null collateral, other tokens must have non-null collateral",
-        );
-
-        return new MultichainToken(chainId, address, decimals, symbol, name, type, hypERC20Collateral);
+        return new MultichainToken(chainId, address, decimals, type, hypERC20Collateral, symbol, name);
     }
 
     public static createHypERC20(
@@ -53,7 +53,7 @@ export class MultichainToken extends Token {
         symbol: string,
         name: string,
     ): MultichainToken {
-        return this.create(chainId, address, decimals, symbol, name, "HypERC20", null);
+        return this.create(chainId, address, decimals, "HypERC20", null, symbol, name);
     }
 
     public static createSuperERC20(
@@ -64,7 +64,7 @@ export class MultichainToken extends Token {
         name: string,
         hypERC20Collateral: Address,
     ): MultichainToken {
-        return this.create(chainId, address, decimals, symbol, name, "SuperERC20", hypERC20Collateral);
+        return this.create(chainId, address, decimals, "SuperERC20", hypERC20Collateral, symbol, name);
     }
 
     public static createERC20(
@@ -75,12 +75,16 @@ export class MultichainToken extends Token {
         name: string,
         hypERC20Collateral: Address,
     ): MultichainToken {
-        return this.create(chainId, address, decimals, symbol, name, "ERC20", hypERC20Collateral);
+        return this.create(chainId, address, decimals, "ERC20", hypERC20Collateral, symbol, name);
     }
 
     public static connect(tokens: MultichainToken[]): void {
         for (let i = 0; i < tokens.length; i++) {
             for (let j = i + 1; j < tokens.length; j++) {
+                if (tokens[i].equals(tokens[j])) {
+                    continue;
+                }
+
                 tokens[i].addRemoteToken(tokens[j]);
                 tokens[j].addRemoteToken(tokens[i]);
             }
@@ -109,10 +113,10 @@ export class MultichainToken extends Token {
 
     public addRemoteToken(token: MultichainToken): void {
         invariant(this.chainId !== token.chainId, "Remote tokens cannot be on the same chain");
-        invariant(
-            !(this.isSuperERC20() && token.isSuperERC20()) || this.address === token.address,
-            "SuperERC20 tokens must have the same address across chains",
-        );
+
+        if (this.isSuperERC20() && token.isSuperERC20()) {
+            invariant(this.address === token.address, "SuperERC20 tokens must have the same address across chains");
+        }
 
         this.remoteTokens[token.chainId] = token;
     }

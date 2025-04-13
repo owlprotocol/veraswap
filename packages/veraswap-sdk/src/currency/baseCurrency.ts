@@ -1,6 +1,29 @@
 import invariant from "tiny-invariant";
+
 import { Currency } from "./currency.js";
 import { Token } from "./token.js";
+
+/**
+ * The base currency data
+ */
+export interface BaseCurrencyData {
+    /**
+     * The chain ID on which this currency resides
+     */
+    chainId: number;
+    /**
+     * The decimals used in representing currency amounts
+     */
+    decimals: number;
+    /**
+     * The symbol of the currency, i.e. a short textual non-unique identifier
+     */
+    symbol?: string;
+    /**
+     * The name of the currency, i.e. a descriptive textual non-unique identifier
+     */
+    name?: string;
+}
 
 /**
  * A currency is any fungible financial instrument, including Ether, all ERC20 tokens, and other chain-native currencies
