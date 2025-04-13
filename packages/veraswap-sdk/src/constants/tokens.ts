@@ -5,6 +5,10 @@ import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/cha
 
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
+import { Currency } from "../currency/currency.js";
+import { Ether } from "../currency/ether.js";
+import { MultichainToken } from "../currency/multichainToken.js";
+import { NativeCurrency } from "../currency/nativeCurrency.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
 
@@ -282,3 +286,122 @@ const TESTNET_POOLS = {
 export const TOKENS = [...LOCAL_TOKENS, ...TESTNET_TOKENS];
 export const TOKENS_MAP = { ...LOCAL_TOKENS_MAP, ...TESTNET_TOKENS_MAP };
 export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS };
+
+//Token Class
+function createMockERC20Token(
+    {
+        chainId,
+        name,
+        symbol,
+        decimals,
+    }: {
+        chainId: number;
+        name: string;
+        symbol: string;
+        decimals: number;
+    },
+    mailbox: Address,
+): MultichainToken {
+    const address = getMockERC20Address({ name, symbol, decimals });
+    return MultichainToken.create({
+        standard: "ERC20",
+        chainId,
+        address,
+        name,
+        symbol,
+        decimals: 18,
+        hypERC20Collateral: getHypERC20CollateralAddress({
+            erc20: address,
+            mailbox: mailbox,
+        }),
+    });
+}
+
+function createMockERC20ConnectedTokens(
+    {
+        chainId,
+        name,
+        symbol,
+        decimals,
+    }: {
+        chainId: number;
+        name: string;
+        symbol: string;
+        decimals: number;
+    },
+    mailboxByChain: Record<number, Address>,
+    msgSender: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+): MultichainToken[] {
+    const mailbox = mailboxByChain[chainId];
+    invariant(mailbox != undefined, `Mailbox not found for token chainId ${chainId}`);
+
+    const token = createMockERC20Token(
+        {
+            chainId,
+            name,
+            symbol,
+            decimals,
+        },
+        mailbox,
+    );
+
+    const connections = Object.entries(mailboxByChain)
+        .filter(([chainId]) => chainId != `${token.chainId}`)
+        .map(([chainId, mailbox]) => {
+            return { chainId: parseInt(chainId), mailbox };
+        });
+
+    const remoteTokens = connections.map(({ chainId, mailbox }) => {
+        const address = getHypERC20Address({
+            decimals,
+            mailbox,
+            totalSupply: 0n,
+            name,
+            symbol,
+            msgSender,
+        });
+        return MultichainToken.create({
+            standard: "HypERC20",
+            chainId,
+            address,
+            name,
+            symbol,
+            decimals,
+        });
+    });
+
+    const tokens = [token, ...remoteTokens];
+    MultichainToken.connect(tokens);
+
+    return tokens;
+}
+
+const mailboxByChain = {
+    [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
+    [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
+    [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
+};
+
+export const LOCAL_CURRENCIES: Currency[] = [
+    ...createMockERC20ConnectedTokens(
+        {
+            chainId: opChainL1.id,
+            name: "Token A",
+            symbol: "A",
+            decimals: 18,
+        },
+        mailboxByChain,
+    ),
+    ...createMockERC20ConnectedTokens(
+        {
+            chainId: opChainL1.id,
+            name: "Token B",
+            symbol: "B",
+            decimals: 18,
+        },
+        mailboxByChain,
+    ),
+    Ether.onChain(opChainL1.id),
+    Ether.onChain(opChainA.id),
+    Ether.onChain(opChainB.id),
+];
