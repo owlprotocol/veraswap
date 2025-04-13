@@ -653,6 +653,7 @@ function Index() {
                     destination: chainOut,
                 }}
                 networkType={networkType}
+                isNativeBridge={!!orbiterRouter}
             />
         </div>
     );
