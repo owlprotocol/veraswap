@@ -99,8 +99,10 @@ export class MultichainToken extends Token {
         return this.type === "HypERC20";
     }
 
-    public get hyperlaneAddress(): Address {
-        return this.hypERC20Collateral ?? this.address;
+    public get hyperlaneAddress(): Address | null {
+        if (this.isHypERC20()) return this.address;
+
+        return this.hypERC20Collateral;
     }
 
     public getRemoteToken(chainId: number): MultichainToken | null {
