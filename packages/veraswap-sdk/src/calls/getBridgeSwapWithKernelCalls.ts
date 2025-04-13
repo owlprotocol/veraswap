@@ -1,11 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PoolKey } from "@uniswap/v4-sdk";
+import { Config } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
-import { Config } from "wagmi";
-import { readContractQueryOptions } from "wagmi/query";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";

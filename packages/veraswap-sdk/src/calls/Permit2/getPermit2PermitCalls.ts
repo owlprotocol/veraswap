@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { AllowanceTransfer } from "@uniswap/permit2-sdk";
 import { Config, signTypedData, switchChain } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, TypedDataDomain } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
 
 import {
     IAllowanceTransfer,

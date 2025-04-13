@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PoolKey } from "@uniswap/v4-sdk";
+import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
-import { Config } from "wagmi";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";

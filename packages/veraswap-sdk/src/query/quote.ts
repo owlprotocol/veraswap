@@ -1,9 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { Currency, CurrencyAmount } from "@uniswap/sdk-core";
-import { readContract } from "@wagmi/core";
+import { Config, readContract } from "@wagmi/core";
+import { readContractQueryKey } from "@wagmi/core/query";
 import { Address, zeroAddress } from "viem";
-import { Config } from "wagmi";
-import { readContractQueryKey } from "wagmi/query";
 
 import {
     quoteExactInputSingle as quoteExactInputSingleAbi,

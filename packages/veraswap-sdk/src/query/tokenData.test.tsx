@@ -1,12 +1,12 @@
-import { test, expect, describe } from "vitest";
-import { renderHook } from "@testing-library/react-hooks";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { http, createConfig } from "wagmi";
-import { localhost } from "wagmi/chains";
+import { renderHook } from "@testing-library/react-hooks";
 import { ReactNode } from "react";
-import { tokenDataQueryOptions } from "./tokenData.js";
 import { zeroAddress } from "viem";
+import { describe, expect, test } from "vitest";
+import { createConfig, http, WagmiProvider } from "wagmi";
+import { localhost } from "wagmi/chains";
+
+import { tokenDataQueryOptions } from "./tokenData.js";
 
 describe("tokenData.test.tsx", () => {
     // Wagmi Config

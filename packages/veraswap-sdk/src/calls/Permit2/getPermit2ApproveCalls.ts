@@ -1,8 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import invariant from "tiny-invariant";
 import { Address, encodeFunctionData } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
 
 import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../../constants/uint256.js";

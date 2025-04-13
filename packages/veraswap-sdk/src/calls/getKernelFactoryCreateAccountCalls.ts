@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
+import { getBytecodeQueryOptions, readContractQueryOptions } from "@wagmi/core/query";
 import { Address, encodeFunctionData, Hex } from "viem";
-import { getBytecodeQueryOptions, readContractQueryOptions } from "wagmi/query";
 
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 
