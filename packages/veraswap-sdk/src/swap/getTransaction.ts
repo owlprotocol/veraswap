@@ -20,6 +20,10 @@ import {
     GetBridgeSwapWithKernelCallsParams,
 } from "../calls/getBridgeSwapWithKernelCalls.js";
 import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
+import {
+    getTransferRemoteWithKernelCalls,
+    GetTransferRemoteWithKernelCallsParams,
+} from "../calls/getTransferRemoteWithKernelCalls.js";
 
 export interface TransactionSwapOptions {
     amountIn: bigint;
@@ -117,8 +121,6 @@ export async function getTransaction(
                 });
             }
 
-            // Disable for now to test out bridge_swap when kernel not deployed
-            /*
             if (tokenIn.standard === "HypERC20Collateral") {
                 const { queryClient, wagmiConfig, initData } = params;
 
@@ -151,7 +153,6 @@ export async function getTransaction(
                     value: bigint;
                 };
             }
-            */
 
             return getTransferRemoteCall({
                 address: tokenIn.address,
