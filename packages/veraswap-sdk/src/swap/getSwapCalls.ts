@@ -7,7 +7,7 @@ import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "wagmi";
 import { CallArgs } from "../smartaccount/ExecLib.js";
-import { getPermit2ApproveCalls } from "../calls/index.js";
+import { getPermit2ApproveCalls } from "../calls/Permit2/getPermit2ApproveCalls.js";
 
 export interface GetSwapCallsParams extends GetCallsParams {
     amountIn: bigint;
