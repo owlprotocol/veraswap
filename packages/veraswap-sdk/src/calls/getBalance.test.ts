@@ -1,8 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { createConfig, getBalance, http } from "@wagmi/core";
+import { getBalanceQueryOptions } from "@wagmi/core/query";
 import { describe, expect, test } from "vitest";
-import { getBalanceQueryOptions } from "wagmi/query";
 
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";
 

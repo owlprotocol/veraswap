@@ -1,10 +1,10 @@
 import { QueryClient } from "@tanstack/react-query";
 import { getAnvilAccount } from "@veraswap/anvil-account";
+import { createConfig } from "@wagmi/core";
 import { omit } from "lodash-es";
 import { Account, Chain, createWalletClient, http, padHex, parseEther, Transport, WalletClient } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeEach, describe, expect, test } from "vitest";
-import { createConfig } from "wagmi";
 
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";

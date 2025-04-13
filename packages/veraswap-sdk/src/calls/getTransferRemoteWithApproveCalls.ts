@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import { Address, Hex } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
 
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";

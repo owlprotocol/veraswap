@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
+import { Config } from "@wagmi/core";
 import { Address } from "viem";
-import { Config } from "wagmi";
 
 import { CallArgs } from "../smartaccount/ExecLib.js";
 

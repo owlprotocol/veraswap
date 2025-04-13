@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config, signTypedData, switchChain } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import { CALL_TYPE } from "@zerodev/sdk/constants";
 import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
 
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 import { CallArgs, encodeCallArgsBatch, encodeCallArgsSingle } from "../smartaccount/ExecLib.js";

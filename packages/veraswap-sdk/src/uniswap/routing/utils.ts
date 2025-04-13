@@ -95,23 +95,23 @@ export function getTradeCurrencies(
     const currencyIn = tokenInIsNative
         ? nativeOnChain(tokenInChainId)
         : parseToken({
-            address: tokenInAddress,
-            chainId: tokenInChainId,
-            decimals: tokenInDecimals,
-            symbol: tokenInSymbol,
-            buyFeeBps: serializedTokenIn?.buyFeeBps,
-            sellFeeBps: serializedTokenIn?.sellFeeBps,
-        });
+              address: tokenInAddress,
+              chainId: tokenInChainId,
+              decimals: tokenInDecimals,
+              symbol: tokenInSymbol,
+              buyFeeBps: serializedTokenIn?.buyFeeBps,
+              sellFeeBps: serializedTokenIn?.sellFeeBps,
+          });
     const currencyOut = tokenOutIsNative
         ? nativeOnChain(tokenOutChainId)
         : parseToken({
-            address: tokenOutAddress,
-            chainId: tokenOutChainId,
-            decimals: tokenOutDecimals,
-            symbol: tokenOutSymbol,
-            buyFeeBps: serializedTokenOut?.buyFeeBps,
-            sellFeeBps: serializedTokenOut?.sellFeeBps,
-        });
+              address: tokenOutAddress,
+              chainId: tokenOutChainId,
+              decimals: tokenOutDecimals,
+              symbol: tokenOutSymbol,
+              buyFeeBps: serializedTokenOut?.buyFeeBps,
+              sellFeeBps: serializedTokenOut?.sellFeeBps,
+          });
 
     return [currencyIn, currencyOut];
 

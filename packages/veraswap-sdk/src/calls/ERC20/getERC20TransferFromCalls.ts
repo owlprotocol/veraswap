@@ -1,8 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import invariant from "tiny-invariant";
 import { Address, encodeFunctionData } from "viem";
-import { readContractQueryOptions } from "wagmi/query";
 
 import { IERC20 } from "../../artifacts/IERC20.js";
 import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";

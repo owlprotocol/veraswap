@@ -1,16 +1,18 @@
-import { renderHook } from "@testing-library/react-hooks";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { WagmiProvider, http, createConfig } from "wagmi";
-import { localhost } from "wagmi/chains";
-import { Address, createPublicClient, zeroAddress } from "viem";
+import { renderHook } from "@testing-library/react-hooks";
 import { CurrencyAmount, Token } from "@uniswap/sdk-core";
+import { Address, createPublicClient, zeroAddress } from "viem";
 import { beforeEach, describe, expect, test } from "vitest";
-import { quoteQueryOptions } from "./quote.js";
+import { createConfig, http, WagmiProvider } from "wagmi";
+import { localhost } from "wagmi/chains";
+
 import {
     quoteExactInputSingle as quoteExactInputSingleAbi,
     quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
+
+import { quoteQueryOptions } from "./quote.js";
 
 describe("quote.test.tsx", () => {
     const chain = localhost;
