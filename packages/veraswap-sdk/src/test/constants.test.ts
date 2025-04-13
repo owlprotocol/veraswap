@@ -1,7 +1,9 @@
-import { describe, expect, test } from "vitest";
-import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "./constants.js";
-import { opChainL1Client } from "../chains/index.js";
 import { zeroAddress } from "viem";
+import { describe, expect, test } from "vitest";
+
+import { opChainL1Client } from "../chains/index.js";
+
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "./constants.js";
 
 describe("test/constants.test.ts", function () {
     test("contracts exist", async () => {

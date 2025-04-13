@@ -1,4 +1,4 @@
-import { Address, TypedDataDomain, TypedData } from "viem";
+import { Address, TypedData, TypedDataDomain } from "viem";
 
 export interface PermitDetails {
     token: Address;

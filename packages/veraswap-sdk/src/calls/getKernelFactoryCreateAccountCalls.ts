@@ -1,11 +1,11 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions, getBytecodeQueryOptions } from "wagmi/query";
+import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex } from "viem";
+import { getBytecodeQueryOptions, readContractQueryOptions } from "wagmi/query";
+
+import { KernelFactory } from "../artifacts/KernelFactory.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { KernelFactory } from "../artifacts/KernelFactory.js";
 
 export interface GetKernelFactoryCreateAccountParams extends GetCallsParams {
     initData: Hex;

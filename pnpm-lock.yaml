@@ -505,6 +505,9 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.22.0(jiti@1.21.7)
+      eslint-plugin-import:
+        specifier: ^2.31.0
+        version: 2.31.0(@typescript-eslint/parser@8.26.1(eslint@9.22.0(jiti@1.21.7))(typescript@5.8.2))(eslint-import-resolver-typescript@2.7.1)(eslint@9.22.0(jiti@1.21.7))
       lint-staged:
         specifier: ^11.2.6
         version: 11.2.6

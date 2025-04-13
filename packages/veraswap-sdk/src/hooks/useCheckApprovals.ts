@@ -1,8 +1,8 @@
-import { useReadContracts } from "wagmi";
 import { Address } from "viem";
+import { useReadContracts } from "wagmi";
 
-import { MockERC20 } from "../artifacts/MockERC20.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { MockERC20 } from "../artifacts/MockERC20.js";
 import { PoolKey } from "../types/PoolKey.js";
 
 const MAX_UINT_256 = 2n ** 256n - 1n;

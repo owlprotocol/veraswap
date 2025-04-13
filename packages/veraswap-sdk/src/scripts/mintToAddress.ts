@@ -10,6 +10,7 @@ import {
     parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainL1 } from "../chains/index.js";
 

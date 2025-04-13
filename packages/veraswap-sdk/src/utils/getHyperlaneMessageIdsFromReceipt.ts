@@ -1,5 +1,5 @@
 import { DispatchId } from "@owlprotocol/contracts-hyperlane/artifacts/IMailbox";
-import { TransactionReceipt, Hex, parseEventLogs } from "viem";
+import { Hex, parseEventLogs, TransactionReceipt } from "viem";
 
 export function getHyperlaneMessageIdsFromReceipt(receipt: TransactionReceipt): Hex[] {
     const logsDecoded = parseEventLogs({

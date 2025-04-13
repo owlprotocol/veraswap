@@ -1,13 +1,12 @@
-import { Config } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
-
-import { readContractQueryOptions } from "wagmi/query";
-import { Address, encodeFunctionData } from "viem";
+import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
+import { Address, encodeFunctionData } from "viem";
+import { readContractQueryOptions } from "wagmi/query";
 
 import { IERC20 } from "../../artifacts/IERC20.js";
-import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
 import { MAX_UINT_256 } from "../../constants/uint256.js";
+import { GetCallsParams, GetCallsReturnType } from "../getCalls.js";
 
 export interface GetERC20ApproveCallsParams extends GetCallsParams {
     token: Address;

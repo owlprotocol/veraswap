@@ -1,10 +1,12 @@
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
-import { Address, encodeFunctionData, Hex } from "viem";
 import { PoolKey } from "@uniswap/v4-sdk";
-import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
-import { IERC20 } from "../artifacts/IERC20.js";
+import { Address, encodeFunctionData, Hex } from "viem";
+
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { IERC20 } from "../artifacts/IERC20.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/index.js";
+
+import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 
 export function getEOASwapCalls({
     amountIn,

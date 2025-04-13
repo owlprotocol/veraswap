@@ -1,5 +1,6 @@
-import { Client, Transport, Chain, Account, Address } from "viem";
+import { Account, Address, Chain, Client, Transport } from "viem";
 import { waitForTransactionReceipt, writeContract } from "viem/actions";
+
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 
 /**

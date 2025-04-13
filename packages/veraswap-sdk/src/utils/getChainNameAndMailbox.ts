@@ -1,4 +1,5 @@
 import { Address } from "viem";
+
 import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
 
 export interface ChainMailboxAndName {

@@ -1,9 +1,11 @@
-import { encodeFunctionData, Address, padHex, Hex, zeroAddress } from "viem";
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
-import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
+import { Address, encodeFunctionData, Hex, padHex, zeroAddress } from "viem";
+
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
-import { PoolKey } from "../types/PoolKey.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
+import { PoolKey } from "../types/PoolKey.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
+
+import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndHyperlaneBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane

@@ -1,12 +1,14 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/chains";
+
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
-import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
-import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/chains";
-import invariant from "tiny-invariant";
+
+import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({

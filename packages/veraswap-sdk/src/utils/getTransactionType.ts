@@ -1,6 +1,7 @@
 import { Address } from "viem";
-import { Token } from "../types/Token.js";
+
 import { PoolKey } from "../types/PoolKey.js";
+import { Token } from "../types/Token.js";
 
 export interface TransactionTypeSwap {
     type: "SWAP";

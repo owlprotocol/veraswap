@@ -1,7 +1,8 @@
-import { Address } from "viem";
-import { CallArgs } from "../smartaccount/ExecLib.js";
 import { QueryClient } from "@tanstack/react-query";
+import { Address } from "viem";
 import { Config } from "wagmi";
+
+import { CallArgs } from "../smartaccount/ExecLib.js";
 
 /**
  * Common params for all `get...Calls` functions with `chainId, account` params

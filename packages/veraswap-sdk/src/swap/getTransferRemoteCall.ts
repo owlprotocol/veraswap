@@ -1,4 +1,5 @@
-import { encodeFunctionData, Address, Hex, padHex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, Hex, padHex, zeroAddress } from "viem";
+
 import { HypERC20 } from "../artifacts/HypERC20.js";
 
 export interface GetTransferRemoteCallParams {

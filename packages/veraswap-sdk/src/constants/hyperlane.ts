@@ -1,16 +1,18 @@
-import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
+import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { Mailbox } from "../artifacts/Mailbox.js";
-import { PausableHook } from "../artifacts/PausableHook.js";
-import { NoopIsm } from "../artifacts/NoopIsm.js";
-import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
+import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
+
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
-import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
-import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
-import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
 import { HypTokenRouterSweep } from "../artifacts/index.js";
+import { Mailbox } from "../artifacts/Mailbox.js";
+import { NoopIsm } from "../artifacts/NoopIsm.js";
+import { PausableHook } from "../artifacts/PausableHook.js";
+import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
+import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
+
+import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
 
 export function getMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({

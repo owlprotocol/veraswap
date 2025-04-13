@@ -4,9 +4,10 @@ import { Config, readContract } from "@wagmi/core";
 import { Address, Chain, zeroAddress } from "viem";
 import * as chains from "viem/chains";
 
-import { tokenRegistryData } from "./tokenRegistryData.js";
-import { symbol as symbolAbi, decimals as decimalsAbi, name as nameAbi } from "../artifacts/MockERC20.js";
+import { decimals as decimalsAbi, name as nameAbi, symbol as symbolAbi } from "../artifacts/MockERC20.js";
 import { inkSepolia, unichainSepolia } from "../chains/index.js";
+
+import { tokenRegistryData } from "./tokenRegistryData.js";
 
 // TODO: use viem registry?
 export const chainIdToBlockchain: Record<number, string> = {

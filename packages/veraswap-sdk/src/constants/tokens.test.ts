@@ -1,7 +1,9 @@
-import { describe, expect, test } from "vitest";
 import { zeroAddress } from "viem";
+import { describe, expect, test } from "vitest";
+
+import { opChainAClient, opChainBClient, opChainL1Client } from "../chains/index.js";
+
 import { LOCAL_TOKENS } from "./tokens.js";
-import { opChainL1Client, opChainAClient, opChainBClient } from "../chains/index.js";
 
 describe("constants/tokens.test.ts", function () {
     const clients = {

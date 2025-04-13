@@ -1,5 +1,7 @@
 import { Address, encodeFunctionData, encodePacked, Hash, hashTypedData, Hex, TypedDataDomain } from "viem";
+
 import { Kernel } from "../artifacts/Kernel.js";
+
 import { encodeInstallExecutorData, ERC7579_MODULE_TYPE } from "./ERC7579Module.js";
 
 /**
