@@ -25,17 +25,35 @@ library Create2Utils {
 
     /// @notice Get Create2 address, exists with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
     function getAddressExists(bytes memory bytecode) internal view returns (address expected, bool contractExists) {
-        expected = getAddress(bytecode);
+        (expected, contractExists) = getAddressExists(bytecode, BYTES32_ZERO);
+    }
+
+    /// @notice Get Create2 address, exists with DETERMINISTIC_DEPLOYER
+    function getAddressExists(
+        bytes memory bytecode,
+        bytes32 salt
+    ) internal view returns (address expected, bool contractExists) {
+        expected = getAddress(bytecode, salt);
         contractExists = expected.code.length > 0;
     }
 
     /// @notice Get Create2 address with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
     function getAddress(bytes memory bytecode) internal pure returns (address expected) {
-        expected = Create2.computeAddress(BYTES32_ZERO, keccak256(bytecode), DETERMINISTIC_DEPLOYER);
+        expected = getAddress(bytecode, BYTES32_ZERO);
+    }
+
+    /// @notice Get Create2 address with DETERMINISTIC_DEPLOYER
+    function getAddress(bytes memory bytecode, bytes32 salt) internal pure returns (address expected) {
+        expected = Create2.computeAddress(salt, keccak256(bytecode), DETERMINISTIC_DEPLOYER);
     }
 
     /// @notice Create2 address deployed with BYTES32_ZERO, DETERMINISTIC_DEPLOYER
     function exists(bytes memory bytecode) internal view returns (bool contractExists) {
-        (, contractExists) = getAddressExists(bytecode);
+        contractExists = exists(bytecode, BYTES32_ZERO);
+    }
+
+    /// @notice Create2 address deployed with DETERMINISTIC_DEPLOYER
+    function exists(bytes memory bytecode, bytes32 salt) internal view returns (bool contractExists) {
+        (, contractExists) = getAddressExists(bytecode, salt);
     }
 }

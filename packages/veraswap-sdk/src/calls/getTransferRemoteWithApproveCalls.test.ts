@@ -4,14 +4,14 @@ import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { mock } from "@wagmi/connectors";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
 
-import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { Account, createWalletClient, parseEther } from "viem";
 import { IERC20 } from "../artifacts/IERC20.js";
-import { MAX_UINT_256 } from "../constants/uint256.js";
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
+import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -38,8 +38,9 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
 
     let account: Account;
 
-    const tokenA = localMockTokens[0];
-    const tokenAHypERC20Collateral = LOCAL_TOKENS[0];
+    const tokenA = mockMailboxMockERC20Tokens[0];
+    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0];
+    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1]; //Token A on "remote" opChainA
 
     beforeAll(async () => {
         await connect(config, {
@@ -60,6 +61,7 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
     });
 
     test("getTransferRemoteWithApproveCalls", async () => {
+        // locked collateral
         const preCollateralBalance = await opChainL1Client.readContract({
             address: tokenA.address,
             abi: IERC20.abi,
@@ -79,8 +81,11 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
             approveAmount: "MAX_UINT_256",
         });
 
-        expect(transferRemoteCalls.calls.length).toBe(2);
-        // ERC20.approve(HypERC20Collateral, 1)
+        // ERC20 already approved
+        expect(transferRemoteCalls.calls.length).toBe(1);
+
+        //TODO: Add test with non anvil(0)
+        /*
         expect(transferRemoteCalls.calls[0].to).toBe(tokenA.address);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await anvilClient.sendTransaction(transferRemoteCalls.calls[0]),
@@ -92,12 +97,14 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
             args: [anvilAccount.address, tokenAHypERC20Collateral.address],
         });
         expect(allowance).toBe(MAX_UINT_256);
+        */
 
         // HypERC20Collateral.transferRemote()
-        expect(transferRemoteCalls.calls[1].to).toBe(tokenAHypERC20Collateral.address);
+        expect(transferRemoteCalls.calls[0].to).toBe(tokenAHypERC20Collateral.address);
         await opChainL1Client.waitForTransactionReceipt({
-            hash: await anvilClient.sendTransaction(transferRemoteCalls.calls[1]),
+            hash: await anvilClient.sendTransaction(transferRemoteCalls.calls[0]),
         });
+        // locked collateral
         const postCollateralBalance = await opChainL1Client.readContract({
             address: tokenA.address,
             abi: IERC20.abi,
@@ -105,5 +112,17 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
             args: [tokenAHypERC20Collateral.address],
         });
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
+
+        // Process Hyperlane Message
+        await processNextInboundMessage(anvilClient, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox });
+
+        // hypERC20 balance of recipient
+        const hypERC20Balance = await opChainL1Client.readContract({
+            address: tokenAHypERC20.address,
+            abi: IERC20.abi,
+            functionName: "balanceOf",
+            args: [account.address],
+        });
+        expect(hypERC20Balance).toBe(1n);
     });
 });

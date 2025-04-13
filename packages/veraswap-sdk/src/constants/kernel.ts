@@ -53,5 +53,6 @@ export function getKernelContracts() {
     };
 }
 
+//TODO: Index by chainId to keep consistent with other constants (eg. hyperlane)
 // For default local deployment with anvil(0) address
 export const LOCAL_KERNEL_CONTRACTS = getKernelContracts();

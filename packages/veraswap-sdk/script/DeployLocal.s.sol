@@ -21,10 +21,13 @@ import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
+import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
+import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
@@ -175,6 +178,8 @@ contract DeployLocal is DeployCoreContracts {
             // MockMaibox HypERC20
             (address hypMockERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
             (address hypMockERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
+            IERC20(hypMockERC20TokenA).approve(address(Permit2Utils.permit2), type(uint256).max);
+            IERC20(hypMockERC20TokenB).approve(address(Permit2Utils.permit2), type(uint256).max);
             // Enroll remote routers
             TokenRouter(hypMockERC20CollateralTokenA).enrollRemoteRouter(
                 chainOpADomain,
@@ -194,19 +199,25 @@ contract DeployLocal is DeployCoreContracts {
             );
             // ERC7579ExecutorRouter
             CoreContracts storage contracts = chainContracts[chainIds[0]];
-            (address erc7579ExecutorRouterL1, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+
+            // L1 Executor Router
+            ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxL1,
                 address(0),
-                //TODO: This might cause issues due to chainId verification for signatures
                 contracts.ownableSignatureExecutor,
-                //TODO: This might cause issues due to create2 conflicts (eg. deploy 2 same contracts on mock "L1" and "OPA")
                 contracts.kernelFactory
             );
-            (address erc7579ExecutorRouterOpA, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
+
+            // New implementations to avoid collisions
+            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
+            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
+
+            // OPA Executor Router
+            ERC7579ExecutorRouterUtils.getOrCreate2(
                 mailboxOpA,
                 address(0),
-                contracts.ownableSignatureExecutor,
-                contracts.kernelFactory
+                ownableSignatureExecutorOpA,
+                kernelFactoryOpA
             );
 
             vm.stopBroadcast();

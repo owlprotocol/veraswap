@@ -4,10 +4,9 @@ import { connect, createConfig, http } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { mock } from "@wagmi/connectors";
 
-import { opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
 
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
-import { LOCAL_TOKENS, localMockTokens } from "../constants/tokens.js";
 import { Address, bytesToHex, createWalletClient, encodeFunctionData, Hex, LocalAccount, padHex } from "viem";
 import { getRandomValues } from "crypto";
 import { IERC20 } from "../artifacts/IERC20.js";
@@ -30,6 +29,11 @@ import { Execute } from "../artifacts/Execute.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { MAX_UINT_160, MAX_UINT_256 } from "../constants/uint256.js";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
+import { mockMailboxMockERC20Tokens, MOCK_MAILBOX_TOKENS, MOCK_MAILBOX_CONTRACTS } from "../test/constants.js";
+import { processNextInboundMessage } from "../utils/MockMailbox.js";
+import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
+import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 
 describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     const anvilAccount = getAnvilAccount();
@@ -61,8 +65,12 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     let kernelInitData: Hex;
     let kernelSalt: Hex;
 
-    const tokenA = localMockTokens[0];
-    const tokenAHypERC20Collateral = LOCAL_TOKENS[0];
+    const tokenA = mockMailboxMockERC20Tokens[0];
+    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0];
+    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1]; //Token A on "remote" opChainA
+
+    let preCollateralBalance: bigint;
+    let recipient: Address;
 
     beforeAll(async () => {
         await connect(config, {
@@ -72,6 +80,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     });
 
     beforeEach(async () => {
+        recipient = privateKeyToAccount(generatePrivateKey()).address;
         // Create smart account
         const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
             entryPoint,
@@ -105,6 +114,13 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             implementation: LOCAL_KERNEL_CONTRACTS.kernel,
             factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
         });
+        // Pre collateral balance
+        preCollateralBalance = await opChainL1Client.readContract({
+            address: tokenA.address,
+            abi: IERC20.abi,
+            functionName: "balanceOf",
+            args: [tokenAHypERC20Collateral.address],
+        });
     });
 
     describe("smart account deployed", () => {
@@ -122,26 +138,28 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         });
 
         test("auto", async () => {
-            const preCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-
             const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id,
                 token: tokenAHypERC20Collateral.address,
                 tokenStandard: "HypERC20Collateral",
                 account: anvilAccount.address,
                 destination: 901,
-                recipient: kernelAddress,
+                recipient,
                 amount: 1n,
                 createAccount: {
                     initData: kernelInitData,
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                // Pre-configure account for future calls to support execution from 901
+                erc7579RouterOwners: [
+                    {
+                        owner: anvilAccount.address,
+                        domain: 901,
+                        router: LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router,
+                        enabled: true,
+                    },
+                ],
             });
             expect(transferRemoteCalls.calls.length).toBe(1);
             // OwnableExecutor.executeBatchOnOwnedAccount(kernelAddress, calls)
@@ -152,23 +170,28 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 hash: await anvilClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
             });
 
-            const postCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
+            // Check owner set on Executor
+            const owners = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getOwners",
+                args: [kernelAddress],
             });
-            expect(postCollateralBalance - preCollateralBalance).toBe(1n);
+            expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(erc7579Router)").toContain(
+                LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+            );
+
+            // Check owners set on 7579Router
+            const isOwner = await opChainL1Client.readContract({
+                address: LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+                abi: ERC7579ExecutorRouter.abi,
+                functionName: "owners",
+                args: [kernelAddress, 901, LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router, anvilAccount.address],
+            });
+            expect(isOwner, `ERC7579Router.owner(kernelAddress, 901, erc7579Router 901, owner) == true`).toBe(true);
         });
 
         test("manual", async () => {
-            const preCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-
             const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, config, {
                 chainId: opChainL1.id,
                 token: tokenAHypERC20Collateral.address,
@@ -176,7 +199,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 account: kernelAddress,
                 funder: anvilAccount.address,
                 destination: 901,
-                recipient: kernelAddress,
+                recipient,
                 amount: 1n,
                 approveAmount: "MAX_UINT_256",
                 permit2: {
@@ -210,39 +233,33 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     args: [kernelAddress, callData],
                 }),
             });
-
-            const postCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-            expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         });
     });
 
     describe("smart account not deployed", () => {
         test("auto", async () => {
-            const preCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-
             const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id,
                 token: tokenAHypERC20Collateral.address,
                 tokenStandard: "HypERC20Collateral",
                 account: anvilAccount.address,
                 destination: 901,
-                recipient: kernelAddress,
+                recipient,
                 amount: 1n,
                 createAccount: {
                     initData: kernelInitData,
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                // Pre-configure account for future calls to support execution from 901
+                erc7579RouterOwners: [
+                    {
+                        owner: anvilAccount.address,
+                        domain: 901,
+                        router: LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router,
+                        enabled: true,
+                    },
+                ],
             });
             expect(transferRemoteCalls.calls.length).toBe(1);
             // Execute.execute(...)
@@ -253,23 +270,28 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 hash: await anvilClient.sendTransaction(omit(transferRemoteCalls.calls[0], "account")),
             });
 
-            const postCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
+            // Check owner set on Executor
+            const owners = await opChainL1Client.readContract({
+                address: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                abi: OwnableSignatureExecutor.abi,
+                functionName: "getOwners",
+                args: [kernelAddress],
             });
-            expect(postCollateralBalance - preCollateralBalance).toBe(1n);
+            expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(erc7579Router)").toContain(
+                LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+            );
+
+            // Check owners set on 7579Router
+            const isOwner = await opChainL1Client.readContract({
+                address: LOCAL_HYPERLANE_CONTRACTS[900].erc7579Router,
+                abi: ERC7579ExecutorRouter.abi,
+                functionName: "owners",
+                args: [kernelAddress, 901, LOCAL_HYPERLANE_CONTRACTS[901].erc7579Router, anvilAccount.address],
+            });
+            expect(isOwner, `ERC7579Router.owner(kernelAddress, 901, erc7579Router 901, owner) == true`).toBe(true);
         });
 
         test("manual", async () => {
-            const preCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-
             const createAccountCalls = await getKernelFactoryCreateAccountCalls(queryClient, config, {
                 chainId: opChainL1.id,
                 account: anvilAccount.address,
@@ -290,7 +312,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                 account: kernelAddress,
                 funder: anvilAccount.address,
                 destination: 901,
-                recipient: kernelAddress,
+                recipient,
                 amount: 1n,
                 approveAmount: "MAX_UINT_256",
                 permit2: {
@@ -358,18 +380,30 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     ],
                 }),
             });
-
-            const postCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
-                abi: IERC20.abi,
-                functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
-            });
-            expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         });
     });
 
     afterEach(async () => {
+        // locked collateral
+        const postCollateralBalance = await opChainL1Client.readContract({
+            address: tokenA.address,
+            abi: IERC20.abi,
+            functionName: "balanceOf",
+            args: [tokenAHypERC20Collateral.address],
+        });
+        expect(postCollateralBalance - preCollateralBalance).toBe(1n);
+        // Process Hyperlane Message
+        await processNextInboundMessage(anvilClient, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainA.id].mailbox });
+
+        // hypERC20 balance of recipient
+        const hypERC20Balance = await opChainL1Client.readContract({
+            address: tokenAHypERC20.address,
+            abi: IERC20.abi,
+            functionName: "balanceOf",
+            args: [recipient],
+        });
+        expect(hypERC20Balance).toBe(1n);
+
         const bytecode = await opChainL1Client.getCode({ address: kernelAddress });
         expect(bytecode, "smart account deployed").toBeDefined();
 

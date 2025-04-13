@@ -1,4 +1,4 @@
-import { Config, signTypedData } from "@wagmi/core";
+import { Config, signTypedData, switchChain } from "@wagmi/core";
 import { QueryClient } from "@tanstack/react-query";
 import { readContractQueryOptions } from "wagmi/query";
 import { Address, encodeFunctionData, TypedDataDomain } from "viem";
@@ -101,6 +101,8 @@ export async function getPermit2PermitCalls(
         sigDeadline,
     };
     const permitData = AllowanceTransfer.getPermitData(permitSingle, PERMIT2_ADDRESS, chainId);
+
+    await switchChain(wagmiConfig, { chainId }); //signature request must be on same active chain
     const signature = await signTypedData(wagmiConfig, {
         account,
         domain: permitData.domain as TypedDataDomain,
