@@ -7,7 +7,6 @@ import {
     getHyperlaneMessageIdsFromReceipt,
     getTransaction,
     TransactionParams,
-    HypERC20CollateralToken,
     Token,
     chainIdToOrbiterChainId,
     TransactionType,
@@ -259,20 +258,6 @@ function Index() {
                         MAX_UINT_160,
                         MAX_UINT_48,
                     ],
-                }),
-            });
-
-            return;
-        }
-
-        if (swapStep === SwapStep.APPROVE_BRIDGE) {
-            sendTransaction({
-                to: (tokenIn as HypERC20CollateralToken)!.collateralAddress,
-                chainId: tokenIn!.chainId,
-                data: encodeFunctionData({
-                    abi: IERC20.abi,
-                    functionName: "approve",
-                    args: [tokenIn!.address, MAX_UINT_256],
                 }),
             });
 
@@ -651,7 +636,6 @@ function Index() {
                             !(
                                 swapStep === SwapStep.APPROVE_PERMIT2 ||
                                 swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
-                                swapStep === SwapStep.APPROVE_BRIDGE ||
                                 swapStep === SwapStep.EXECUTE_SWAP ||
                                 swapStep === SwapStep.NOT_SUPPORTED
                             )

@@ -3,15 +3,8 @@ import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { parseUnits, zeroAddress } from "viem";
 import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
-import { Token, getTransactionType, TransactionType, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
-import {
-    PERMIT2_ADDRESS,
-    UNISWAP_CONTRACTS,
-    LOCAL_POOLS,
-    LOCAL_TOKENS_MAP,
-    POOLS,
-    TOKENS_MAP,
-} from "@owlprotocol/veraswap-sdk/constants";
+import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
+import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, POOLS, TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
 import { balanceOf as balanceOfAbi, allowance as allowanceAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { allowance as allowancePermit2Abi } from "@owlprotocol/veraswap-sdk/artifacts/IAllowanceTransfer";
 import { accountAtom } from "./account.js";
@@ -169,36 +162,6 @@ export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
 export const tokenInUniswapRouterAllowanceAtom = atom<bigint | null>((get) => {
     const data = get(tokenInUniswapRouterAllowanceQueryAtom).data;
     return data ? data[0] : null;
-});
-
-/** Check if router is approved for token in if token in is collateral */
-export const tokenInBridgeAllowanceQueryAtom = atomWithQuery((get) => {
-    // TODO: Could cause issues on account change
-    const account = get(accountAtom);
-    const tokenIn = get(tokenInAtom);
-    const enabled = !!tokenIn && !!account.address && tokenIn.standard === "HypERC20Collateral";
-
-    const chainId = tokenIn?.chainId ?? 0;
-    const tokenAddress =
-        !!tokenIn && tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : zeroAddress;
-    const accountAddress = account.address ?? zeroAddress;
-    const bridgeAddress = tokenIn?.address ?? zeroAddress;
-
-    return {
-        ...readContractQueryOptions(config, {
-            abi: [allowanceAbi],
-            chainId: chainId,
-            address: tokenAddress,
-            functionName: "allowance",
-            args: [accountAddress, bridgeAddress],
-        }),
-        enabled,
-        refetchInterval: 2000,
-    };
-});
-
-export const tokenInBridgeAllowanceAtom = atom<bigint | null>((get) => {
-    return get(tokenInBridgeAllowanceQueryAtom).data ?? null;
 });
 
 /***** Token Out *****/
