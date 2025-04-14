@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { getChainNameAndMailbox, TransactionType } from "@owlprotocol/veraswap-sdk";
-import { Address, Hash, zeroAddress } from "viem";
+import { Address, Hash, TransactionNotFoundError, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
     sendTransactionMutationOptions,
@@ -96,7 +96,9 @@ export const swapStepAtom = atom((get) => {
     } else if (
         // tokenIn is not native, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&
-        (transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE") &&
+        (transactionType.type !== "BRIDGE" ||
+            (transactionType.type === "BRIDGE" &&
+                !(tokenIn.standard === "HypERC20" || tokenIn.standard === "SuperchainERC20"))) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
