@@ -65,7 +65,18 @@ export interface TransactionSwapBridgeOptions {
     amountOutMinimum: bigint;
     bridgePayment: bigint;
     walletAddress: Address;
+    orbiterParams?: OrbiterParams;
     uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }>;
+}
+
+export interface TransactionSwapBridgeOrbiterOptions {
+    amountIn: bigint;
+    amountOutMinimum: bigint;
+    walletAddress: Address;
+    orbiterParams?: OrbiterParams;
+    // TODO: maybe calculate total amount in to pay and pass it as bridge payment
+    // Keeping it for type consistency
+    bridgePayment?: bigint;
 }
 
 export interface TransactionBridgeSwapOptions {
@@ -85,6 +96,7 @@ export type TransactionParams =
     | (TransactionTypeBridge & TransactionBridgeOrbiterOptions)
     | (TransactionTypeBridge & TransactionBridgeHyperlaneCollateralOptions)
     | (TransactionTypeSwapBridge & TransactionSwapBridgeOptions)
+    | (TransactionTypeSwapBridge & TransactionSwapBridgeOrbiterOptions)
     | (TransactionTypeBridgeSwap & TransactionBridgeSwapOptions);
 
 export async function getTransaction(
@@ -176,12 +188,21 @@ export async function getTransaction(
         }
 
         case "SWAP_BRIDGE": {
-            const { swap, bridge, bridgePayment, amountIn, amountOutMinimum, walletAddress } = params;
+            const { swap, bridge, bridgePayment, amountIn, amountOutMinimum, walletAddress, orbiterParams } = params;
             const { tokenIn: swapTokenIn, poolKey, zeroForOne } = swap;
             const { tokenIn: bridgeTokenIn, tokenOut: bridgeTokenOut } = bridge;
 
             const bridgeAddress = bridgeTokenIn.address;
 
+            if (bridgeTokenIn.standard === "NativeToken" && bridgeTokenOut.standard === "NativeToken") {
+                if (!orbiterParams) {
+                    throw new Error("Orbiter params are required for Orbiter bridging");
+                }
+
+                throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
+            }
+
+            // TODO: add orbiter bridging
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapTokenIn.chainId].universalRouter,
                 bridgeAddress,

@@ -25,6 +25,7 @@ export function getOrbiterETHTransferTransaction({
     endpoint: Address;
     endpointContract: Address;
 }): { to: Address; value: bigint; data: Hex } {
+    // TODO: strip last 4 digits to make sure they don't conflict with identificationCode
     const identificationCode = 9000 + orbiterChainId;
     const totalAmount = amount + BigInt(identificationCode);
 
