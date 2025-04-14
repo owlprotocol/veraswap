@@ -33,7 +33,7 @@ HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,o
     # Start auth dev mode
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
      # Start duster
-    tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && pnpm dev" ENTER
+    tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && PRIVATE_KEY=${privateKeyAnvil0} pnpm dev" ENTER
 fi
 
 if [ -n "${TMUX+1}" ]; then
