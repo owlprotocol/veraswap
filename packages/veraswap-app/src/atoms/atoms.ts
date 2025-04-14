@@ -81,6 +81,8 @@ export const swapStepAtom = atom((get) => {
 
     if (account.address === undefined) {
         return SwapStep.CONNECT_WALLET;
+    } else if (!transactionType) {
+        return SwapStep.NOT_SUPPORTED;
     } else if (mutation.isPending) {
         return SwapStep.PENDING_SIGNATURE;
     } else if (hash && hash != receipt.data?.transactionHash) {
@@ -94,18 +96,16 @@ export const swapStepAtom = atom((get) => {
     } else if (
         // tokenIn is not native, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&
-        (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
+        (transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE") &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (
         tokenIn.standard !== "NativeToken" &&
-        (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
+        (transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE") &&
         (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
-    } else if (!transactionType) {
-        return SwapStep.NOT_SUPPORTED;
     }
 
     return SwapStep.EXECUTE_SWAP;
