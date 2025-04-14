@@ -12,7 +12,6 @@ import {
     tokenInAmountAtom,
     tokenInAtom,
     tokenInBalanceAtom,
-    tokenInBridgeAllowanceAtom,
     tokenInPermit2AllowanceAtom,
     tokenInUniswapRouterAllowanceAtom,
     tokenOutAtom,
@@ -73,7 +72,6 @@ export const swapStepAtom = atom((get) => {
     const tokenInBalance = get(tokenInBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
     const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
-    const tokenInBridgeAllowance = get(tokenInBridgeAllowanceAtom);
 
     const transactionType = get(transactionTypeAtom);
 
@@ -93,13 +91,6 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.SELECT_TOKEN_AMOUNT;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
-    } else if (
-        transactionType?.type === "BRIDGE" &&
-        tokenIn.standard === "HypERC20Collateral" &&
-        tokenInBridgeAllowance !== null &&
-        tokenInAmount > tokenInBridgeAllowance
-    ) {
-        return SwapStep.APPROVE_BRIDGE;
     } else if (
         // tokenIn is not native, and we are not bridging a synthetic token, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&

@@ -10,9 +10,8 @@ import {
     Transport,
 } from "viem";
 
-
-const DUST_MIN_ETH = parseEther("0.0005");
-const DUST_AMOUNT_ETH = (DUST_MIN_ETH * 150n) / 100n
+const DUST_MIN_ETH = parseEther("0.02");
+const DUST_AMOUNT_ETH = (DUST_MIN_ETH * 150n) / 100n;
 
 export async function getDustAccountCalls({
     account,
@@ -26,7 +25,8 @@ export async function getDustAccountCalls({
     const calls: CallArgs[] = [];
 
     const filteredTokens = tokens.filter(
-        (token) => token.chainId === client.chain?.id && token.standard === "MockERC20",
+        (token) =>
+            token.chainId === client.chain?.id && token.standard === "MockERC20"
     );
 
     const ethBalancePromise = client.getBalance({ address: account });
@@ -36,7 +36,7 @@ export async function getDustAccountCalls({
             abi: MockERC20.abi,
             functionName: "balanceOf",
             args: [account],
-        }),
+        })
     );
 
     const [ethBalance, ...tokenBalances] = await Promise.all([
