@@ -2209,6 +2209,35 @@ export const functions = [
         outputs: [],
         stateMutability: "nonpayable",
     },
+    {
+        type: "function",
+        name: "FIXED_GAS_PAYMENT",
+        inputs: [],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "payForGas",
+        inputs: [
+            { name: "_messageId", type: "bytes32", internalType: "bytes32" },
+            { name: "_destinationDomain", type: "uint32", internalType: "uint32" },
+            { name: "_gasAmount", type: "uint256", internalType: "uint256" },
+            { name: "_refundAddress", type: "address", internalType: "address" },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "quoteGasPayment",
+        inputs: [
+            { name: "_destinationDomain", type: "uint32", internalType: "uint32" },
+            { name: "_gasAmount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "pure",
+    },
     { type: "function", name: "__constructor__", inputs: [], outputs: [], stateMutability: "nonpayable" },
     {
         type: "function",

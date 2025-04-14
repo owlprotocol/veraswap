@@ -32,6 +32,8 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/HypERC20FlashCollateral.sol/*.json",
     "out/HypTokenRouterSweep.sol/*.json",
     "out/ERC7579ExecutorRouter.sol/*.json",
+    "out/MockInterchainGasPaymaster.sol/*.json",
+    "out/IInterchainGasPaymaster.sol/*.json",
     // Superchain
     "out/IL2ToL2CrossDomainMessenger.sol/*.json",
     // Superchain (custom)

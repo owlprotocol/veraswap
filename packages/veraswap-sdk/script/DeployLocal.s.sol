@@ -7,6 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {IInterchainGasPaymaster} from "@hyperlane-xyz/core/interfaces/IInterchainGasPaymaster.sol";
 
 import {MockMailbox} from "@hyperlane-xyz/core/mock/MockMailbox.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
@@ -28,6 +29,7 @@ import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
+import {MockInterchainGasPaymasterUtils} from "./utils/MockInterchainGasPaymasterUtils.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
@@ -52,6 +54,11 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
             CoreContracts memory contracts = deployCoreContracts();
+
+            // Deploy mock paymaster for local testing only
+            (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();
+            console2.log("mockInterchainGasPaymaster:", mockInterchainGasPaymaster);
+
             vm.stopBroadcast();
 
             console2.log("v4PoolManager:", contracts.uniswap.v4PoolManager);
