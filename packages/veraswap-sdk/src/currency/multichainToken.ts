@@ -33,13 +33,13 @@ export class MultichainToken extends Token {
 
     protected constructor(data: MultichainTokenData) {
         super(data);
-        const { standard: type, hypERC20Collateral, remoteTokens } = data;
+        const { standard, hypERC20Collateral = null, remoteTokens } = data;
 
-        if (type === "HypERC20") {
+        if (standard === "HypERC20") {
             invariant(hypERC20Collateral === null, "HypERC20 tokens may not be linked to a HypERC20Collateral");
         }
 
-        this.standard = type;
+        this.standard = standard;
         this.hypERC20Collateral = hypERC20Collateral ? getAddress(hypERC20Collateral) : null;
         this.remoteTokens = remoteTokens ? mapValues(remoteTokens, (token) => new MultichainToken(token)) : {};
     }
@@ -48,15 +48,15 @@ export class MultichainToken extends Token {
         return new MultichainToken(data);
     }
 
-    public static createHypERC20(data: Omit<MultichainTokenData, "type" | "hypERC20Collateral">): MultichainToken {
+    public static createHypERC20(data: Omit<MultichainTokenData, "standard" | "hypERC20Collateral">): MultichainToken {
         return this.create({ ...data, standard: "HypERC20" });
     }
 
-    public static createSuperERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
+    public static createSuperERC20(data: Omit<MultichainTokenData, "standard">): MultichainToken {
         return this.create({ ...data, standard: "SuperERC20" });
     }
 
-    public static createERC20(data: Omit<MultichainTokenData, "type">): MultichainToken {
+    public static createERC20(data: Omit<MultichainTokenData, "standard">): MultichainToken {
         return this.create({ ...data, standard: "ERC20" });
     }
 

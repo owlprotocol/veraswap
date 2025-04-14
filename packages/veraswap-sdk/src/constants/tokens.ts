@@ -5,10 +5,8 @@ import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/cha
 
 import { MockERC20 } from "../artifacts/MockERC20.js";
 import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
-import { Currency } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { NativeCurrency } from "../currency/nativeCurrency.js";
 import { createPoolKey } from "../types/PoolKey.js";
 import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
 
@@ -303,8 +301,7 @@ function createMockERC20Token(
     mailbox: Address,
 ): MultichainToken {
     const address = getMockERC20Address({ name, symbol, decimals });
-    return MultichainToken.create({
-        standard: "ERC20",
+    return MultichainToken.createERC20({
         chainId,
         address,
         name,
@@ -360,8 +357,7 @@ function createMockERC20ConnectedTokens(
             symbol,
             msgSender,
         });
-        return MultichainToken.create({
-            standard: "HypERC20",
+        return MultichainToken.createHypERC20({
             chainId,
             address,
             name,
@@ -382,7 +378,7 @@ const mailboxByChain = {
     [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
 };
 
-export const LOCAL_CURRENCIES: Currency[] = [
+export const LOCAL_CURRENCIES = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
