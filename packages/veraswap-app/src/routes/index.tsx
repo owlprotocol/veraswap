@@ -374,10 +374,10 @@ function Index() {
             return;
         }
 
+        const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
-
-            const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
 
             if (bridge) {
                 setBridgeMessageId(bridge);
@@ -392,13 +392,10 @@ function Index() {
         } else {
             updateTransactionStep({ id: "swap", status: "success" });
 
-            if (transactionType.type === "SWAP_BRIDGE") {
-                const [bridge] = getHyperlaneMessageIdsFromReceipt(receipt);
-                if (bridge) {
-                    setBridgeMessageId(bridge);
-                    setTransactionHashes((prev) => ({ ...prev, bridge }));
-                    updateTransactionStep({ id: "bridge", status: "processing" });
-                }
+            if (transactionType.type === "SWAP_BRIDGE" && bridge) {
+                setBridgeMessageId(bridge);
+                setTransactionHashes((prev) => ({ ...prev, bridge }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
             } else if (transactionType.type === "SWAP") {
                 toast({
                     title: "Swap Complete",
