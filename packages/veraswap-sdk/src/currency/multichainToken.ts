@@ -1,6 +1,6 @@
 import { mapValues } from "lodash-es";
 import invariant from "tiny-invariant";
-import { Address } from "viem";
+import { Address, getAddress } from "viem";
 
 import { Token, TokenData } from "./token.js";
 
@@ -40,7 +40,7 @@ export class MultichainToken extends Token {
         }
 
         this.standard = type;
-        this.hypERC20Collateral = hypERC20Collateral ?? null;
+        this.hypERC20Collateral = hypERC20Collateral ? getAddress(hypERC20Collateral) : null;
         this.remoteTokens = remoteTokens ? mapValues(remoteTokens, (token) => new MultichainToken(token)) : {};
     }
 
