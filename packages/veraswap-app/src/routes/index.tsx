@@ -223,6 +223,7 @@ function Index() {
             !swapStep ||
             transactionIsPending ||
             !walletAddress ||
+            !tokenIn ||
             (swapStep === SwapStep.EXECUTE_SWAP && !transactionType)
         )
             return;
@@ -233,8 +234,8 @@ function Index() {
 
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             sendTransaction({
-                to: tokenIn!.address,
-                chainId: tokenIn!.chainId,
+                to: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
+                chainId: tokenIn.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
                     functionName: "approve",
@@ -248,13 +249,13 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
             sendTransaction({
                 to: PERMIT2_ADDRESS,
-                chainId: tokenIn!.chainId,
+                chainId: tokenIn.chainId,
                 data: encodeFunctionData({
                     abi: IAllowanceTransfer.abi,
                     functionName: "approve",
                     args: [
-                        tokenIn!.address,
-                        UNISWAP_CONTRACTS[tokenIn!.chainId].universalRouter,
+                        tokenIn.address,
+                        UNISWAP_CONTRACTS[tokenIn.chainId].universalRouter,
                         MAX_UINT_160,
                         MAX_UINT_48,
                     ],
@@ -326,7 +327,7 @@ function Index() {
             }
 
             sendTransaction(
-                { chainId: tokenIn!.chainId, ...transaction },
+                { chainId: tokenIn.chainId, ...transaction },
                 {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {

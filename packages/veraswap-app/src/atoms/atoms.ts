@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { getChainNameAndMailbox, TransactionType } from "@owlprotocol/veraswap-sdk";
-import { Address, Hash, zeroAddress } from "viem";
+import { Address, Hash, TransactionNotFoundError, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
     sendTransactionMutationOptions,
@@ -81,6 +81,8 @@ export const swapStepAtom = atom((get) => {
 
     if (account.address === undefined) {
         return SwapStep.CONNECT_WALLET;
+    } else if (!transactionType) {
+        return SwapStep.NOT_SUPPORTED;
     } else if (mutation.isPending) {
         return SwapStep.PENDING_SIGNATURE;
     } else if (hash && hash != receipt.data?.transactionHash) {
@@ -92,20 +94,20 @@ export const swapStepAtom = atom((get) => {
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (
-        // tokenIn is not native, and we are not bridging a synthetic token, and we don't have enough allowance
+        // tokenIn is not native, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&
-        !(transactionType?.type === "BRIDGE" && tokenIn.standard === "HypERC20") &&
+        (transactionType.type !== "BRIDGE" ||
+            (transactionType.type === "BRIDGE" &&
+                !(tokenIn.standard === "HypERC20" || tokenIn.standard === "SuperchainERC20"))) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (
-        tokenIn?.standard !== "NativeToken" &&
-        (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
+        tokenIn.standard !== "NativeToken" &&
+        (transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE") &&
         (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
-    } else if (!transactionType) {
-        return SwapStep.NOT_SUPPORTED;
     }
 
     return SwapStep.EXECUTE_SWAP;
