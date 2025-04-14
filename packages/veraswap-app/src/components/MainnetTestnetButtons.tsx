@@ -1,4 +1,5 @@
 import { useAtom } from "jotai";
+import { useEffect } from "react";
 import { Button } from "./ui/button.js";
 import { ChainsType, chainsTypeWriteAtom } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
@@ -31,6 +32,13 @@ const buttonStyles: Record<string, string> = {
   `,
 };
 
+const useDomainType = () => {
+    const hostname = window.location.hostname;
+    if (hostname === "veraswap.io" || hostname === "app.veraswap.io") return "mainnet";
+    if (hostname === "testnet.veraswap.io") return "testnet";
+    return null;
+};
+
 const networkTypes =
     import.meta.env.MODE === "development"
         ? (["mainnet", "testnet", "local"] as const)
@@ -39,6 +47,14 @@ const networkTypes =
 export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const navigate = Route.useNavigate();
+    const domainType = useDomainType();
+
+    useEffect(() => {
+        if (domainType) {
+            setNetworkType(domainType);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [domainType]);
 
     const handleNetworkChange = (newType: ChainsType) => {
         setNetworkType(newType);
@@ -55,15 +71,11 @@ export const MainnetTestnetButtons = () => {
         });
     };
 
+    if (domainType) return null;
+
     return (
         <div className="flex justify-center mb-4">
-            <div
-                className="
-    bg-gray-100 border-gray-300
-    dark:bg-gray-800 dark:border-gray-600
-    p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border
-"
-            >
+            <div className="bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-600 p-1 rounded-2xl shadow-md flex space-x-1 md:space-x-2 border">
                 {networkTypes.map((type: ChainsType) => (
                     <Button
                         key={type}
