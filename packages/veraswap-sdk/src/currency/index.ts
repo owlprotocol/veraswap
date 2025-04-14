@@ -1,5 +1,6 @@
 export * from "./baseCurrency.js";
 export * from "./currency.js";
+export * from "./currencyAmount.js";
 export * from "./ether.js";
 export * from "./nativeCurrency.js";
 export * from "./token.js";
