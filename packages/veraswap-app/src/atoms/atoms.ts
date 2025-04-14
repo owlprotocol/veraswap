@@ -92,14 +92,14 @@ export const swapStepAtom = atom((get) => {
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (
-        // tokenIn is not native, and we are not bridging a synthetic token, and we don't have enough allowance
+        // tokenIn is not native, and we don't have enough allowance
         tokenIn.standard !== "NativeToken" &&
-        !(transactionType?.type === "BRIDGE" && tokenIn.standard === "HypERC20") &&
+        (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
     } else if (
-        tokenIn?.standard !== "NativeToken" &&
+        tokenIn.standard !== "NativeToken" &&
         (transactionType?.type === "SWAP" || transactionType?.type === "SWAP_BRIDGE") &&
         (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
     ) {
