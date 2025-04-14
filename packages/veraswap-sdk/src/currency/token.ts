@@ -1,5 +1,5 @@
 import invariant from "tiny-invariant";
-import { Address } from "viem";
+import { Address, getAddress } from "viem";
 
 import { BaseCurrency, BaseCurrencyData } from "./baseCurrency.js";
 import { Currency } from "./currency.js";
@@ -32,7 +32,7 @@ export class Token extends BaseCurrency {
      */
     public constructor(data: TokenData) {
         super(data);
-        this.address = data.address;
+        this.address = getAddress(data.address);
     }
 
     /**
@@ -40,11 +40,7 @@ export class Token extends BaseCurrency {
      * @param other other token to compare
      */
     public equals(other: Currency): boolean {
-        return (
-            other.isToken &&
-            this.chainId === other.chainId &&
-            this.address.toLowerCase() === other.address.toLowerCase()
-        );
+        return other.isToken && this.chainId === other.chainId && this.address === other.address;
     }
 
     /**
