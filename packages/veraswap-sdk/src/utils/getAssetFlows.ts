@@ -163,7 +163,7 @@ export function getAssetFlows(
     currencyIn: Currency,
     currencyOut: Currency,
     poolKeysByChain: Record<number, PoolKey[]>,
-): AssetFlow[] | null {
+): [AssetFlow, ...AssetFlow[]] | null {
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap or bridge same token");
 
     // BRIDGE ONLY
@@ -222,5 +222,49 @@ export function getAssetFlows(
         });
     }
 
-    return flows;
+    return flows as [AssetFlow, ...AssetFlow[]];
+}
+
+export interface TransactionTypeSwapBridge {
+    type: "SWAP_BRIDGE";
+    swap: AssetFlowSwap;
+    bridge: AssetFlowBridge;
+}
+
+export interface TransactionTypeBridgeSwap {
+    type: "BRIDGE_SWAP";
+    bridge: AssetFlowBridge;
+    swap: AssetFlowSwap;
+}
+
+export type TransactionType = AssetFlowSwap | AssetFlowBridge | TransactionTypeSwapBridge | TransactionTypeBridgeSwap;
+/**
+ * Convert list of asset flows to TransactionType (used on frontend)
+ * @param flows
+ */
+export function assetFlowsToTransactionType(flows: [AssetFlow, ...AssetFlow[]]): TransactionType | null {
+    invariant(flows.length >= 1, "flows.length MUST be >= 1");
+    if (flows.length === 1) {
+        return flows[0];
+    }
+
+    if (flows.length === 2) {
+        if (flows[0].type === "SWAP" && flows[1].type === "BRIDGE") {
+            return {
+                type: "SWAP_BRIDGE",
+                swap: flows[0],
+                bridge: flows[1],
+            };
+        } else if (flows[0].type === "BRIDGE" && flows[1].type === "SWAP") {
+            return {
+                type: "BRIDGE_SWAP",
+                bridge: flows[0],
+                swap: flows[1],
+            };
+        }
+        throw new Error("flows.length === 2 but not SWAP_BRIDGE / BRIDGE_SWAP");
+    }
+
+    //Longer flows unsupported
+    return null;
 }
