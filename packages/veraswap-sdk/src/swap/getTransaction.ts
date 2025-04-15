@@ -137,7 +137,8 @@ export async function getTransaction(
 
             const getPermit2Params: GetPermit2PermitSignatureParams = {
                 chainId: tokenIn.chainId,
-                minAmount: MAX_UINT_160,
+                minAmount: amountIn,
+                approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[tokenIn.chainId].universalRouter,
                 token: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
@@ -251,7 +252,8 @@ export async function getTransaction(
 
             const getPermit2Params: GetPermit2PermitSignatureParams = {
                 chainId: swapTokenIn.chainId,
-                minAmount: MAX_UINT_160,
+                minAmount: amountIn,
+                approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[swapTokenIn.chainId].universalRouter,
                 token:
