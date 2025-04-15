@@ -20,6 +20,8 @@ import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts"
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
+    LOCAL_HYPERLANE_CONTRACTS,
+    LOCAL_KERNEL_CONTRACTS,
     MAX_UINT_160,
     MAX_UINT_256,
     MAX_UINT_48,
@@ -174,8 +176,8 @@ function Index() {
                 ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
                 : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
             : quoterData
-              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
-              : "";
+                ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+                : "";
 
     useDustAccount(walletAddress);
 
@@ -281,17 +283,17 @@ function Index() {
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                          ...transactionType,
-                          amountIn: tokenInAmount!,
-                          walletAddress,
-                          bridgePayment: bridgePayment,
-                          orbiterParams,
-                          queryClient: queryClient,
-                          wagmiConfig: config,
-                          initData: kernelSmartAccountInitData,
-                      } as TransactionParams & TransactionTypeBridge)
+                        ...transactionType,
+                        amountIn: tokenInAmount!,
+                        walletAddress,
+                        bridgePayment: bridgePayment,
+                        orbiterParams,
+                        queryClient: queryClient,
+                        wagmiConfig: config,
+                        initData: kernelSmartAccountInitData,
+                    } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                      ? ({
+                        ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum,
@@ -302,7 +304,7 @@ function Index() {
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                      : ({
+                        : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
@@ -310,7 +312,29 @@ function Index() {
                             bridgePayment: bridgePayment,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
-            const transaction = await getTransaction(transactionParams);
+            const inChainId = tokenIn.chainId;
+            const outChainId = tokenOut!.chainId;
+
+            const transaction = await getTransaction(transactionParams, {
+                [inChainId]: {
+                    universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter,
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    //TODO: testnet addresses
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[inChainId]?.erc7579Router,
+                    interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[inChainId]?.mockInterchainGasPaymaster,
+                },
+                [outChainId]: {
+                    universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter,
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    //TODO: testnet addresses
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[outChainId]?.erc7579Router,
+                    interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster,
+                },
+            });
             // Switch back to chainIn (in case chain was changed when requesting signature)
             if (tokenIn) {
                 // Kinda weird to check this here
@@ -598,8 +622,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0"
+                                                ? "Fetching quote..."
+                                                : "0"
                                     }
                                     disabled={true}
                                 />
