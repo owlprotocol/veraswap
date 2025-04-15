@@ -2,3 +2,8 @@ export * from "./inkSepolia.js";
 export * from "./interopDevnet.js";
 export * from "./supersim.js";
 export * from "./unichainSepolia.js";
+export * from "./baseSepolia.js";
+export * from "./sepolia.js";
+export * from "./arbitrumSepolia.js";
+export * from "./optimismSepolia.js";
+export * from "./base.js";
