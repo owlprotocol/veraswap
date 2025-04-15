@@ -110,9 +110,6 @@ function Index() {
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
 
-    console.log("bridgeMessageId", bridgeMessageId);
-    console.log("swapMessageId", swapMessageId);
-
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelSmartAccountInitDataAtom);
@@ -155,9 +152,6 @@ function Index() {
 
     const [bridgeRemoteTransactionHash, setBridgeRemoteTransactionHash] = useAtom(bridgeRemoteTransactionHashAtom);
     const [swapRemoteTransactionHash, setSwapRemoteTransactionHash] = useAtom(swapRemoteTransactionHashAtom);
-
-    console.log("bridgeRemoteTransactionHash", bridgeRemoteTransactionHash);
-    console.log("swapRemoteTransactionHash", swapRemoteTransactionHash);
 
     const { switchChain } = useSwitchChain();
 
@@ -421,8 +415,6 @@ function Index() {
         }
 
         const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
-        console.log("bridge from receipt", bridge);
-        console.log("swap from receipt", swap);
 
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
