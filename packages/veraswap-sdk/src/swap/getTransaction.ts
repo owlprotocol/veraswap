@@ -11,6 +11,7 @@ import {
     GetTransferRemoteWithKernelCallsParams,
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
+import { MAX_UINT_160 } from "../constants/uint256.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
@@ -136,7 +137,7 @@ export async function getTransaction(
 
             const getPermit2Params: GetPermit2PermitSignatureParams = {
                 chainId: tokenIn.chainId,
-                minAmount: amountIn,
+                minAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[tokenIn.chainId].universalRouter,
                 token: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
@@ -250,7 +251,7 @@ export async function getTransaction(
 
             const getPermit2Params: GetPermit2PermitSignatureParams = {
                 chainId: swapTokenIn.chainId,
-                minAmount: amountIn,
+                minAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[swapTokenIn.chainId].universalRouter,
                 token:
