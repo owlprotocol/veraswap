@@ -374,47 +374,34 @@ function Index() {
             return;
         }
 
-        if (transactionType.type !== "BRIDGE" && transactionType.type !== "BRIDGE_SWAP") {
+        const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+
+        if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
+            updateTransactionStep({ id: "sendOrigin", status: "success" });
+
+            if (bridge) {
+                setBridgeMessageId(bridge);
+                setTransactionHashes((prev) => ({ ...prev, bridge }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
+
+                if (transactionType.type === "BRIDGE_SWAP" && swap) {
+                    setSwapMessageId(swap);
+                    setTransactionHashes((prev) => ({ ...prev, swap }));
+                }
+            }
+        } else {
             updateTransactionStep({ id: "swap", status: "success" });
 
-            if (transactionType.type !== "SWAP_BRIDGE") {
+            if (transactionType.type === "SWAP_BRIDGE" && bridge) {
+                setBridgeMessageId(bridge);
+                setTransactionHashes((prev) => ({ ...prev, bridge }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
+            } else if (transactionType.type === "SWAP") {
                 toast({
                     title: "Swap Complete",
                     description: "Your swap has been completed successfully",
                     variant: "default",
                 });
-            }
-        }
-
-        if (transactionType.type !== "SWAP") {
-            updateTransactionStep({ id: "sendOrigin", status: "success" });
-
-            const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
-
-            setTransactionHashes((prev) => ({
-                ...prev,
-                bridge,
-            }));
-
-            const setMessage = (id: "bridge" | "swap", hash: Hex | undefined) => {
-                if (!hash) return;
-                if (id === "bridge") {
-                    setBridgeMessageId(hash);
-                } else {
-                    setSwapMessageId(hash);
-                }
-                updateTransactionStep({ id, status: "processing" });
-            };
-
-            switch (transactionType.type) {
-                case "BRIDGE":
-                case "SWAP_BRIDGE":
-                    setMessage("bridge", bridge);
-                    break;
-                case "BRIDGE_SWAP":
-                    setMessage("bridge", bridge);
-                    setMessage("swap", swap);
-                    break;
             }
         }
 
@@ -443,11 +430,13 @@ function Index() {
         }
 
         if (transactionType.type === "BRIDGE_SWAP") {
-            if (bridgeRemoteTransactionHash && !swapRemoteTransactionHash) {
-                updateTransactionStep({ id: "sendOrigin", status: "success" });
+            if (bridgeRemoteTransactionHash) {
                 updateTransactionStep({ id: "bridge", status: "success" });
+                setTransactionHashes((prev) => ({ ...prev, transferRemote: bridgeRemoteTransactionHash }));
                 updateTransactionStep({ id: "transferRemote", status: "success" });
-                updateTransactionStep({ id: "swap", status: "processing" });
+                if (swapMessageId) {
+                    updateTransactionStep({ id: "swap", status: "processing" });
+                }
             }
 
             if (bridgeRemoteTransactionHash && swapRemoteTransactionHash) {
