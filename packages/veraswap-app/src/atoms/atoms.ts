@@ -101,13 +101,22 @@ export enum SwapStep {
     INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
-    APPROVE_BRIDGE = "Approve Token Bridge",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
     BRIDGING_NOT_SUPPORTED = "Bridging not supported",
     NOT_SUPPORTED = "Not supported",
 }
+
+/** Steps that disable the transaction button */
+const enabledSteps = [
+    SwapStep.APPROVE_PERMIT2,
+    SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
+    SwapStep.EXECUTE_SWAP,
+    SwapStep.NOT_SUPPORTED,
+];
+
+export const isDisabledStep = (swapStep: SwapStep) => !enabledSteps.includes(swapStep);
 
 export const getSwapStepMessage = (swapStep: SwapStep, transactionType: TransactionType | null) => {
     if (swapStep !== SwapStep.EXECUTE_SWAP) return swapStep;
@@ -167,12 +176,6 @@ export const swapStepAtom = atom((get) => {
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
-    } else if (
-        tokenIn.standard !== "NativeToken" &&
-        (transactionType.type === "SWAP" || transactionType.type === "SWAP_BRIDGE") &&
-        (tokenInUniswapRouterAllowance === null || tokenInUniswapRouterAllowance < tokenInAmount)
-    ) {
-        return SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER;
     }
 
     return SwapStep.EXECUTE_SWAP;

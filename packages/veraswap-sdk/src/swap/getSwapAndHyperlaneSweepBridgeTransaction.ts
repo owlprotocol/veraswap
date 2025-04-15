@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
+import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
@@ -21,6 +22,7 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     amountOutMinimum,
     poolKey,
     zeroForOne,
+    permit2PermitParams,
     hookData = "0x",
 }: {
     universalRouter: Address;
@@ -32,9 +34,14 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     amountOutMinimum: bigint;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
     const routePlanner = new RoutePlanner();
+
+    if (permit2PermitParams) {
+        routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
+    }
 
     const v4SwapParams = getV4SwapCommandParams({
         receiver: HYPERLANE_ROUTER_SWEEP_ADDRESS,
@@ -58,11 +65,11 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 
     return {
         to: universalRouter,
-        value: isNative ? amountIn + bridgePayment : bridgePayment,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",
             args: [routePlanner.commands, routePlanner.inputs, routerDeadline],
         }),
+        value: isNative ? amountIn + bridgePayment : bridgePayment,
     };
 }

@@ -18,6 +18,7 @@ export interface GetSwapCallsParams extends GetCallsParams {
     poolKey: PoolKey;
     universalRouter: Address;
     receiver: Address;
+    callTargetBefore?: [Address, bigint, Hex];
     callTargetAfter?: [Address, bigint, Hex];
     routerPayment?: bigint;
     hookData?: Hex;
@@ -38,6 +39,7 @@ export async function getSwapCalls(
         universalRouter,
         receiver,
         zeroForOne,
+        callTargetBefore,
         callTargetAfter,
         hookData,
         approveExpiration,
@@ -59,6 +61,10 @@ export async function getSwapCalls(
     calls.push(...permit2Calls.calls.map((call) => ({ ...call, account }))); //override account of Permit2.permit call (anyone can submit this)
 
     const routePlanner = new RoutePlanner();
+
+    if (callTargetBefore) {
+        routePlanner.addCommand(CommandType.CALL_TARGET, callTargetBefore);
+    }
 
     const v4SwapParams = getV4SwapCommandParams({
         receiver,

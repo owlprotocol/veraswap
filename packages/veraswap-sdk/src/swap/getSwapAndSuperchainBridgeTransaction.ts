@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, Hex } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
+import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
@@ -19,6 +20,7 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountOutMinimum,
     poolKey,
     zeroForOne,
+    permit2PermitParams,
     hookData = "0x",
 }: {
     universalRouter: Address;
@@ -28,9 +30,14 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountOutMinimum: bigint;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
     const routePlanner = new RoutePlanner();
+
+    if (permit2PermitParams) {
+        routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
+    }
 
     const v4SwapParams = getV4SwapCommandParams({
         receiver: SUPERCHAIN_SWEEP_ADDRESS,

@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, Hex, padHex, zeroAddress } from "viem";
 
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
+import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
@@ -20,6 +21,7 @@ export function getSwapAndHyperlaneBridgeTransaction({
     amountOutMinimum,
     poolKey,
     zeroForOne,
+    permit2PermitParams,
     hookData = "0x",
 }: {
     universalRouter: Address;
@@ -31,9 +33,15 @@ export function getSwapAndHyperlaneBridgeTransaction({
     amountOutMinimum: bigint;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
     const routePlanner = new RoutePlanner();
+
+    if (permit2PermitParams) {
+        routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
+    }
+
     routePlanner.addCommand(CommandType.CALL_TARGET, [
         bridgeAddress,
         0n,
