@@ -15,17 +15,15 @@ import {
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, Hex, zeroAddress } from "viem";
-import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
+import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
     HYPERLANE_CONTRACTS,
     LOCAL_HYPERLANE_CONTRACTS,
     LOCAL_KERNEL_CONTRACTS,
-    MAX_UINT_160,
     MAX_UINT_256,
-    MAX_UINT_48,
     PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
@@ -64,6 +62,7 @@ import {
     orbiterRouterAtom,
     orbiterRoutersEndpointContractsAtom,
     kernelSmartAccountInitDataAtom,
+    isDisabledStep,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -251,24 +250,24 @@ function Index() {
             return;
         }
 
-        if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
-            sendTransaction({
-                to: PERMIT2_ADDRESS,
-                chainId: tokenIn.chainId,
-                data: encodeFunctionData({
-                    abi: IAllowanceTransfer.abi,
-                    functionName: "approve",
-                    args: [
-                        tokenIn.address,
-                        UNISWAP_CONTRACTS[tokenIn.chainId].universalRouter,
-                        MAX_UINT_160,
-                        MAX_UINT_48,
-                    ],
-                }),
-            });
-
-            return;
-        }
+        // if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
+        //     sendTransaction({
+        //         to: PERMIT2_ADDRESS,
+        //         chainId: tokenIn.chainId,
+        //         data: encodeFunctionData({
+        //             abi: IAllowanceTransfer.abi,
+        //             functionName: "approve",
+        //             args: [
+        //                 tokenIn.address,
+        //                 UNISWAP_CONTRACTS[tokenIn.chainId].universalRouter,
+        //                 MAX_UINT_160,
+        //                 MAX_UINT_48,
+        //             ],
+        //         }),
+        //     });
+        //
+        //     return;
+        // }
 
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
@@ -313,6 +312,8 @@ function Index() {
                             amountOutMinimum: amountOutMinimum!,
                             walletAddress,
                             bridgePayment: bridgePayment,
+                            queryClient: queryClient,
+                            wagmiConfig: config,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const inChainId = tokenIn.chainId;
@@ -657,14 +658,7 @@ function Index() {
                         </div>
                     </div>
                     <Button
-                        disabled={
-                            !(
-                                swapStep === SwapStep.APPROVE_PERMIT2 ||
-                                swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER ||
-                                swapStep === SwapStep.EXECUTE_SWAP ||
-                                swapStep === SwapStep.NOT_SUPPORTED
-                            )
-                        }
+                        disabled={isDisabledStep(swapStep)}
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-14 text-lg rounded-xl shadow-lg transition-all"
                         onClick={() => handleSwapSteps()}
                     >

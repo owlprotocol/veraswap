@@ -10,7 +10,9 @@ import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
 } from "../calls/getTransferRemoteWithKernelCalls.js";
+import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import {
     TransactionTypeBridge,
@@ -24,6 +26,9 @@ import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
 export interface TransactionSwapOptions {
+    walletAddress: Address;
+    queryClient: QueryClient;
+    wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
 }
@@ -61,15 +66,18 @@ export interface TransactionBridgeOrbiterOptions {
 }
 
 export interface TransactionSwapBridgeOptions {
+    queryClient: QueryClient;
+    wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
     bridgePayment: bigint;
     walletAddress: Address;
     orbiterParams?: OrbiterParams;
-    uniswapContracts: Record<number, { UNIVERSAL_ROUTER: Address }>;
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
+    queryClient: QueryClient;
+    wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
     walletAddress: Address;
@@ -115,13 +123,40 @@ export async function getTransaction(
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
     switch (params.type) {
         case "SWAP": {
-            const { tokenIn, poolKey, zeroForOne, amountIn, amountOutMinimum } = params;
+            const {
+                tokenIn,
+                poolKey,
+                zeroForOne,
+                amountIn,
+                walletAddress,
+                amountOutMinimum,
+                queryClient,
+                wagmiConfig,
+            } = params;
+
+            const getPermit2Params: GetPermit2PermitSignatureParams = {
+                chainId: tokenIn.chainId,
+                minAmount: amountIn,
+                approveExpiration: "MAX_UINT_48",
+                spender: contracts[tokenIn.chainId].universalRouter,
+                token: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
+                account: walletAddress,
+            };
+            const { permitSingle, signature } = await getPermit2PermitSignature(
+                queryClient,
+                wagmiConfig,
+                getPermit2Params,
+            );
+            const permit2PermitParams: [PermitSingle, Hex] | undefined =
+                permitSingle && signature ? [permitSingle, signature] : undefined;
+
             return getSwapExactInExecuteData({
                 universalRouter: contracts[tokenIn.chainId].universalRouter,
                 poolKey,
                 zeroForOne,
                 amountIn,
                 amountOutMinimum,
+                permit2PermitParams,
             });
         }
 
@@ -188,12 +223,23 @@ export async function getTransaction(
         }
 
         case "SWAP_BRIDGE": {
-            const { swap, bridge, bridgePayment, amountIn, amountOutMinimum, walletAddress, orbiterParams } = params;
+            const {
+                swap,
+                bridge,
+                bridgePayment,
+                amountIn,
+                amountOutMinimum,
+                walletAddress,
+                orbiterParams,
+                queryClient,
+                wagmiConfig,
+            } = params;
             const { tokenIn: swapTokenIn, poolKey, zeroForOne } = swap;
             const { tokenIn: bridgeTokenIn, tokenOut: bridgeTokenOut } = bridge;
 
             const bridgeAddress = bridgeTokenIn.address;
 
+            // TODO: add orbiter bridging
             if (bridgeTokenIn.standard === "NativeToken" && bridgeTokenOut.standard === "NativeToken") {
                 if (!orbiterParams) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
@@ -202,7 +248,23 @@ export async function getTransaction(
                 throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
             }
 
-            // TODO: add orbiter bridging
+            const getPermit2Params: GetPermit2PermitSignatureParams = {
+                chainId: swapTokenIn.chainId,
+                minAmount: amountIn,
+                approveExpiration: "MAX_UINT_48",
+                spender: contracts[swapTokenIn.chainId].universalRouter,
+                token:
+                    swapTokenIn.standard === "HypERC20Collateral" ? swapTokenIn.collateralAddress : swapTokenIn.address,
+                account: walletAddress,
+            };
+            const { permitSingle, signature } = await getPermit2PermitSignature(
+                queryClient,
+                wagmiConfig,
+                getPermit2Params,
+            );
+            const permit2PermitParams: [PermitSingle, Hex] | undefined =
+                permitSingle && signature ? [permitSingle, signature] : undefined;
+
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapTokenIn.chainId].universalRouter,
                 bridgeAddress,
@@ -212,6 +274,7 @@ export async function getTransaction(
                 receiver: walletAddress,
                 poolKey,
                 zeroForOne,
+                permit2PermitParams,
                 amountIn,
                 amountOutMinimum,
             });

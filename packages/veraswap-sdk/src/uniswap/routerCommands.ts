@@ -5,6 +5,11 @@
 import type { AbiParametersToPrimitiveTypes } from "abitype";
 import { encodeAbiParameters, Hex } from "viem";
 
+import {
+    permit,
+    permit_address___address_uint160_uint48_uint48__address_uint256__bytes,
+} from "../artifacts/IAllowanceTransfer.js";
+
 /**
  * CommandTypes
  * @description Flags that modify a command's execution
@@ -71,11 +76,9 @@ export type CommandDefinition =
 const ALLOW_REVERT_FLAG = 0x80;
 const REVERTIBLE_COMMANDS = new Set<CommandType>([CommandType.EXECUTE_SUB_PLAN]);
 
-const PERMIT_STRUCT =
-    "((address token,uint160 amount,uint48 expiration,uint48 nonce) details,address spender,uint256 sigDeadline)";
+const PERMIT_STRUCT = permit_address___address_uint160_uint48_uint48__address_uint256__bytes.inputs[1];
 
-const PERMIT_BATCH_STRUCT =
-    "((address token,uint160 amount,uint48 expiration,uint48 nonce)[] details,address spender,uint256 sigDeadline)";
+const PERMIT_BATCH_STRUCT = permit.inputs[1];
 
 const POOL_KEY_STRUCT = "(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks)";
 
@@ -95,17 +98,11 @@ export const COMMAND_DEFINITION = {
     // Permit2 Actions
     [CommandType.PERMIT2_PERMIT]: {
         parser: Parser.Abi,
-        params: [
-            { name: "permit", type: PERMIT_STRUCT },
-            { name: "signature", type: "bytes" },
-        ],
+        params: [PERMIT_STRUCT, { name: "signature", type: "bytes" }],
     },
     [CommandType.PERMIT2_PERMIT_BATCH]: {
         parser: Parser.Abi,
-        params: [
-            { name: "permit", type: PERMIT_BATCH_STRUCT },
-            { name: "signature", type: "bytes" },
-        ],
+        params: [PERMIT_BATCH_STRUCT, { name: "signature", type: "bytes" }],
     },
     [CommandType.PERMIT2_TRANSFER_FROM]: {
         parser: Parser.Abi,
