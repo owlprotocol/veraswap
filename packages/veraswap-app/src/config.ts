@@ -1,5 +1,4 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
-import { arbitrum, arbitrumSepolia, base, baseSepolia, Chain, mainnet, optimismSepolia, sepolia } from "wagmi/chains";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
 import {
@@ -10,7 +9,13 @@ import {
     opChainB,
     opChainL1,
     unichainSepolia,
+    arbitrumSepolia,
+    base,
+    baseSepolia,
+    optimismSepolia,
+    sepolia,
 } from "@owlprotocol/veraswap-sdk/chains";
+import { Chain } from "viem";
 
 /***** Chains *****/
 // List of supported networks
@@ -18,72 +23,9 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [
-    mainnet,
-    arbitrum,
-    {
-        ...base,
-        rpcUrls: {
-            default: {
-                http: ["https://lb.drpc.org/ogrpc?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-                webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            },
-        },
-    },
-];
+export const mainnetChains = [base];
 
-export const testnetChains = [
-    {
-        ...sepolia,
-        rpcUrls: {
-            default: {
-                http: ["https://lb.drpc.org/ogrpc?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-                webSocket: ["wss://lb.drpc.org/ogws?network=sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            },
-        },
-    },
-    {
-        ...optimismSepolia,
-        rpcUrls: {
-            default: {
-                http: [
-                    "https://lb.drpc.org/ogrpc?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-                webSocket: [
-                    "wss://lb.drpc.org/ogws?network=optimism-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-            },
-        },
-    },
-    {
-        ...arbitrumSepolia,
-        rpcUrls: {
-            default: {
-                http: [
-                    "https://lb.drpc.org/ogrpc?network=arbitrum-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-                webSocket: [
-                    "wss://lb.drpc.org/ogws?network=arbitrum-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-            },
-        },
-    },
-    {
-        ...baseSepolia,
-        rpcUrls: {
-            default: {
-                http: [
-                    "https://lb.drpc.org/ogrpc?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-                webSocket: [
-                    "wss://lb.drpc.org/ogws?network=base-sepolia&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB",
-                ],
-            },
-        },
-    },
-    inkSepolia,
-    unichainSepolia,
-];
+export const testnetChains = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, inkSepolia, unichainSepolia];
 
 const allChains = [...interopDevnetChains, ...testnetChains, ...mainnetChains];
 
