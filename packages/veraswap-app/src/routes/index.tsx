@@ -251,25 +251,6 @@ function Index() {
             return;
         }
 
-        // if (swapStep === SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER) {
-        //     sendTransaction({
-        //         to: PERMIT2_ADDRESS,
-        //         chainId: tokenIn.chainId,
-        //         data: encodeFunctionData({
-        //             abi: IAllowanceTransfer.abi,
-        //             functionName: "approve",
-        //             args: [
-        //                 tokenIn.address,
-        //                 UNISWAP_CONTRACTS[tokenIn.chainId].universalRouter,
-        //                 MAX_UINT_160,
-        //                 MAX_UINT_48,
-        //             ],
-        //         }),
-        //     });
-        //
-        //     return;
-        // }
-
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
