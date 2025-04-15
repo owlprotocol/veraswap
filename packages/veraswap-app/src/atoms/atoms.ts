@@ -241,6 +241,9 @@ export const updateTransactionStepAtom = atom(
 );
 
 export const initializeTransactionStepsAtom = atom(null, (_, set, transactionType: TransactionType) => {
+    // Clear previous transaction hashes
+    set(transactionHashesAtom, {} as Record<TransactionStepId, string | undefined>);
+
     const swapStep: TransactionStep = {
         id: "swap",
         title: "🤝 Swap",
@@ -283,7 +286,7 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
             steps = [swapStep, bridgeStep, transferRemoteStep];
             break;
         case "BRIDGE_SWAP":
-            steps = [sendOriginStep, bridgeStep, transferRemoteStep, swapStep];
+            steps = [sendOriginStep, bridgeStep, swapStep, transferRemoteStep];
             break;
     }
 

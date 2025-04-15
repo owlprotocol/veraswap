@@ -1,9 +1,11 @@
 import { CheckCircle, Loader2, XCircle, ArrowUpRight } from "lucide-react";
 import { Chain } from "viem";
+import { useAtomValue } from "jotai";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { cn } from "@/lib/utils.js";
 import { TransactionStepId } from "@/atoms/atoms.js";
+import { transactionTypeAtom } from "@/atoms/tokens.js";
 
 export type TransactionStep = {
     id: TransactionStepId;
@@ -17,7 +19,7 @@ type TransactionStatusModalProps = {
     onOpenChange: (open: boolean) => void;
     steps: TransactionStep[];
     currentStepId?: string;
-    hashes?: { swap?: string; bridge?: string; transfer?: string };
+    hashes?: { swap?: string; bridge?: string; transferRemote?: string; sendOrigin?: string };
     chains?: { source?: Chain; destination?: Chain };
     networkType: "local" | "testnet" | "mainnet";
 };
@@ -31,15 +33,20 @@ export function TransactionStatusModal({
     chains,
     networkType,
 }: TransactionStatusModalProps) {
+    const transactionType = useAtomValue(transactionTypeAtom);
+
     const getExplorerUrl = (stepId: "swap" | "bridge" | "sendOrigin" | "transferRemote") => {
         if (networkType === "local") return undefined;
         switch (stepId) {
             case "swap":
+                if (transactionType?.type === "BRIDGE_SWAP" && hashes?.swap) {
+                    return `https://explorer.hyperlane.xyz/message/${hashes.swap}`;
+                }
                 return hashes?.swap && chains?.source
                     ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.swap}`
                     : undefined;
             case "bridge":
-                if (!hashes?.swap) return undefined;
+                if (!hashes?.bridge) return undefined;
 
                 /*
                 if (networkType === "superchain") {
@@ -49,12 +56,12 @@ export function TransactionStatusModal({
                 */
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "sendOrigin":
-                return hashes?.transfer && chains?.source
-                    ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.transfer}`
+                return hashes?.sendOrigin && chains?.source
+                    ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.sendOrigin}`
                     : undefined;
             case "transferRemote":
-                return hashes?.transfer && chains?.destination
-                    ? `${chains.destination.blockExplorers?.default?.url}/tx/${hashes.transfer}`
+                return hashes?.transferRemote && chains?.destination
+                    ? `${chains.destination.blockExplorers?.default?.url}/tx/${hashes.transferRemote}`
                     : undefined;
             default:
                 return undefined;
@@ -85,7 +92,7 @@ function StepCard({ step, isActive, url }: { step: TransactionStep; isActive: bo
         <Card
             className={cn(
                 "border-2 transition-all duration-200 group",
-                isActive && step.status === "processing" && "border-blue-500 shadow-md",
+                step.status === "processing" && "border-blue-500 shadow-md",
                 step.status === "success" && "border-green-500",
                 step.status === "error" && "border-red-500",
                 url && "hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer",

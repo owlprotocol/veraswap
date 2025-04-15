@@ -110,6 +110,9 @@ function Index() {
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
 
+    console.log("bridgeMessageId", bridgeMessageId);
+    console.log("swapMessageId", swapMessageId);
+
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelSmartAccountInitDataAtom);
@@ -152,6 +155,9 @@ function Index() {
 
     const [bridgeRemoteTransactionHash, setBridgeRemoteTransactionHash] = useAtom(bridgeRemoteTransactionHashAtom);
     const [swapRemoteTransactionHash, setSwapRemoteTransactionHash] = useAtom(swapRemoteTransactionHashAtom);
+
+    console.log("bridgeRemoteTransactionHash", bridgeRemoteTransactionHash);
+    console.log("swapRemoteTransactionHash", swapRemoteTransactionHash);
 
     const { switchChain } = useSwitchChain();
 
@@ -415,6 +421,8 @@ function Index() {
         }
 
         const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+        console.log("bridge from receipt", bridge);
+        console.log("swap from receipt", swap);
 
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
@@ -427,15 +435,18 @@ function Index() {
                 if (transactionType.type === "BRIDGE_SWAP" && swap) {
                     setSwapMessageId(swap);
                     setTransactionHashes((prev) => ({ ...prev, swap }));
+                    updateTransactionStep({ id: "swap", status: "processing" });
                 }
             }
         } else {
             updateTransactionStep({ id: "swap", status: "success" });
 
-            if (transactionType.type === "SWAP_BRIDGE" && bridge) {
-                setBridgeMessageId(bridge);
-                setTransactionHashes((prev) => ({ ...prev, bridge }));
-                updateTransactionStep({ id: "bridge", status: "processing" });
+            if (bridge) {
+                if (transactionType.type === "SWAP_BRIDGE") {
+                    setBridgeMessageId(bridge);
+                    setTransactionHashes((prev) => ({ ...prev, bridge }));
+                    updateTransactionStep({ id: "bridge", status: "processing" });
+                }
             } else if (transactionType.type === "SWAP") {
                 toast({
                     title: "Swap Complete",
@@ -472,26 +483,18 @@ function Index() {
         if (transactionType.type === "BRIDGE_SWAP") {
             if (bridgeRemoteTransactionHash) {
                 updateTransactionStep({ id: "bridge", status: "success" });
-                setTransactionHashes((prev) => ({ ...prev, transferRemote: bridgeRemoteTransactionHash }));
-                updateTransactionStep({ id: "transferRemote", status: "success" });
-                if (swapMessageId) {
-                    updateTransactionStep({ id: "swap", status: "processing" });
+
+                if (swapRemoteTransactionHash) {
+                    updateTransactionStep({ id: "swap", status: "success" });
+                    setTransactionHashes((prev) => ({ ...prev, transferRemote: swapRemoteTransactionHash }));
+                    updateTransactionStep({ id: "transferRemote", status: "success" });
                 }
             }
-
-            if (bridgeRemoteTransactionHash && swapRemoteTransactionHash) {
-                setTransactionHashes((prev) => ({
-                    ...prev,
-                    swap: swapRemoteTransactionHash,
-                }));
-                updateTransactionStep({ id: "swap", status: "success" });
-
-                toast({
-                    title: "Transaction Complete",
-                    description: "Your transaction has been completed successfully",
-                    variant: "default",
-                });
-            }
+            toast({
+                title: "Transaction Complete",
+                description: "Your transaction has been completed successfully",
+                variant: "default",
+            });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bridgeRemoteTransactionHash, swapRemoteTransactionHash]);
