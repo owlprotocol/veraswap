@@ -152,6 +152,11 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                 },
+                contracts: {
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
+                },
                 // Pre-configure account for future calls to support execution from 901
                 erc7579RouterOwners: [
                     {
@@ -251,6 +256,11 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
                     initData: kernelInitData,
                     salt: kernelSalt,
                     factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                },
+                contracts: {
+                    execute: LOCAL_KERNEL_CONTRACTS.execute,
+                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
                 },
                 // Pre-configure account for future calls to support execution from 901
                 erc7579RouterOwners: [

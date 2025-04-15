@@ -6,8 +6,6 @@ import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { Execute } from "../artifacts/Execute.js";
-import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
-import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
@@ -40,7 +38,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         salt: Hex;
         factoryAddress: Address;
     };
-    contracts?: {
+    contracts: {
         execute: Address;
         ownableSignatureExecutor: Address;
         erc7579Router: Address;
@@ -62,6 +60,7 @@ export async function getTransferRemoteWithKernelCalls(
     params: GetTransferRemoteWithKernelCallsParams,
 ): Promise<GetCallsReturnType> {
     const {
+        contracts,
         chainId,
         account,
         tokenStandard,
@@ -82,11 +81,6 @@ export async function getTransferRemoteWithKernelCalls(
     if (!params.contracts) {
         invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
     }
-    const contracts = params.contracts ?? {
-        execute: LOCAL_KERNEL_CONTRACTS.execute,
-        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].erc7579Router,
-    };
     const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
     // KERNEL ACCOUNT CONFIGURATION

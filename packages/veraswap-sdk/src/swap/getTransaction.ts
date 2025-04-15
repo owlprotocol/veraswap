@@ -139,10 +139,16 @@ export async function getTransaction(
                     destination: tokenOut.chainId,
                     recipient: walletAddress,
                     amount: amountIn,
+                    //TODO: LOCAL CONTRACTS
                     createAccount: {
                         initData,
                         salt: zeroHash,
                         factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    },
+                    contracts: {
+                        execute: LOCAL_KERNEL_CONTRACTS.execute,
+                        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].erc7579Router,
                     },
                 };
 
@@ -228,6 +234,7 @@ export async function getTransaction(
                 destination: tokenOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
+                //TODO: LOCAL CONTRACTS
                 contracts: {
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,

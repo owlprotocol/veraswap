@@ -10,8 +10,6 @@ import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddres
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
 import { IInterchainGasPaymaster } from "../artifacts/IInterchainGasPaymaster.js";
-import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
-import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
@@ -35,13 +33,13 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
-    contracts?: {
+    contracts: {
         execute: Address;
         ownableSignatureExecutor: Address;
         erc7579Router: Address;
         interchainGasPaymaster: Address;
     };
-    contractsRemote?: {
+    contractsRemote: {
         execute: Address;
         ownableSignatureExecutor: Address;
         erc7579Router: Address;
@@ -77,6 +75,8 @@ export async function getBridgeSwapWithKernelCalls(
     params: GetBridgeSwapWithKernelCallsParams,
 ): Promise<GetCallsReturnType> {
     const {
+        contracts,
+        contractsRemote,
         amount,
         destination,
         hook,
@@ -93,27 +93,6 @@ export async function getBridgeSwapWithKernelCalls(
         tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral or NativeToken`,
     );
-
-    if (!params.contracts) {
-        invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
-    }
-    if (!params.contractsRemote) {
-        invariant(
-            destination === 900 || destination === 901,
-            "Destination Chain ID must be 900 or 901 for default remoteContracts",
-        );
-    }
-    const contracts = params.contracts ?? {
-        execute: LOCAL_KERNEL_CONTRACTS.execute,
-        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].erc7579Router,
-        interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].mockInterchainGasPaymaster,
-    };
-    const contractsRemote = params.contractsRemote ?? {
-        execute: LOCAL_KERNEL_CONTRACTS.execute,
-        ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[destination as 900 | 901].erc7579Router,
-    };
 
     // KERNEL ACCOUNT CREATE
     // Create account if needed
