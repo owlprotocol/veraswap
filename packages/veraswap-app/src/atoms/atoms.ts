@@ -1,12 +1,13 @@
 import { atom, WritableAtom } from "jotai";
 import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getChainNameAndMailbox, TransactionType } from "@owlprotocol/veraswap-sdk";
+import { TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Address, Hash, TransactionNotFoundError, zeroAddress } from "viem";
 import {
     readContractQueryOptions,
     sendTransactionMutationOptions,
     waitForTransactionReceiptQueryOptions,
 } from "wagmi/query";
+import { mapKeys } from "lodash-es";
 import {
     chainOutAtom,
     tokenInAmountAtom,
@@ -27,6 +28,71 @@ import { TransactionStep } from "@/components/TransactionStatusModal.js";
 export type TransactionStepId = "swap" | "bridge" | "sendOrigin" | "transferRemote";
 
 export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
+
+export interface HyperlaneChainMetadata {
+    chainId: number;
+    name: string;
+    blocks: {
+        confirmations: number;
+        estimateBlockTime: number;
+        reorgPeriod: string;
+    };
+    estimateBlockTime: number;
+    deployer: {
+        name: string;
+        url: string;
+    };
+    displayName: string;
+    domainId: number;
+    gasCurrencyCoinGeckoId: string;
+    nativeToken: {
+        decimals: number;
+        name: string;
+        symbol: string;
+    };
+    protocol: string;
+    technicalStack: string;
+}
+
+export interface HyperlaneChainAddresses {
+    domainRoutingIsm: Address;
+    domainRoutingIsmFactory: Address;
+    fallbackDomainRoutingHook: Address;
+    fallbackRoutingHook: Address;
+    interchainGasPaymaster: Address;
+    interchainSecurityModule: Address;
+    mailbox: Address;
+    merkleTreeHook: Address;
+    proxyAdmin: Address;
+    staticAggregationHookFactory: Address;
+    staticAggregationIsmFactory: Address;
+    staticMerkleRootMultisigIsmFactory: Address;
+    staticMerkleRootWeightedMultisigIsmFactory: Address;
+    staticMessageIdMultisigIsmFactory: Address;
+    staticMessageIdWeightedMultisigIsmFactory: Address;
+    storageGasOracle: Address;
+    testRecipient: Address;
+    validatorAnnounce: Address;
+}
+
+// Get Hyperlane Registry result and remap by chainId
+export const hyperlaneRegistryAtom = atom((get) => {
+    const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
+    if (!hyperlaneRegistry) return null;
+
+    // Map chainId to chain name (hyperlane name)
+    const metadata = hyperlaneRegistry.metadata as Record<string, HyperlaneChainMetadata>;
+    const metadataByChainId = mapKeys(metadata, (value) => value.chainId) as Record<number, HyperlaneChainMetadata>;
+    const addressesByChainId = mapKeys(hyperlaneRegistry.addresses, (_, key) => metadata[key].chainId) as Record<
+        number,
+        HyperlaneChainAddresses
+    >;
+
+    return {
+        metadata: metadataByChainId,
+        addresses: addressesByChainId,
+    };
+});
 
 export enum SwapStep {
     CONNECT_WALLET = "Connect Wallet",
@@ -233,12 +299,11 @@ export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
 
 export const hyperlaneMailboxChainOut = atom((get) => {
-    const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
+    const hyperlaneRegistry = get(hyperlaneRegistryAtom);
     if (!hyperlaneRegistry) return null;
     const chainOut = get(chainOutAtom);
-    const chainsType = get(chainsTypeAtom);
+    const chainsType = get(chainsTypeAtom); //TODO: Why is chainsType required here?
     if (!chainOut || !chainsType) return null;
 
-    const { mailbox } = getChainNameAndMailbox({ chainId: chainOut.id, hyperlaneRegistry });
-    return mailbox;
+    return hyperlaneRegistry.addresses[chainOut.id].mailbox;
 });
