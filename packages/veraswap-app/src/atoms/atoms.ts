@@ -18,7 +18,6 @@ import {
     tokenOutAtom,
     transactionTypeAtom,
 } from "./tokens.js";
-import { chainsTypeAtom } from "./chains.js";
 import { accountAtom } from "./account.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
@@ -302,8 +301,7 @@ export const hyperlaneMailboxChainOut = atom((get) => {
     const hyperlaneRegistry = get(hyperlaneRegistryAtom);
     if (!hyperlaneRegistry) return null;
     const chainOut = get(chainOutAtom);
-    const chainsType = get(chainsTypeAtom); //TODO: Why is chainsType required here?
-    if (!chainOut || !chainsType) return null;
+    if (!chainOut) return null;
 
     return hyperlaneRegistry.addresses[chainOut.id].mailbox;
 });
