@@ -147,14 +147,14 @@ export const swapStepAtom = atom((get) => {
 
     if (account.address === undefined) {
         return SwapStep.CONNECT_WALLET;
-    } else if (!transactionType) {
-        return SwapStep.NOT_SUPPORTED;
     } else if (mutation.isPending) {
         return SwapStep.PENDING_SIGNATURE;
     } else if (hash && hash != receipt.data?.transactionHash) {
         return SwapStep.PENDING_TRANSACTION;
     } else if (tokenIn === null || tokenOut === null) {
         return SwapStep.SELECT_TOKEN;
+    } else if (!transactionType) {
+        return SwapStep.NOT_SUPPORTED;
     } else if (tokenInAmount === null) {
         return SwapStep.SELECT_TOKEN_AMOUNT;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
