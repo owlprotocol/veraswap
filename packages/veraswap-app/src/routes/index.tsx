@@ -237,6 +237,7 @@ function Index() {
         }
 
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
+            // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
                 to: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
                 chainId: tokenIn.chainId,
