@@ -398,6 +398,17 @@ export const events = [
     },
     {
         type: "event",
+        name: "GasPayment",
+        inputs: [
+            { name: "messageId", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "destinationDomain", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "gasAmount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "payment", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "RelayedMessage",
         inputs: [
             { name: "source", type: "uint256", indexed: true, internalType: "uint256" },

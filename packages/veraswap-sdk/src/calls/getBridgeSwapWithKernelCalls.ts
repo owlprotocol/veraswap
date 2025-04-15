@@ -5,10 +5,11 @@ import { readContractQueryOptions } from "@wagmi/core/query";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import invariant from "tiny-invariant";
-import { Address, encodeFunctionData, Hex, zeroAddress, zeroHash } from "viem";
+import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddress, zeroHash } from "viem";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
+import { IInterchainGasPaymaster } from "../artifacts/IInterchainGasPaymaster.js";
 import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
@@ -34,6 +35,12 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     hookMetadata?: Hex;
     hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
+    contracts?: {
+        execute: Address;
+        ownableSignatureExecutor: Address;
+        erc7579Router: Address;
+        interchainGasPaymaster: Address;
+    };
     contractsRemote?: {
         execute: Address;
         ownableSignatureExecutor: Address;
@@ -100,6 +107,7 @@ export async function getBridgeSwapWithKernelCalls(
         execute: LOCAL_KERNEL_CONTRACTS.execute,
         ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
         erc7579Router: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].erc7579Router,
+        interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[chainId as 900 | 901].mockInterchainGasPaymaster,
     };
     const contractsRemote = params.contractsRemote ?? {
         execute: LOCAL_KERNEL_CONTRACTS.execute,
@@ -281,6 +289,26 @@ export async function getBridgeSwapWithKernelCalls(
         signature: remoteExecutorCallData.signature,
     };
 
+    // Estimated using test in getBridgeSwapWithKernelCalls.test.ts
+    const callRemoteGas = 1_000_000n;
+
+    const callRemotePayment = await queryClient.fetchQuery(
+        readContractQueryOptions(wagmiConfig, {
+            chainId,
+            address: contracts.interchainGasPaymaster,
+            abi: IInterchainGasPaymaster.abi,
+            functionName: "quoteGasPayment",
+            args: [destination, numberToHex(callRemoteGas) as unknown as bigint], //wagmi/core has issues with bigint encoding for query key
+        }),
+    );
+
+    // Format hook metadata according to Hyperlane's StandardHookMetadata format
+    // See: https://docs.hyperlane.xyz/docs/reference/hooks/interchain-gas#determine-and-override-the-gas-limit
+    const hookData = encodePacked(
+        ["uint16", "uint256", "uint256", "address", "bytes"],
+        [1, 0n, callRemoteGas, account, "0x"],
+    );
+
     const callRemoteData = encodeFunctionData({
         abi: ERC7579ExecutorRouter.abi,
         functionName: "callRemote",
@@ -296,19 +324,16 @@ export async function getBridgeSwapWithKernelCalls(
             messageParams.validAfter!, //should be defined
             messageParams.validUntil!, //should be defined
             messageParams.signature ?? "0x",
-            "0x",
+            hookData,
             zeroAddress,
         ],
     });
-
-    // TODO: estimate remote expense
-    const bridgePayment = 1000000000n;
 
     const callRemote = {
         account: kernelAddress,
         to: contracts.erc7579Router,
         data: callRemoteData,
-        value: tokenStandard === "NativeToken" ? amount + bridgePayment : bridgePayment,
+        value: tokenStandard === "NativeToken" ? amount + callRemotePayment : callRemotePayment,
     };
 
     const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([

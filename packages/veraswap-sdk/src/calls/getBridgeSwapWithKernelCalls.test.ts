@@ -16,6 +16,7 @@ import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { LOCAL_POOLS } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
@@ -194,6 +195,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     ownableSignatureExecutor: MOCK_MAILBOX_CONTRACTS[opChainA.id].ownableSignatureExecutor,
                     erc7579Router: MOCK_MAILBOX_CONTRACTS[opChainA.id].erc7579Router,
+                    interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mockInterchainGasPaymaster,
                 },
                 contractsRemote: {
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
@@ -255,7 +257,14 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             expect(tokenABalancePostBridge).toBe(parseEther("1"));
 
             // 3. Process Swap Message on L1
-            await processNextInboundMessage(anvilClientL1, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainL1.id].mailbox });
+            const receipt = await processNextInboundMessage(anvilClientL1, {
+                mailbox: MOCK_MAILBOX_CONTRACTS[opChainL1.id].mailbox,
+            });
+
+            const roundedGas = ((receipt.gasUsed + 49999n) / 50000n) * 50000n;
+            expect(roundedGas).toBeGreaterThanOrEqual(800_000n);
+            expect(roundedGas).toBeLessThanOrEqual(1_000_000n);
+
             const tokenABalancePostSwap = await opChainL1Client.readContract({
                 address: tokenA.address,
                 abi: IERC20.abi,

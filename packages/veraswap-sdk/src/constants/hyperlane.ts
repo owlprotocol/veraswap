@@ -7,6 +7,7 @@ import { HypERC20 } from "../artifacts/HypERC20.js";
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 import { HypTokenRouterSweep } from "../artifacts/index.js";
 import { Mailbox } from "../artifacts/Mailbox.js";
+import { MockInterchainGasPaymaster } from "../artifacts/MockInterchainGasPaymaster.js";
 import { NoopIsm } from "../artifacts/NoopIsm.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
@@ -25,6 +26,13 @@ export function getMailboxAddress({ chainId }: { chainId: number }) {
     });
 }
 
+export function getMockInterchainGasPaymasterAddress() {
+    return getDeployDeterministicAddress({
+        bytecode: MockInterchainGasPaymaster.bytecode,
+        salt: zeroHash,
+    });
+}
+
 export function getHyperlaneContracts({ chainId }: { chainId: number }) {
     const mailbox = getMailboxAddress({ chainId });
 
@@ -38,10 +46,13 @@ export function getHyperlaneContracts({ chainId }: { chainId: number }) {
         salt: zeroHash,
     });
 
+    const mockInterchainGasPaymaster = getMockInterchainGasPaymasterAddress();
+
     return {
         mailbox,
         noopISM,
         pausableHook,
+        mockInterchainGasPaymaster,
     };
 }
 

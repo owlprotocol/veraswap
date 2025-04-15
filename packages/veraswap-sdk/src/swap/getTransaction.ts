@@ -232,6 +232,8 @@ export async function getTransaction(
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
                     erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].erc7579Router,
+                    interchainGasPaymaster:
+                        LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].mockInterchainGasPaymaster,
                 },
                 contractsRemote: {
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
