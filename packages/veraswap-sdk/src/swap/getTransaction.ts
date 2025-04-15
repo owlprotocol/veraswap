@@ -10,9 +10,6 @@ import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
 } from "../calls/getTransferRemoteWithKernelCalls.js";
-import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
-import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
-import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import {
@@ -92,15 +89,23 @@ export type TransactionParams =
 
 export async function getTransaction(
     params: TransactionParams,
-    constants?: { uniswapContracts: Record<number, { universalRouter: Address }> },
+    contracts: Record<
+        number,
+        {
+            universalRouter: Address;
+            execute: Address;
+            kernelFactory: Address;
+            ownableSignatureExecutor: Address;
+            erc7579Router: Address;
+            interchainGasPaymaster: Address;
+        }
+    >,
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
-    const uniswapContracts = constants?.uniswapContracts ?? UNISWAP_CONTRACTS;
-
     switch (params.type) {
         case "SWAP": {
             const { tokenIn, poolKey, zeroForOne, amountIn, amountOutMinimum } = params;
             return getSwapExactInExecuteData({
-                universalRouter: uniswapContracts[tokenIn.chainId].universalRouter,
+                universalRouter: contracts[tokenIn.chainId].universalRouter,
                 poolKey,
                 zeroForOne,
                 amountIn,
@@ -139,10 +144,16 @@ export async function getTransaction(
                     destination: tokenOut.chainId,
                     recipient: walletAddress,
                     amount: amountIn,
+                    //TODO: LOCAL CONTRACTS
                     createAccount: {
                         initData,
                         salt: zeroHash,
-                        factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                        factoryAddress: contracts[tokenIn.chainId].kernelFactory,
+                    },
+                    contracts: {
+                        execute: contracts[tokenIn.chainId].execute,
+                        ownableSignatureExecutor: contracts[tokenIn.chainId].ownableSignatureExecutor,
+                        erc7579Router: contracts[tokenIn.chainId].erc7579Router,
                     },
                 };
 
@@ -172,7 +183,7 @@ export async function getTransaction(
             const bridgeAddress = bridgeTokenIn.address;
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
-                universalRouter: uniswapContracts[swapTokenIn.chainId].universalRouter,
+                universalRouter: contracts[swapTokenIn.chainId].universalRouter,
                 bridgeAddress,
                 // Default for local env
                 bridgePayment: bridgePayment ?? 1n,
@@ -207,10 +218,8 @@ export async function getTransaction(
             }
 
             // TODO: fix this for non local env
-            const originERC7579ExecutorRouter =
-                LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as keyof typeof LOCAL_HYPERLANE_CONTRACTS]?.erc7579Router;
-            const remoteERC7579ExecutorRouter =
-                LOCAL_HYPERLANE_CONTRACTS[tokenOut.chainId as keyof typeof LOCAL_HYPERLANE_CONTRACTS]?.erc7579Router;
+            const originERC7579ExecutorRouter = contracts[tokenIn.chainId].erc7579Router;
+            const remoteERC7579ExecutorRouter = contracts[tokenOut.chainId].erc7579Router;
 
             if (!originERC7579ExecutorRouter) {
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenIn.chainId}`);
@@ -228,27 +237,32 @@ export async function getTransaction(
                 destination: tokenOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
+                //TODO: LOCAL CONTRACTS
                 contracts: {
-                    execute: LOCAL_KERNEL_CONTRACTS.execute,
-                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].erc7579Router,
-                    interchainGasPaymaster:
-                        LOCAL_HYPERLANE_CONTRACTS[tokenIn.chainId as 900 | 901].mockInterchainGasPaymaster,
+                    // static
+                    execute: contracts[tokenIn.chainId].execute,
+                    ownableSignatureExecutor: contracts[tokenIn.chainId].ownableSignatureExecutor,
+                    // mailbox
+                    erc7579Router: contracts[tokenIn.chainId].erc7579Router,
+                    interchainGasPaymaster: contracts[tokenIn.chainId].interchainGasPaymaster,
                 },
                 contractsRemote: {
-                    execute: LOCAL_KERNEL_CONTRACTS.execute,
-                    ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[tokenOut.chainId as 900 | 901].erc7579Router,
+                    execute: contracts[tokenOut.chainId].execute,
+                    ownableSignatureExecutor: contracts[tokenOut.chainId].ownableSignatureExecutor,
+                    // mailbox
+                    erc7579Router: contracts[tokenOut.chainId].erc7579Router,
                 },
                 createAccount: {
                     initData,
                     salt: zeroHash,
-                    factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    // static
+                    factoryAddress: contracts[tokenIn.chainId].kernelFactory,
                 },
                 createAccountRemote: {
                     initData,
                     salt: zeroHash,
-                    factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+                    // static
+                    factoryAddress: contracts[tokenOut.chainId].kernelFactory,
                 },
                 // erc7579RouterOwners: [],
                 // erc7579RouterOwnersRemote: [],
@@ -258,7 +272,7 @@ export async function getTransaction(
                     amountOutMinimum,
                     poolKey,
                     receiver: walletAddress,
-                    universalRouter: uniswapContracts[tokenOut.chainId].universalRouter,
+                    universalRouter: contracts[tokenOut.chainId].universalRouter,
                     zeroForOne,
                 },
                 orbiterParams,

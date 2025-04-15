@@ -1,6 +1,7 @@
 import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
+import { optimismSepolia, sepolia } from "viem/chains";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";
@@ -10,7 +11,7 @@ import { Mailbox } from "../artifacts/Mailbox.js";
 import { MockInterchainGasPaymaster } from "../artifacts/MockInterchainGasPaymaster.js";
 import { NoopIsm } from "../artifacts/NoopIsm.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
-import { opChainA, opChainB, opChainL1 } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
 import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
 
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
@@ -110,6 +111,36 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             factory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
         }),
+    },
+};
+
+/**
+ * Custom contracts not included in Hyperlane Registry but using Hyperlane Protocol
+ */
+export const HYPERLANE_CONTRACTS: Record<
+    number,
+    {
+        //TODO: Add other required contracts that are not in HyperlaneRegistry
+        erc7579Router: Address;
+    }
+> = {
+    [opChainL1.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
+    },
+    [opChainA.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].erc7579Router,
+    },
+    [opChainB.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].erc7579Router,
+    },
+    [sepolia.id]: {
+        erc7579Router: "0x526da4BBc5973b69E7740808a9cBF955B469eaDF",
+    },
+    [optimismSepolia.id]: {
+        erc7579Router: "0xb7E87Eb6F91C51eEdd602bD215B0919caA927979",
+    },
+    [unichainSepolia.id]: {
+        erc7579Router: "0x5A354bd2896A69F7f5B24d3D25Cdad94A84a56Fc",
     },
 };
 
