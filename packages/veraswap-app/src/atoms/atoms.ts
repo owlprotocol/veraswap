@@ -80,8 +80,8 @@ export const hyperlaneRegistryAtom = atom((get) => {
     const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
     if (!hyperlaneRegistry) return null;
 
-    // Map chainId to chain name (hyperlane name)
     const metadata = hyperlaneRegistry.metadata as Record<string, HyperlaneChainMetadata>;
+    // Remap metadata & addresses by chainId
     const metadataByChainId = mapKeys(metadata, (value) => value.chainId) as Record<number, HyperlaneChainMetadata>;
     const addressesByChainId = mapKeys(hyperlaneRegistry.addresses, (_, key) => metadata[key].chainId) as Record<
         number,

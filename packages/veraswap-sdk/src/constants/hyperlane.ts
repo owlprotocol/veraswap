@@ -1,6 +1,7 @@
 import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
+import { optimismSepolia, sepolia } from "viem/chains";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";
@@ -110,6 +111,35 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
             executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
             factory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
         }),
+    },
+};
+
+/**
+ * Custom contracts not included in Hyperlane Registry but using Hyperlane Protocol
+ */
+export const HYPERLANE_CONTRACTS: Record<
+    number,
+    {
+        //TODO: Add other required contracts that are not in HyperlaneRegistry
+        erc7579Router: Address;
+    }
+> = {
+    [opChainL1.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
+    },
+    [opChainA.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].erc7579Router,
+    },
+    [opChainB.id]: {
+        erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].erc7579Router,
+    },
+    [sepolia.id]: {
+        //TODO: Add address
+        erc7579Router: zeroAddress,
+    },
+    [optimismSepolia.id]: {
+        //TODO: Add address
+        erc7579Router: zeroAddress,
     },
 };
 

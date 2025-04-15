@@ -20,6 +20,7 @@ import { IAllowanceTransfer, IERC20 } from "@owlprotocol/veraswap-sdk/artifacts"
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
+    HYPERLANE_CONTRACTS,
     LOCAL_HYPERLANE_CONTRACTS,
     LOCAL_KERNEL_CONTRACTS,
     MAX_UINT_160,
@@ -55,6 +56,7 @@ import {
     swapRemoteTransactionHashAtom,
     transactionTypeAtom,
     hyperlaneMailboxChainOut,
+    hyperlaneRegistryAtom,
     chainsTypeAtom,
     getSwapStepMessage,
     orbiterParamsAtom,
@@ -128,6 +130,7 @@ function Index() {
     const [_, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
 
+    const hyperlaneRegistry = useAtomValue(hyperlaneRegistryAtom);
     const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
 
     const { toast } = useToast();
@@ -315,24 +318,37 @@ function Index() {
             const inChainId = tokenIn.chainId;
             const outChainId = tokenOut!.chainId;
 
+            //TODO: Add additional checks if registry not loaded yet
+
+            // Use IGP from registry or from local contracts
+            const interchainGasPaymasterIn =
+                hyperlaneRegistry!.addresses[inChainId]?.interchainGasPaymaster ??
+                LOCAL_HYPERLANE_CONTRACTS[inChainId]?.mockInterchainGasPaymaster;
+
+            const interchainGasPaymasterOut =
+                hyperlaneRegistry!.addresses[outChainId]?.interchainGasPaymaster ??
+                LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster;
+
+            // Use custom constant that stores non-registry hyperlane related contracts
+            const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId].erc7579Router;
+            const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId].erc7579Router;
+
             const transaction = await getTransaction(transactionParams, {
                 [inChainId]: {
                     universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                    //TODO: testnet addresses
-                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[inChainId]?.erc7579Router,
-                    interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[inChainId]?.mockInterchainGasPaymaster,
+                    erc7579Router: erc7579RouterIn,
+                    interchainGasPaymaster: interchainGasPaymasterIn,
                 },
                 [outChainId]: {
                     universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                    //TODO: testnet addresses
-                    erc7579Router: LOCAL_HYPERLANE_CONTRACTS[outChainId]?.erc7579Router,
-                    interchainGasPaymaster: LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster,
+                    erc7579Router: erc7579RouterOut,
+                    interchainGasPaymaster: interchainGasPaymasterOut,
                 },
             });
             // Switch back to chainIn (in case chain was changed when requesting signature)
