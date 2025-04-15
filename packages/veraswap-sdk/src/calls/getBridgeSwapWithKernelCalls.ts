@@ -289,6 +289,7 @@ export async function getBridgeSwapWithKernelCalls(
         signature: remoteExecutorCallData.signature,
     };
 
+    // Estimated using test in getBridgeSwapWithKernelCalls.test.ts
     const callRemoteGas = 1_000_000n;
 
     const callRemotePayment = await queryClient.fetchQuery(
@@ -299,6 +300,13 @@ export async function getBridgeSwapWithKernelCalls(
             functionName: "quoteGasPayment",
             args: [destination, callRemoteGas],
         }),
+    );
+
+    // Format hook metadata according to Hyperlane's StandardHookMetadata format
+    // See: https://docs.hyperlane.xyz/docs/reference/hooks/interchain-gas#determine-and-override-the-gas-limit
+    const hookData = encodePacked(
+        ["uint16", "uint256", "uint256", "address", "bytes"],
+        [1, 0n, callRemoteGas, account, "0x"],
     );
 
     const callRemoteData = encodeFunctionData({
@@ -316,7 +324,7 @@ export async function getBridgeSwapWithKernelCalls(
             messageParams.validAfter!, //should be defined
             messageParams.validUntil!, //should be defined
             messageParams.signature ?? "0x",
-            encodePacked(["uint16", "uint256", "uint256", "address", "bytes"], [1, 0n, callRemoteGas, account, "0x"]),
+            hookData,
             zeroAddress,
         ],
     });
