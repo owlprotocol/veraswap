@@ -43,4 +43,5 @@ struct CoreContracts {
     address ownableSignatureExecutor;
     address erc7579ExecutorRouter;
     address execute;
+    address orbiterBridgeSweep;
 }
