@@ -73,7 +73,6 @@ export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
         return {
             ...getBalanceQueryOptions(config, { address: account.address ?? zeroAddress, chainId: tokenIn.chainId }),
             enabled: !!account.address,
-            refetchInterval: 2000,
             select: (data: GetBalanceReturnType) => data.value,
         };
     }
@@ -87,7 +86,6 @@ export const tokenInBalanceQueryAtom = atomWithQuery((get) => {
             args: [accountAddress],
         }),
         enabled,
-        refetchInterval: 2000,
     };
 }) as any as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 
@@ -117,7 +115,6 @@ export const tokenInPermit2AllowanceQueryAtom = atomWithQuery((get) => {
             args: [accountAddress, PERMIT2_ADDRESS],
         }),
         enabled,
-        refetchInterval: 2000,
     };
 });
 /** tokenIn.allowance(account, PERMIT2): bigint */
@@ -139,7 +136,7 @@ export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
 
     const universalRouter = tokenIn?.chainId
         ? // NOTE: Add zeroAddress fallback as since tokenIn.chainId is not guaranteed to be in UNISWAP_CONTRACTS
-          (UNISWAP_CONTRACTS[tokenIn.chainId as keyof typeof UNISWAP_CONTRACTS]?.universalRouter ?? zeroAddress)
+        (UNISWAP_CONTRACTS[tokenIn.chainId as keyof typeof UNISWAP_CONTRACTS]?.universalRouter ?? zeroAddress)
         : zeroAddress;
 
     if (tokenIn?.chainId && !(tokenIn.chainId in UNISWAP_CONTRACTS)) {
@@ -155,7 +152,6 @@ export const tokenInUniswapRouterAllowanceQueryAtom = atomWithQuery((get) => {
             args: [accountAddress, tokenAddress, universalRouter],
         }),
         enabled,
-        refetchInterval: 2000,
     };
 });
 /** permit2.allowance(account, tokenIn, UniversalRouter): bigint */
@@ -190,7 +186,6 @@ export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
         return {
             ...getBalanceQueryOptions(config, { address: account.address ?? zeroAddress, chainId: tokenOut.chainId }),
             enabled: !!account.address,
-            refetchInterval: 2000,
             select: (data: GetBalanceReturnType) => data.value,
         };
     }
@@ -204,7 +199,6 @@ export const tokenOutBalanceQueryAtom = atomWithQuery((get) => {
             args: [accountAddress],
         }),
         enabled,
-        refetchInterval: 2000,
     };
 }) as any as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 

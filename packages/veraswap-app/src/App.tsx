@@ -6,6 +6,8 @@ import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { base } from "wagmi/chains";
+import { queryClientAtom } from "jotai-tanstack-query";
+import { useHydrateAtoms } from "jotai/react/utils";
 import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
@@ -24,7 +26,20 @@ function InnerApp() {
     return <RouterProvider router={router} />;
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+            staleTime: 1000 * 60 * 5,
+            refetchInterval: 1000 * 60 * 5,
+        },
+    },
+});
+
+const HydrateAtoms = ({ children }) => {
+    useHydrateAtoms([[queryClientAtom, queryClient]]);
+    return children;
+};
 
 function App() {
     return (
@@ -40,12 +55,13 @@ function App() {
                     >
                         <QueryClientProvider client={queryClient}>
                             <RainbowKitProvider theme={customTheme}>
-                                <InnerApp />
-                                <ReactQueryDevtools initialIsOpen={false} />
-                                <Analytics />
-                                <Toaster />
+                                <HydrateAtoms>
+                                    <InnerApp />
+                                    <ReactQueryDevtools initialIsOpen={false} />
+                                    <Analytics />
+                                    <Toaster />
+                                </HydrateAtoms>
                             </RainbowKitProvider>
-                            <ReactQueryDevtools initialIsOpen={false} />
                         </QueryClientProvider>
                     </OnchainKitProvider>
                 </WagmiProvider>

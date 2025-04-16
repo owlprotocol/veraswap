@@ -64,6 +64,7 @@ import {
     kernelSmartAccountInitDataAtom,
     isDisabledStep,
     prefetchQueriesAtom,
+    kernelSmartAccountAddressAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -115,6 +116,9 @@ function Index() {
     const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelSmartAccountInitDataAtom);
+    const { data: kernelSmartAccountAddress } = useAtomValue(kernelSmartAccountAddressAtom);
+
+    console.log({ kernelSmartAccountAddress });
 
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 

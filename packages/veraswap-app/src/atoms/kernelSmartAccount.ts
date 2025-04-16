@@ -13,7 +13,7 @@ import { config } from "@/config.js";
 export const kernelSmartAccountInitDataAtom = atomWithQuery((get) => {
     const account = get(accountAtom);
     const chain = get(chainInAtom);
-
+    // TODO: check account is defined
     const signer = account.address ? ({ type: "local", address: account.address } as LocalAccount) : undefined;
 
     const client = getClient(config, { chainId: chain?.id }) as Client;
