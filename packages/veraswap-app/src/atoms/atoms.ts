@@ -1,97 +1,15 @@
-import { atom, WritableAtom } from "jotai";
-import { atomWithMutation, atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
+import { atom } from "jotai";
+import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
 import { TransactionType } from "@owlprotocol/veraswap-sdk";
-import { Address, Hash, TransactionNotFoundError, zeroAddress } from "viem";
-import {
-    readContractQueryOptions,
-    sendTransactionMutationOptions,
-    waitForTransactionReceiptQueryOptions,
-} from "wagmi/query";
-import { mapKeys } from "lodash-es";
-import {
-    chainOutAtom,
-    tokenInAmountAtom,
-    tokenInAtom,
-    tokenInBalanceAtom,
-    tokenInPermit2AllowanceAtom,
-    tokenInUniswapRouterAllowanceAtom,
-    tokenOutAtom,
-    transactionTypeAtom,
-} from "./tokens.js";
+import { Hash } from "viem";
+import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
+import { tokenInAmountAtom, tokenInAtom, tokenOutAtom, transactionTypeAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
+import { tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { config } from "@/config.js";
-import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
-import { quoteGasPayment } from "@/abis/quoteGasPayment.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
 export type TransactionStepId = "swap" | "bridge" | "sendOrigin" | "transferRemote";
-
-export const hyperlaneRegistryQueryAtom = atomWithQuery(hyperlaneRegistryOptions);
-
-export interface HyperlaneChainMetadata {
-    chainId: number;
-    name: string;
-    blocks: {
-        confirmations: number;
-        estimateBlockTime: number;
-        reorgPeriod: string;
-    };
-    estimateBlockTime: number;
-    deployer: {
-        name: string;
-        url: string;
-    };
-    displayName: string;
-    domainId: number;
-    gasCurrencyCoinGeckoId: string;
-    nativeToken: {
-        decimals: number;
-        name: string;
-        symbol: string;
-    };
-    protocol: string;
-    technicalStack: string;
-}
-
-export interface HyperlaneChainAddresses {
-    domainRoutingIsm: Address;
-    domainRoutingIsmFactory: Address;
-    fallbackDomainRoutingHook: Address;
-    fallbackRoutingHook: Address;
-    interchainGasPaymaster: Address;
-    interchainSecurityModule: Address;
-    mailbox: Address;
-    merkleTreeHook: Address;
-    proxyAdmin: Address;
-    staticAggregationHookFactory: Address;
-    staticAggregationIsmFactory: Address;
-    staticMerkleRootMultisigIsmFactory: Address;
-    staticMerkleRootWeightedMultisigIsmFactory: Address;
-    staticMessageIdMultisigIsmFactory: Address;
-    staticMessageIdWeightedMultisigIsmFactory: Address;
-    storageGasOracle: Address;
-    testRecipient: Address;
-    validatorAnnounce: Address;
-}
-
-// Get Hyperlane Registry result and remap by chainId
-export const hyperlaneRegistryAtom = atom((get) => {
-    const { data: hyperlaneRegistry } = get(hyperlaneRegistryQueryAtom);
-    if (!hyperlaneRegistry) return null;
-
-    const metadata = hyperlaneRegistry.metadata as Record<string, HyperlaneChainMetadata>;
-    // Remap metadata & addresses by chainId
-    const metadataByChainId = mapKeys(metadata, (value) => value.chainId) as Record<number, HyperlaneChainMetadata>;
-    const addressesByChainId = mapKeys(hyperlaneRegistry.addresses, (_, key) => metadata[key].chainId) as Record<
-        number,
-        HyperlaneChainAddresses
-    >;
-
-    return {
-        metadata: metadataByChainId,
-        addresses: addressesByChainId,
-    };
-});
 
 export enum SwapStep {
     CONNECT_WALLET = "Connect Wallet",
@@ -143,9 +61,8 @@ export const swapStepAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
     const tokenOut = get(tokenOutAtom);
     const tokenInAmount = get(tokenInAmountAtom);
-    const tokenInBalance = get(tokenInBalanceAtom);
-    const tokenInPermit2Allowance = get(tokenInPermit2AllowanceAtom);
-    const tokenInUniswapRouterAllowance = get(tokenInUniswapRouterAllowanceAtom);
+    const tokenInBalance = get(tokenInAccountBalanceAtom);
+    const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
 
     const transactionType = get(transactionTypeAtom);
 
@@ -191,37 +108,6 @@ export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     const hash = mutation.data;
     return waitForTransactionReceiptQueryOptions(config, { hash });
 });
-
-export const hyperlaneGasPaymentAtom = atomWithQuery((get) => {
-    const transactionType = get(transactionTypeAtom);
-
-    let chainId: number = 0;
-    let address: Address = zeroAddress;
-    let chainIdOut: number = 0;
-
-    if (transactionType?.type === "BRIDGE") {
-        chainId = transactionType.tokenIn.chainId;
-        address = transactionType.tokenIn.address;
-        chainIdOut = transactionType.tokenOut.chainId;
-    } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
-        chainId = transactionType.bridge.tokenIn.chainId;
-        address = transactionType.bridge.tokenIn.address;
-        chainIdOut = transactionType.bridge.tokenOut.chainId;
-    }
-
-    const enabled = chainId !== 0 && address !== zeroAddress && chainIdOut !== 0;
-
-    return {
-        ...readContractQueryOptions(config, {
-            chainId,
-            address,
-            abi: [quoteGasPayment],
-            functionName: "quoteGasPayment",
-            args: [chainIdOut],
-        }),
-        enabled,
-    };
-}) as unknown as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 
 export const transactionModalOpenAtom = atom<boolean>(false);
 export const transactionStepsAtom = atom<TransactionStep[]>([]);
@@ -302,12 +188,3 @@ export const swapMessageIdAtom = atom<Hash | null>(null);
 
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
-
-export const hyperlaneMailboxChainOut = atom((get) => {
-    const hyperlaneRegistry = get(hyperlaneRegistryAtom);
-    if (!hyperlaneRegistry) return null;
-    const chainOut = get(chainOutAtom);
-    if (!chainOut) return null;
-
-    return hyperlaneRegistry.addresses[chainOut.id].mailbox;
-});
