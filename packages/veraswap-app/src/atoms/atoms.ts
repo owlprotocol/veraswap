@@ -27,12 +27,7 @@ export enum SwapStep {
 }
 
 /** Steps that disable the transaction button */
-const enabledSteps = [
-    SwapStep.APPROVE_PERMIT2,
-    SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
-    SwapStep.EXECUTE_SWAP,
-    SwapStep.NOT_SUPPORTED,
-];
+const enabledSteps = [SwapStep.APPROVE_PERMIT2, SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER, SwapStep.EXECUTE_SWAP];
 
 export const isDisabledStep = (swapStep: SwapStep) => !enabledSteps.includes(swapStep);
 
@@ -65,6 +60,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
 
     const transactionType = get(transactionTypeAtom);
+    console.log({ transactionType });
 
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;

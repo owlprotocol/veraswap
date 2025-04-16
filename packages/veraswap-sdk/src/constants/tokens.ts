@@ -119,7 +119,19 @@ export const localMockTokens: TokenBase<"MockERC20">[] = [
     },
 ];
 
-const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA, opChainB].map(
+const ethNativeLocalTokens = [opChainL1, opChainA, opChainB].map(
+    (chain) =>
+        ({
+            chainId: chain.id,
+            ...chain.nativeCurrency,
+            name: "Ether",
+            standard: "NativeToken",
+            address: zeroAddress,
+            logoURI: "https://assets.coingecko.com/coins/images/279/standard/ethereum.png",
+        }) satisfies NativeToken,
+);
+
+const ethNativeTestnetTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia].map(
     (chain) =>
         ({
             chainId: chain.id,
@@ -148,7 +160,7 @@ export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToke
             [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
         },
     }),
-    ...ethNativeTokens,
+    ...ethNativeLocalTokens,
 ];
 
 export function createTokenMap(tokens: Token[]): Record<number, Record<Address, Token>> {
@@ -202,7 +214,7 @@ export const testnetMockTokens = [
 ] as const;
 
 //TODO: Helper to generate this using params (but not use bytecode)?
-const TESTNET_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
+const TESTNET_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToken)[] = [
     ...connectTokens([
         {
             standard: "HypERC20Collateral",
@@ -262,6 +274,7 @@ const TESTNET_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
             decimals: 18,
             connections: [],
         },
+        ...ethNativeTestnetTokens,
     ]) as (HypERC20CollateralToken | HypERC20Token)[]),
 ];
 
@@ -272,6 +285,13 @@ const TESTNET_POOLS = {
         createPoolKey({
             currency0: testnetMockTokens[0].address,
             currency1: testnetMockTokens[1].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: testnetMockTokens[0].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

@@ -23,6 +23,7 @@ import {
 } from "../utils/getTransactionType.js";
 
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
+import { getSwapAndOrbiterETHBridgeTransaction } from "./getSwapAndOrbiterETHBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
@@ -241,15 +242,6 @@ export async function getTransaction(
 
             const bridgeAddress = bridgeTokenIn.address;
 
-            // TODO: add orbiter bridging
-            if (bridgeTokenIn.standard === "NativeToken" && bridgeTokenOut.standard === "NativeToken") {
-                if (!orbiterParams) {
-                    throw new Error("Orbiter params are required for Orbiter bridging");
-                }
-
-                throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
-            }
-
             const getPermit2Params: GetPermit2PermitSignatureParams = {
                 chainId: swapTokenIn.chainId,
                 minAmount: amountIn,
@@ -267,6 +259,24 @@ export async function getTransaction(
             );
             const permit2PermitParams: [PermitSingle, Hex] | undefined =
                 permitSingle && signature ? [permitSingle, signature] : undefined;
+
+            if (bridgeTokenIn.standard === "NativeToken" && bridgeTokenOut.standard === "NativeToken") {
+                if (!orbiterParams) {
+                    throw new Error("Orbiter params are required for Orbiter bridging");
+                }
+
+                return getSwapAndOrbiterETHBridgeTransaction({
+                    ...orbiterParams,
+                    amountIn,
+                    amountOutMinimum,
+                    poolKey,
+                    receiver: walletAddress,
+                    universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                    walletAddress,
+                    zeroForOne,
+                    permit2PermitParams,
+                });
+            }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapTokenIn.chainId].universalRouter,
