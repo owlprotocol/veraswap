@@ -63,6 +63,7 @@ import {
     orbiterRoutersEndpointContractsAtom,
     kernelSmartAccountInitDataAtom,
     isDisabledStep,
+    prefetchQueriesAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -92,6 +93,8 @@ function Index() {
     const { address: walletAddress, chainId } = useAccount();
 
     const { watchAsset } = useWatchAsset();
+
+    useAtomValue(prefetchQueriesAtom);
 
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);

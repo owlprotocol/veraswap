@@ -5,3 +5,4 @@ export * from "./uniswap.js";
 export * from "./atoms.js";
 export * from "./kernelSmartAccount.js";
 export * from "./orbiter.js";
+export * from "./prefetch.js";
