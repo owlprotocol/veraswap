@@ -74,6 +74,9 @@ If verification failed for some reason, you can re-run using `--resume` flag:
 forge script ./script/DeployCoreContracts.s.sol --resume --private-key $PRIVATE_KEY --rpc-url sepolia --verify
 ```
 
+
+Both `HypTokenRouterSweep` and `OrbiterBridgeSweep` need to be configured to approve any ERC20 being transferred. For Orbiter specifically, you need to approve the USDC address on each chain.
+
 > Current Etherscan v1 Endpoints https://docs.etherscan.io/getting-started/endpoint-urls
 > Note: Etherscan [v2 API](https://docs.etherscan.io/etherscan-v2) not supported by forge yet as seen in [foundry/issues/9196](https://github.com/foundry-rs/foundry/issues/9196)
 

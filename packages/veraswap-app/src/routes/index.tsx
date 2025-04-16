@@ -337,6 +337,7 @@ function Index() {
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
+                            orbiterParams,
                             walletAddress,
                             bridgePayment: bridgePayment,
                             queryClient: queryClient,

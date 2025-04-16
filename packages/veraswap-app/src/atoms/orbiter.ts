@@ -47,21 +47,27 @@ export const orbiterRouterAtom = atom((get) => {
 
     if (transactionType.type === "SWAP") return undefined;
 
-    const chainOutSymbol = chainOut.nativeCurrency.symbol;
     const chainInSymbol = chainIn.nativeCurrency.symbol;
+    const chainOutSymbol = chainOut.nativeCurrency.symbol;
 
     if (transactionType.type === "SWAP_BRIDGE") {
+        // TODO: Handle USDC
         if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
             // If bridging on output a native token, must be ETH on both chains
             return undefined;
         }
+
         // Type is either "BRIDGE" or "BRIDGE_SWAP"
+        // TODO: Handle USDC
     } else if (!currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
         // If bridging on input a native token, must be ETH on both chains
         return undefined;
     }
 
-    const line = `${currencyIn.chainId}/${chainOut.id}-${currencyIn.symbol}/${chainOutSymbol}`;
+    // For swap and bridge, tokenOut is what we bridge, else tokenIn
+    const bridgeSymbol = transactionType.type === "SWAP_BRIDGE" ? currencyOut.symbol : currencyIn.symbol;
+
+    const line = `${currencyIn.chainId}/${chainOut.id}-${bridgeSymbol}/${bridgeSymbol}`;
 
     return orbiterRoutersAll.find((router) => router.line === line);
 });
@@ -100,8 +106,6 @@ export const orbiterAmountOutAtom = atom((get) => {
     // minAmt already includes withholdingFee
     if (amountIn < minAmtParsed) return undefined;
     if (amountIn > maxAmtParsed + withholdingFeeParsed) return undefined;
-
-    console.debug({ tradeFee, withholdingFee });
 
     // Assuming tokenIn and tokenOut have the same decimals
 

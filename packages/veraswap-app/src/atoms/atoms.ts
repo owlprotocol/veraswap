@@ -68,6 +68,7 @@ export const swapStepAtom = atom((get) => {
     const amountOut = get(amountOutAtom);
 
     const transactionType = get(transactionTypeAtom);
+    console.log({ transactionType });
 
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;

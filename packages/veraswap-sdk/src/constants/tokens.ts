@@ -987,6 +987,13 @@ const TESTNET_POOLS = {
             tickSpacing: 60,
             hooks: zeroAddress,
         }),
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: testnetMockTokens[0].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
     ],
     */
 };
