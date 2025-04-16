@@ -38,6 +38,8 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IL2ToL2CrossDomainMessenger.sol/*.json",
     // Superchain (custom)
     "out/SuperchainTokenBridgeSweep.sol/*.json",
+    // Orbiter (custom)
+    "out/OrbiterBridgeSweep.sol/*.json",
     // Kernel
     "out/Kernel.sol/*.json",
     "out/KernelFactory.sol/*.json",

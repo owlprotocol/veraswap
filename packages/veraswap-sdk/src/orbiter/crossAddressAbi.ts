@@ -2,7 +2,7 @@ export const crossAddressAbi = [
     {
         inputs: [
             { internalType: "address payable", name: "_to", type: "address" },
-            { internalType: "bytes", name: "_ext", type: "bytes" },
+            { internalType: "bytes", name: "_data", type: "bytes" },
         ],
         name: "transfer",
         outputs: [],
@@ -14,9 +14,9 @@ export const crossAddressAbi = [
             { internalType: "address", name: "_token", type: "address" },
             { internalType: "address", name: "_to", type: "address" },
             { internalType: "uint256", name: "_amount", type: "uint256" },
-            { internalType: "bytes", name: "_ext", type: "bytes" },
+            { internalType: "bytes", name: "_data", type: "bytes" },
         ],
-        name: "transferERC20",
+        name: "transferToken",
         outputs: [],
         stateMutability: "nonpayable",
         type: "function",
