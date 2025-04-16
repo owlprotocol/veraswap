@@ -45,6 +45,7 @@ function App() {
                                 <Analytics />
                                 <Toaster />
                             </RainbowKitProvider>
+                            <ReactQueryDevtools initialIsOpen={false} />
                         </QueryClientProvider>
                     </OnchainKitProvider>
                 </WagmiProvider>
