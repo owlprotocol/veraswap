@@ -2,7 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {OrbiterXRouter} from "./OrbiterXRouter.sol";
+import {IOrbiterXRouter} from "./IOrbiterXRouter.sol";
 
 /// @notice Middleware designed to call an orbiter endpoint contract and bridge tokens
 contract OrbiterBridgeSweep {
@@ -48,7 +48,7 @@ contract OrbiterBridgeSweep {
 
         uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
 
-        OrbiterXRouter(endpointContract).transfer{value: balanceAdjusted}(recipient, transferData);
+        IOrbiterXRouter(endpointContract).transfer{value: balanceAdjusted}(recipient, transferData);
     }
 
     /// @notice Call Orbiter endpoint contract with `transferToken` using as much of this contract's balance as possible. (msg.value is forwarded for relay payment)
@@ -70,6 +70,6 @@ contract OrbiterBridgeSweep {
 
         uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
 
-        OrbiterXRouter(endpointContract).transferToken(IERC20(token), recipient, balanceAdjusted, transferData);
+        IOrbiterXRouter(endpointContract).transferToken(IERC20(token), recipient, balanceAdjusted, transferData);
     }
 }
