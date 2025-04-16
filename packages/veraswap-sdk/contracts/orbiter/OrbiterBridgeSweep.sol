@@ -72,4 +72,6 @@ contract OrbiterBridgeSweep {
 
         IOrbiterXRouter(endpointContract).transferToken(IERC20(token), recipient, balanceAdjusted, transferData);
     }
+
+    receive() external payable {}
 }
