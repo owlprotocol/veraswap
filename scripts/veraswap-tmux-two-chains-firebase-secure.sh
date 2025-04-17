@@ -1,5 +1,5 @@
-WORKSPACE="${WORKSPACE:-~/owl/workspace}"
-VERASWAP="$(dirname $WORKSPACE)/veraswap"
+# Get parent directory of this script's directory
+VERASWAP="$(dirname $(dirname $(realpath $0)))"
 
 session="vera"
 privateKeyAnvil0="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -35,7 +35,7 @@ HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,o
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
      # Start duster
     tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && PRIVATE_KEY=${privateKeyAnvil0} pnpm dev" ENTER
-    tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && ./scoutup supersim" ENTER
+    tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && go build && sleep 5 && ./scoutup --supersim" ENTER
 fi
 
 if [ -n "${TMUX+1}" ]; then
