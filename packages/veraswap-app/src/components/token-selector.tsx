@@ -327,6 +327,8 @@ const TokenGroup = ({
                         const balance =
                             balances.find((b) => b.token.chainId === token.chainId && b.token.address === token.address)
                                 ?.balance ?? 0;
+                        const displayedAddress =
+                            token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
                         return (
                             <button
                                 key={token.chainId}
@@ -339,8 +341,8 @@ const TokenGroup = ({
                                         {balance.toFixed(4)} {symbol}
                                     </div>
                                     <div className="text-xs text-muted-foreground truncate">
-                                        {token.address.substring(0, 6)}...
-                                        {token.address.substring(token.address.length - 4)}
+                                        {displayedAddress.substring(0, 6)}...
+                                        {displayedAddress.substring(displayedAddress.length - 4)}
                                     </div>
                                 </div>
                             </button>
