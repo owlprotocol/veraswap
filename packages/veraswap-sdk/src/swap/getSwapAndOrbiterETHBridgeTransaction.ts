@@ -5,6 +5,7 @@ import { OrbiterBridgeSweep } from "../artifacts/OrbiterBridgeSweep.js";
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { getOrbiterTransferData } from "../orbiter/getOrbiterTransferData.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
+import { OrbiterParams } from "../types/OrbiterParams.js";
 import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
@@ -15,7 +16,6 @@ import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
  */
 export function getSwapAndOrbiterETHBridgeTransaction({
     universalRouter,
-    walletAddress,
     receiver,
     amountIn,
     amountOutMinimum,
@@ -24,11 +24,9 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     path,
     permit2PermitParams,
     hookData = "0x",
-    orbiterChainId,
-    endpointContract,
+    orbiterParams,
 }: {
     universalRouter: Address;
-    walletAddress: Address;
     receiver: Address;
     amountIn: bigint;
     amountOutMinimum: bigint;
@@ -37,9 +35,9 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     path: PathKey[];
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
-    orbiterChainId: number;
-    endpointContract: Address;
+    orbiterParams: OrbiterParams;
 }) {
+    const { endpoint, endpointContract, orbiterChainId } = orbiterParams;
     const routePlanner = new RoutePlanner();
 
     if (permit2PermitParams) {
@@ -62,11 +60,9 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     const orbiterCallData = encodeFunctionData({
         abi: OrbiterBridgeSweep.abi,
         functionName: "bridgeAllETH",
-        args: [endpointContract, orbiterChainId, receiver, orbiterTransferData],
+        args: [receiver, endpointContract, orbiterChainId, endpoint, orbiterTransferData],
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [ORBITER_BRIDGE_SWEEP_ADDRESS, 0n, orbiterCallData]);
-
-    routePlanner.addCommand(CommandType.UNWRAP_WETH, [walletAddress, 0n]);
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 

@@ -14,7 +14,11 @@ export function getOrbiterTransferData({
 }) {
     const identificationCode = 9000 + orbiterChainId;
 
-    const chainAndApp = `c=${identificationCode}&app=${app}`;
-    const transferDataString = recipient ? `${chainAndApp}&t=${recipient}` : chainAndApp;
-    return stringToHex(transferDataString);
+    let transferData: string;
+    if (recipient) {
+        transferData = `c=${identificationCode}&t=${recipient.toLowerCase()}&app=${app}`;
+    } else {
+        transferData = `c=${identificationCode}&app=${app}`;
+    }
+    return stringToHex(transferData);
 }
