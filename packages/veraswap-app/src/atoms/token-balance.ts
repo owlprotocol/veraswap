@@ -42,6 +42,8 @@ export const tokenBalanceAtomFamily = atomFamily(
         }),
     (a, b) => a.account === b.account && a.token.chainId === b.token.chainId && a.token.address === b.token.address,
 ) as unknown as AtomFamily<{ token: Token; account: Address }, Atom<AtomWithQueryResult<bigint>>>;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
 export const tokenAllowanceAtomFamily = atomFamily(
     ({ token, account, spender }: { token: Token; account: Address; spender: Address }) =>
@@ -64,6 +66,8 @@ export const tokenAllowanceAtomFamily = atomFamily(
         a.token.chainId === b.token.chainId &&
         a.token.address === b.token.address,
 ) as unknown as AtomFamily<{ token: Token; account: Address; spender: Address }, Atom<AtomWithQueryResult<bigint>>>;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenAllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
 export const tokenPermit2AllowanceAtomFamily = atomFamily(
     ({ token, account, spender }: { token: Token; account: Address; spender: Address }) =>
@@ -89,6 +93,8 @@ export const tokenPermit2AllowanceAtomFamily = atomFamily(
     { token: Token; account: Address; spender: Address },
     Atom<AtomWithQueryResult<[bigint, number, number]>>
 >;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenPermit2AllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
 /***** Balances *****/
 export const tokenInAccountBalanceQueryAtom = atom((get) => {

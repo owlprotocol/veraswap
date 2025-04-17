@@ -54,6 +54,8 @@ export const kernelFactoryGetAddressAtomFamily = atomFamily(
     { chainId: number; factoryAddress: Address; initData: Hex; initSalt: Hash },
     Atom<AtomWithQueryResult<Address>>
 >;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+kernelFactoryGetAddressAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
 export const kernelAddressChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
