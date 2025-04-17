@@ -23,6 +23,10 @@ export interface BaseCurrencyData {
      * The name of the currency, i.e. a descriptive textual non-unique identifier
      */
     name?: string;
+    /**
+     * The logo uri of the currency, i.e. an http link to the token logo
+     */
+    logoURI?: string;
 }
 
 /**
@@ -54,13 +58,17 @@ export abstract class BaseCurrency {
      * The name of the currency, i.e. a descriptive textual non-unique identifier
      */
     public readonly name?: string;
+    /**
+     * The logo uri of the currency, i.e. an http link to the token logo
+     */
+    public readonly logoURI?: string;
 
     /**
      * Constructs an instance of the base class `BaseCurrency`.
      * @param data the currency data
      */
     protected constructor(data: BaseCurrencyData) {
-        const { chainId, decimals, symbol, name } = data;
+        const { chainId, decimals, symbol, name, logoURI } = data;
         invariant(Number.isSafeInteger(chainId), "CHAIN_ID");
         invariant(decimals >= 0 && decimals < 255 && Number.isInteger(decimals), "DECIMALS");
 
@@ -68,6 +76,7 @@ export abstract class BaseCurrency {
         this.decimals = decimals;
         this.symbol = symbol;
         this.name = name;
+        this.logoURI = logoURI;
     }
 
     /**
