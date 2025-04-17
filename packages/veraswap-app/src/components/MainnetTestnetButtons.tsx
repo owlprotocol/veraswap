@@ -1,8 +1,8 @@
 import { useAtom } from "jotai";
-import { useEffect } from "react";
 import { Button } from "./ui/button.js";
 import { ChainsType, chainsTypeWriteAtom } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
+import { useDomainType } from "@/hooks/useDomainType.js";
 
 const buttonStyles: Record<string, string> = {
     local: `
@@ -32,13 +32,6 @@ const buttonStyles: Record<string, string> = {
   `,
 };
 
-const useDomainType = () => {
-    const hostname = window.location.hostname;
-    if (hostname === "veraswap.io" || hostname === "app.veraswap.io") return "mainnet";
-    if (hostname === "testnet.veraswap.io") return "testnet";
-    return null;
-};
-
 const networkTypes =
     import.meta.env.MODE === "development"
         ? (["mainnet", "testnet", "local"] as const)
@@ -48,13 +41,6 @@ export const MainnetTestnetButtons = () => {
     const [networkType, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const navigate = Route.useNavigate();
     const domainType = useDomainType();
-
-    useEffect(() => {
-        if (domainType) {
-            setNetworkType(domainType);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [domainType]);
 
     const handleNetworkChange = (newType: ChainsType) => {
         setNetworkType(newType);
