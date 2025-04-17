@@ -29,7 +29,6 @@ import {
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-    hyperlaneGasPaymentAtom,
     quoteInAtom,
     sendTransactionMutationAtom,
     swapInvertAtom,
@@ -38,9 +37,9 @@ import {
     tokenInAmountAtom,
     tokenInAmountInputAtom,
     tokenInAtom,
-    tokenInBalanceQueryAtom,
+    tokenInAccountBalanceQueryAtom,
     tokenOutAtom,
-    tokenOutBalanceQueryAtom,
+    tokenOutAccountBalanceQueryAtom,
     transactionModalOpenAtom,
     transactionStepsAtom,
     currentTransactionStepIdAtom,
@@ -61,8 +60,10 @@ import {
     orbiterAmountOutAtom,
     orbiterRouterAtom,
     orbiterRoutersEndpointContractsAtom,
-    kernelSmartAccountInitDataAtom,
+    kernelInitDataAtom,
     isDisabledStep,
+    prefetchQueriesAtom,
+    tokenRouterQuoteGasPaymentQueryAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -93,6 +94,8 @@ function Index() {
 
     const { watchAsset } = useWatchAsset();
 
+    useAtomValue(prefetchQueriesAtom);
+
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);
 
@@ -102,17 +105,16 @@ function Index() {
     const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
-    const { data: tokenInBalance } = useAtomValue(tokenInBalanceQueryAtom);
+    const { data: tokenInBalance } = useAtomValue(tokenInAccountBalanceQueryAtom);
 
-    const { data: tokenOutBalance } = useAtomValue(tokenOutBalanceQueryAtom);
+    const { data: tokenOutBalance } = useAtomValue(tokenOutAccountBalanceQueryAtom);
 
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
 
-    const { data: bridgePayment } = useAtomValue(hyperlaneGasPaymentAtom);
+    const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
-    const { data: kernelSmartAccountInitData } = useAtomValue(kernelSmartAccountInitDataAtom);
-
+    const { data: kernelSmartAccountInitData } = useAtomValue(kernelInitDataAtom);
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
