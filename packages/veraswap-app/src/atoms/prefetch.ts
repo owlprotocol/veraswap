@@ -5,6 +5,7 @@ import {
     kernelAddressChainOutQueryAtom,
     kernelBytecodeChainInQueryAtom,
     kernelBytecodeChainOutQueryAtom,
+    kernelInitDataAtom,
 } from "./kernelSmartAccount.js";
 import {
     tokenInAccountBalanceQueryAtom,
@@ -43,6 +44,7 @@ import {
 
 export const prefetchQueriesAtom = atom((get) => [
     // Kernel
+    get(kernelInitDataAtom),
     get(kernelAddressChainInQueryAtom),
     get(kernelAddressChainOutQueryAtom),
     get(kernelBytecodeChainInQueryAtom),
