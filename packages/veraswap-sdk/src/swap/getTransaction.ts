@@ -266,14 +266,13 @@ export async function getTransaction(
                 }
 
                 return getSwapAndOrbiterETHBridgeTransaction({
-                    ...orbiterParams,
                     amountIn,
                     amountOutMinimum,
                     poolKey,
                     receiver: walletAddress,
                     universalRouter: contracts[swapTokenIn.chainId].universalRouter,
-                    walletAddress,
                     zeroForOne,
+                    orbiterParams,
                     permit2PermitParams,
                 });
             }

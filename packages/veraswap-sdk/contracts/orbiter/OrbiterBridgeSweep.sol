@@ -31,16 +31,18 @@ contract OrbiterBridgeSweep {
         return balanceAdjusted;
     }
 
-    /// @notice Call Orbiter endpoint contract with `transfer` using as much of this contract's balance as possible.
+    /// @notice Call Orbiter endpoint contract with `transfer` using as much of this contract's balance as possible. Leftover balance will be sent to the recipient.
     /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
+    /// @param recipient The recipient of the transfer
     /// @param endpointContract The Orbiter endpoint contract
     /// @param orbiterChainId The Orbiter destination chain id
-    /// @param recipient The address of the recipient on the destination chain.
+    /// @param endpoint The address of the orbiter endpoint on the destination chain.
     /// @param transferData The data to be passed to the endpoint contract, an encoded string
     function bridgeAllETH(
+        address payable recipient,
         address endpointContract,
         uint32 orbiterChainId,
-        address recipient,
+        address endpoint,
         bytes calldata transferData
     ) external payable {
         uint256 balance = address(this).balance;
@@ -48,21 +50,25 @@ contract OrbiterBridgeSweep {
 
         uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
 
-        IOrbiterXRouter(endpointContract).transfer{value: balanceAdjusted}(recipient, transferData);
+        IOrbiterXRouter(endpointContract).transfer{value: balanceAdjusted}(endpoint, transferData);
+
+        recipient.transfer(balance - balanceAdjusted);
     }
 
     /// @notice Call Orbiter endpoint contract with `transferToken` using as much of this contract's balance as possible. (msg.value is forwarded for relay payment)
     /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
+    /// @param recipient The recipient of the transfer
     /// @param token the token to bridge
     /// @param endpointContract The Orbiter endpoint contract
     /// @param orbiterChainId The Orbiter destination chain id
-    /// @param recipient The address of the recipient on the destination chain.
+    /// @param endpoint The address of the orbiter endpoint on the destination chain.
     /// @param transferData The data to be passed to the endpoint contract, an encoded string
     function bridgeAllToken(
+        address recipient,
         address token,
         address endpointContract,
         uint32 orbiterChainId,
-        address recipient,
+        address endpoint,
         bytes calldata transferData
     ) external payable {
         uint256 balance = IERC20(token).balanceOf(address(this));
@@ -70,7 +76,9 @@ contract OrbiterBridgeSweep {
 
         uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
 
-        IOrbiterXRouter(endpointContract).transferToken(IERC20(token), recipient, balanceAdjusted, transferData);
+        IOrbiterXRouter(endpointContract).transferToken(IERC20(token), endpoint, balanceAdjusted, transferData);
+
+        IERC20(token).transfer(recipient, balance - balanceAdjusted);
     }
 
     receive() external payable {}
