@@ -2,7 +2,7 @@ import invariant from "tiny-invariant";
 
 import { Currency } from "./currency.js";
 import { NativeCurrency } from "./nativeCurrency.js";
-import { Token } from "./token.js";
+import { Token2 } from "./token.js";
 import { WETH9 } from "./weth9.js";
 
 /**
@@ -13,7 +13,7 @@ export class Ether extends NativeCurrency {
         super({ chainId, decimals: 18, symbol: "ETH", name: "Ether" });
     }
 
-    public get wrapped(): Token {
+    public get wrapped(): Token2 {
         const weth9 = WETH9[this.chainId];
         invariant(!!weth9, "WRAPPED");
         return weth9;

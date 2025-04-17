@@ -2,15 +2,16 @@ import { mapValues } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, getAddress } from "viem";
 
-import { Token, TokenData } from "./token.js";
+import { Token2, TokenData } from "./token.js";
 
-export type TokenStandard = "ERC20" | "SuperERC20" | "HypERC20";
+//TODO: Naming conflict with non class
+export type TokenStandard2 = "ERC20" | "SuperERC20" | "HypERC20";
 
 export interface MultichainTokenData extends TokenData {
     /**
      * The type of the token
      */
-    standard: TokenStandard;
+    standard: TokenStandard2;
     /**
      * The address of the HypERC20Collateral, if applicable
      */
@@ -25,8 +26,8 @@ export interface MultichainTokenData extends TokenData {
  * Represents a token that exists on multiple chains with the same address.
  * This is useful for tokens like USDC, USDT, etc. that have the same address across multiple chains.
  */
-export class MultichainToken extends Token {
-    public readonly standard: TokenStandard;
+export class MultichainToken extends Token2 {
+    public readonly standard: TokenStandard2;
     private hypERC20Collateral: Address | null;
 
     private remoteTokens: Record<number, MultichainToken>;
