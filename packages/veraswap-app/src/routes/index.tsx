@@ -64,6 +64,8 @@ import {
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
+    currencyInAtom,
+    currencyOutAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -98,6 +100,9 @@ function Index() {
 
     const tokenIn = useAtomValue(tokenInAtom);
     const tokenOut = useAtomValue(tokenOutAtom);
+    const currencyIn = useAtomValue(currencyInAtom);
+    const currencyOut = useAtomValue(currencyOutAtom);
+    console.debug({ currencyIn, currencyOut });
 
     const chainIn = chains.find((c) => c.id === tokenIn?.chainId);
     const chainOut = chains.find((c) => c.id === tokenOut?.chainId);
@@ -180,8 +185,8 @@ function Index() {
                 ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
                 : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
             : quoterData
-              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
-              : "";
+                ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+                : "";
 
     useDustAccount(walletAddress);
 
@@ -269,17 +274,17 @@ function Index() {
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                          ...transactionType,
-                          amountIn: tokenInAmount!,
-                          walletAddress,
-                          bridgePayment: bridgePayment,
-                          orbiterParams,
-                          queryClient: queryClient,
-                          wagmiConfig: config,
-                          initData: kernelSmartAccountInitData,
-                      } as TransactionParams & TransactionTypeBridge)
+                        ...transactionType,
+                        amountIn: tokenInAmount!,
+                        walletAddress,
+                        bridgePayment: bridgePayment,
+                        orbiterParams,
+                        queryClient: queryClient,
+                        wagmiConfig: config,
+                        initData: kernelSmartAccountInitData,
+                    } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                      ? ({
+                        ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum,
@@ -290,7 +295,7 @@ function Index() {
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                      : ({
+                        : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
@@ -618,8 +623,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0"
+                                                ? "Fetching quote..."
+                                                : "0"
                                     }
                                     disabled={true}
                                 />
