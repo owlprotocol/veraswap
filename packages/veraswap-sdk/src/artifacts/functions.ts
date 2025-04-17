@@ -2211,7 +2211,7 @@ export const functions = [
     },
     {
         type: "function",
-        name: "FIXED_GAS_PAYMENT",
+        name: "FIXED_GAS_PRICE",
         inputs: [],
         outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
         stateMutability: "view",
