@@ -7,6 +7,7 @@ export type TokenStandard =
     | "MockSuperchainERC20"
     | "HypERC20"
     | "HypERC20Collateral"
+    | "HypSuperchainERC20Collateral"
     | "SuperchainERC20"
     | "NativeToken";
 
@@ -50,6 +51,19 @@ export interface HypERC20CollateralToken extends TokenBase<"HypERC20Collateral">
     }[];
 }
 
+/**
+ * HypSuperchainERC20Collateral Token with remote connections and collateral.
+ * Assume that if the connection address it the same as the collateral address, then it's a Superchain connection
+ * */
+export interface HypSuperchainERC20CollateralToken extends TokenBase<"HypSuperchainERC20Collateral"> {
+    collateralAddress: Address;
+    connections: {
+        vm: string;
+        chainId: number;
+        address: Address;
+    }[];
+}
+
 export type Token =
     | TokenBase<"ERC20">
     | TokenBase<"MockERC20">
@@ -57,4 +71,5 @@ export type Token =
     | TokenBase<"SuperchainERC20">
     | HypERC20Token
     | HypERC20CollateralToken
+    | HypSuperchainERC20CollateralToken
     | NativeToken;

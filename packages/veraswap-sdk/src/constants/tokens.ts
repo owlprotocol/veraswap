@@ -76,7 +76,7 @@ export function createMockERC20WarpRoute({
     mailboxByChain,
     msgSender = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
 }: {
-    token: TokenBase<"MockERC20" | "MockSuperchainERC20">;
+    token: TokenBase<"MockERC20">;
     mailboxByChain: Record<number, Address>;
     msgSender?: Address;
 }): [HypERC20CollateralToken, ...HypERC20Token[]] {
@@ -151,20 +151,6 @@ export function createMockSuperchainERC20WarpRoute({
         msgSender,
     });
 
-    const hypERC20Collateral: HypERC20CollateralToken = {
-        ...token,
-        standard: "HypERC20Collateral",
-        address: hypERC20CollateralAddress,
-        collateralAddress: token.address,
-        connections: [
-            {
-                vm: "evm",
-                chainId: opChainL1.id,
-                address: hypERC20Address,
-            },
-        ],
-    };
-
     const hypERC20 = {
         ...token,
         standard: "HypERC20",
@@ -185,15 +171,32 @@ export function createMockSuperchainERC20WarpRoute({
         address: token.address,
     }));
 
-    const superchainERC20s = localSuperChains.map(
-        (chainId) =>
-            ({
-                ...token,
-                standard: "SuperchainERC20",
-                chainId,
-                connections: superchainConnections.filter((c) => c.chainId != chainId),
-            }) as TokenBase<"SuperchainERC20">,
-    );
+    const hypERC20Collateral: HypERC20CollateralToken = {
+        ...token,
+        standard: "HypERC20Collateral",
+        address: hypERC20CollateralAddress,
+        collateralAddress: token.address,
+        connections: [
+            ...superchainConnections.filter((c) => c.chainId != token.chainId),
+            {
+                vm: "evm",
+                chainId: opChainL1.id,
+                address: hypERC20Address,
+            },
+        ],
+    };
+
+    const superchainERC20s = localSuperChains
+        .filter((cId) => token.chainId != cId)
+        .map(
+            (chainId) =>
+                ({
+                    ...token,
+                    standard: "SuperchainERC20",
+                    chainId,
+                    connections: superchainConnections.filter((c) => c.chainId != chainId),
+                }) as TokenBase<"SuperchainERC20">,
+        );
 
     return [hypERC20Collateral, hypERC20, ...superchainERC20s];
 }
