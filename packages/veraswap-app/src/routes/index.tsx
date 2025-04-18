@@ -20,6 +20,7 @@ import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
+    getHypERC7579RouterAddress,
     HYPERLANE_CONTRACTS,
     LOCAL_HYPERLANE_CONTRACTS,
     LOCAL_KERNEL_CONTRACTS,
@@ -316,8 +317,9 @@ function Index() {
                 LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster;
 
             // Use custom constant that stores non-registry hyperlane related contracts
-            const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId].erc7579Router;
-            const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId].erc7579Router;
+            // TODO: remove fallback
+            const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId]?.erc7579Router ?? zeroAddress;
+            const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId]?.erc7579Router ?? zeroAddress;
 
             const transaction = await getTransaction(transactionParams, {
                 [inChainId]: {
