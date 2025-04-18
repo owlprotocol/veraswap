@@ -12,24 +12,29 @@ export interface TransactionTypeSwap {
     tokenOut: Token;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    // Not needed here but used for consistency
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridge {
     type: "BRIDGE";
     tokenIn: Token;
     tokenOut: Token;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
     swap: TransactionTypeSwap;
     bridge: TransactionTypeBridge;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
     bridge: TransactionTypeBridge;
     swap: TransactionTypeSwap;
+    withSuperchain?: boolean;
 }
 
 export type TransactionType =
@@ -186,7 +191,7 @@ export function getTransactionType({
         (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
         (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
     ) {
-        return { type: "BRIDGE", tokenIn, tokenOut };
+        return { type: "BRIDGE", tokenIn, tokenOut, withSuperchain: true };
     }
 
     // BRIDGE: `tokenIn.connections.includes(tokenOut)`

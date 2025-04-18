@@ -186,5 +186,7 @@ export const initializeTransactionStepsAtom = atom(null, (_, set, transactionTyp
 export const bridgeMessageIdAtom = atom<Hash | null>(null);
 export const swapMessageIdAtom = atom<Hash | null>(null);
 
+export const superchainBridgeMessageIdAtom = atom<Hash | null>(null);
+
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
