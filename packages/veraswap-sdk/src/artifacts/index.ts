@@ -24,6 +24,7 @@ export { MockERC20 } from "./MockERC20.js";
 export { MockInterchainGasPaymaster } from "./MockInterchainGasPaymaster.js";
 export { MockMailbox } from "./MockMailbox.js";
 export { NoopIsm } from "./NoopIsm.js";
+export { OrbiterBridgeSweep } from "./OrbiterBridgeSweep.js";
 export { OwnableSignatureExecutor } from "./OwnableSignatureExecutor.js";
 export { PausableHook } from "./PausableHook.js";
 export { PoolManager } from "./PoolManager.js";

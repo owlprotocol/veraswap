@@ -2336,6 +2336,33 @@ export const functions = [
     },
     {
         type: "function",
+        name: "bridgeAllETH",
+        inputs: [
+            { name: "recipient", type: "address", internalType: "address payable" },
+            { name: "endpointContract", type: "address", internalType: "address" },
+            { name: "orbiterChainId", type: "uint32", internalType: "uint32" },
+            { name: "endpoint", type: "address", internalType: "address" },
+            { name: "transferData", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "bridgeAllToken",
+        inputs: [
+            { name: "recipient", type: "address", internalType: "address" },
+            { name: "token", type: "address", internalType: "address" },
+            { name: "endpointContract", type: "address", internalType: "address" },
+            { name: "orbiterChainId", type: "uint32", internalType: "uint32" },
+            { name: "endpoint", type: "address", internalType: "address" },
+            { name: "transferData", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
         name: "accountId",
         inputs: [],
         outputs: [{ name: "accountImplementationId", type: "string", internalType: "string" }],
