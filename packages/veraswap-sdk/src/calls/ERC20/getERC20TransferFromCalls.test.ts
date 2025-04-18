@@ -9,7 +9,7 @@ import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import { IERC20 } from "../../artifacts/IERC20.js";
 import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
-import { localMockTokens } from "../../constants/tokens.js";
+import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
 
 import { getERC20TransferFromCalls } from "./getERC20TransferFromCalls.js";
 
@@ -39,8 +39,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
     let account: Account;
     let accountClient: WalletClient<Transport, Chain, Account>;
 
-    const tokenA = localMockTokens[0];
-    // const tokenAHypERC20Collateral = LOCAL_TOKENS[0];
+    const tokenA = LOCAL_CURRENCIES[0].wrapped.address;
 
     beforeAll(async () => {
         await connect(config, {
@@ -69,7 +68,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         // Approve account as spender
         await opChainL1Client.waitForTransactionReceipt({
             hash: await anvilClient.writeContract({
-                address: tokenA.address,
+                address: tokenA,
                 abi: IERC20.abi,
                 functionName: "approve",
                 args: [account.address, 1n],
@@ -79,7 +78,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
         // Transfer from anvilAccount to account
         const transferFromCall = await getERC20TransferFromCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenA.address,
+            token: tokenA,
             account: account.address,
             funder: anvilAccount.address,
             minAmount: 1n,
@@ -89,7 +88,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
 
         // ERC20.transferFrom(anvilAccount, account, 1n)
         expect(transferFromCall.calls[0]).toBeDefined();
-        expect(transferFromCall.calls[0].to).toBe(tokenA.address);
+        expect(transferFromCall.calls[0].to).toBe(tokenA);
 
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(transferFromCall.calls[0], "account")),
@@ -97,7 +96,7 @@ describe("calls/getERC20TransferFromCalls.test.ts", function () {
 
         // Check balance of account
         const balance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
             args: [account.address],

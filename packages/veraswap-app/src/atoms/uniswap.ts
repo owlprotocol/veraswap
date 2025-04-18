@@ -1,5 +1,11 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import {
+    getUniswapV4Address,
+    isMultichainToken,
+    isNativeCurrency,
+    PoolKey,
+    quoteQueryOptions,
+} from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
 import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
@@ -34,15 +40,19 @@ export const quoteInAtom = atomWithQuery((get) => {
     if (transactionType?.type === "SWAP") {
         chainId = transactionType.chainId;
         poolKey = transactionType.poolKey;
-        const tokenIn = transactionType.tokenIn;
-        tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        const currencyIn = transactionType.currencyIn;
+        tokenInAddress = isMultichainToken(currencyIn)
+            ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
+            : getUniswapV4Address(currencyIn);
         tokenInDecimals = tokenInDecimals;
     } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
         chainId = transactionType.swap.chainId;
         poolKey = transactionType.swap.poolKey;
-        const tokenIn = transactionType.swap.tokenIn;
-        tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
-        tokenInDecimals = tokenIn.decimals;
+        const currencyIn = transactionType.swap.currencyIn;
+        tokenInAddress = isMultichainToken(currencyIn)
+            ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
+            : getUniswapV4Address(currencyIn);
+        tokenInDecimals = currencyIn.decimals;
     }
 
     const enabled = chainId != 0 && poolKey != emptyPoolKey && !!tokenInAmount;
@@ -52,7 +62,7 @@ export const quoteInAtom = atomWithQuery((get) => {
     // TODO: generalize to any bridging that involves orbiter (e.g. USDC)
     if (
         transactionType?.type === "BRIDGE_SWAP" &&
-        transactionType?.bridge.tokenIn.standard === "NativeToken" &&
+        isNativeCurrency(transactionType?.bridge.currencyIn) &&
         orbiterAmountOut
     ) {
         amountIn = orbiterAmountOut;

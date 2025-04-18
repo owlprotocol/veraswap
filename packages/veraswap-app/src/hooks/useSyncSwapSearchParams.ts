@@ -1,23 +1,23 @@
 import { useEffect } from "react";
 import { useSearch } from "@tanstack/react-router";
-import { Token } from "@owlprotocol/veraswap-sdk";
+import { Currency } from "@owlprotocol/veraswap-sdk";
 import { useAtom } from "jotai";
 import { useDomainType } from "./useDomainType.js";
-import { tokenInAtom, tokenOutAtom, chainsTypeWriteAtom, chainsAtom } from "@/atoms/index.js";
+import { currencyInAtom, currencyOutAtom, chainsTypeWriteAtom, chainsAtom } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 
-export function useSyncSwapSearchParams(allTokens: Token[]) {
+export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const navigate = Route.useNavigate();
     const search = useSearch({ from: "/" });
     const domainType = useDomainType();
 
-    const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
-    const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
+    const [currencyIn, setCurrencyIn] = useAtom(currencyInAtom);
+    const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
     const [, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const [enabledChains] = useAtom(chainsAtom);
 
     useEffect(() => {
-        const { tokenIn: tokenInSymbol, chainIdIn, tokenOut: tokenOutSymbol, chainIdOut, type } = search;
+        const { currencyIn: currencyInSymbol, chainIdIn, currencyOut: currencyOutSymbol, chainIdOut, type } = search;
 
         const chainsType = domainType || type || "mainnet";
         setNetworkType(chainsType);
@@ -33,38 +33,42 @@ export function useSyncSwapSearchParams(allTokens: Token[]) {
         }
 
         const enabledChainIds = enabledChains.map((c) => c.id);
-        const tokensInNetwork = allTokens.filter((t) => enabledChainIds.includes(t.chainId));
+        const tokensInNetwork = allCurrencies.filter((t) => enabledChainIds.includes(t.chainId));
 
-        if (tokenInSymbol && chainIdIn) {
-            const foundTokenIn = tokensInNetwork.find((t) => t.symbol === tokenInSymbol && t.chainId === chainIdIn);
-            if (foundTokenIn) setTokenIn(foundTokenIn);
+        if (currencyInSymbol && chainIdIn) {
+            const foundCurrencyIn = tokensInNetwork.find(
+                (t) => t.symbol === currencyInSymbol && t.chainId === chainIdIn,
+            );
+            if (foundCurrencyIn) setCurrencyIn(foundCurrencyIn);
         }
 
-        if (tokenOutSymbol && chainIdOut) {
-            const foundTokenOut = tokensInNetwork.find((t) => t.symbol === tokenOutSymbol && t.chainId === chainIdOut);
-            if (foundTokenOut) setTokenOut(foundTokenOut);
+        if (currencyOutSymbol && chainIdOut) {
+            const foundCurrencyOut = tokensInNetwork.find(
+                (t) => t.symbol === currencyOutSymbol && t.chainId === chainIdOut,
+            );
+            if (foundCurrencyOut) setCurrencyOut(foundCurrencyOut);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allTokens, domainType]);
+    }, [allCurrencies, domainType]);
 
     useEffect(() => {
-        if (!tokenIn && !tokenOut) return;
+        if (!currencyIn && !currencyOut) return;
 
         navigate({
             search: (prev) => ({
                 ...prev,
-                ...(tokenIn && {
-                    tokenIn: tokenIn.symbol,
-                    chainIdIn: tokenIn.chainId,
+                ...(currencyIn && {
+                    currencyIn: currencyIn.symbol,
+                    chainIdIn: currencyIn.chainId,
                 }),
-                ...(tokenOut && {
-                    tokenOut: tokenOut.symbol,
-                    chainIdOut: tokenOut.chainId,
+                ...(currencyOut && {
+                    currencyOut: currencyOut.symbol,
+                    chainIdOut: currencyOut.chainId,
                 }),
             }),
             replace: true,
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tokenIn, tokenOut]);
+    }, [currencyIn, currencyOut]);
 }

@@ -48,9 +48,9 @@ export const MainnetTestnetButtons = () => {
         navigate({
             search: {
                 type: newType,
-                tokenIn: undefined,
+                currencyIn: undefined,
                 chainIdIn: undefined,
-                tokenOut: undefined,
+                currencyOut: undefined,
                 chainIdOut: undefined,
             },
             replace: true,

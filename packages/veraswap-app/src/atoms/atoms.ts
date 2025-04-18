@@ -1,9 +1,9 @@
 import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
-import { TransactionType } from "@owlprotocol/veraswap-sdk";
+import { isMultichainToken, isNativeCurrency, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
-import { tokenInAmountAtom, tokenInAtom, tokenOutAtom, transactionTypeAtom } from "./tokens.js";
+import { tokenInAmountAtom, currencyInAtom, transactionTypeAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
 import { tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { config } from "@/config.js";
@@ -58,8 +58,8 @@ export const getSwapStepMessage = (swapStep: SwapStep, transactionType: Transact
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
     const account = get(accountAtom);
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
+    const currencyIn = get(currencyInAtom);
+    const currencyOut = get(currencyOutAtom);
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInAccountBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
@@ -76,7 +76,7 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.PENDING_SIGNATURE;
     } else if (hash && hash != receipt.data?.transactionHash) {
         return SwapStep.PENDING_TRANSACTION;
-    } else if (tokenIn === null || tokenOut === null) {
+    } else if (currencyIn === null || currencyOut === null) {
         return SwapStep.SELECT_TOKEN;
     } else if (!transactionType) {
         return SwapStep.NOT_SUPPORTED;
@@ -86,10 +86,11 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (
         // tokenIn is not native, and we don't have enough allowance
-        tokenIn.standard !== "NativeToken" &&
+        !isNativeCurrency(currencyIn) &&
         (transactionType.type !== "BRIDGE" ||
             (transactionType.type === "BRIDGE" &&
-                !(tokenIn.standard === "HypERC20" || tokenIn.standard === "SuperchainERC20"))) &&
+                isMultichainToken(currencyIn) &&
+                !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20"))) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
