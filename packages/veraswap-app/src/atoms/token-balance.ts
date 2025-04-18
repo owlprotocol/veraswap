@@ -8,101 +8,21 @@ import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
 import {
     PERMIT2_ADDRESS,
-    Token,
     UNISWAP_CONTRACTS,
     isNativeCurrency,
     getUniswapV4Address,
     Currency,
+    isMultichainToken,
 } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
-import { tokenInAtom, tokenOutAtom } from "./tokens.js";
-import { currenciesAtom, tokensAtom } from "./chains.js";
+import { currencyInAtom, currencyOutAtom } from "./tokens.js";
+import { currenciesAtom } from "./chains.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
 
 /***** Atom Family *****/
-export const tokenBalanceAtomFamily = atomFamily(
-    ({ token, account }: { token: Token; account: Address }) =>
-        atomWithQuery<bigint>(() => {
-            if (token.standard === "NativeToken") {
-                // Get native balance
-                return {
-                    ...(getBalanceQueryOptions(config, {
-                        address: account,
-                        chainId: token.chainId,
-                    }) as any),
-                    select: (data: GetBalanceReturnType) => data.value,
-                };
-            }
-
-            // Get ERC20 balance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
-            return readContractQueryOptions(config, {
-                abi: [balanceOfAbi],
-                chainId: token.chainId,
-                address: tokenAddress,
-                functionName: "balanceOf",
-                args: [account],
-            });
-        }),
-    (a, b) => a.account === b.account && a.token.chainId === b.token.chainId && a.token.address === b.token.address,
-) as unknown as AtomFamily<{ token: Token; account: Address }, Atom<AtomWithQueryResult<bigint>>>;
-// https://jotai.org/docs/utilities/family#caveat-memory-leaks
-tokenBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
-
-export const tokenAllowanceAtomFamily = atomFamily(
-    ({ token, account, spender }: { token: Token; account: Address; spender: Address }) =>
-        atomWithQuery<bigint>(() => {
-            if (token.standard === "NativeToken") return disabledQueryOptions as any;
-
-            // Get ERC20 allowance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
-            return readContractQueryOptions(config, {
-                abi: [allowanceAbi],
-                chainId: token.chainId,
-                address: tokenAddress,
-                functionName: "allowance",
-                args: [account, spender],
-            }) as any;
-        }),
-    (a, b) =>
-        a.account === b.account &&
-        a.spender === b.spender &&
-        a.token.chainId === b.token.chainId &&
-        a.token.address === b.token.address,
-) as unknown as AtomFamily<{ token: Token; account: Address; spender: Address }, Atom<AtomWithQueryResult<bigint>>>;
-// https://jotai.org/docs/utilities/family#caveat-memory-leaks
-tokenAllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
-
-export const tokenPermit2AllowanceAtomFamily = atomFamily(
-    ({ token, account, spender }: { token: Token; account: Address; spender: Address }) =>
-        atomWithQuery<[bigint, number, number]>(() => {
-            if (token.standard === "NativeToken") return disabledQueryOptions as any;
-
-            // Get ERC20 allowance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
-            return readContractQueryOptions(config, {
-                abi: [permit2AllowanceAbi],
-                chainId: token.chainId,
-                address: PERMIT2_ADDRESS,
-                functionName: "allowance",
-                args: [account, tokenAddress, spender],
-            }) as any;
-        }),
-    (a, b) =>
-        a.account === b.account &&
-        a.spender === b.spender &&
-        a.token.chainId === b.token.chainId &&
-        a.token.address === b.token.address,
-) as unknown as AtomFamily<
-    { token: Token; account: Address; spender: Address },
-    Atom<AtomWithQueryResult<[bigint, number, number]>>
->;
-// https://jotai.org/docs/utilities/family#caveat-memory-leaks
-tokenPermit2AllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
-
 export const currencyBalanceAtomFamily = atomFamily(
     ({ currency, account }: { currency: Currency; account: Address }) =>
         atomWithQuery<bigint>(() => {
@@ -116,10 +36,14 @@ export const currencyBalanceAtomFamily = atomFamily(
                     select: (data: GetBalanceReturnType) => data.value,
                 };
             }
+
+            const tokenAddress = isMultichainToken(currency)
+                ? (currency.hyperlaneAddress ?? currency.address)
+                : currency.address;
             return readContractQueryOptions(config, {
                 abi: [balanceOfAbi],
                 chainId: currency.chainId,
-                address: currency.address,
+                address: tokenAddress,
                 functionName: "balanceOf",
                 args: [account],
             });
@@ -129,14 +53,74 @@ export const currencyBalanceAtomFamily = atomFamily(
         a.currency.chainId === b.currency.chainId &&
         getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
 ) as unknown as AtomFamily<{ currency: Currency; account: Address }, Atom<AtomWithQueryResult<bigint>>>;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
+
+export const tokenAllowanceAtomFamily = atomFamily(
+    ({ currency, account, spender }: { currency: Currency; account: Address; spender: Address }) =>
+        atomWithQuery<bigint>(() => {
+            if (isNativeCurrency(currency)) return disabledQueryOptions as any;
+
+            // Get ERC20 allowance
+            const tokenAddress = isMultichainToken(currency)
+                ? (currency.hyperlaneAddress ?? currency.address)
+                : currency.address;
+            return readContractQueryOptions(config, {
+                abi: [allowanceAbi],
+                chainId: currency.chainId,
+                address: tokenAddress,
+                functionName: "allowance",
+                args: [account, spender],
+            }) as any;
+        }),
+    (a, b) =>
+        a.account === b.account &&
+        a.spender === b.spender &&
+        a.currency.chainId === b.currency.chainId &&
+        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+) as unknown as AtomFamily<
+    { currency: Currency; account: Address; spender: Address },
+    Atom<AtomWithQueryResult<bigint>>
+>;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenAllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
+
+export const tokenPermit2AllowanceAtomFamily = atomFamily(
+    ({ currency, account, spender }: { currency: Currency; account: Address; spender: Address }) =>
+        atomWithQuery<[bigint, number, number]>(() => {
+            if (isNativeCurrency(currency)) return disabledQueryOptions as any;
+
+            // Get ERC20 allowance
+            const tokenAddress = isMultichainToken(currency)
+                ? (currency.hyperlaneAddress ?? currency.address)
+                : currency.address;
+            return readContractQueryOptions(config, {
+                abi: [permit2AllowanceAbi],
+                chainId: currency.chainId,
+                address: PERMIT2_ADDRESS,
+                functionName: "allowance",
+                args: [account, tokenAddress, spender],
+            }) as any;
+        }),
+    (a, b) =>
+        a.account === b.account &&
+        a.spender === b.spender &&
+        a.currency.chainId === b.currency.chainId &&
+        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+) as unknown as AtomFamily<
+    { currency: Currency; account: Address; spender: Address },
+    Atom<AtomWithQueryResult<[bigint, number, number]>>
+>;
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenPermit2AllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
 /***** Balances *****/
 export const tokenInAccountBalanceQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const account = get(accountAtom);
-    if (!token || !account?.address) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address) return get(disabledQueryAtom) as any;
 
-    return get(tokenBalanceAtomFamily({ token, account: account.address }));
+    return get(currencyBalanceAtomFamily({ currency, account: account.address }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenInAccountBalanceAtom = atom<bigint | null>((get) => {
@@ -144,45 +128,45 @@ export const tokenInAccountBalanceAtom = atom<bigint | null>((get) => {
 });
 
 export const tokenInKernelBalanceQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const { data: account } = get(kernelAddressChainInQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    return get(tokenBalanceAtomFamily({ token, account }));
+    return get(currencyBalanceAtomFamily({ currency, account }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenOutAccountBalanceQueryAtom = atom((get) => {
-    const token = get(tokenOutAtom);
+    const currency = get(currencyOutAtom);
     const account = get(accountAtom);
-    if (!token || !account?.address) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address) return get(disabledQueryAtom) as any;
 
-    return get(tokenBalanceAtomFamily({ token, account: account.address }));
+    return get(currencyBalanceAtomFamily({ currency, account: account.address }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenOutKernelBalanceQueryAtom = atom((get) => {
-    const token = get(tokenOutAtom);
+    const currency = get(currencyOutAtom);
     const { data: account } = get(kernelAddressChainOutQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    return get(tokenBalanceAtomFamily({ token, account }));
+    return get(currencyBalanceAtomFamily({ currency, account }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 /***** Allowances *****/
 export const tokenInAllowanceAccountToKernelQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const account = get(accountAtom);
     const { data: spender } = get(kernelAddressChainInQueryAtom);
-    if (!token || !account?.address || !spender) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address || !spender) return get(disabledQueryAtom) as any;
 
-    return get(tokenAllowanceAtomFamily({ token, account: account.address, spender }));
+    return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenInAllowanceAccountToPermit2QueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const account = get(accountAtom);
-    if (!token || !account?.address) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address) return get(disabledQueryAtom) as any;
 
-    return get(tokenAllowanceAtomFamily({ token, account: account.address, spender: PERMIT2_ADDRESS }));
+    return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender: PERMIT2_ADDRESS }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenInAllowanceAccountToPermit2Atom = atom<bigint | null>((get) => {
@@ -190,95 +174,77 @@ export const tokenInAllowanceAccountToPermit2Atom = atom<bigint | null>((get) =>
 });
 
 export const tokenInAllowanceKernelToPermit2QueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const { data: account } = get(kernelAddressChainInQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    return get(tokenAllowanceAtomFamily({ token, account, spender: PERMIT2_ADDRESS }));
+    return get(tokenAllowanceAtomFamily({ currency, account, spender: PERMIT2_ADDRESS }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 export const tokenInAllowanceKernelToHypERC20CollateralQueryAtom = atom((get) => {
-    const tokenIn = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const { data: account } = get(kernelAddressChainInQueryAtom);
 
-    if (!tokenIn || !account || tokenIn.standard !== "HypERC20Collateral") {
+    if (!currency || !account || "collateralAddress" in currency) {
         return get(disabledQueryAtom) as any;
     }
     // tokenIn will actually be tokenIn.collateralAddress
-    return get(tokenAllowanceAtomFamily({ token: tokenIn, account, spender: tokenIn.address }));
+    return get(tokenAllowanceAtomFamily({ currency, account, spender: getUniswapV4Address(currency) }));
 }) as WritableAtom<AtomWithQueryResult<bigint, Error>, [], void>;
 
 export const tokenOutAllowanceKernelToPermit2QueryAtom = atom((get) => {
-    const token = get(tokenOutAtom);
+    const currency = get(currencyOutAtom);
     const { data: account } = get(kernelAddressChainOutQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    return get(tokenAllowanceAtomFamily({ token, account, spender: PERMIT2_ADDRESS }));
+    return get(tokenAllowanceAtomFamily({ currency, account, spender: PERMIT2_ADDRESS }));
 }) as Atom<AtomWithQueryResult<bigint>>;
 
 /***** Permit2 Allowances *****/
 export const tokenInPermit2AllowanceAccountToKernelQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const account = get(accountAtom);
     const { data: spender } = get(kernelAddressChainInQueryAtom);
-    if (!token || !account?.address || !spender) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address || !spender) return get(disabledQueryAtom) as any;
 
-    return get(tokenPermit2AllowanceAtomFamily({ token, account: account.address, spender }));
+    return get(tokenPermit2AllowanceAtomFamily({ currency, account: account.address, spender }));
 }) as Atom<AtomWithQueryResult<readonly [bigint, number, number]>>;
 
 export const tokenInPermit2AllowanceAccountToUniswapRouterQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const account = get(accountAtom);
-    if (!token || !account?.address) return get(disabledQueryAtom) as any;
+    if (!currency || !account?.address) return get(disabledQueryAtom) as any;
 
-    const uniswapContracts = UNISWAP_CONTRACTS[token.chainId];
+    const uniswapContracts = UNISWAP_CONTRACTS[currency.chainId];
     if (!uniswapContracts) return disabledQueryOptions as any;
     const spender = uniswapContracts.universalRouter;
 
-    return get(tokenPermit2AllowanceAtomFamily({ token, account: account.address, spender }));
+    return get(tokenPermit2AllowanceAtomFamily({ currency, account: account.address, spender }));
 }) as Atom<AtomWithQueryResult<readonly [bigint, number, number]>>;
 
 export const tokenInPermit2AllowanceKernelToUniswapRouterQueryAtom = atom((get) => {
-    const token = get(tokenInAtom);
+    const currency = get(currencyInAtom);
     const { data: account } = get(kernelAddressChainInQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    const uniswapContracts = UNISWAP_CONTRACTS[token.chainId];
+    const uniswapContracts = UNISWAP_CONTRACTS[currency.chainId];
     if (!uniswapContracts) return get(disabledQueryAtom) as any;
     const spender = uniswapContracts.universalRouter;
 
-    return get(tokenPermit2AllowanceAtomFamily({ token, account, spender }));
+    return get(tokenPermit2AllowanceAtomFamily({ currency, account, spender }));
 }) as Atom<AtomWithQueryResult<readonly [bigint, number, number]>>;
 
 export const tokenOutPermit2AllowanceKernelToUniswapRouterQueryAtom = atom((get) => {
-    const token = get(tokenOutAtom);
+    const currency = get(currencyOutAtom);
     const { data: account } = get(kernelAddressChainOutQueryAtom);
-    if (!token || !account) return get(disabledQueryAtom) as any;
+    if (!currency || !account) return get(disabledQueryAtom) as any;
 
-    const uniswapContracts = UNISWAP_CONTRACTS[token.chainId];
+    const uniswapContracts = UNISWAP_CONTRACTS[currency.chainId];
     if (!uniswapContracts) return get(disabledQueryAtom) as any;
     const spender = uniswapContracts.universalRouter;
 
-    return get(tokenPermit2AllowanceAtomFamily({ token, account, spender }));
+    return get(tokenPermit2AllowanceAtomFamily({ currency, account, spender }));
 }) as Atom<AtomWithQueryResult<readonly [bigint, number, number]>>;
-
-export const tokenBalancesAtom = atom((get) => {
-    const allTokens = get(tokensAtom);
-    const account = get(accountAtom);
-
-    return allTokens.map((token) => {
-        const balanceRaw = account.address
-            ? (get(tokenBalanceAtomFamily({ token, account: account.address })).data ?? 0n)
-            : 0n;
-        const decimals = token?.decimals ?? 18;
-        const balance = Number(formatUnits(balanceRaw, decimals));
-
-        return {
-            token,
-            balance,
-        };
-    });
-});
 
 export const currencyBalancesAtom = atom((get) => {
     const allCurrencies = get(currenciesAtom);

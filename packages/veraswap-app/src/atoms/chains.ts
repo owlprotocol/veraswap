@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { Chain } from "viem";
 import { TOKENS, LOCAL_CURRENCIES } from "@owlprotocol/veraswap-sdk/constants";
 import { Currency } from "@owlprotocol/veraswap-sdk";
-import { tokenInAmountInputAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
+import { tokenInAmountInputAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { localChains, mainnetChains, testnetChains } from "@/config.js";
 
 export type ChainsType = "local" | "testnet" | "mainnet";
@@ -16,9 +16,8 @@ export const chainsTypeWriteAtom = atom(
         const currChainsType = get(chainsTypeAtom);
         if (currChainsType != update) {
             set(chainsTypeAtom, update);
-            set(tokenInAtom, null);
-            set(tokenInAmountInputAtom, "");
-            set(tokenOutAtom, null);
+            set(currencyInAtom, null);
+            set(currencyOutAtom, null);
         }
     },
 );
