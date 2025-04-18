@@ -6,7 +6,7 @@ import { Address, numberToHex } from "viem";
 import { readContractQueryOptions } from "wagmi/query";
 import { mapKeys } from "lodash-es";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { chainInAtom, chainOutAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
+import { chainInAtom, chainOutAtom, tokenInAtom } from "./tokens.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 
@@ -91,7 +91,7 @@ export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
 
     if (!tokenIn) return disabledQueryOptions as any;
 
-    if (tokenIn.standard !== "HypERC20Collateral") {
+    if (tokenIn.standard !== "HypERC20Collateral" && tokenIn.standard !== "HypSuperchainERC20Collateral") {
         return disabledQueryOptions as any;
     }
 
@@ -109,7 +109,7 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
 
     if (!tokenIn || !chainOut) return disabledQueryOptions as any;
-    if (tokenIn.standard !== "HypERC20Collateral") {
+    if (tokenIn.standard !== "HypERC20Collateral" && tokenIn.standard !== "HypSuperchainERC20Collateral") {
         return disabledQueryOptions as any;
     }
 

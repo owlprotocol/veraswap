@@ -431,6 +431,30 @@ export const events = [
     },
     {
         type: "event",
+        name: "RelayERC20",
+        inputs: [
+            { name: "token", type: "address", indexed: true, internalType: "address" },
+            { name: "from", type: "address", indexed: true, internalType: "address" },
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "source", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "SendERC20",
+        inputs: [
+            { name: "token", type: "address", indexed: true, internalType: "address" },
+            { name: "from", type: "address", indexed: true, internalType: "address" },
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "destination", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "CrosschainBurn",
         inputs: [
             { name: "from", type: "address", indexed: true, internalType: "address" },

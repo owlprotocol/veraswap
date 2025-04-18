@@ -37,6 +37,7 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     // Superchain
     "out/IL2ToL2CrossDomainMessenger.sol/*.json",
     // Superchain (custom)
+    "out/ISuperchainTokenBridge.sol/*.json",
     "out/SuperchainTokenBridgeSweep.sol/*.json",
     "out/MockSuperchainERC20.sol/*.json",
     // Kernel

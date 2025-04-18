@@ -13,8 +13,10 @@ import {
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
+import { getTokenAddress } from "../utils/getTokenAddress.js";
 import {
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
@@ -141,7 +143,7 @@ export async function getTransaction(
                 approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[tokenIn.chainId].universalRouter,
-                token: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
+                token: getTokenAddress(tokenIn),
                 account: walletAddress,
             };
             const { permitSingle, signature } = await getPermit2PermitSignature(
@@ -176,7 +178,21 @@ export async function getTransaction(
                 });
             }
 
-            if (tokenIn.standard === "HypERC20Collateral") {
+            console.log({ tokenIn, tokenOut });
+            if (
+                (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
+                (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
+            ) {
+                console.log("Superchain bridge transaction");
+                return getSuperchainBridgeTransaction({
+                    token: getTokenAddress(tokenIn),
+                    recipient: walletAddress,
+                    amount: amountIn,
+                    destination: tokenOut.chainId,
+                });
+            }
+
+            if (tokenIn.standard === "HypERC20Collateral" || tokenIn.standard === "HypSuperchainERC20Collateral") {
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
@@ -256,8 +272,7 @@ export async function getTransaction(
                 approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[swapTokenIn.chainId].universalRouter,
-                token:
-                    swapTokenIn.standard === "HypERC20Collateral" ? swapTokenIn.collateralAddress : swapTokenIn.address,
+                token: getTokenAddress(swapTokenIn),
                 account: walletAddress,
             };
             const { permitSingle, signature } = await getPermit2PermitSignature(

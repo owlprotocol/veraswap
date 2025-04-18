@@ -15,6 +15,7 @@ export { IPoolManager } from "./IPoolManager.js";
 export { IPositionManager } from "./IPositionManager.js";
 export { ISignatureTransfer } from "./ISignatureTransfer.js";
 export { IStateView } from "./IStateView.js";
+export { ISuperchainTokenBridge } from "./ISuperchainTokenBridge.js";
 export { IUniversalRouter } from "./IUniversalRouter.js";
 export { IV4Quoter } from "./IV4Quoter.js";
 export { Kernel } from "./Kernel.js";

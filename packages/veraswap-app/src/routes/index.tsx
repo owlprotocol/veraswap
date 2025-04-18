@@ -14,6 +14,7 @@ import {
     TransactionTypeBridgeSwap,
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
+    getTokenAddress,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -241,7 +242,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
-                to: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
+                to: getTokenAddress(tokenIn),
                 chainId: tokenIn.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,

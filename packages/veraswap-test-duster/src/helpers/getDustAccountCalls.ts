@@ -33,12 +33,20 @@ export async function getDustAccountCalls({
 
     const ethBalancePromise = client.getBalance({ address: account });
     const tokenBalancePromises = filteredTokens.map((token) =>
-        client.readContract({
-            address: token.address,
-            abi: MockERC20.abi,
-            functionName: "balanceOf",
-            args: [account],
-        })
+        client
+            .readContract({
+                address: token.address,
+                abi: MockERC20.abi,
+                functionName: "balanceOf",
+                args: [account],
+            })
+            .catch((e) => {
+                console.error(
+                    `Error fetching balance for token ${token.name} on chain ${token.chainId}:`,
+                    e
+                );
+                throw e;
+            })
     );
 
     const [ethBalance, ...tokenBalances] = await Promise.all([
