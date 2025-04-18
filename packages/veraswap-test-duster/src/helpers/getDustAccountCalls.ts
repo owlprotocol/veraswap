@@ -26,7 +26,9 @@ export async function getDustAccountCalls({
 
     const filteredTokens = tokens.filter(
         (token) =>
-            token.chainId === client.chain?.id && token.standard === "MockERC20"
+            token.chainId === client.chain?.id &&
+            (token.standard === "MockERC20" ||
+                token.standard === "MockSuperchainERC20")
     );
 
     const ethBalancePromise = client.getBalance({ address: account });
