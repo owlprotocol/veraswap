@@ -4,7 +4,7 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Token } from "@owlprotocol/veraswap-sdk";
+import { getTokenAddress, Token } from "@owlprotocol/veraswap-sdk";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
@@ -327,8 +327,7 @@ const TokenGroup = ({
                         const balance =
                             balances.find((b) => b.token.chainId === token.chainId && b.token.address === token.address)
                                 ?.balance ?? 0;
-                        const displayedAddress =
-                            token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
+                        const displayedAddress = getTokenAddress(token);
                         return (
                             <button
                                 key={token.chainId}

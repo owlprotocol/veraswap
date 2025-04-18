@@ -6,7 +6,7 @@ import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
-import { PERMIT2_ADDRESS, Token, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { getTokenAddress, PERMIT2_ADDRESS, Token, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
 import { tokenInAtom, tokenOutAtom } from "./tokens.js";
@@ -31,7 +31,7 @@ export const tokenBalanceAtomFamily = atomFamily(
             }
 
             // Get ERC20 balance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
+            const tokenAddress = getTokenAddress(token);
             return readContractQueryOptions(config, {
                 abi: [balanceOfAbi],
                 chainId: token.chainId,
@@ -51,7 +51,7 @@ export const tokenAllowanceAtomFamily = atomFamily(
             if (token.standard === "NativeToken") return disabledQueryOptions as any;
 
             // Get ERC20 allowance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
+            const tokenAddress = getTokenAddress(token);
             return readContractQueryOptions(config, {
                 abi: [allowanceAbi],
                 chainId: token.chainId,
@@ -75,7 +75,7 @@ export const tokenPermit2AllowanceAtomFamily = atomFamily(
             if (token.standard === "NativeToken") return disabledQueryOptions as any;
 
             // Get ERC20 allowance
-            const tokenAddress = token.standard === "HypERC20Collateral" ? token.collateralAddress : token.address;
+            const tokenAddress = getTokenAddress(token);
             return readContractQueryOptions(config, {
                 abi: [permit2AllowanceAbi],
                 chainId: token.chainId,
@@ -167,7 +167,11 @@ export const tokenInAllowanceKernelToHypERC20CollateralQueryAtom = atom((get) =>
     const tokenIn = get(tokenInAtom);
     const { data: account } = get(kernelAddressChainInQueryAtom);
 
-    if (!tokenIn || !account || tokenIn.standard !== "HypERC20Collateral") {
+    if (
+        !tokenIn ||
+        !account ||
+        (tokenIn.standard !== "HypERC20Collateral" && tokenIn.standard !== "HypSuperchainERC20Collateral")
+    ) {
         return get(disabledQueryAtom) as any;
     }
     // tokenIn will actually be tokenIn.collateralAddress
