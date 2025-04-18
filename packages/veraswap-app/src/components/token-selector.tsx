@@ -333,7 +333,6 @@ const TokenGroup = ({
                                     b.currency.chainId === token.chainId &&
                                     getUniswapV4Address(b.currency) === getUniswapV4Address(token),
                             )?.balance ?? 0;
-
                         return (
                             <button
                                 key={token.chainId}

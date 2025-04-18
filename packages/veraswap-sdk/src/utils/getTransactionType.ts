@@ -37,7 +37,6 @@ export type TransactionType =
     | TransactionTypeBridgeSwap;
 
 /**
- * Get transaction type & params (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) for Currency
  * @param param0
  * @returns
  */

@@ -14,6 +14,7 @@ import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../c
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import { TokenStandard } from "../types/Token.js";
@@ -175,6 +176,21 @@ export async function getTransaction(
                 return getOrbiterETHTransferTransaction({
                     ...orbiterParams,
                     amount: amountIn,
+                });
+            }
+
+            if (
+                isMultichainToken(currencyIn) &&
+                currencyIn.isSuperERC20() &&
+                isMultichainToken(currencyOut) &&
+                currencyOut.isSuperERC20()
+            ) {
+                console.log("Superchain bridge transaction");
+                return getSuperchainBridgeTransaction({
+                    token: getUniswapV4Address(currencyIn),
+                    recipient: walletAddress,
+                    amount: amountIn,
+                    destination: currencyOut.chainId,
                 });
             }
 

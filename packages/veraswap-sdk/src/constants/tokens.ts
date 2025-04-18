@@ -8,7 +8,14 @@ import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { createPoolKey } from "../types/PoolKey.js";
-import { HypERC20CollateralToken, HypERC20Token, NativeToken, Token, TokenBase } from "../types/Token.js";
+import {
+    HypERC20CollateralToken,
+    HypERC20Token,
+    HypSuperchainERC20CollateralToken,
+    NativeToken,
+    Token,
+    TokenBase,
+} from "../types/Token.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -171,9 +178,9 @@ export function createMockSuperchainERC20WarpRoute({
         address: token.address,
     }));
 
-    const hypERC20Collateral: HypERC20CollateralToken = {
+    const hypSuperchainERC20Collateral: HypSuperchainERC20CollateralToken = {
         ...token,
-        standard: "HypERC20Collateral",
+        standard: "HypSuperchainERC20Collateral",
         address: hypERC20CollateralAddress,
         collateralAddress: token.address,
         connections: [
@@ -198,7 +205,7 @@ export function createMockSuperchainERC20WarpRoute({
                 }) as TokenBase<"SuperchainERC20">,
         );
 
-    return [hypERC20Collateral, hypERC20, ...superchainERC20s];
+    return [hypSuperchainERC20Collateral, hypERC20, ...superchainERC20s];
 }
 
 export const localMockTokens = [
@@ -264,7 +271,13 @@ const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia,
         }) satisfies NativeToken,
 );
 
-export const LOCAL_TOKENS: (HypERC20CollateralToken | HypERC20Token | NativeToken | TokenBase<"SuperchainERC20">)[] = [
+export const LOCAL_TOKENS: (
+    | HypERC20CollateralToken
+    | HypERC20Token
+    | NativeToken
+    | TokenBase<"SuperchainERC20">
+    | HypSuperchainERC20CollateralToken
+)[] = [
     ...createMockERC20WarpRoute({
         token: localMockTokens[0],
         mailboxByChain: {

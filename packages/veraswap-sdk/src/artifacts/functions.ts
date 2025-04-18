@@ -2325,6 +2325,30 @@ export const functions = [
     },
     {
         type: "function",
+        name: "relayERC20",
+        inputs: [
+            { name: "_token", type: "address", internalType: "address" },
+            { name: "_from", type: "address", internalType: "address" },
+            { name: "_to", type: "address", internalType: "address" },
+            { name: "_amount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "sendERC20",
+        inputs: [
+            { name: "_token", type: "address", internalType: "address" },
+            { name: "_to", type: "address", internalType: "address" },
+            { name: "_amount", type: "uint256", internalType: "uint256" },
+            { name: "_chainId", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "msgHash_", type: "bytes32", internalType: "bytes32" }],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "sendAllERC20",
         inputs: [
             { name: "_token", type: "address", internalType: "address" },
