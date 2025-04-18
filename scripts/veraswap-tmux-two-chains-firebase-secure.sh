@@ -34,7 +34,7 @@ HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,o
     tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
      # Start duster
     tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && PRIVATE_KEY=${privateKeyAnvil0} pnpm dev" ENTER
-    tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && go build && sleep 5 && ./scoutup --supersim" ENTER
+    # tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && go build && sleep 5 && ./scoutup --supersim" ENTER
 fi
 
 if [ -n "${TMUX+1}" ]; then
