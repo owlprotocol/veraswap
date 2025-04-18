@@ -178,12 +178,10 @@ export async function getTransaction(
                 });
             }
 
-            console.log({ tokenIn, tokenOut });
             if (
                 (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
                 (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
             ) {
-                console.log("Superchain bridge transaction");
                 return getSuperchainBridgeTransaction({
                     token: getTokenAddress(tokenIn),
                     recipient: walletAddress,
