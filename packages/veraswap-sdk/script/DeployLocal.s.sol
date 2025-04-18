@@ -233,11 +233,13 @@ contract DeployLocal is DeployCoreContracts {
 
         /***** Deploy Superchain Tokens on OP Chains with Collateral *****/
         {
-            // Deploy Token C and Collateral on OPChainA
+            // Deploy Token C and Collateral on OPChainA, and silently deploy Token D
             {
                 vm.selectFork(forks[1]);
                 vm.startBroadcast();
                 CoreContracts storage contractsA = chainContracts[chainIds[1]];
+
+                MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
                 (address superchainTokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
                 tokens[chainIds[1]][keccak256("C")] = superchainTokenC;
@@ -265,11 +267,13 @@ contract DeployLocal is DeployCoreContracts {
                 vm.stopBroadcast();
             }
 
-            // Deploy Token D and Collateral on OPChainB
+            // Deploy Token D and Collateral on OPChainB and silently deploy Token C
             {
                 vm.selectFork(forks[2]);
                 vm.startBroadcast();
                 CoreContracts storage contractsB = chainContracts[chainIds[2]];
+
+                MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
 
                 (address superchainTokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
                 tokens[chainIds[2]][keccak256("D")] = superchainTokenD;
