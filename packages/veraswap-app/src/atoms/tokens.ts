@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
+import { Token, getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
 import { POOLS, TOKENS_MAP, LOCAL_CURRENCIES } from "@owlprotocol/veraswap-sdk/constants";
 import { chains } from "@/config.js";
 
@@ -34,21 +34,22 @@ export const fetchedTokensAtom = atomWithQuery(() => ({
 /***** Token In *****/
 /** Selected tokenIn */
 export const tokenInAtom = atom<Token | null>(null);
-export const currencyInAtom = atom((get) => {
-    const tokenIn = get(tokenInAtom);
-    if (!tokenIn) return null;
-    return (
-        LOCAL_CURRENCIES.find((token) => {
-            if (tokenIn.standard === "NativeToken") {
-                return token.isNative && token.chainId === tokenIn.chainId;
-            }
+export const currencyInAtom = atom<Currency | null>(null);
+// export const currencyInAtom = atom((get) => {
+//     const tokenIn = get(tokenInAtom);
+//     if (!tokenIn) return null;
+//     return (
+//         LOCAL_CURRENCIES.find((token) => {
+//             if (tokenIn.standard === "NativeToken") {
+//                 return token.isNative && token.chainId === tokenIn.chainId;
+//             }
 
-            const tokenAddress =
-                tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
-            return token.chainId === tokenIn.chainId && token.wrapped.address === tokenAddress;
-        }) ?? null
-    );
-});
+//             const tokenAddress =
+//                 tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+//             return token.chainId === tokenIn.chainId && token.wrapped.address === tokenAddress;
+//         }) ?? null
+//     );
+// });
 /** Selected tokenIn chain */
 export const chainInAtom = atom((get) => {
     const tokenIn = get(tokenInAtom);
@@ -68,21 +69,22 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 /***** Token Out *****/
 /** Selected tokenOut */
 export const tokenOutAtom = atom<Token | null>(null);
-export const currencyOutAtom = atom((get) => {
-    const tokenOut = get(tokenOutAtom);
-    if (!tokenOut) return null;
-    return (
-        LOCAL_CURRENCIES.find((token) => {
-            if (tokenOut.standard === "NativeToken") {
-                return token.isNative && token.chainId === tokenOut.chainId;
-            }
+export const currencyOutAtom = atom<Currency | null>(null);
+// export const currencyOutAtom = atom((get) => {
+//     const tokenOut = get(tokenOutAtom);
+//     if (!tokenOut) return null;
+//     return (
+//         LOCAL_CURRENCIES.find((token) => {
+//             if (tokenOut.standard === "NativeToken") {
+//                 return token.isNative && token.chainId === tokenOut.chainId;
+//             }
 
-            const tokenAddress =
-                tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
-            return token.chainId === tokenOut.chainId && token.wrapped.address === tokenAddress;
-        }) ?? null
-    );
-});
+//             const tokenAddress =
+//                 tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+//             return token.chainId === tokenOut.chainId && token.wrapped.address === tokenAddress;
+//         }) ?? null
+//     );
+// });
 /** Selected tokenOut chain */
 export const chainOutAtom = atom((get) => {
     const tokenOut = get(tokenOutAtom);

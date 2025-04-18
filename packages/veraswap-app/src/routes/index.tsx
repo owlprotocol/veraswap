@@ -82,9 +82,9 @@ import { useDustAccount, useWatchMessageProcessed } from "@/hooks/index.js";
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
         type: z.enum(["mainnet", "testnet", "local"]).optional(),
-        tokenIn: z.string().optional(),
+        currencyIn: z.string().optional(),
         chainIdIn: z.coerce.number().optional(),
-        tokenOut: z.string().optional(),
+        currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
     }),
     component: Index,
@@ -185,8 +185,8 @@ function Index() {
                 ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
                 : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
             : quoterData
-                ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
-                : "";
+              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+              : "";
 
     useDustAccount(walletAddress);
 
@@ -274,17 +274,17 @@ function Index() {
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                        ...transactionType,
-                        amountIn: tokenInAmount!,
-                        walletAddress,
-                        bridgePayment: bridgePayment,
-                        orbiterParams,
-                        queryClient: queryClient,
-                        wagmiConfig: config,
-                        initData: kernelSmartAccountInitData,
-                    } as TransactionParams & TransactionTypeBridge)
+                          ...transactionType,
+                          amountIn: tokenInAmount!,
+                          walletAddress,
+                          bridgePayment: bridgePayment,
+                          orbiterParams,
+                          queryClient: queryClient,
+                          wagmiConfig: config,
+                          initData: kernelSmartAccountInitData,
+                      } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                        ? ({
+                      ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum,
@@ -295,7 +295,7 @@ function Index() {
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                        : ({
+                      : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
@@ -623,8 +623,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                                ? "Fetching quote..."
-                                                : "0"
+                                              ? "Fetching quote..."
+                                              : "0"
                                     }
                                     disabled={true}
                                 />

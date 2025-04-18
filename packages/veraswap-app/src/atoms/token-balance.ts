@@ -6,11 +6,18 @@ import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
-import { PERMIT2_ADDRESS, Token, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import {
+    PERMIT2_ADDRESS,
+    Token,
+    UNISWAP_CONTRACTS,
+    isNativeCurrency,
+    getUniswapV4Address,
+    Currency,
+} from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
 import { tokenInAtom, tokenOutAtom } from "./tokens.js";
-import { tokensAtom } from "./chains.js";
+import { currenciesAtom, tokensAtom } from "./chains.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
@@ -95,6 +102,33 @@ export const tokenPermit2AllowanceAtomFamily = atomFamily(
 >;
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 tokenPermit2AllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
+
+export const currencyBalanceAtomFamily = atomFamily(
+    ({ currency, account }: { currency: Currency; account: Address }) =>
+        atomWithQuery<bigint>(() => {
+            if (isNativeCurrency(currency)) {
+                // Get native balance
+                return {
+                    ...(getBalanceQueryOptions(config, {
+                        address: account,
+                        chainId: currency.chainId,
+                    }) as any),
+                    select: (data: GetBalanceReturnType) => data.value,
+                };
+            }
+            return readContractQueryOptions(config, {
+                abi: [balanceOfAbi],
+                chainId: currency.chainId,
+                address: currency.address,
+                functionName: "balanceOf",
+                args: [account],
+            });
+        }),
+    (a, b) =>
+        a.account === b.account &&
+        a.currency.chainId === b.currency.chainId &&
+        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+) as unknown as AtomFamily<{ currency: Currency; account: Address }, Atom<AtomWithQueryResult<bigint>>>;
 
 /***** Balances *****/
 export const tokenInAccountBalanceQueryAtom = atom((get) => {
@@ -241,6 +275,24 @@ export const tokenBalancesAtom = atom((get) => {
 
         return {
             token,
+            balance,
+        };
+    });
+});
+
+export const currencyBalancesAtom = atom((get) => {
+    const allCurrencies = get(currenciesAtom);
+    const account = get(accountAtom);
+
+    return allCurrencies.map((currency) => {
+        const balanceRaw = account.address
+            ? (get(currencyBalanceAtomFamily({ currency, account: account.address })).data ?? 0n)
+            : 0n;
+        const decimals = currency.decimals ?? 18;
+        const balance = Number(formatUnits(balanceRaw, decimals));
+
+        return {
+            currency,
             balance,
         };
     });
