@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
 import { Token, getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
-import { POOLS, TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
+import { POOLS } from "@owlprotocol/veraswap-sdk/constants";
 import { chains } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -84,7 +84,7 @@ export const transactionTypeAtom = atom<TransactionType | null>((get) => {
     if (!currencyIn || !currencyOut) return null;
 
     //TODO: Add better constants
-    return getTransactionType({ currencyIn, currencyOut, poolKeys: POOLS, tokens: TOKENS_MAP });
+    return getTransactionType({ currencyIn, currencyOut, poolKeys: POOLS });
 });
 
 /***** Invert *****/
