@@ -185,7 +185,6 @@ export async function getTransaction(
                 isMultichainToken(currencyOut) &&
                 currencyOut.isSuperERC20()
             ) {
-                console.log("Superchain bridge transaction");
                 return getSuperchainBridgeTransaction({
                     token: getUniswapV4Address(currencyIn),
                     recipient: walletAddress,
