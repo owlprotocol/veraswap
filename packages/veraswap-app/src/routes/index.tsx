@@ -359,6 +359,7 @@ function Index() {
                 LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster;
 
             // Use custom constant that stores non-registry hyperlane related contracts
+            // TODO: remove fallback
             const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId]?.erc7579Router ?? zeroAddress;
             const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId]?.erc7579Router ?? zeroAddress;
 
