@@ -101,7 +101,6 @@ function Index() {
 
     const currencyIn = useAtomValue(currencyInAtom);
     const currencyOut = useAtomValue(currencyOutAtom);
-    console.debug({ currencyIn, currencyOut });
 
     const chainIn = chains.find((c) => c.id === currencyIn?.chainId);
     const chainOut = chains.find((c) => c.id === currencyOut?.chainId);
