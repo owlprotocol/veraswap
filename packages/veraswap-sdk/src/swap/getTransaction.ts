@@ -189,7 +189,7 @@ export async function getTransaction(
 
                 const bridgeParams: GetTransferRemoteWithKernelCallsParams = {
                     chainId: currencyIn.chainId,
-                    token: getUniswapV4Address(currencyIn),
+                    token: currencyIn.hyperlaneAddress,
                     tokenStandard: getTokenStandard(currencyIn),
                     account: walletAddress,
                     destination: currencyOut.chainId,
