@@ -1,11 +1,5 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import {
-    getUniswapV4Address,
-    isMultichainToken,
-    isNativeCurrency,
-    PoolKey,
-    quoteQueryOptions,
-} from "@owlprotocol/veraswap-sdk";
+import { getUniswapV4Address, isMultichainToken, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
 import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
@@ -60,11 +54,7 @@ export const quoteInAtom = atomWithQuery((get) => {
     let amountIn = tokenInAmount;
 
     // TODO: generalize to any bridging that involves orbiter (e.g. USDC)
-    if (
-        transactionType?.type === "BRIDGE_SWAP" &&
-        isNativeCurrency(transactionType?.bridge.currencyIn) &&
-        orbiterAmountOut
-    ) {
+    if (transactionType?.type === "BRIDGE_SWAP" && transactionType?.bridge.currencyIn.isNative && orbiterAmountOut) {
         amountIn = orbiterAmountOut;
     }
 

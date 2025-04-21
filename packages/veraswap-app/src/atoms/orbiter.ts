@@ -1,10 +1,5 @@
 import { atom } from "jotai";
-import {
-    chainIdToOrbiterChainId,
-    isNativeCurrency,
-    OrbiterParams,
-    orbiterRoutersQueryOptions,
-} from "@owlprotocol/veraswap-sdk";
+import { chainIdToOrbiterChainId, OrbiterParams, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
 import {
@@ -62,12 +57,12 @@ export const orbiterRouterAtom = atom((get) => {
     const chainInSymbol = chainIn.nativeCurrency.symbol;
 
     if (transactionType.type === "SWAP_BRIDGE") {
-        if (isNativeCurrency(currencyOut) && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
+        if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
             // If bridging on output a native token, must be ETH on both chains
             return undefined;
         }
         // Type is either "BRIDGE" or "BRIDGE_SWAP"
-    } else if (!isNativeCurrency(currencyIn) || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
+    } else if (currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
         // If bridging on input a native token, must be ETH on both chains
         return undefined;
     }

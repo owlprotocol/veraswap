@@ -13,7 +13,6 @@ import {
     TransactionTypeBridgeSwap,
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
-    isNativeCurrency,
     Currency,
     isMultichainToken,
     getUniswapV4Address,
@@ -529,7 +528,7 @@ function Index() {
 
         let max = tokenBalance;
         if (
-            !isNativeCurrency(currency) ||
+            !currency.isNative ||
             !transactionTypeType ||
             !(transactionTypeType === "BRIDGE" || transactionTypeType === "BRIDGE_SWAP")
         ) {
@@ -577,7 +576,7 @@ function Index() {
                                     placeholder="0"
                                     disabled={!currencyIn}
                                 />
-                                {currencyIn && chainId && !isNativeCurrency(currencyIn) && (
+                                {currencyIn && chainId && !currencyIn.isNative && (
                                     <button
                                         onClick={() => importToken(currencyIn)}
                                         className="flex items-center gap-1 text-sm"
@@ -639,7 +638,7 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
-                                {currencyOut && chainId && !isNativeCurrency(currencyOut) && (
+                                {currencyOut && chainId && !currencyOut.isNative && (
                                     <button
                                         onClick={() => importToken(currencyOut)}
                                         className="flex items-center gap-1 text-sm"

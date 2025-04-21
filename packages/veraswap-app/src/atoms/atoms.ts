@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
-import { isMultichainToken, isNativeCurrency, TransactionType } from "@owlprotocol/veraswap-sdk";
+import { isMultichainToken, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, transactionTypeAtom, currencyOutAtom } from "./tokens.js";
@@ -86,7 +86,7 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (
         // tokenIn is not native, and we don't have enough allowance
-        !isNativeCurrency(currencyIn) &&
+        !currencyIn.isNative &&
         (transactionType.type !== "BRIDGE" ||
             (transactionType.type === "BRIDGE" &&
                 isMultichainToken(currencyIn) &&

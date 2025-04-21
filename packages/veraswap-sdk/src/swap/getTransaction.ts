@@ -12,7 +12,7 @@ import {
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
-import { Currency, getUniswapV4Address, isMultichainToken, isNativeCurrency } from "../currency/index.js";
+import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
@@ -169,7 +169,7 @@ export async function getTransaction(
         case "BRIDGE": {
             const { currencyIn, currencyOut, amountIn, walletAddress, orbiterParams } = params;
 
-            if (isNativeCurrency(currencyIn) && isNativeCurrency(currencyOut)) {
+            if (currencyIn.isNative && currencyOut.isNative) {
                 if (!orbiterParams) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
@@ -246,7 +246,7 @@ export async function getTransaction(
             const bridgeAddress = getUniswapV4Address(bridgeCurrencyIn);
 
             // TODO: add orbiter bridging
-            if (isNativeCurrency(bridgeCurrencyIn) && isNativeCurrency(bridgeCurrencyOut)) {
+            if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
                 if (!orbiterParams) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
@@ -305,7 +305,7 @@ export async function getTransaction(
             const { currencyIn, currencyOut } = bridge;
             const { poolKey, zeroForOne } = swap;
 
-            if (isNativeCurrency(currencyIn) && (!orbiterParams || !orbiterAmountOut)) {
+            if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
@@ -386,7 +386,7 @@ export async function getTransaction(
 
 // TODO: Temp function to match old TokenStandard
 function getTokenStandard(currency: Currency): TokenStandard {
-    if (isNativeCurrency(currency)) return "NativeToken";
+    if (currency.isNative) return "NativeToken";
     if (isMultichainToken(currency)) {
         if (currency.isHypERC20()) return "HypERC20";
         if (currency.hyperlaneAddress) return "HypERC20Collateral";

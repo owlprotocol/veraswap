@@ -9,7 +9,6 @@ import { Address, formatUnits } from "viem";
 import {
     PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
-    isNativeCurrency,
     getUniswapV4Address,
     Currency,
     isMultichainToken,
@@ -26,7 +25,7 @@ import { config } from "@/config.js";
 export const currencyBalanceAtomFamily = atomFamily(
     ({ currency, account }: { currency: Currency; account: Address }) =>
         atomWithQuery<bigint>(() => {
-            if (isNativeCurrency(currency)) {
+            if (currency.isNative) {
                 // Get native balance
                 return {
                     ...(getBalanceQueryOptions(config, {
@@ -59,7 +58,7 @@ currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt 
 export const tokenAllowanceAtomFamily = atomFamily(
     ({ currency, account, spender }: { currency: Currency; account: Address; spender: Address }) =>
         atomWithQuery<bigint>(() => {
-            if (isNativeCurrency(currency)) return disabledQueryOptions as any;
+            if (currency.isNative) return disabledQueryOptions as any;
 
             // Get ERC20 allowance
             const tokenAddress = isMultichainToken(currency)
@@ -88,7 +87,7 @@ tokenAllowanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt >
 export const tokenPermit2AllowanceAtomFamily = atomFamily(
     ({ currency, account, spender }: { currency: Currency; account: Address; spender: Address }) =>
         atomWithQuery<[bigint, number, number]>(() => {
-            if (isNativeCurrency(currency)) return disabledQueryOptions as any;
+            if (currency.isNative) return disabledQueryOptions as any;
 
             // Get ERC20 allowance
             const tokenAddress = isMultichainToken(currency)
