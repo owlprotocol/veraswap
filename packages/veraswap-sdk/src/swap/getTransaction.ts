@@ -143,9 +143,7 @@ export async function getTransaction(
                 approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[currencyIn.chainId].universalRouter,
-                token: isMultichainToken(currencyIn)
-                    ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
-                    : getUniswapV4Address(currencyIn),
+                token: getUniswapV4Address(currencyIn),
                 account: walletAddress,
             };
             const { permitSingle, signature } = await getPermit2PermitSignature(

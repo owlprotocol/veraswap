@@ -47,10 +47,7 @@ export const currencyBalanceAtomFamily = atomFamily(
                 args: [account],
             });
         }),
-    (a, b) =>
-        a.account === b.account &&
-        a.currency.chainId === b.currency.chainId &&
-        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+    (a, b) => a.account === b.account && a.currency.equals(b.currency),
 ) as unknown as AtomFamily<{ currency: Currency; account: Address }, Atom<AtomWithQueryResult<bigint>>>;
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
@@ -68,11 +65,7 @@ export const tokenAllowanceAtomFamily = atomFamily(
                 args: [account, spender],
             }) as any;
         }),
-    (a, b) =>
-        a.account === b.account &&
-        a.spender === b.spender &&
-        a.currency.chainId === b.currency.chainId &&
-        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+    (a, b) => a.account === b.account && a.spender === b.spender && a.currency.equals(b.currency),
 ) as unknown as AtomFamily<
     { currency: Currency; account: Address; spender: Address },
     Atom<AtomWithQueryResult<bigint>>
@@ -85,23 +78,15 @@ export const tokenPermit2AllowanceAtomFamily = atomFamily(
         atomWithQuery<[bigint, number, number]>(() => {
             if (currency.isNative) return disabledQueryOptions as any;
 
-            // Get ERC20 allowance
-            const tokenAddress = isMultichainToken(currency)
-                ? (currency.hyperlaneAddress ?? currency.address)
-                : currency.address;
             return readContractQueryOptions(config, {
                 abi: [permit2AllowanceAbi],
                 chainId: currency.chainId,
                 address: PERMIT2_ADDRESS,
                 functionName: "allowance",
-                args: [account, tokenAddress, spender],
+                args: [account, currency.address, spender],
             }) as any;
         }),
-    (a, b) =>
-        a.account === b.account &&
-        a.spender === b.spender &&
-        a.currency.chainId === b.currency.chainId &&
-        getUniswapV4Address(a.currency) === getUniswapV4Address(b.currency),
+    (a, b) => a.account === b.account && a.spender === b.spender && a.currency.equals(b.currency),
 ) as unknown as AtomFamily<
     { currency: Currency; account: Address; spender: Address },
     Atom<AtomWithQueryResult<[bigint, number, number]>>
