@@ -60,14 +60,10 @@ export const tokenAllowanceAtomFamily = atomFamily(
         atomWithQuery<bigint>(() => {
             if (currency.isNative) return disabledQueryOptions as any;
 
-            // Get ERC20 allowance
-            const tokenAddress = isMultichainToken(currency)
-                ? (currency.hyperlaneAddress ?? currency.address)
-                : currency.address;
             return readContractQueryOptions(config, {
                 abi: [allowanceAbi],
                 chainId: currency.chainId,
-                address: tokenAddress,
+                address: currency.address,
                 functionName: "allowance",
                 args: [account, spender],
             }) as any;
