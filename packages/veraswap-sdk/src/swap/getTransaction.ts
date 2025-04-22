@@ -138,22 +138,26 @@ export async function getTransaction(
                 wagmiConfig,
             } = params;
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: currencyIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[currencyIn.chainId].universalRouter,
-                token: getUniswapV4Address(currencyIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (!currencyIn.isNative) {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: currencyIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[currencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(currencyIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
@@ -269,22 +273,26 @@ export async function getTransaction(
                 throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
             }
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: swapCurrencyIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[swapCurrencyIn.chainId].universalRouter,
-                token: getUniswapV4Address(swapCurrencyIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (!swapCurrencyIn.isNative) {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: swapCurrencyIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[swapCurrencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(swapCurrencyIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,

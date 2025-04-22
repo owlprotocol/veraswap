@@ -366,6 +366,24 @@ export const LOCAL_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    [opChainA.id]: [
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: localMockTokens[2].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
+    [opChainB.id]: [
+        createPoolKey({
+            currency0: zeroAddress,
+            currency1: localMockTokens[3].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
 };
 
 export const testnetMockTokens = [
