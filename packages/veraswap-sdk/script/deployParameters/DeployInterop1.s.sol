@@ -22,7 +22,7 @@ library DeployInterop1 {
             v4PositionManager: 0x4498FE0b1DF6B476453440664A16E269B7587D0F,
             v4StateView: 0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375,
             v4Quoter: 0x7C594D9B533ac43D3595dd4117549111Ec48F8B2,
-            universalRouter: 0x4a5C956e6626c552c9e830beFDDf8F5e02bBf60a
+            universalRouter: address(0)
         });
 
         HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
