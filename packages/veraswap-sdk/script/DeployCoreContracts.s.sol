@@ -91,7 +91,7 @@ contract DeployCoreContracts is DeployParameters {
         uint256 chainId = block.chainid;
 
         // Uniswap contracts
-        if (chainId == 900 || chainId == 901 || chainId == 902) {
+        if (chainId == 900 || chainId == 901 || chainId == 902 || chainId == 420120000 || chainId == 420120001) {
             // Local Anvil / Supersim
             address weth9 = 0x4200000000000000000000000000000000000006;
             (address permit2, ) = Permit2Utils.getOrCreate2();
