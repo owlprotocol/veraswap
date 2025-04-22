@@ -250,10 +250,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
-                to:
-                    isMultichainToken(currencyIn) && currencyIn.hyperlaneAddress
-                        ? currencyIn.hyperlaneAddress
-                        : getUniswapV4Address(currencyIn),
+                to: getUniswapV4Address(currencyIn),
                 chainId: currencyIn.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
@@ -312,7 +309,7 @@ function Index() {
                             wagmiConfig: config,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
-            const inChainId = currencyIn!.chainId;
+            const inChainId = currencyIn.chainId;
             const outChainId = currencyOut!.chainId;
 
             //TODO: Add additional checks if registry not loaded yet

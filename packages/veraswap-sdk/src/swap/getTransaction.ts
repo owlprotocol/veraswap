@@ -241,7 +241,9 @@ export async function getTransaction(
             const { currencyIn: swapCurrencyIn, poolKey, zeroForOne } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
-            const bridgeAddress = getUniswapV4Address(bridgeCurrencyIn);
+            const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
+                ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
+                : getUniswapV4Address(bridgeCurrencyIn);
 
             // TODO: add orbiter bridging
             if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
@@ -258,9 +260,7 @@ export async function getTransaction(
                 approveAmount: MAX_UINT_160,
                 approveExpiration: "MAX_UINT_48",
                 spender: contracts[swapCurrencyIn.chainId].universalRouter,
-                token: isMultichainToken(swapCurrencyIn)
-                    ? (swapCurrencyIn.hyperlaneAddress ?? swapCurrencyIn.address)
-                    : getUniswapV4Address(swapCurrencyIn),
+                token: getUniswapV4Address(swapCurrencyIn),
                 account: walletAddress,
             };
             const { permitSingle, signature } = await getPermit2PermitSignature(
@@ -321,7 +321,9 @@ export async function getTransaction(
 
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: currencyIn.chainId,
-                token: getUniswapV4Address(currencyIn),
+                token: isMultichainToken(currencyIn)
+                    ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
+                    : getUniswapV4Address(currencyIn),
                 tokenStandard: getTokenStandard(currencyIn),
                 account: walletAddress,
                 destination: currencyOut.chainId,
