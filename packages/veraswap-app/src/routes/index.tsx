@@ -675,8 +675,8 @@ function Index() {
                 currentStepId={currentTransactionStepId}
                 hashes={transactionHashes}
                 chains={{
-                    source: chainIn,
-                    destination: chainOut,
+                    source: chainIn ?? undefined,
+                    destination: chainOut ?? undefined,
                 }}
                 networkType={networkType}
             />
