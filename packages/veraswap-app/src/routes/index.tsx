@@ -374,6 +374,8 @@ function Index() {
 
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
+                        // TODO: Do smarter invalidation, this currently invalidates ALL queries
+                        queryClient.invalidateQueries();
                     },
                     onError: (error) => {
                         console.log(error);
@@ -382,6 +384,8 @@ function Index() {
                         } else {
                             updateTransactionStep({ id: "swap", status: "error" });
                         }
+                        // TODO: Do smarter invalidation, this currently invalidates ALL queries
+                        queryClient.invalidateQueries();
                         //TODO: show in UI instead
                         toast({
                             title: "Transaction Failed",
