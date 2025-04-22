@@ -83,7 +83,7 @@ export const hyperlaneMailboxChainOut = atom((get) => {
     const chainOut = get(chainOutAtom);
     if (!chainOut) return null;
 
-    return hyperlaneRegistry.addresses[chainOut.id].mailbox;
+    return hyperlaneRegistry.addresses[chainOut.id]?.mailbox ?? null;
 });
 
 export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {

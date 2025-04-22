@@ -20,8 +20,8 @@ export const erc7579RouterAccountIsOwnerChainInQueryAtom = atomWithQuery((get) =
         return disabledQueryOptions as any;
     }
 
-    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id].erc7579Router;
-    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id].erc7579Router;
+    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id]?.erc7579Router;
+    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id]?.erc7579Router;
 
     if (!erc7579RouterIn || !erc7579RouterOut) {
         return disabledQueryOptions as any;
@@ -46,8 +46,8 @@ export const erc7579RouterAccountIsOwnerChainOutQueryAtom = atomWithQuery((get) 
         return disabledQueryOptions as any;
     }
 
-    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id].erc7579Router;
-    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id].erc7579Router;
+    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id]?.erc7579Router;
+    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id]?.erc7579Router;
 
     if (!erc7579RouterIn || !erc7579RouterOut) {
         return disabledQueryOptions as any;
@@ -72,8 +72,8 @@ export const erc7579RouterKernelIsOwnerChainInQueryAtom = atomWithQuery((get) =>
         return disabledQueryOptions as any;
     }
 
-    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id].erc7579Router;
-    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id].erc7579Router;
+    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id]?.erc7579Router;
+    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id]?.erc7579Router;
 
     if (!erc7579RouterIn || !erc7579RouterOut) {
         return disabledQueryOptions as any;
@@ -98,8 +98,8 @@ export const erc7579RouterKernelIsOwnerChainOutQueryAtom = atomWithQuery((get) =
         return disabledQueryOptions as any;
     }
 
-    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id].erc7579Router;
-    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id].erc7579Router;
+    const erc7579RouterIn = HYPERLANE_CONTRACTS[chainIn.id]?.erc7579Router;
+    const erc7579RouterOut = HYPERLANE_CONTRACTS[chainOut.id]?.erc7579Router;
 
     if (!erc7579RouterIn || !erc7579RouterOut) {
         return disabledQueryOptions as any;

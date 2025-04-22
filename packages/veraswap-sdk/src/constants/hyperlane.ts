@@ -119,10 +119,11 @@ export const LOCAL_HYPERLANE_CONTRACTS = {
  */
 export const HYPERLANE_CONTRACTS: Record<
     number,
-    {
-        //TODO: Add other required contracts that are not in HyperlaneRegistry
-        erc7579Router: Address;
-    }
+    | {
+          //TODO: Add other required contracts that are not in HyperlaneRegistry
+          erc7579Router: Address;
+      }
+    | undefined
 > = {
     [opChainL1.id]: {
         erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].erc7579Router,
