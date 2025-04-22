@@ -33,23 +33,8 @@ export const fetchedTokensAtom = atomWithQuery(() => ({
 
 /***** Token In *****/
 /** Selected tokenIn */
-// export const tokenInAtom = atom<Token | null>(null);
 export const currencyInAtom = atom<Currency | null>(null);
-// export const currencyInAtom = atom((get) => {
-//     const tokenIn = get(tokenInAtom);
-//     if (!tokenIn) return null;
-//     return (
-//         LOCAL_CURRENCIES.find((token) => {
-//             if (tokenIn.standard === "NativeToken") {
-//                 return token.isNative && token.chainId === tokenIn.chainId;
-//             }
 
-//             const tokenAddress =
-//                 tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
-//             return token.chainId === tokenIn.chainId && token.wrapped.address === tokenAddress;
-//         }) ?? null
-//     );
-// });
 /** Selected tokenIn chain */
 export const chainInAtom = atom((get) => {
     const currencyIn = get(currencyInAtom);
@@ -68,13 +53,12 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 
 /***** Token Out *****/
 /** Selected tokenOut */
-export const tokenOutAtom = atom<Token | null>(null);
 export const currencyOutAtom = atom<Currency | null>(null);
 
 /** Selected tokenOut chain */
 export const chainOutAtom = atom((get) => {
-    const tokenOut = get(tokenOutAtom);
-    return chains.find((c) => c.id === tokenOut?.chainId) ?? null;
+    const currencyOut = get(currencyOutAtom);
+    return chains.find((c) => c.id === currencyOut?.chainId) ?? null;
 });
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
