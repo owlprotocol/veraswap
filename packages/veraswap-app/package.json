@@ -24,7 +24,7 @@
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vite build --mode ${NODE_ENV:-production}",
     "build:watch": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vite build --watch",
     "dev": "vite",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist node_modules/.vite",
     "lint": "eslint 'src/**/*.ts' 'src/**/*.tsx' --report-unused-disable-directives",
     "lint:fix": "eslint 'src/**/*.ts' 'src/**/*.tsx' --fix --report-unused-disable-directives",
     "madge": "madge src/App.tsx -c",
