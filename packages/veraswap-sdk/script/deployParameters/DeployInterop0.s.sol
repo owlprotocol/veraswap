@@ -6,21 +6,23 @@ import {UniswapContracts, HyperlaneDeployParams, DeployParams} from "../Structs.
 library DeployInterop0 {
     uint256 constant chainId = 420120000;
 
-    // TODO: set this to the correct values
+    bytes32 constant BYTES32_ZERO = bytes32(0);
+    address constant UNSUPPORTED_PROTOCOL = address(0);
+
     function getParams() internal pure returns (DeployParams memory params) {
         UniswapContracts memory uniswap = UniswapContracts({
             permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
             weth9: 0x4200000000000000000000000000000000000006,
-            v2Factory: address(0),
-            v3Factory: address(0),
-            pairInitCodeHash: 0x0000000000000000000000000000000000000000000000000000000000000000,
-            poolInitCodeHash: 0x0000000000000000000000000000000000000000000000000000000000000000,
-            v4PoolManager: address(0),
+            v2Factory: UNSUPPORTED_PROTOCOL,
+            v3Factory: UNSUPPORTED_PROTOCOL,
+            pairInitCodeHash: BYTES32_ZERO,
+            poolInitCodeHash: BYTES32_ZERO,
+            v4PoolManager: 	0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96,
             v3NFTPositionManager: address(0),
-            v4PositionManager: address(0),
-            v4StateView: address(0),
-            v4Quoter: address(0),
-            universalRouter: address(0)
+            v4PositionManager: 0x4498FE0b1DF6B476453440664A16E269B7587D0F,
+            v4StateView: 0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375,
+            v4Quoter: 0x7C594D9B533ac43D3595dd4117549111Ec48F8B2,
+            universalRouter: 0x4a5C956e6626c552c9e830beFDDf8F5e02bBf60a
         });
 
         HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
