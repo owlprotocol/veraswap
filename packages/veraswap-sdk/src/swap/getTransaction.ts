@@ -137,22 +137,26 @@ export async function getTransaction(
                 wagmiConfig,
             } = params;
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: tokenIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[tokenIn.chainId].universalRouter,
-                token: getTokenAddress(tokenIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (tokenIn.standard !== "NativeToken") {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: tokenIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[tokenIn.chainId].universalRouter,
+                    token: getTokenAddress(tokenIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[tokenIn.chainId].universalRouter,
@@ -264,22 +268,26 @@ export async function getTransaction(
                 throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
             }
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: swapTokenIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[swapTokenIn.chainId].universalRouter,
-                token: getTokenAddress(swapTokenIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (swapTokenIn.standard !== "NativeToken") {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: swapTokenIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[swapTokenIn.chainId].universalRouter,
+                    token: getTokenAddress(swapTokenIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapTokenIn.chainId].universalRouter,

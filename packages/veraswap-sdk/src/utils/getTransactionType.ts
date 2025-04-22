@@ -189,7 +189,8 @@ export function getTransactionType({
 
     if (
         (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
-        (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
+        (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral") &&
+        tokenIn.chainId !== tokenOut.chainId
     ) {
         return { type: "BRIDGE", tokenIn, tokenOut, withSuperchain: true };
     }

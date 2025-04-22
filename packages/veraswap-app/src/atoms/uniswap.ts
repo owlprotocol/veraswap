@@ -1,5 +1,5 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { getTokenAddress, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
 import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
@@ -35,13 +35,13 @@ export const quoteInAtom = atomWithQuery((get) => {
         chainId = transactionType.chainId;
         poolKey = transactionType.poolKey;
         const tokenIn = transactionType.tokenIn;
-        tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
-        tokenInDecimals = tokenInDecimals;
+        tokenInAddress = getTokenAddress(tokenIn);
+        tokenInDecimals = tokenIn.decimals;
     } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
         chainId = transactionType.swap.chainId;
         poolKey = transactionType.swap.poolKey;
         const tokenIn = transactionType.swap.tokenIn;
-        tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        tokenInAddress = getTokenAddress(tokenIn);
         tokenInDecimals = tokenIn.decimals;
     }
 
