@@ -25,7 +25,8 @@ export const opChainA = {
     name: "OP Chain A",
     testnet: true,
     rpcUrls: {
-        default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
+        // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
+        default: { http: [`http://127.0.0.1:${opChainAPort}`] },
     },
 } as const satisfies Chain;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
@@ -37,7 +38,8 @@ export const opChainB = {
     name: "OP Chain B",
     testnet: true,
     rpcUrls: {
-        default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
+        // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
+        default: { http: [`http://127.0.0.1:${opChainBPort}`] },
     },
 } as const satisfies Chain;
 export const opChainBClient = createPublicClient({ chain: opChainB, transport: http() });

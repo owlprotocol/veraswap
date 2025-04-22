@@ -17,7 +17,7 @@ import {
     getTokenAddress,
     getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
+import { createPublicClient, encodeFunctionData, formatUnits, http, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
@@ -216,18 +216,71 @@ function Index() {
         abi: [RelayedMessage],
         eventName: "RelayedMessage",
         chainId: chainOut?.id ?? 0,
-        address: SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER ?? zeroAddress,
+        address: SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER,
         args: { messageHash: superchainBridgeMessageId ?? "0x" },
-        enabled: !!chainOut && !!superchainBridgeMessageId,
+        enabled: !!chainOut && !!chainOut.rpcUrls.default.webSocket && !!superchainBridgeMessageId,
         strict: true,
         onLogs: (logs) => {
             setBridgeRemoteTransactionHash(logs[0].transactionHash);
         },
     });
 
+    // This is a workaround for watching superchain messages without websocket
+    useEffect(() => {
+        if (
+            !chainOut ||
+            !!chainOut.rpcUrls.default.webSocket ||
+            !superchainBridgeMessageId ||
+            !!bridgeRemoteTransactionHash
+        ) {
+            return;
+        }
+
+        const chainOutClient = createPublicClient({ chain: chainOut!, transport: http() });
+
+        const superchainWatchRoutine = async () => {
+            const block = await chainOutClient.getBlock({ blockTag: "latest" });
+
+            const fromBlock = block.number > 100n ? block.number - 100n : 0n;
+            const [log] = await chainOutClient.getLogs({
+                fromBlock,
+                address: SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER,
+                event: RelayedMessage,
+                strict: true,
+                args: { messageHash: superchainBridgeMessageId ?? "0x" },
+            });
+
+            if (!log) return;
+
+            setBridgeRemoteTransactionHash(log.transactionHash);
+            return log.transactionHash;
+        };
+
+        const superchainWatchRoutineWithRetries = async () => {
+            for (let i = 0; i < 6; i++) {
+                console.debug(
+                    `Attempt ${i + 1} to watch Superchain bridge message with id ${superchainBridgeMessageId}`,
+                );
+
+                const hash = await superchainWatchRoutine();
+
+                if (hash) break;
+
+                // 2s, 4s, 8s, 16s, 32s, ...
+                const timeout = 1000 * 2 ** (i + 1);
+                await new Promise((resolve) => setTimeout(resolve, timeout));
+            }
+        };
+
+        superchainWatchRoutineWithRetries();
+
+        // setBridgeRemoteTransactionHash
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chainOut, chainOut?.id, superchainBridgeMessageId, bridgeRemoteTransactionHash]);
+
     useWatchBlocks({
         chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams && !!hash,
+        enabled: !!tokenOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
@@ -280,6 +333,13 @@ function Index() {
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
+
+            // TODO: reset somewhere cleaner
+            setBridgeRemoteTransactionHash(null);
+            setSwapRemoteTransactionHash(null);
+            setSuperchainBridgeMessageId(null);
+            setBridgeMessageId(null);
+            setSwapMessageId(null);
 
             // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
             const amountOutMinimum = quoterData?.[0] ?? null;
