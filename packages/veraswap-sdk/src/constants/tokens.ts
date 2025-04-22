@@ -4,7 +4,7 @@ import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { arbitrumSepolia, baseSepolia, optimismSepolia, sepolia } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
+import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { createPoolKey } from "../types/PoolKey.js";
@@ -130,6 +130,28 @@ export function createMockERC20WarpRoute({
     return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
 }
 
+const testnetSuperChains = [interopDevnet0.id, interopDevnet1.id] as const;
+
+/** Connect mock superchain erc20s to each other, without hyperlane */
+export function connectTestnetMockSuperchainERC20(token: TokenBase<"MockSuperchainERC20">) {
+    const superchainConnections: TokenBase["connections"] = testnetSuperChains.map((chainId) => ({
+        vm: "evm",
+        chainId,
+        address: token.address,
+    }));
+
+    return testnetSuperChains.map(
+        (chainId) =>
+            ({
+                ...token,
+                standard: "SuperchainERC20",
+                chainId,
+                chonnections: superchainConnections.filter((c) => c.chainId != chainId),
+            }) as TokenBase<"SuperchainERC20">,
+    );
+}
+
+/** Connect mock superchain erc20s to each other, with hyperlane */
 export function createMockSuperchainERC20WarpRoute({
     token,
     remoteChain,
@@ -259,7 +281,17 @@ export const localMockTokens = [
     },
 ] as const satisfies TokenBase<"MockERC20" | "MockSuperchainERC20">[];
 
-const ethNativeTokens = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, opChainL1, opChainA, opChainB].map(
+const ethNativeTokens = [
+    sepolia,
+    optimismSepolia,
+    arbitrumSepolia,
+    baseSepolia,
+    opChainL1,
+    opChainA,
+    opChainB,
+    interopDevnet0,
+    interopDevnet1,
+].map(
     (chain) =>
         ({
             chainId: chain.id,
@@ -278,32 +310,32 @@ export const LOCAL_TOKENS: (
     | TokenBase<"SuperchainERC20">
     | HypSuperchainERC20CollateralToken
 )[] = [
-    ...createMockERC20WarpRoute({
-        token: localMockTokens[0],
-        mailboxByChain: {
-            [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
-            [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
-            [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
-        },
-    }),
-    ...createMockERC20WarpRoute({
-        token: localMockTokens[1],
-        mailboxByChain: {
-            [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
-            [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
-            [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
-        },
-    }),
-    ...createMockSuperchainERC20WarpRoute({
-        token: localMockTokens[2],
-        remoteChain: opChainL1.id,
-    }),
-    ...createMockSuperchainERC20WarpRoute({
-        token: localMockTokens[3],
-        remoteChain: opChainL1.id,
-    }),
-    ...ethNativeTokens,
-];
+        ...createMockERC20WarpRoute({
+            token: localMockTokens[0],
+            mailboxByChain: {
+                [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
+                [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
+                [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
+            },
+        }),
+        ...createMockERC20WarpRoute({
+            token: localMockTokens[1],
+            mailboxByChain: {
+                [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
+                [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
+                [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
+            },
+        }),
+        ...createMockSuperchainERC20WarpRoute({
+            token: localMockTokens[2],
+            remoteChain: opChainL1.id,
+        }),
+        ...createMockSuperchainERC20WarpRoute({
+            token: localMockTokens[3],
+            remoteChain: opChainL1.id,
+        }),
+        ...ethNativeTokens,
+    ];
 
 export function createTokenMap(tokens: Token[]): Record<number, Record<Address, Token>> {
     const data: Record<number, Record<Address, Token>> = {};
@@ -353,71 +385,111 @@ export const testnetMockTokens = [
         symbol: "D",
         decimals: 18,
     },
+    {
+        standard: "MockSuperchainERC20",
+        chainId: interopDevnet0.id,
+        address: "0x2Eb2838feBfB326803fF33C4F54cd2d3561ce6Ed",
+        name: "Token C",
+        symbol: "C",
+        decimals: 18,
+    },
+    {
+        standard: "MockSuperchainERC20",
+        chainId: interopDevnet1.id,
+        address: "0x432EE6707eA6A11dBF889fABc12F2d51c6fA79A6",
+        name: "Token D",
+        symbol: "D",
+        decimals: 18,
+    },
+    {
+        standard: "MockSuperchainERC20",
+        chainId: interopDevnet1.id,
+        address: "0x2Eb2838feBfB326803fF33C4F54cd2d3561ce6Ed",
+        name: "Token C",
+        symbol: "C",
+        decimals: 18,
+    },
+    {
+        standard: "MockSuperchainERC20",
+        chainId: interopDevnet0.id,
+        address: "0x432EE6707eA6A11dBF889fABc12F2d51c6fA79A6",
+        name: "Token D",
+        symbol: "D",
+        decimals: 18,
+    },
 ] as const;
 
 //TODO: Helper to generate this using params (but not use bytecode)?
-const TESTNET_TOKENS: (HypERC20CollateralToken | HypERC20Token)[] = [
-    ...connectTokens([
-        {
-            standard: "HypERC20Collateral",
-            chainId: sepolia.id,
-            address: "0x3127Fc42fD0a8fB9E1A342D01C5F89Dd84f78F50",
-            collateralAddress: testnetMockTokens[0].address,
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-            connections: [],
-        },
-        {
-            standard: "HypERC20",
-            chainId: optimismSepolia.id,
-            address: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-            connections: [],
-        },
-        {
-            standard: "HypERC20",
-            chainId: unichainSepolia.id,
-            address: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-            connections: [],
-        },
-    ] as (HypERC20CollateralToken | HypERC20Token)[]),
-    ...(connectTokens([
-        {
-            standard: "HypERC20Collateral",
-            chainId: sepolia.id,
-            address: "0xc6BCbD4B62FA6f088DB0f3D668fbFE235CB014fC",
-            collateralAddress: testnetMockTokens[1].address,
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-            connections: [],
-        },
-        {
-            standard: "HypERC20",
-            chainId: optimismSepolia.id,
-            address: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-            connections: [],
-        },
-        {
-            standard: "HypERC20",
-            chainId: unichainSepolia.id,
-            address: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-            connections: [],
-        },
-    ]) as (HypERC20CollateralToken | HypERC20Token)[]),
-];
+const TESTNET_TOKENS: (
+    | HypERC20CollateralToken
+    | HypERC20Token
+    | NativeToken
+    | TokenBase<"SuperchainERC20">
+    | HypSuperchainERC20CollateralToken
+)[] = [
+        ...connectTokens([
+            {
+                standard: "HypERC20Collateral",
+                chainId: sepolia.id,
+                address: "0x3127Fc42fD0a8fB9E1A342D01C5F89Dd84f78F50",
+                collateralAddress: testnetMockTokens[0].address,
+                name: "Token C",
+                symbol: "C",
+                decimals: 18,
+                connections: [],
+            },
+            {
+                standard: "HypERC20",
+                chainId: optimismSepolia.id,
+                address: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
+                name: "Token C",
+                symbol: "C",
+                decimals: 18,
+                connections: [],
+            },
+            {
+                standard: "HypERC20",
+                chainId: unichainSepolia.id,
+                address: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
+                name: "Token C",
+                symbol: "C",
+                decimals: 18,
+                connections: [],
+            },
+        ] as (HypERC20CollateralToken | HypERC20Token)[]),
+        ...(connectTokens([
+            {
+                standard: "HypERC20Collateral",
+                chainId: sepolia.id,
+                address: "0xc6BCbD4B62FA6f088DB0f3D668fbFE235CB014fC",
+                collateralAddress: testnetMockTokens[1].address,
+                name: "Token D",
+                symbol: "D",
+                decimals: 18,
+                connections: [],
+            },
+            {
+                standard: "HypERC20",
+                chainId: optimismSepolia.id,
+                address: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
+                name: "Token D",
+                symbol: "D",
+                decimals: 18,
+                connections: [],
+            },
+            {
+                standard: "HypERC20",
+                chainId: unichainSepolia.id,
+                address: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
+                name: "Token D",
+                symbol: "D",
+                decimals: 18,
+                connections: [],
+            },
+        ]) as (HypERC20CollateralToken | HypERC20Token)[]),
+        ...connectTestnetMockSuperchainERC20(testnetMockTokens[2]),
+        ...connectTestnetMockSuperchainERC20(testnetMockTokens[3]),
+    ];
 
 const TESTNET_TOKENS_MAP = createTokenMap([...testnetMockTokens, ...TESTNET_TOKENS]);
 
@@ -426,6 +498,15 @@ const TESTNET_POOLS = {
         createPoolKey({
             currency0: testnetMockTokens[0].address,
             currency1: testnetMockTokens[1].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
+    [interopDevnet0.id]: [
+        createPoolKey({
+            currency0: testnetMockTokens[2].address,
+            currency1: testnetMockTokens[5].address,
             fee: 3000,
             tickSpacing: 60,
             hooks: zeroAddress,

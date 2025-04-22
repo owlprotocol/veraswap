@@ -1,4 +1,4 @@
-import { prodChains, localChains } from "@/config/chains";
+import { prodChains, localChains, interopDevnetChains } from "@/config/chains";
 import { Execute } from "@owlprotocol/veraswap-sdk/artifacts";
 import {
     localMockTokens,
@@ -30,7 +30,10 @@ import { getDustAccountCalls } from "@/helpers/getDustAccountCalls";
 
 const privateKey = process.env.PRIVATE_KEY;
 const chains = (
-    process.env.NODE_ENV === "development" ? localChains : prodChains
+    process.env.NODE_ENV === "development"
+        ? localChains
+        : // ? [...localChains, ...interopDevnetChains]
+          [...prodChains, ...interopDevnetChains]
 ).filter((c) => c.testnet);
 
 export default async function handler(
