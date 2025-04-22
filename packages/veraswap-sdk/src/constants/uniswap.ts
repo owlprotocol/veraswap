@@ -1,6 +1,6 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
-import { optimismSepolia, sepolia } from "viem/chains";
+import { baseSepolia, optimismSepolia, sepolia } from "viem/chains";
 
 import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
@@ -121,5 +121,12 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
         universalRouter: "0x5fb0c37c53ccf5445ef0bac4eea32da4258d5278",
+    },
+    [baseSepolia.id]: {
+        v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
+        v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
+        v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
+        v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
+        universalRouter: "0x2a229f4f81d0b9a434584d6ebc2ffa9e30b8d82d",
     },
 } as const;
