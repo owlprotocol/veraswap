@@ -28,6 +28,7 @@ import {
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
     quoteInAtom,
     sendTransactionMutationAtom,
@@ -91,6 +92,7 @@ export const Route = createFileRoute("/")({
 function Index() {
     const queryClient = useQueryClient();
     const { address: walletAddress, chainId } = useAccount();
+    const { openConnectModal } = useConnectModal();
 
     const { watchAsset } = useWatchAsset();
 
@@ -224,6 +226,10 @@ function Index() {
     });
 
     const handleSwapSteps = async () => {
+        if (!walletAddress) {
+            openConnectModal?.();
+            return;
+        }
         // Check transaction type here for swaps to avoid changing chains if not needed
         if (
             !swapStep ||
