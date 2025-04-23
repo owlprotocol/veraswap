@@ -372,7 +372,7 @@ function createMockERC20ConnectedTokens(
     return tokens;
 }
 
-const mailboxByChain = {
+const localMailboxByChain = {
     [opChainL1.id]: LOCAL_HYPERLANE_CONTRACTS[opChainL1.id].mailbox,
     [opChainA.id]: LOCAL_HYPERLANE_CONTRACTS[opChainA.id].mailbox,
     [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
@@ -386,7 +386,7 @@ export const LOCAL_CURRENCIES = [
             symbol: "A",
             decimals: 18,
         },
-        mailboxByChain,
+        localMailboxByChain,
     ),
     ...createMockERC20ConnectedTokens(
         {
@@ -395,9 +395,105 @@ export const LOCAL_CURRENCIES = [
             symbol: "B",
             decimals: 18,
         },
-        mailboxByChain,
+        localMailboxByChain,
     ),
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),
 ];
+
+const testnetMailboxByChain: Record<number, Address> = {
+    [sepolia.id]: "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766" as Address,
+    [optimismSepolia.id]: "0x6966b0E55883d49BFB24539356a2f8A673E02039" as Address,
+    [unichainSepolia.id]: "0xDDcFEcF17586D08A5740B7D91735fcCE3dfe3eeD" as Address,
+};
+
+function addMockERC20ConnectedTokens(
+    {
+        chainId,
+        name,
+        symbol,
+        decimals,
+        address,
+        hypAddresses,
+    }: {
+        chainId: number;
+        name: string;
+        symbol: string;
+        decimals: number;
+        address: Address;
+        hypAddresses: Record<number, Address>;
+    },
+    mailboxByChain: Record<number, Address>,
+): MultichainToken[] {
+    const mailbox = mailboxByChain[chainId];
+
+    const token = MultichainToken.createERC20({
+        chainId,
+        address,
+        name,
+        symbol,
+        decimals,
+        hypERC20Collateral: getHypERC20CollateralAddress({
+            erc20: address,
+            mailbox,
+        }),
+    });
+
+    const connections = Object.entries(mailboxByChain)
+        .filter(([id]) => parseInt(id) !== token.chainId)
+        .map(([id, mailbox]) => ({ chainId: parseInt(id), mailbox }));
+
+    const remoteTokens = connections.map(({ chainId }) => {
+        const hypAddress = hypAddresses[chainId];
+
+        return MultichainToken.createHypERC20({
+            chainId,
+            address: hypAddress,
+            name,
+            symbol,
+            decimals,
+        });
+    });
+
+    const tokens = [token, ...remoteTokens];
+    MultichainToken.connect(tokens);
+
+    return tokens;
+}
+
+export const TESTNET_CURRENCIES = [
+    ...addMockERC20ConnectedTokens(
+        {
+            chainId: sepolia.id,
+            name: "Token C",
+            symbol: "C",
+            decimals: 18,
+            address: testnetMockTokens[0].address,
+            hypAddresses: {
+                [optimismSepolia.id]: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
+                [unichainSepolia.id]: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
+            },
+        },
+        testnetMailboxByChain,
+    ),
+    ...addMockERC20ConnectedTokens(
+        {
+            chainId: sepolia.id,
+            name: "Token D",
+            symbol: "D",
+            decimals: 18,
+            address: testnetMockTokens[1].address,
+            hypAddresses: {
+                [optimismSepolia.id]: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
+                [unichainSepolia.id]: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
+            },
+        },
+        testnetMailboxByChain,
+    ),
+    Ether.onChain(sepolia.id),
+    Ether.onChain(optimismSepolia.id),
+    Ether.onChain(unichainSepolia.id),
+];
+
+export const CURRENCIES = [...LOCAL_CURRENCIES, ...TESTNET_CURRENCIES];

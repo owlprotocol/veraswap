@@ -91,7 +91,7 @@ export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
 
     if (!currencyIn) return disabledQueryOptions as any;
 
-    if (!isMultichainToken(currencyIn) || !currencyIn.hyperlaneAddress) {
+    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 
@@ -109,7 +109,7 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
 
     if (!currencyIn || !chainOut) return disabledQueryOptions as any;
-    if (!isMultichainToken(currencyIn) || !currencyIn.hyperlaneAddress) {
+    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 

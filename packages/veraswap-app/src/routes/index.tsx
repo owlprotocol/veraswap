@@ -14,7 +14,6 @@ import {
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
     Currency,
-    isMultichainToken,
     getUniswapV4Address,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
@@ -188,8 +187,8 @@ function Index() {
                 ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
                 : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
             : quoterData
-                ? formatUnits(quoterData[0], currencyOut?.decimals ?? 18)
-                : "";
+              ? formatUnits(quoterData[0], currencyOut?.decimals ?? 18)
+              : "";
 
     useDustAccount(walletAddress);
 
@@ -280,17 +279,17 @@ function Index() {
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                        ...transactionType,
-                        amountIn: tokenInAmount!,
-                        walletAddress,
-                        bridgePayment: bridgePayment,
-                        orbiterParams,
-                        queryClient: queryClient,
-                        wagmiConfig: config,
-                        initData: kernelSmartAccountInitData,
-                    } as TransactionParams & TransactionTypeBridge)
+                          ...transactionType,
+                          amountIn: tokenInAmount!,
+                          walletAddress,
+                          bridgePayment: bridgePayment,
+                          orbiterParams,
+                          queryClient: queryClient,
+                          wagmiConfig: config,
+                          initData: kernelSmartAccountInitData,
+                      } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                        ? ({
+                      ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum,
@@ -301,7 +300,7 @@ function Index() {
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                        : ({
+                      : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
@@ -636,8 +635,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                                ? "Fetching quote..."
-                                                : "0"
+                                              ? "Fetching quote..."
+                                              : "0"
                                     }
                                     disabled={true}
                                 />

@@ -6,13 +6,7 @@ import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
-import {
-    PERMIT2_ADDRESS,
-    UNISWAP_CONTRACTS,
-    getUniswapV4Address,
-    Currency,
-    isMultichainToken,
-} from "@owlprotocol/veraswap-sdk";
+import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom } from "./tokens.js";
@@ -36,13 +30,10 @@ export const currencyBalanceAtomFamily = atomFamily(
                 };
             }
 
-            const tokenAddress = isMultichainToken(currency)
-                ? (currency.hyperlaneAddress ?? currency.address)
-                : currency.address;
             return readContractQueryOptions(config, {
                 abi: [balanceOfAbi],
                 chainId: currency.chainId,
-                address: tokenAddress,
+                address: currency.address,
                 functionName: "balanceOf",
                 args: [account],
             });

@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { Token, getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
+import { getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
 import { POOLS } from "@owlprotocol/veraswap-sdk/constants";
 import { chains } from "@/config.js";
 
