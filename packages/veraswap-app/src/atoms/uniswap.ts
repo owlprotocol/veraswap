@@ -35,17 +35,13 @@ export const quoteInAtom = atomWithQuery((get) => {
         chainId = transactionType.chainId;
         poolKey = transactionType.poolKey;
         const currencyIn = transactionType.currencyIn;
-        tokenInAddress = isMultichainToken(currencyIn)
-            ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
-            : getUniswapV4Address(currencyIn);
+        tokenInAddress = getUniswapV4Address(currencyIn);
         tokenInDecimals = tokenInDecimals;
     } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
         chainId = transactionType.swap.chainId;
         poolKey = transactionType.swap.poolKey;
         const currencyIn = transactionType.swap.currencyIn;
-        tokenInAddress = isMultichainToken(currencyIn)
-            ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
-            : getUniswapV4Address(currencyIn);
+        tokenInAddress = getUniswapV4Address(currencyIn);
         tokenInDecimals = currencyIn.decimals;
     }
 
