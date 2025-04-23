@@ -188,3 +188,5 @@ export const swapMessageIdAtom = atom<Hash | null>(null);
 
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
+
+export const funModeAtom = atom<boolean>(false);

@@ -76,6 +76,7 @@ import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
 import { useDustAccount, useWatchMessageProcessed } from "@/hooks/index.js";
+import { SettingsModal } from "@/components/SettingsModal.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -538,7 +539,8 @@ function Index() {
             <MainnetTestnetButtons />
             <Card className="w-full backdrop-blur-sm shadow-xl">
                 <CardContent className="p-4 space-y-6">
-                    <div className="space-y-4">
+                    <SettingsModal />
+                    <div className="space-y-2">
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
                             <div className="mb-2 flex justify-between items-center">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
