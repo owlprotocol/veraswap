@@ -297,20 +297,19 @@ export async function getTransaction(
 
             // TODO: figure out why we have MockSuperchainERC20 here
             if (
-                (bridgeTokenIn.standard === "SuperchainERC20" ||
-                    bridgeTokenIn.standard === "HypSuperchainERC20Collateral" ||
-                    bridgeTokenIn.standard === "MockSuperchainERC20") &&
-                (bridgeTokenOut.standard === "SuperchainERC20" ||
-                    bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
-                    bridgeTokenOut.standard === "MockSuperchainERC20")
+                (isMultichainToken(bridgeCurrencyIn) && bridgeCurrencyIn.isSuperERC20()) ||
+                (isMultichainToken(bridgeCurrencyIn) &&
+                    bridgeCurrencyIn.isHypERC20() &&
+                    ((isMultichainToken(bridgeCurrencyOut) && bridgeCurrencyOut.isSuperERC20()) ||
+                        (isMultichainToken(bridgeCurrencyOut) && bridgeCurrencyOut.isHypERC20())))
             ) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
                     amountOutMinimum,
-                    destinationChain: bridgeTokenOut.chainId,
+                    destinationChain: bridgeCurrencyOut.chainId,
                     poolKey,
                     receiver: walletAddress,
-                    universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                    universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     zeroForOne,
                     permit2PermitParams,
                 });
@@ -345,7 +344,7 @@ export async function getTransaction(
                 orbiterAmountOut,
             } = params;
 
-            const { currencyIn, currencyOut } = bridge;
+            const { currencyIn, currencyOut, withSuperchain } = bridge;
             const { poolKey, zeroForOne } = swap;
 
             if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {

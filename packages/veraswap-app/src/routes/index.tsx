@@ -82,7 +82,8 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
-import { useDustAccount, useWatchMessageProcessed } from "@/hooks/index.js";
+import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
+import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -197,8 +198,27 @@ function Index() {
 
     useDustAccount(walletAddress);
 
-    useWatchMessageProcessed(bridgeMessageId, currencyOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
-    useWatchMessageProcessed(swapMessageId, currencyOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);
+    useWatchHyperlaneMessageProcessed(
+        bridgeMessageId,
+        chainOut,
+        hyperlaneMailboxAddress,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
+    useWatchHyperlaneMessageProcessed(
+        swapMessageId,
+        chainOut,
+        hyperlaneMailboxAddress,
+        setSwapRemoteTransactionHash,
+        swapRemoteTransactionHash,
+    );
+
+    useWatchSuperchainMessageProcessed(
+        superchainBridgeMessageId,
+        chainOut,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
 
     useWatchContractEvent({
         abi: [Transfer],
@@ -217,72 +237,6 @@ function Index() {
             setBridgeRemoteTransactionHash(logs[0].transactionHash);
         },
     });
-
-    useWatchContractEvent({
-        abi: [RelayedMessage],
-        eventName: "RelayedMessage",
-        chainId: chainOut?.id ?? 0,
-        address: SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER,
-        args: { messageHash: superchainBridgeMessageId ?? "0x" },
-        enabled: !!chainOut && !!chainOut.rpcUrls.default.webSocket && !!superchainBridgeMessageId,
-        strict: true,
-        onLogs: (logs) => {
-            setBridgeRemoteTransactionHash(logs[0].transactionHash);
-        },
-    });
-
-    // This is a workaround for watching superchain messages without websocket
-    useEffect(() => {
-        if (
-            !chainOut ||
-            !!chainOut.rpcUrls.default.webSocket ||
-            !superchainBridgeMessageId ||
-            !!bridgeRemoteTransactionHash
-        ) {
-            return;
-        }
-
-        const chainOutClient = createPublicClient({ chain: chainOut!, transport: http() });
-
-        const superchainWatchRoutine = async () => {
-            const block = await chainOutClient.getBlock({ blockTag: "latest" });
-
-            const fromBlock = block.number > 100n ? block.number - 100n : 0n;
-            const [log] = await chainOutClient.getLogs({
-                fromBlock,
-                address: SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER,
-                event: RelayedMessage,
-                strict: true,
-                args: { messageHash: superchainBridgeMessageId ?? "0x" },
-            });
-
-            if (!log) return;
-
-            setBridgeRemoteTransactionHash(log.transactionHash);
-            return log.transactionHash;
-        };
-
-        const superchainWatchRoutineWithRetries = async () => {
-            for (let i = 0; i < 6; i++) {
-                console.debug(
-                    `Attempt ${i + 1} to watch Superchain bridge message with id ${superchainBridgeMessageId}`,
-                );
-
-                const hash = await superchainWatchRoutine();
-
-                if (hash) break;
-
-                // 2s, 4s, 8s, 16s, 32s, ...
-                const timeout = 1000 * 2 ** (i + 1);
-                await new Promise((resolve) => setTimeout(resolve, timeout));
-            }
-        };
-
-        superchainWatchRoutineWithRetries();
-
-        // setBridgeRemoteTransactionHash
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chainOut, chainOut?.id, superchainBridgeMessageId, bridgeRemoteTransactionHash]);
 
     useWatchBlocks({
         chainId: currencyOut?.chainId ?? 0,
@@ -495,17 +449,30 @@ function Index() {
             return;
         }
 
-        const [hyperlaneBridgeMessageId, hyperlaneSwapMessageId] = getHyperlaneMessageIdsFromReceipt(receipt);
+        const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
         const superchainBridgeMessageId = getSuperchainMessageIdFromReceipt(receipt, chainIn!.id);
-        console.log({ superchainBridgeMessageId });
 
-        if (transactionType.type === "BRIDGE" && superchainBridgeMessageId) {
+        if (
+            (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") &&
+            superchainBridgeMessageId
+        ) {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
             setSuperchainBridgeMessageId(superchainBridgeMessageId);
             setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
             updateTransactionStep({ id: "bridge", status: "processing" });
+
+            const hyperlaneSwapMessageId = hyperlaneMessageIds[0];
+
+            // TODO: change this to handle either hyperlane or superchain remote chain execution
+            if (transactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
+                setSwapMessageId(hyperlaneSwapMessageId);
+                setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
+                updateTransactionStep({ id: "swap", status: "processing" });
+            }
         }
+
+        const [hyperlaneBridgeMessageId, hyperlaneSwapMessageId] = hyperlaneMessageIds;
 
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
