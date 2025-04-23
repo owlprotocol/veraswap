@@ -259,6 +259,7 @@ export async function getTransaction(
                 wagmiConfig,
             } = params;
             const { currencyIn: swapCurrencyIn, poolKey, zeroForOne } = swap;
+            // TODO: add withSuperchain if needed
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
@@ -343,8 +344,8 @@ export async function getTransaction(
                 orbiterParams,
                 orbiterAmountOut,
             } = params;
-
-            const { currencyIn, currencyOut, withSuperchain } = bridge;
+            // TODO: add withSuperchain if needed
+            const { currencyIn, currencyOut } = bridge;
             const { poolKey, zeroForOne } = swap;
 
             if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
@@ -369,6 +370,7 @@ export async function getTransaction(
                     ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
                     : getUniswapV4Address(currencyIn),
                 tokenStandard: getTokenStandard(currencyIn),
+                tokenOutStandard: getTokenStandard(currencyOut),
                 account: walletAddress,
                 destination: currencyOut.chainId,
                 recipient: walletAddress,
@@ -433,6 +435,7 @@ function getTokenStandard(currency: Currency): TokenStandard {
     if (currency.isNative) return "NativeToken";
     if (isMultichainToken(currency)) {
         if (currency.isHypERC20()) return "HypERC20";
+        if (currency.isSuperERC20()) return "SuperchainERC20";
         if (currency.hyperlaneAddress) return "HypERC20Collateral";
     }
     return "ERC20";

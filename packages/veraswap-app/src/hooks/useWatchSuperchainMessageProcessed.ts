@@ -6,7 +6,7 @@ import { SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER } from "@owlprotocol/veraswa
 
 export function useWatchSuperchainMessageProcessed(
     messageId: Hex | null,
-    chainOut: Chain | undefined,
+    chainOut: Chain | null,
     setRemoteTransactionHash: (txHash: Hex) => void,
     remoteTransactionHash: Hex | null,
 ) {

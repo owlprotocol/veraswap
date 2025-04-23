@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 export function useWatchHyperlaneMessageProcessed(
     messageId: Hex | null,
-    chainOut: Chain | undefined,
+    chainOut: Chain | null,
     mailbox: Address | null,
     setRemoteTransactionHash: (txHash: Hex) => void,
     remoteTransactionHash: Hex | null,
