@@ -171,7 +171,7 @@ export function createMockSuperchainERC20WarpRoute({
 
     const hypERC20Address = getHypERC20Address({
         decimals: token.decimals,
-        mailbox,
+        mailbox: mailboxRemote,
         totalSupply: 0n,
         name: token.name,
         symbol: token.symbol,

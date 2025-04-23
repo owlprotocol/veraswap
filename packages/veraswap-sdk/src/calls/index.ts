@@ -10,3 +10,5 @@ export * from "./getOwnableExecutorExecuteCalls.js";
 export * from "./getTransferRemoteWithApproveCalls.js";
 export * from "./getTransferRemoteWithApproveCalls.js";
 export * from "./getTransferRemoteWithKernelCalls.js";
+export * from "./getSuperchainBridgeWithApproveCalls.js";
+export * from "./getSuperchainBridgeWithFunderCalls.js";

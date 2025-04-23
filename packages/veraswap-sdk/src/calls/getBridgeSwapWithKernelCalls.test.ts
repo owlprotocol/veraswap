@@ -187,6 +187,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 chainId: opChainL1.id, //"opChainA" but we use are mocking on L1 for now
                 token: tokenAHypERC20.address,
                 tokenStandard: "HypERC20",
+                tokenOutStandard: "HypERC20Collateral",
                 account: anvilAccount.address,
                 destination: opChainL1.id,
                 recipient,

@@ -21,12 +21,14 @@ import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCal
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getOwnableExecutorExecuteCalls, getOwnableExecutorExecuteData } from "./getOwnableExecutorExecuteCalls.js";
+import { getSuperchainBridgeWithFunderCalls } from "./getSuperchainBridgeWithFunderCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
 import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithKernelCalls.js";
 
 //TODO: Remove optional with hard-coded defaults
 export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
+    tokenOutStandard: TokenStandard;
     token: Address;
     destination: number;
     amount: bigint;
@@ -86,12 +88,17 @@ export async function getBridgeSwapWithKernelCalls(
         account,
         remoteSwapParams,
         tokenStandard,
+        tokenOutStandard,
         approveAmount,
         permit2,
     } = params;
     invariant(
-        tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken",
-        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral or NativeToken`,
+        tokenStandard === "HypERC20" ||
+            tokenStandard === "HypERC20Collateral" ||
+            tokenStandard === "HypSuperchainERC20Collateral" ||
+            tokenStandard === "SuperchainERC20" ||
+            tokenStandard === "NativeToken",
+        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
     // KERNEL ACCOUNT CREATE
@@ -180,6 +187,27 @@ export async function getBridgeSwapWithKernelCalls(
             ...params.orbiterParams!,
         });
         bridgeCalls = [{ ...orbiterCall, account: kernelAddress }];
+    } else if (
+        // TODO: use the withSuperchain flag, and fix the GetBridgeSwapWithKernelCallsParams type accordingly
+        tokenStandard === "SuperchainERC20" ||
+        tokenOutStandard === "SuperchainERC20" ||
+        // Only other superchain possibilities left
+        (tokenStandard === "HypSuperchainERC20Collateral" && tokenOutStandard === "HypSuperchainERC20Collateral")
+    ) {
+        const superchainBridgeCalls = await getSuperchainBridgeWithFunderCalls(queryClient, wagmiConfig, {
+            chainId,
+            // Only possibilities
+            tokenStandard: tokenStandard as "SuperchainERC20" | "HypSuperchainERC20Collateral",
+            account: kernelAddress,
+            funder: account,
+            token,
+            destination,
+            recipient: kernelAddressRemote,
+            amount,
+            approveAmount,
+            permit2,
+        });
+        bridgeCalls = superchainBridgeCalls.calls;
     } else {
         // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed

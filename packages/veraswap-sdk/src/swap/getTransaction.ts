@@ -340,10 +340,10 @@ export async function getTransaction(
                 orbiterAmountOut,
             } = params;
 
-            const { tokenIn, tokenOut } = bridge;
+            const { tokenIn, tokenOut, withSuperchain } = bridge;
             const { poolKey, zeroForOne } = swap;
 
-            if (tokenIn.standard === "NativeToken" && (!orbiterParams || !orbiterAmountOut)) {
+            if (tokenIn.standard === "NativeToken" && !withSuperchain && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
@@ -363,6 +363,7 @@ export async function getTransaction(
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
                 tokenStandard: tokenIn.standard,
+                tokenOutStandard: tokenOut.standard,
                 account: walletAddress,
                 destination: tokenOut.chainId,
                 recipient: walletAddress,
