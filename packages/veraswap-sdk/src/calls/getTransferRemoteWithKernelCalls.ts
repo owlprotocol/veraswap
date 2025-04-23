@@ -74,8 +74,11 @@ export async function getTransferRemoteWithKernelCalls(
         permit2,
     } = params;
     invariant(
-        tokenStandard === "HypERC20" || tokenStandard === "HypERC20Collateral" || tokenStandard === "NativeToken",
-        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral or NativeToken`,
+        tokenStandard === "HypERC20" ||
+            tokenStandard === "HypERC20Collateral" ||
+            tokenStandard === "HypSuperchainERC20Collateral" ||
+            tokenStandard === "NativeToken",
+        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral or NativeToken`,
     );
 
     if (!params.contracts) {

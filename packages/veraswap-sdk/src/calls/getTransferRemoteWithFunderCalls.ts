@@ -13,7 +13,7 @@ import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCal
 
 export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
     funder: Address;
-    tokenStandard: TokenStandard & ("HypERC20" | "HypERC20Collateral");
+    tokenStandard: TokenStandard & ("HypERC20" | "HypERC20Collateral" | "HypSuperchainERC20Collateral");
     token: Address;
     destination: number;
     recipient: Address;
@@ -55,7 +55,7 @@ export async function getTransferRemoteWithFunderCalls(
     const calls: (CallArgs & { account: Address })[] = [];
 
     let wrappedToken = token;
-    if (tokenStandard === "HypERC20Collateral") {
+    if (tokenStandard === "HypERC20Collateral" || tokenStandard === "HypSuperchainERC20Collateral") {
         // HypERC20Collateral requires approval for wrapped token
         wrappedToken = await queryClient.fetchQuery(
             readContractQueryOptions(wagmiConfig, {

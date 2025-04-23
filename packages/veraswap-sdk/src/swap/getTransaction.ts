@@ -26,6 +26,7 @@ import {
 } from "../utils/getTransactionType.js";
 
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
+import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
@@ -292,6 +293,27 @@ export async function getTransaction(
                     getPermit2Params,
                 );
                 permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
+
+            // TODO: figure out why we have MockSuperchainERC20 here
+            if (
+                (bridgeTokenIn.standard === "SuperchainERC20" ||
+                    bridgeTokenIn.standard === "HypSuperchainERC20Collateral" ||
+                    bridgeTokenIn.standard === "MockSuperchainERC20") &&
+                (bridgeTokenOut.standard === "SuperchainERC20" ||
+                    bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
+                    bridgeTokenOut.standard === "MockSuperchainERC20")
+            ) {
+                return getSwapAndSuperchainBridgeTransaction({
+                    amountIn,
+                    amountOutMinimum,
+                    destinationChain: bridgeTokenOut.chainId,
+                    poolKey,
+                    receiver: walletAddress,
+                    universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                    zeroForOne,
+                    permit2PermitParams,
+                });
             }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({

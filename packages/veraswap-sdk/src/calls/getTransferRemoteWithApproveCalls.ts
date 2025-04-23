@@ -11,7 +11,7 @@ import { getERC20ApproveCalls } from "./ERC20/getERC20ApproveCalls.js";
 import { GetCallsParams } from "./getCalls.js";
 
 export interface GetTransferRemoteWithApproveCallsParams extends GetCallsParams {
-    tokenStandard: "HypERC20" | "HypERC20Collateral";
+    tokenStandard: "HypERC20" | "HypERC20Collateral" | "HypSuperchainERC20Collateral";
     token: Address;
     destination: number;
     recipient: Address;
@@ -48,7 +48,7 @@ export async function getTransferRemoteWithApproveCalls(
         }),
     );
 
-    if (tokenStandard === "HypERC20Collateral") {
+    if (tokenStandard === "HypERC20Collateral" || tokenStandard === "HypSuperchainERC20Collateral") {
         // HypERC20Collateral requires approval for wrapped token
         const wrappedToken = await queryClient.fetchQuery(
             readContractQueryOptions(wagmiConfig, {
