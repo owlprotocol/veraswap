@@ -3,8 +3,8 @@ import { FundButton, getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
 import { useAtomValue } from "jotai";
 import { parseUnits } from "viem";
 import { chainInAtom, tokenInAmountAtom } from "@/atoms/index.js";
+
 const projectId = import.meta.env.VITE_CDP_PROJECT_ID;
-console.log({ projectId });
 
 const defaultUSDCAmount = parseUnits("10", 6);
 

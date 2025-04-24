@@ -13,8 +13,10 @@ import {
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
+import { getTokenAddress } from "../utils/getTokenAddress.js";
 import {
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
@@ -23,6 +25,7 @@ import {
 } from "../utils/getTransactionType.js";
 
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
+import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
@@ -135,22 +138,26 @@ export async function getTransaction(
                 wagmiConfig,
             } = params;
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: tokenIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[tokenIn.chainId].universalRouter,
-                token: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (tokenIn.standard !== "NativeToken") {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: tokenIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[tokenIn.chainId].universalRouter,
+                    token: getTokenAddress(tokenIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[tokenIn.chainId].universalRouter,
@@ -176,7 +183,19 @@ export async function getTransaction(
                 });
             }
 
-            if (tokenIn.standard === "HypERC20Collateral") {
+            if (
+                (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
+                (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
+            ) {
+                return getSuperchainBridgeTransaction({
+                    token: getTokenAddress(tokenIn),
+                    recipient: walletAddress,
+                    amount: amountIn,
+                    destination: tokenOut.chainId,
+                });
+            }
+
+            if (tokenIn.standard === "HypERC20Collateral" || tokenIn.standard === "HypSuperchainERC20Collateral") {
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
@@ -250,23 +269,47 @@ export async function getTransaction(
                 throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
             }
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: swapTokenIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[swapTokenIn.chainId].universalRouter,
-                token:
-                    swapTokenIn.standard === "HypERC20Collateral" ? swapTokenIn.collateralAddress : swapTokenIn.address,
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (swapTokenIn.standard !== "NativeToken") {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: swapTokenIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[swapTokenIn.chainId].universalRouter,
+                    token: getTokenAddress(swapTokenIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
+
+            // TODO: figure out why we have MockSuperchainERC20 here
+            if (
+                (bridgeTokenIn.standard === "SuperchainERC20" ||
+                    bridgeTokenIn.standard === "HypSuperchainERC20Collateral" ||
+                    bridgeTokenIn.standard === "MockSuperchainERC20") &&
+                (bridgeTokenOut.standard === "SuperchainERC20" ||
+                    bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
+                    bridgeTokenOut.standard === "MockSuperchainERC20")
+            ) {
+                return getSwapAndSuperchainBridgeTransaction({
+                    amountIn,
+                    amountOutMinimum,
+                    destinationChain: bridgeTokenOut.chainId,
+                    poolKey,
+                    receiver: walletAddress,
+                    universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                    zeroForOne,
+                    permit2PermitParams,
+                });
+            }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapTokenIn.chainId].universalRouter,
@@ -297,10 +340,10 @@ export async function getTransaction(
                 orbiterAmountOut,
             } = params;
 
-            const { tokenIn, tokenOut } = bridge;
+            const { tokenIn, tokenOut, withSuperchain } = bridge;
             const { poolKey, zeroForOne } = swap;
 
-            if (tokenIn.standard === "NativeToken" && (!orbiterParams || !orbiterAmountOut)) {
+            if (tokenIn.standard === "NativeToken" && !withSuperchain && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
@@ -320,6 +363,7 @@ export async function getTransaction(
                 chainId: tokenIn.chainId,
                 token: tokenIn.address,
                 tokenStandard: tokenIn.standard,
+                tokenOutStandard: tokenOut.standard,
                 account: walletAddress,
                 destination: tokenOut.chainId,
                 recipient: walletAddress,

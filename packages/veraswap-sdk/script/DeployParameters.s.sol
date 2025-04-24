@@ -19,6 +19,8 @@ import {DeployCelo} from "./deployParameters/DeployCelo.s.sol";
 import {DeployCeloAlfajores} from "./deployParameters/DeployCeloAlfajores.s.sol";
 import {DeployGoerli} from "./deployParameters/DeployGoerli.s.sol";
 import {DeployInk} from "./deployParameters/DeployInk.s.sol";
+import {DeployInterop0} from "./deployParameters/DeployInterop0.s.sol";
+import {DeployInterop1} from "./deployParameters/DeployInterop1.s.sol";
 import {DeployMainnet} from "./deployParameters/DeployMainnet.s.sol";
 import {DeployOptimism} from "./deployParameters/DeployOptimism.s.sol";
 import {DeployOptimismGoerli} from "./deployParameters/DeployOptimismGoerli.s.sol";
@@ -48,6 +50,8 @@ contract DeployParameters is Script, Test {
         deployParams[DeployCeloAlfajores.chainId] = DeployCeloAlfajores.getParams();
         deployParams[DeployGoerli.chainId] = DeployGoerli.getParams();
         deployParams[DeployInk.chainId] = DeployInk.getParams();
+        deployParams[DeployInterop0.chainId] = DeployInterop0.getParams();
+        deployParams[DeployInterop1.chainId] = DeployInterop1.getParams();
         deployParams[DeployMainnet.chainId] = DeployMainnet.getParams();
         deployParams[DeployOptimism.chainId] = DeployOptimism.getParams();
         deployParams[DeployOptimismGoerli.chainId] = DeployOptimismGoerli.getParams();

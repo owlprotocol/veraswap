@@ -14,6 +14,8 @@ import {
     TransactionTypeBridgeSwap,
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
+    getTokenAddress,
+    getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -64,6 +66,7 @@ import {
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
+    superchainBridgeMessageIdAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -75,7 +78,8 @@ import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { chains, config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
-import { useDustAccount, useWatchMessageProcessed } from "@/hooks/index.js";
+import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
+import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -111,6 +115,7 @@ function Index() {
 
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
+    const [superchainBridgeMessageId, setSuperchainBridgeMessageId] = useAtom(superchainBridgeMessageIdAtom);
 
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
@@ -185,8 +190,27 @@ function Index() {
 
     useDustAccount(walletAddress);
 
-    useWatchMessageProcessed(bridgeMessageId, tokenOut, hyperlaneMailboxAddress, setBridgeRemoteTransactionHash);
-    useWatchMessageProcessed(swapMessageId, tokenOut, hyperlaneMailboxAddress, setSwapRemoteTransactionHash);
+    useWatchHyperlaneMessageProcessed(
+        bridgeMessageId,
+        chainOut,
+        hyperlaneMailboxAddress,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
+    useWatchHyperlaneMessageProcessed(
+        swapMessageId,
+        chainOut,
+        hyperlaneMailboxAddress,
+        setSwapRemoteTransactionHash,
+        swapRemoteTransactionHash,
+    );
+
+    useWatchSuperchainMessageProcessed(
+        superchainBridgeMessageId,
+        chainOut,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
 
     useWatchContractEvent({
         abi: [Transfer],
@@ -194,7 +218,12 @@ function Index() {
         chainId: tokenOut?.chainId ?? 0,
         address: orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] ?? zeroAddress,
         args: { to: walletAddress ?? zeroAddress },
-        enabled: !!tokenOut && !!orbiterParams && !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] && !!hash,
+        enabled:
+            !!tokenOut &&
+            !!orbiterParams &&
+            !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] &&
+            !!hash &&
+            !transactionType?.withSuperchain,
         strict: true,
         onLogs: (logs) => {
             setBridgeRemoteTransactionHash(logs[0].transactionHash);
@@ -203,7 +232,7 @@ function Index() {
 
     useWatchBlocks({
         chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams && !!hash,
+        enabled: !!tokenOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
@@ -241,7 +270,7 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
-                to: tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address,
+                to: getTokenAddress(tokenIn),
                 chainId: tokenIn.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
@@ -256,6 +285,15 @@ function Index() {
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
+
+            console.debug({ transactionType });
+
+            // TODO: reset somewhere cleaner
+            setBridgeRemoteTransactionHash(null);
+            setSwapRemoteTransactionHash(null);
+            setSuperchainBridgeMessageId(null);
+            setBridgeMessageId(null);
+            setSwapMessageId(null);
 
             // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
             const amountOutMinimum = quoterData?.[0] ?? null;
@@ -315,12 +353,12 @@ function Index() {
                 LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster;
 
             // Use custom constant that stores non-registry hyperlane related contracts
-            const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId].erc7579Router;
-            const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId].erc7579Router;
+            const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId]?.erc7579Router ?? zeroAddress;
+            const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId]?.erc7579Router ?? zeroAddress;
 
             const transaction = await getTransaction(transactionParams, {
                 [inChainId]: {
-                    universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter,
+                    universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter ?? zeroAddress,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -328,7 +366,7 @@ function Index() {
                     interchainGasPaymaster: interchainGasPaymasterIn,
                 },
                 [outChainId]: {
-                    universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter,
+                    universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter ?? zeroAddress,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -399,29 +437,56 @@ function Index() {
             return;
         }
 
-        const [bridge, swap] = getHyperlaneMessageIdsFromReceipt(receipt);
+        const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
+        const superchainBridgeMessageId = getSuperchainMessageIdFromReceipt(receipt, chainIn!.id);
+
+        if (
+            (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") &&
+            superchainBridgeMessageId
+        ) {
+            updateTransactionStep({ id: "sendOrigin", status: "success" });
+
+            setSuperchainBridgeMessageId(superchainBridgeMessageId);
+            setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
+            updateTransactionStep({ id: "bridge", status: "processing" });
+
+            const hyperlaneSwapMessageId = hyperlaneMessageIds[0];
+
+            // TODO: change this to handle either hyperlane or superchain remote chain execution
+            if (transactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
+                setSwapMessageId(hyperlaneSwapMessageId);
+                setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
+                updateTransactionStep({ id: "swap", status: "processing" });
+            }
+        }
+
+        const [hyperlaneBridgeMessageId, hyperlaneSwapMessageId] = hyperlaneMessageIds;
 
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (bridge) {
-                setBridgeMessageId(bridge);
-                setTransactionHashes((prev) => ({ ...prev, bridge }));
+            if (hyperlaneBridgeMessageId) {
+                setBridgeMessageId(hyperlaneBridgeMessageId);
+                setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
 
-                if (transactionType.type === "BRIDGE_SWAP" && swap) {
-                    setSwapMessageId(swap);
-                    setTransactionHashes((prev) => ({ ...prev, swap }));
+                if (transactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
+                    setSwapMessageId(hyperlaneSwapMessageId);
+                    setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
                     updateTransactionStep({ id: "swap", status: "processing" });
                 }
             }
         } else {
             updateTransactionStep({ id: "swap", status: "success" });
 
-            if (bridge) {
-                if (transactionType.type === "SWAP_BRIDGE") {
-                    setBridgeMessageId(bridge);
-                    setTransactionHashes((prev) => ({ ...prev, bridge }));
+            if (transactionType.type === "SWAP_BRIDGE") {
+                if (hyperlaneBridgeMessageId) {
+                    setBridgeMessageId(hyperlaneBridgeMessageId);
+                    setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
+                    updateTransactionStep({ id: "bridge", status: "processing" });
+                } else if (superchainBridgeMessageId) {
+                    setSuperchainBridgeMessageId(superchainBridgeMessageId);
+                    setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
                     updateTransactionStep({ id: "bridge", status: "processing" });
                 }
             } else if (transactionType.type === "SWAP") {

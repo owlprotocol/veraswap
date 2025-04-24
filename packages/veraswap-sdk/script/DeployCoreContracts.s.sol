@@ -91,7 +91,7 @@ contract DeployCoreContracts is DeployParameters {
         uint256 chainId = block.chainid;
 
         // Uniswap contracts
-        if (chainId == 900 || chainId == 901 || chainId == 902) {
+        if (chainId == 900 || chainId == 901 || chainId == 902 || chainId == 420120000 || chainId == 420120001) {
             // Local Anvil / Supersim
             address weth9 = 0x4200000000000000000000000000000000000006;
             (address permit2, ) = Permit2Utils.getOrCreate2();
@@ -123,7 +123,7 @@ contract DeployCoreContracts is DeployParameters {
             contracts.uniswap.universalRouter = universalRouter;
         } else {
             UniswapContracts memory uniswapParams = deployParams[chainId].uniswap;
-            if (uniswapParams.permit2 == address(0)) revert("Invalid: DeployParams Permit2 not deployed");
+            if (uniswapParams.permit2 == address(0)) revert("Invalid: DeployParams Permit2 not deployed or deploy parameters not set for chain");
 
             RouterParameters memory routerParams = RouterParameters({
                 permit2: uniswapParams.permit2,
@@ -162,7 +162,8 @@ contract DeployCoreContracts is DeployParameters {
         }
 
         // Hyperlane contracts
-        if (chainId == 900 || chainId == 901 || chainId == 902) {
+        // TODO: remove interop chains when hyperlane is supported
+        if (chainId == 900 || chainId == 901 || chainId == 902 || chainId == 420120000 || chainId == 420120001) {
             HyperlaneDeployParams memory hyperlaneParams = deployHyperlaneParams();
             (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
             (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
@@ -173,7 +174,7 @@ contract DeployCoreContracts is DeployParameters {
             });
         } else {
             HyperlaneDeployParams memory hyperlaneParams = deployParams[chainId].hyperlane;
-            if (hyperlaneParams.mailbox == address(0)) revert("Invalid: DeployParams Hyperlane Mailbox not deployed");
+            if (hyperlaneParams.mailbox == address(0)) revert("Invalid: DeployParams Hyperlane Mailbox not deployed or deploy parameters not set for chain");
             (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
             (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
             contracts.hyperlane = HyperlaneContracts({

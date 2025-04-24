@@ -1,7 +1,9 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 
 import { PoolKey } from "../types/PoolKey.js";
 import { Token } from "../types/Token.js";
+
+import { getTokenAddress } from "./getTokenAddress.js";
 
 export interface TransactionTypeSwap {
     type: "SWAP";
@@ -10,24 +12,29 @@ export interface TransactionTypeSwap {
     tokenOut: Token;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    // Not needed here but used for consistency
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridge {
     type: "BRIDGE";
     tokenIn: Token;
     tokenOut: Token;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
     swap: TransactionTypeSwap;
     bridge: TransactionTypeBridge;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
     bridge: TransactionTypeBridge;
     swap: TransactionTypeSwap;
+    withSuperchain?: boolean;
 }
 
 export type TransactionType =
@@ -92,8 +99,9 @@ export function getPoolKey({
     tokenOut: Token;
 }): PoolKey | null {
     // Get correct address
-    const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
-    const tokenOutAddress = tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+    const tokenInAddress = getTokenAddress(tokenIn);
+    const tokenOutAddress = getTokenAddress(tokenOut);
+
     // Compute address following PoolKey invariant
     const currency0 = tokenInAddress < tokenOutAddress ? tokenInAddress : tokenOutAddress;
     const currency1 = tokenInAddress < tokenOutAddress ? tokenOutAddress : tokenInAddress;
@@ -125,7 +133,34 @@ export function getSharedChainPools({
     // same token!
     if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return [];
 
-    const tokenPairs = getSharedChainTokenPairs({ tokenIn, tokenOut });
+    let tokenPairs: { chainId: number; tokenIn: Address; tokenOut: Address }[] = [];
+
+    // Handle native tokens separately since they don't have connections
+    if (tokenIn.standard === "NativeToken" && tokenIn.symbol === "ETH") {
+        const tokenOutChainsAndAddresses = [
+            { chainId: tokenOut.chainId, address: tokenOut.address },
+            ...(tokenOut.connections ?? []).map((c) => ({ chainId: c.chainId, address: c.address })),
+        ];
+        tokenOutChainsAndAddresses.forEach(({ chainId, address }) => {
+            const nativeToken = tokens[chainId][zeroAddress];
+            if (nativeToken && nativeToken.symbol === "ETH") {
+                tokenPairs.push({ chainId, tokenIn: zeroAddress, tokenOut: address });
+            }
+        });
+    } else if (tokenOut.standard === "NativeToken" && tokenOut.symbol === "ETH") {
+        const tokenInChainsAndAddresses = [
+            { chainId: tokenIn.chainId, address: tokenIn.address },
+            ...(tokenIn.connections ?? []).map((c) => ({ chainId: c.chainId, address: c.address })),
+        ];
+        tokenInChainsAndAddresses.forEach(({ chainId, address }) => {
+            const nativeToken = tokens[chainId][zeroAddress];
+            if (nativeToken && nativeToken.symbol === "ETH") {
+                tokenPairs.push({ chainId, tokenIn: address, tokenOut: zeroAddress });
+            }
+        });
+    } else {
+        tokenPairs = getSharedChainTokenPairs({ tokenIn, tokenOut });
+    }
 
     // Find pool pairs on same chain to search pool keys
     const poolKeyOptions: { chainId: number; tokenIn: Token; tokenOut: Token; poolKey: PoolKey }[] = [];
@@ -171,12 +206,26 @@ export function getTransactionType({
     // same token!
     if (tokenIn.chainId === tokenOut.chainId && tokenIn.address === tokenOut.address) return null;
 
-    if (tokenIn.standard === "NativeToken" && tokenOut.standard === "NativeToken") {
+    // TODO: No native token bridging locally
+    if (
+        tokenIn.standard === "NativeToken" &&
+        tokenOut.standard === "NativeToken" &&
+        tokenIn.symbol === tokenOut.symbol
+    ) {
         return {
             type: "BRIDGE",
             tokenIn,
             tokenOut,
         };
+    }
+
+    if (
+        (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
+        (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral") &&
+        tokenIn.chainId !== tokenOut.chainId &&
+        tokenIn.address === tokenOut.address
+    ) {
+        return { type: "BRIDGE", tokenIn, tokenOut, withSuperchain: true };
     }
 
     // BRIDGE: `tokenIn.connections.includes(tokenOut)`
@@ -194,7 +243,7 @@ export function getTransactionType({
         //TODO: Check alternative sources of liquidity
         if (!poolKey) return null;
 
-        const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        const tokenInAddress = getTokenAddress(tokenIn);
         const zeroForOne = poolKey.currency0 === tokenInAddress;
 
         return {
@@ -214,7 +263,7 @@ export function getTransactionType({
     // SWAP_BRIDGE: `pool.chainId == tokenIn.chainId`
     const poolKeyInChain = poolKeyOptions.find((option) => option.chainId === tokenIn.chainId);
     if (poolKeyInChain) {
-        const tokenInAddress = tokenIn.standard === "HypERC20Collateral" ? tokenIn.collateralAddress : tokenIn.address;
+        const tokenInAddress = getTokenAddress(tokenIn);
         const zeroForOne = poolKeyInChain.poolKey.currency0 === tokenInAddress;
 
         return {
@@ -238,16 +287,28 @@ export function getTransactionType({
     // BRIDGE_SWAP: `pool.chainId == tokenOut.chainId`
     const poolKeyOutChain = poolKeyOptions.find((option) => option.chainId === tokenOut.chainId);
     if (poolKeyOutChain) {
-        const tokenOutAddress =
-            tokenOut.standard === "HypERC20Collateral" ? tokenOut.collateralAddress : tokenOut.address;
+        const tokenOutAddress = getTokenAddress(tokenOut);
         const zeroForOne = poolKeyOutChain.poolKey.currency1 === tokenOutAddress;
+
+        // TODO: No native token bridging locally
+
+        const bridgeTokenOut = poolKeyOutChain.tokenIn;
+        // TODO: Do Hyp*ERC20Collateral tokens ever exist in pool keys?
+        const withSuperchain =
+            (tokenIn.standard === "SuperchainERC20" ||
+                tokenIn.standard === "HypSuperchainERC20Collateral" ||
+                tokenIn.standard === "MockSuperchainERC20") &&
+            (bridgeTokenOut.standard === "SuperchainERC20" ||
+                bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
+                bridgeTokenOut.standard === "MockSuperchainERC20");
 
         return {
             type: "BRIDGE_SWAP",
             bridge: {
                 type: "BRIDGE",
                 tokenIn,
-                tokenOut: poolKeyOutChain.tokenIn,
+                tokenOut: bridgeTokenOut,
+                withSuperchain,
             },
             swap: {
                 type: "SWAP",
@@ -257,6 +318,7 @@ export function getTransactionType({
                 tokenOut: tokenOut,
                 zeroForOne,
             },
+            withSuperchain,
         };
     }
 

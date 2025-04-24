@@ -48,12 +48,11 @@ export function TransactionStatusModal({
             case "bridge":
                 if (!hashes?.bridge) return undefined;
 
-                /*
-                if (networkType === "superchain") {
-                    return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.swap}`;
-                    // TODO: fix messageId return `https://sid.testnet.routescan.io/crosstransactions/${hashes.bridge}`;
+                if (transactionType?.withSuperchain) {
+                    // We have to search by transaction hash
+                    return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.sendOrigin}`;
                 }
-                */
+
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "sendOrigin":
                 return hashes?.sendOrigin && chains?.source

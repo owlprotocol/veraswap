@@ -25,9 +25,17 @@ export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
 export const mainnetChains = [base];
 
-export const testnetChains = [sepolia, optimismSepolia, arbitrumSepolia, baseSepolia, inkSepolia, unichainSepolia];
+export const testnetChains = [
+    sepolia,
+    optimismSepolia,
+    arbitrumSepolia,
+    baseSepolia,
+    inkSepolia,
+    unichainSepolia,
+    ...interopDevnetChains,
+];
 
-const allChains = [...interopDevnetChains, ...testnetChains, ...mainnetChains];
+const allChains = [...testnetChains, ...mainnetChains];
 
 export const chains = (import.meta.env.MODE === "development"
     ? [...allChains, ...localChains]

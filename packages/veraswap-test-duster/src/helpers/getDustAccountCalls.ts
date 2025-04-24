@@ -26,17 +26,27 @@ export async function getDustAccountCalls({
 
     const filteredTokens = tokens.filter(
         (token) =>
-            token.chainId === client.chain?.id && token.standard === "MockERC20"
+            token.chainId === client.chain?.id &&
+            (token.standard === "MockERC20" ||
+                token.standard === "MockSuperchainERC20")
     );
 
     const ethBalancePromise = client.getBalance({ address: account });
     const tokenBalancePromises = filteredTokens.map((token) =>
-        client.readContract({
-            address: token.address,
-            abi: MockERC20.abi,
-            functionName: "balanceOf",
-            args: [account],
-        })
+        client
+            .readContract({
+                address: token.address,
+                abi: MockERC20.abi,
+                functionName: "balanceOf",
+                args: [account],
+            })
+            .catch((e) => {
+                console.error(
+                    `Error fetching balance for token ${token.name} on chain ${token.chainId}:`,
+                    e
+                );
+                throw e;
+            })
     );
 
     const [ethBalance, ...tokenBalances] = await Promise.all([
