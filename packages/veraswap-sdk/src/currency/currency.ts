@@ -1,8 +1,8 @@
 import { Address, zeroAddress } from "viem";
 
 import { MultichainToken } from "./multichainToken.js";
-import { NativeCurrency } from "./nativeCurrency.js";
-import { Token2 } from "./token.js";
+import { type NativeCurrency } from "./nativeCurrency.js";
+import { type Token2 } from "./token.js";
 
 export type Currency = NativeCurrency | Token2 | MultichainToken;
 

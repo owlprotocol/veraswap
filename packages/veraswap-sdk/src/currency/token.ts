@@ -1,8 +1,8 @@
 import invariant from "tiny-invariant";
 import { Address, getAddress } from "viem";
 
-import { BaseCurrency, BaseCurrencyData } from "./baseCurrency.js";
-import { Currency } from "./currency.js";
+import { BaseCurrency, type BaseCurrencyData } from "./baseCurrency.js";
+import { type Currency } from "./currency.js";
 
 /**
  * The token data

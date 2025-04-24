@@ -2,7 +2,7 @@ import { mapValues } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, getAddress } from "viem";
 
-import { Token2, TokenData } from "./token.js";
+import { Token2, type TokenData } from "./token.js";
 
 //TODO: Naming conflict with non class
 export type TokenStandard2 = "ERC20" | "SuperERC20" | "HypERC20";
