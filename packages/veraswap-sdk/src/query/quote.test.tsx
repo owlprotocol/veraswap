@@ -70,7 +70,7 @@ describe("quote.test.tsx", () => {
                         poolKey,
                         exactCurrencyAmount: currency0Amount,
                         quoteType: "quoteExactInputSingle",
-                        quoterAddress: UNISWAP_CONTRACTS[chainId].v4Quoter,
+                        quoterAddress: UNISWAP_CONTRACTS[chainId]!.v4Quoter,
                     }),
                 ),
             { wrapper },
@@ -86,7 +86,7 @@ describe("quote.test.tsx", () => {
         };
         const [amountOutQuoted, gasEstimateQuoted] = (await publicClient.readContract({
             abi: [quoteExactInputSingleAbi],
-            address: UNISWAP_CONTRACTS[chainId].v4Quoter,
+            address: UNISWAP_CONTRACTS[chainId]!.v4Quoter,
             functionName: "quoteExactInputSingle",
             args: [quoteExactInputSingleParams],
         })) as [bigint, bigint];
@@ -112,7 +112,7 @@ describe("quote.test.tsx", () => {
                         poolKey,
                         exactCurrencyAmount: currency1Amount,
                         quoteType: "quoteExactOutputSingle",
-                        quoterAddress: UNISWAP_CONTRACTS[chainId].v4Quoter,
+                        quoterAddress: UNISWAP_CONTRACTS[chainId]!.v4Quoter,
                     }),
                 ),
             { wrapper },
@@ -128,7 +128,7 @@ describe("quote.test.tsx", () => {
         };
         const [amountInQuoted, gasEstimatedQuoted] = (await publicClient.readContract({
             abi: [quoteExactOutputSingleAbi],
-            address: UNISWAP_CONTRACTS[chainId].v4Quoter,
+            address: UNISWAP_CONTRACTS[chainId]!.v4Quoter,
             functionName: "quoteExactOutputSingle",
             args: [quoteExactOutputSingleParams],
         })) as [bigint, bigint];

@@ -1,25 +1,23 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, Hex } from "viem";
+import { Address } from "viem";
 
 import { HypERC20Collateral } from "../artifacts/HypERC20Collateral.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { TokenStandard } from "../types/Token.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
-import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
+import { getSuperchainBridgeWithApproveCalls } from "./getSuperchainBridgeWithApproveCalls.js";
 import { getPermit2TransferFromCalls } from "./Permit2/getPermit2TransferFromCalls.js";
 
-export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
+export interface GetSuperchainBridgeWithFunderCallsParams extends GetCallsParams {
     funder: Address;
-    tokenStandard: TokenStandard & ("HypERC20" | "HypERC20Collateral" | "HypSuperchainERC20Collateral");
+    tokenStandard: TokenStandard & ("HypSuperchainERC20Collateral" | "SuperchainERC20");
     token: Address;
     destination: number;
     recipient: Address;
     amount: bigint;
-    hookMetadata?: Hex;
-    hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
     permit2?: {
         approveAmount?: bigint | "MAX_UINT_160";
@@ -30,19 +28,18 @@ export interface GetTransferRemoteWithFunderCallsParams extends GetCallsParams {
 }
 
 /**
- * Get call to fund & set appprovals for `TokenRouter.transferRemote` call
+ * Get call to fund & set appprovals for `SuperchainTokenBridge.sendERC20` call
  * @dev Assumes `token.balanceOf(account) > amount`
  * @param queryClient
  * @param wagmiConfig
  * @param params
  */
-export async function getTransferRemoteWithFunderCalls(
+export async function getSuperchainBridgeWithFunderCalls(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetTransferRemoteWithFunderCallsParams,
+    params: GetSuperchainBridgeWithFunderCallsParams,
 ): Promise<GetCallsReturnType> {
-    const { chainId, account, funder, tokenStandard, token, destination, recipient, amount, hookMetadata, hook } =
-        params;
+    const { chainId, account, funder, tokenStandard, token, destination, recipient, amount } = params;
 
     // Default to MAX_UINT_160 if not provided
     const permit2 = {
@@ -55,7 +52,7 @@ export async function getTransferRemoteWithFunderCalls(
     const calls: (CallArgs & { account: Address })[] = [];
 
     let wrappedToken = token;
-    if (tokenStandard === "HypERC20Collateral" || tokenStandard === "HypSuperchainERC20Collateral") {
+    if (tokenStandard === "HypSuperchainERC20Collateral") {
         // HypERC20Collateral requires approval for wrapped token
         wrappedToken = await queryClient.fetchQuery(
             readContractQueryOptions(wagmiConfig, {
@@ -79,8 +76,8 @@ export async function getTransferRemoteWithFunderCalls(
     });
     calls.push(...transferFromCall.calls);
 
-    // Approve HypERC20Collateral and call `transferRemote`
-    const transferRemoteCall = await getTransferRemoteWithApproveCalls(queryClient, wagmiConfig, {
+    // Approve SuperchainERC20 and call `sendERC20`
+    const transferRemoteCall = await getSuperchainBridgeWithApproveCalls(queryClient, wagmiConfig, {
         chainId,
         account,
         tokenStandard,
@@ -88,8 +85,6 @@ export async function getTransferRemoteWithFunderCalls(
         destination,
         recipient,
         amount,
-        hookMetadata,
-        hook,
         approveAmount: params.approveAmount,
     });
     calls.push(...transferRemoteCall.calls);

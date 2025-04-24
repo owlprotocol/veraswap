@@ -1,4 +1,5 @@
 export * from "./hyperlaneRegistry.js";
 export * from "./useDustAccount.js";
 export * from "./useSyncSwapSearchParams.js";
-export * from "./useWatchMessageProcessed.js";
+export * from "./useWatchSuperchainMessageProcessed.js";
+export * from "./useWatchHyperlaneMessageProcessed.js";

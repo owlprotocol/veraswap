@@ -14,6 +14,8 @@ import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../c
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+// TODO: check usage
+// import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import { TokenStandard } from "../types/Token.js";
@@ -25,6 +27,7 @@ import {
 } from "../utils/getTransactionType.js";
 
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
+import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
 
@@ -137,22 +140,26 @@ export async function getTransaction(
                 wagmiConfig,
             } = params;
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: currencyIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[currencyIn.chainId].universalRouter,
-                token: getUniswapV4Address(currencyIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (!currencyIn.isNative) {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: currencyIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[currencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(currencyIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
@@ -178,7 +185,15 @@ export async function getTransaction(
                 });
             }
 
-            if (isMultichainToken(currencyIn) && !currencyIn.isHypERC20() && currencyIn.hyperlaneAddress) {
+            // TODO: check
+            if (
+                isMultichainToken(currencyIn) &&
+                !currencyIn.isHypERC20() &&
+                currencyIn.hyperlaneAddress &&
+                isMultichainToken(currencyOut) &&
+                !currencyOut.isHypERC20() &&
+                currencyOut.hyperlaneAddress
+            ) {
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
@@ -254,22 +269,50 @@ export async function getTransaction(
                 throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
             }
 
-            const getPermit2Params: GetPermit2PermitSignatureParams = {
-                chainId: swapCurrencyIn.chainId,
-                minAmount: amountIn,
-                approveAmount: MAX_UINT_160,
-                approveExpiration: "MAX_UINT_48",
-                spender: contracts[swapCurrencyIn.chainId].universalRouter,
-                token: getUniswapV4Address(swapCurrencyIn),
-                account: walletAddress,
-            };
-            const { permitSingle, signature } = await getPermit2PermitSignature(
-                queryClient,
-                wagmiConfig,
-                getPermit2Params,
-            );
-            const permit2PermitParams: [PermitSingle, Hex] | undefined =
-                permitSingle && signature ? [permitSingle, signature] : undefined;
+            let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
+
+            // Permit2 is not needed when swapping a native token
+            if (!swapCurrencyIn.isNative) {
+                const getPermit2Params: GetPermit2PermitSignatureParams = {
+                    chainId: swapCurrencyIn.chainId,
+                    minAmount: amountIn,
+                    approveAmount: MAX_UINT_160,
+                    approveExpiration: "MAX_UINT_48",
+                    spender: contracts[swapCurrencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(swapCurrencyIn),
+                    account: walletAddress,
+                };
+                const { permitSingle, signature } = await getPermit2PermitSignature(
+                    queryClient,
+                    wagmiConfig,
+                    getPermit2Params,
+                );
+                permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
+            }
+
+            // TODO: figure out why we have MockSuperchainERC20 here
+            // TODO: find better way to check for superchain collateral
+            if (
+                ((isMultichainToken(bridgeCurrencyIn) && bridgeCurrencyIn.isSuperERC20()) ||
+                    (isMultichainToken(bridgeCurrencyIn) &&
+                        !bridgeCurrencyIn.isHypERC20() &&
+                        bridgeCurrencyIn.hyperlaneAddress)) &&
+                ((isMultichainToken(bridgeCurrencyOut) && bridgeCurrencyOut.isSuperERC20()) ||
+                    (isMultichainToken(bridgeCurrencyOut) &&
+                        !bridgeCurrencyOut.isHypERC20() &&
+                        bridgeCurrencyOut.hyperlaneAddress))
+            ) {
+                return getSwapAndSuperchainBridgeTransaction({
+                    amountIn,
+                    amountOutMinimum,
+                    destinationChain: bridgeCurrencyOut.chainId,
+                    poolKey,
+                    receiver: walletAddress,
+                    universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                    zeroForOne,
+                    permit2PermitParams,
+                });
+            }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
@@ -299,7 +342,7 @@ export async function getTransaction(
                 orbiterParams,
                 orbiterAmountOut,
             } = params;
-
+            // TODO: check if withSuperchain is needed
             const { currencyIn, currencyOut } = bridge;
             const { poolKey, zeroForOne } = swap;
 
@@ -325,6 +368,7 @@ export async function getTransaction(
                     ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
                     : getUniswapV4Address(currencyIn),
                 tokenStandard: getTokenStandard(currencyIn),
+                tokenOutStandard: getTokenStandard(currencyOut),
                 account: walletAddress,
                 destination: currencyOut.chainId,
                 recipient: walletAddress,
@@ -388,6 +432,7 @@ export async function getTransaction(
 function getTokenStandard(currency: Currency): TokenStandard {
     if (currency.isNative) return "NativeToken";
     if (isMultichainToken(currency)) {
+        if (currency.isSuperERC20()) return "SuperchainERC20";
         if (currency.isHypERC20()) return "HypERC20";
         if (currency.hyperlaneAddress) return "HypERC20Collateral";
     }

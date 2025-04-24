@@ -22,7 +22,7 @@ library DeployBaseSepolia {
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: 0x6966b0E55883d49BFB24539356a2f8A673E02039});
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

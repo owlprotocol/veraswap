@@ -45,7 +45,13 @@ export const quoteInAtom = atomWithQuery((get) => {
         tokenInDecimals = currencyIn.decimals;
     }
 
-    const enabled = chainId != 0 && poolKey != emptyPoolKey && !!tokenInAmount;
+    const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId]?.v4Quoter : zeroAddress;
+
+    if (!quoterAddress) {
+        console.warn("Quoter address not found for chain id ", chainId);
+    }
+
+    const enabled = chainId != 0 && poolKey != emptyPoolKey && !!tokenInAmount && !!quoterAddress;
 
     let amountIn = tokenInAmount;
 
@@ -58,7 +64,6 @@ export const quoteInAtom = atomWithQuery((get) => {
     const currencyIn =
         tokenInAddress === zeroAddress ? Ether.onChain(chainId) : new Token(chainId, tokenInAddress, tokenInDecimals);
     const exactCurrencyAmount = CurrencyAmount.fromRawAmount(currencyIn, (amountIn ?? 0).toString());
-    const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId].v4Quoter : zeroAddress;
 
     return {
         ...quoteQueryOptions(config, {
@@ -66,7 +71,7 @@ export const quoteInAtom = atomWithQuery((get) => {
             poolKey,
             exactCurrencyAmount,
             quoteType: "quoteExactInputSingle",
-            quoterAddress,
+            quoterAddress: quoterAddress!,
         }),
         enabled,
     };

@@ -1,8 +1,9 @@
-import { createPublicClient, http } from "viem";
+import { Address, createPublicClient, http } from "viem";
 import { Chain, localhost } from "viem/chains";
 // TODO: delete?
-export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4";
-export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028";
+export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4" as Address;
+export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028" as Address;
+export const SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER = "0x4200000000000000000000000000000000000023" as Address;
 
 /*** Local Supersim Chains ***/
 export const opChainL1Port = 8547;
@@ -24,7 +25,8 @@ export const opChainA = {
     name: "OP Chain A",
     testnet: true,
     rpcUrls: {
-        default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
+        // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
+        default: { http: [`http://127.0.0.1:${opChainAPort}`] },
     },
 } as const satisfies Chain;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
@@ -36,7 +38,8 @@ export const opChainB = {
     name: "OP Chain B",
     testnet: true,
     rpcUrls: {
-        default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
+        // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
+        default: { http: [`http://127.0.0.1:${opChainBPort}`] },
     },
 } as const satisfies Chain;
 export const opChainBClient = createPublicClient({ chain: opChainB, transport: http() });

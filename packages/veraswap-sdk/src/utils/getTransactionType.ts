@@ -10,24 +10,29 @@ export interface TransactionTypeSwap {
     currencyOut: Currency;
     poolKey: PoolKey;
     zeroForOne: boolean;
+    // Not needed here but used for consistency
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridge {
     type: "BRIDGE";
     currencyIn: Currency;
     currencyOut: Currency;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
     swap: TransactionTypeSwap;
     bridge: TransactionTypeBridge;
+    withSuperchain?: boolean;
 }
 
 export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
     bridge: TransactionTypeBridge;
     swap: TransactionTypeSwap;
+    withSuperchain?: boolean;
 }
 
 export type TransactionType =
