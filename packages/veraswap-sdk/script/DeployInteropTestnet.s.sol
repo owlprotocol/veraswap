@@ -48,8 +48,12 @@ contract DeployInteropTestnet is DeployCoreContracts {
             CoreContracts memory contracts = deployCoreContracts();
             vm.stopBroadcast();
 
+            console2.log("Deployed core contracts on %s", chains[i]);
+
             console2.log("v4PoolManager:", contracts.uniswap.v4PoolManager);
             console2.log("v4PositionManager:", contracts.uniswap.v4PositionManager);
+            console2.log("v4Quoter:", contracts.uniswap.v4Quoter);
+            console2.log("universalRouter:", contracts.uniswap.universalRouter);
 
             console2.log("mailbox:", contracts.hyperlane.mailbox);
 

@@ -144,7 +144,7 @@ export function connectTestnetMockSuperchainERC20(token: TokenBase<"MockSupercha
                 ...token,
                 standard: "SuperchainERC20",
                 chainId,
-                chonnections: superchainConnections.filter((c) => c.chainId != chainId),
+                connections: superchainConnections.filter((c) => c.chainId != chainId),
             }) as TokenBase<"SuperchainERC20">,
     );
 }

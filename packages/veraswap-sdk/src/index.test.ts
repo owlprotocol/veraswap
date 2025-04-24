@@ -45,6 +45,7 @@ import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
 describe("index.test.ts", function () {
     const chain = opChainL1;
     const chainId = chain.id;
+    const uniswapContracts = UNISWAP_CONTRACTS[chainId]!;
     const publicClient = createPublicClient({
         chain,
         transport: http(),
@@ -59,15 +60,15 @@ describe("index.test.ts", function () {
     let simpleAccountFactoryAddress: Address;
 
     beforeAll(async () => {
-        const PoolManager = await publicClient.getCode({ address: UNISWAP_CONTRACTS[chainId].v4PoolManager });
+        const PoolManager = await publicClient.getCode({ address: uniswapContracts.v4PoolManager });
         expect(PoolManager).toBeDefined();
-        const PositionManager = await publicClient.getCode({ address: UNISWAP_CONTRACTS[chainId].v4PositionManager });
+        const PositionManager = await publicClient.getCode({ address: uniswapContracts.v4PositionManager });
         expect(PositionManager).toBeDefined();
-        const Router = await publicClient.getCode({ address: UNISWAP_CONTRACTS[chainId].universalRouter });
+        const Router = await publicClient.getCode({ address: uniswapContracts.universalRouter });
         expect(Router).toBeDefined();
-        const Quoter = await publicClient.getCode({ address: UNISWAP_CONTRACTS[chainId].v4Quoter });
+        const Quoter = await publicClient.getCode({ address: uniswapContracts.v4Quoter });
         expect(Quoter).toBeDefined();
-        const StateView = await publicClient.getCode({ address: UNISWAP_CONTRACTS[chainId].v4StateView });
+        const StateView = await publicClient.getCode({ address: uniswapContracts.v4StateView });
         expect(StateView).toBeDefined();
 
         // deploy SimpleAccountFactory
@@ -177,7 +178,7 @@ describe("index.test.ts", function () {
                 address: PERMIT2_ADDRESS,
                 abi: IAllowanceTransfer.abi,
                 functionName: "approve",
-                args: [currency0Address, UNISWAP_CONTRACTS[chainId].v4PositionManager, MAX_UINT_160, MAX_UINT_48],
+                args: [currency0Address, uniswapContracts.v4PositionManager, MAX_UINT_160, MAX_UINT_48],
             });
             await publicClient.waitForTransactionReceipt({ hash: currencyAApprovePOSMHash });
 
@@ -185,7 +186,7 @@ describe("index.test.ts", function () {
                 address: PERMIT2_ADDRESS,
                 abi: IAllowanceTransfer.abi,
                 functionName: "approve",
-                args: [currency1Address, UNISWAP_CONTRACTS[chainId].v4PositionManager, MAX_UINT_160, MAX_UINT_48],
+                args: [currency1Address, uniswapContracts.v4PositionManager, MAX_UINT_160, MAX_UINT_48],
             });
             await publicClient.waitForTransactionReceipt({ hash: currencyBApprovePOSMHash });
 
@@ -265,7 +266,7 @@ describe("index.test.ts", function () {
 
             /** *** Execute Multicall *****/
             const multicallHash = await walletClient.writeContract({
-                address: UNISWAP_CONTRACTS[chainId].v4PositionManager,
+                address: uniswapContracts.v4PositionManager,
                 abi: IMulticall.abi,
                 functionName: "multicall",
                 args: [[initializePoolData, modifyLiquiditiesData]],
@@ -275,7 +276,7 @@ describe("index.test.ts", function () {
             /** *** Get Pool Liquidity *****/
             const poolId = keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
             const currentLiquidity = await publicClient.readContract({
-                address: UNISWAP_CONTRACTS[chainId].v4StateView,
+                address: uniswapContracts.v4StateView,
                 abi: IStateView.abi,
                 functionName: "getLiquidity",
                 args: [poolId],
@@ -302,7 +303,7 @@ describe("index.test.ts", function () {
             const amountIn = 1_000_000n;
             const [amountOutQuoted] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
-                address: UNISWAP_CONTRACTS[chainId].v4Quoter,
+                address: uniswapContracts.v4Quoter,
                 functionName: "quoteExactInputSingle",
                 args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
             })) as [bigint, bigint];
@@ -324,7 +325,7 @@ describe("index.test.ts", function () {
                 amountOutMinimum,
                 poolKey,
                 zeroForOne,
-                universalRouter: UNISWAP_CONTRACTS[chainId].universalRouter,
+                universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
             });
 
@@ -404,7 +405,7 @@ describe("index.test.ts", function () {
             /** *** Get Quote *****/
             const [amountOutQuoted] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
-                address: UNISWAP_CONTRACTS[chainId].v4Quoter,
+                address: uniswapContracts.v4Quoter,
                 functionName: "quoteExactInputSingle",
                 args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
             })) as [bigint, bigint];
@@ -427,7 +428,7 @@ describe("index.test.ts", function () {
                 zeroForOne,
                 permitTransferFromData,
                 poolKey,
-                universalRouter: UNISWAP_CONTRACTS[chainId].universalRouter,
+                universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
             });
 
@@ -517,7 +518,7 @@ describe("index.test.ts", function () {
 
         // Pool deployed with first liquidity NFT
         const positionLiquidity = await publicClient.readContract({
-            address: UNISWAP_CONTRACTS[chainId].v4PositionManager,
+            address: uniswapContracts.v4PositionManager,
             abi: IPositionManager.abi,
             functionName: "getPositionLiquidity",
             args: [1n],
@@ -531,7 +532,7 @@ describe("index.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "approve",
-            args: [poolKey.currency0, UNISWAP_CONTRACTS[chainId].universalRouter, MAX_UINT_160, MAX_UINT_48],
+            args: [poolKey.currency0, uniswapContracts.universalRouter, MAX_UINT_160, MAX_UINT_48],
         });
         await publicClient.waitForTransactionReceipt({ hash: currency0ApproveRouterHash });
 
@@ -539,7 +540,7 @@ describe("index.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "approve",
-            args: [poolKey.currency1, UNISWAP_CONTRACTS[chainId].universalRouter, MAX_UINT_160, MAX_UINT_48],
+            args: [poolKey.currency1, uniswapContracts.universalRouter, MAX_UINT_160, MAX_UINT_48],
         });
         await publicClient.waitForTransactionReceipt({ hash: currency1ApproveRouterHash });
 
@@ -547,7 +548,7 @@ describe("index.test.ts", function () {
 
         const [amountOutQuoted, gasEstimate] = (await publicClient.readContract({
             abi: [quoteExactInputSingleAbi],
-            address: UNISWAP_CONTRACTS[chainId].v4Quoter,
+            address: uniswapContracts.v4Quoter,
             functionName: "quoteExactInputSingle",
             args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
         })) as [bigint, bigint];
@@ -607,7 +608,7 @@ describe("index.test.ts", function () {
 
         const hash = await walletClient.writeContract({
             account: walletClient.account,
-            address: UNISWAP_CONTRACTS[chainId].universalRouter,
+            address: uniswapContracts.universalRouter,
             abi: IUniversalRouter.abi,
             functionName: "execute",
             args: [routerCommands, [routerInput0], routerDeadline],

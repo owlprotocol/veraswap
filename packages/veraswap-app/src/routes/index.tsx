@@ -17,7 +17,7 @@ import {
     getTokenAddress,
     getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
-import { createPublicClient, encodeFunctionData, formatUnits, http, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
@@ -30,8 +30,6 @@ import {
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
-import { SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER } from "@owlprotocol/veraswap-sdk/chains";
-import { RelayedMessage } from "@owlprotocol/veraswap-sdk/artifacts/IL2ToL2CrossDomainMessenger";
 import {
     quoteInAtom,
     sendTransactionMutationAtom,
@@ -288,6 +286,8 @@ function Index() {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
 
+            console.debug({ transactionType });
+
             // TODO: reset somewhere cleaner
             setBridgeRemoteTransactionHash(null);
             setSwapRemoteTransactionHash(null);
@@ -358,7 +358,7 @@ function Index() {
 
             const transaction = await getTransaction(transactionParams, {
                 [inChainId]: {
-                    universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter,
+                    universalRouter: UNISWAP_CONTRACTS[inChainId]?.universalRouter ?? zeroAddress,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
@@ -366,7 +366,7 @@ function Index() {
                     interchainGasPaymaster: interchainGasPaymasterIn,
                 },
                 [outChainId]: {
-                    universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter,
+                    universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter ?? zeroAddress,
                     execute: LOCAL_KERNEL_CONTRACTS.execute,
                     kernelFactory: LOCAL_KERNEL_CONTRACTS.kernelFactory,
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
