@@ -1,5 +1,6 @@
 import { Address, zeroAddress } from "viem";
 
+import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { Token } from "../types/Token.js";
 
@@ -301,6 +302,9 @@ export function getTransactionType({
             (bridgeTokenOut.standard === "SuperchainERC20" ||
                 bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
                 bridgeTokenOut.standard === "MockSuperchainERC20");
+
+        // TODO: remove this when we have a proper remote execution on Interop
+        if (tokenIn.chainId === interopDevnet0.id || tokenIn.chainId === interopDevnet1.id) return null;
 
         return {
             type: "BRIDGE_SWAP",
