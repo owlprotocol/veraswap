@@ -1,6 +1,8 @@
 import { defineChain } from "viem";
 import { chainConfig } from "viem/op-stack";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 const sourceId = 11_155_111; // sepolia
 
 export const inkSepolia = /* #__PURE__ */ defineChain({
@@ -41,4 +43,7 @@ export const inkSepolia = /* #__PURE__ */ defineChain({
     },
     testnet: true,
     sourceId,
-});
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/ink/logo.svg",
+    },
+}) satisfies ChainWithMetadata;

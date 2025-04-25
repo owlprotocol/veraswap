@@ -1,3 +1,4 @@
+export * from "./chainWithMetadata.js";
 export * from "./inkSepolia.js";
 export * from "./interopDevnet.js";
 export * from "./supersim.js";

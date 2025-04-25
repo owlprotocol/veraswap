@@ -1,5 +1,7 @@
 import { base as baseChain } from "wagmi/chains";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 export const base = {
     ...baseChain,
     rpcUrls: {
@@ -8,4 +10,7 @@ export const base = {
             webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
         },
     },
-};
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/base/logo.svg",
+    },
+} satisfies ChainWithMetadata;
