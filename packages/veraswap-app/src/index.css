@@ -32,41 +32,40 @@
         --gradient-to: 260 50% 92%;
         --header-bg: 270 100% 90% / 0.08;
         --header-border: 270 80% 40% / 0.12;
-        --logo-from: 320 80% 75%;
-        --logo-to: 250 85% 65%;
+        --logo-from: 0 0% 9%;
+        --logo-to: 0 0% 9%;
     }
 
     .dark {
-        --background: 240 10% 3.9%;
+        --background: 0 0% 3.9%;
         --foreground: 0 0% 98%;
-        --card: 270 30% 14%;
+        --card: 0 0% 7%;
         --card-foreground: 0 0% 98%;
-        --popover: 240 10% 3.9%;
+        --popover: 0 0% 3.9%;
         --popover-foreground: 0 0% 98%;
         --primary: 0 0% 98%;
-        --primary-foreground: 240 5.9% 10%;
-        --secondary: 240 3.7% 15.9%;
+        --primary-foreground: 0 0% 9%;
+        --secondary: 0 0% 14.9%;
         --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 15.9%;
-        --muted-foreground: 240 5% 64.9%;
-        --header: 240 6% 9%;
-        --accent: 240 3.7% 15.9%;
+        --muted: 0 0% 14.9%;
+        --muted-foreground: 0 0% 63.9%;
+        --header: 0 0% 9%;
+        --accent: 0 0% 14.9%;
         --accent-foreground: 0 0% 98%;
         --warning: 48 96% 89%;
         --warning-foreground: 38 92% 20%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 0 0% 98%;
-        /* increased contrast for border and input this slightly from defaults */
-        --border: 240 3.7% 25%;
-        --input: 240 3.7% 30%;
-        --ring: 240 4.9% 83.9%;
-        --gradient-from: 270 50% 15%;
-        --gradient-via: 280 60% 50%;
-        --gradient-to: 270 40% 30%;
-        --header-bg: 275 35% 25% / 0.12;
-        --header-border: 280 30% 35% / 0.18;
-        --logo-from: 320 80% 75%;
-        --logo-to: 250 85% 65%;
+        --border: 0 0% 14.9%;
+        --input: 0 0% 14.9%;
+        --ring: 0 0% 83.9%;
+        --gradient-from: 0 0% 7%;
+        --gradient-via: 0 0% 14.9%;
+        --gradient-to: 0 0% 7%;
+        --header-bg: 0 0% 9% / 0.12;
+        --header-border: 0 0% 14.9% / 0.18;
+        --logo-from: 0 0% 98%;
+        --logo-to: 0 0% 98%;
     }
 
     :focus {
@@ -104,14 +103,14 @@
         scrollbar-width: thin;
         scrollbar-color: #000000 #2c2c2d;
     }
-    .page-gradient {
+    /* .page-gradient {
         background-image: linear-gradient(
             to bottom right,
             hsl(var(--gradient-from)),
             hsl(var(--gradient-via)),
             hsl(var(--gradient-to))
         );
-    }
+    } */
 
     .logo-gradient {
         background-image: linear-gradient(to right, hsl(var(--logo-from)), hsl(var(--logo-to)));
