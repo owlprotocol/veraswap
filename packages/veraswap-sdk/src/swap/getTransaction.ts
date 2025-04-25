@@ -12,10 +12,9 @@ import {
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
-import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/index.js";
+import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
-// TODO: check usage
-// import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
+import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
 import { TokenStandard } from "../types/Token.js";
@@ -185,15 +184,15 @@ export async function getTransaction(
                 });
             }
 
-            // TODO: check
-            if (
-                isMultichainToken(currencyIn) &&
-                !currencyIn.isHypERC20() &&
-                currencyIn.hyperlaneAddress &&
-                isMultichainToken(currencyOut) &&
-                !currencyOut.isHypERC20() &&
-                currencyOut.hyperlaneAddress
-            ) {
+            if (isSuperOrLinkedToSuper(currencyIn) && isSuperOrLinkedToSuper(currencyOut)) {
+                return getSuperchainBridgeTransaction({
+                    token: getUniswapV4Address(currencyIn),
+                    recipient: walletAddress,
+                    amount: amountIn,
+                    destination: currencyOut.chainId,
+                });
+            }
+            if (isMultichainToken(currencyIn) && currencyIn.hyperlaneAddress) {
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
@@ -292,16 +291,7 @@ export async function getTransaction(
 
             // TODO: figure out why we have MockSuperchainERC20 here
             // TODO: find better way to check for superchain collateral
-            if (
-                ((isMultichainToken(bridgeCurrencyIn) && bridgeCurrencyIn.isSuperERC20()) ||
-                    (isMultichainToken(bridgeCurrencyIn) &&
-                        !bridgeCurrencyIn.isHypERC20() &&
-                        bridgeCurrencyIn.hyperlaneAddress)) &&
-                ((isMultichainToken(bridgeCurrencyOut) && bridgeCurrencyOut.isSuperERC20()) ||
-                    (isMultichainToken(bridgeCurrencyOut) &&
-                        !bridgeCurrencyOut.isHypERC20() &&
-                        bridgeCurrencyOut.hyperlaneAddress))
-            ) {
+            if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
                     amountOutMinimum,

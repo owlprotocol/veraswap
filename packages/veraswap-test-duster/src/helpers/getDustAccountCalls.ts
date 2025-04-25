@@ -1,5 +1,6 @@
 import { MockERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
-import type { CallArgs, Token } from "@owlprotocol/veraswap-sdk";
+import type { CallArgs, Currency } from "@owlprotocol/veraswap-sdk";
+import { isMultichainToken, MultichainToken } from "@owlprotocol/veraswap-sdk";
 import {
     Address,
     PublicClient,
@@ -16,19 +17,20 @@ const DUST_AMOUNT_ETH = (DUST_MIN_ETH * 150n) / 100n;
 export async function getDustAccountCalls({
     account,
     client,
-    tokens,
+    currencies,
 }: {
     account: Address;
     client: PublicClient<Transport, Chain>;
-    tokens: Token[];
+    currencies: Currency[];
 }): Promise<CallArgs[]> {
     const calls: CallArgs[] = [];
 
-    const filteredTokens = tokens.filter(
-        (token) =>
+    const filteredTokens = currencies.filter(
+        (token): token is MultichainToken =>
+            isMultichainToken(token) &&
             token.chainId === client.chain?.id &&
-            (token.standard === "MockERC20" ||
-                token.standard === "MockSuperchainERC20")
+            (token.standard === "ERC20" ||
+                token.standard === "SuperERC20")
     );
 
     const ethBalancePromise = client.getBalance({ address: account });

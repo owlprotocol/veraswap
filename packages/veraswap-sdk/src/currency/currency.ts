@@ -37,3 +37,17 @@ export function isMultichainToken(currency: Currency): currency is MultichainTok
 export function getUniswapV4Address(currency: Currency): Address {
     return isNativeCurrency(currency) ? zeroAddress : currency.address;
 }
+
+/**
+ * Helper function to check if a currency is a SuperERC20 or is linked to one.
+ */
+export function isSuperOrLinkedToSuper(currency: Currency): boolean {
+    if (!isMultichainToken(currency)) {
+        return false;
+    }
+    if (currency.isSuperERC20()) {
+        return true;
+    }
+    const remoteTokens = currency.getRemoteTokens();
+    return remoteTokens.some((remote) => remote.isSuperERC20());
+}
