@@ -29,6 +29,7 @@ import {DeployPolygon} from "./deployParameters/DeployPolygon.s.sol";
 import {DeployPolygonMumbai} from "./deployParameters/DeployPolygonMumbai.s.sol";
 import {DeploySepolia} from "./deployParameters/DeploySepolia.s.sol";
 import {DeploySoneium} from "./deployParameters/DeploySoneium.s.sol";
+import {DeploySuperseed} from "./deployParameters/DeploySuperseed.s.sol";
 import {DeployUnichain} from "./deployParameters/DeployUnichain.s.sol";
 import {DeployUnichainSepolia} from "./deployParameters/DeployUnichainSepolia.s.sol";
 import {DeployWorldchain} from "./deployParameters/DeployWorldchain.s.sol";
@@ -60,6 +61,7 @@ contract DeployParameters is Script, Test {
         deployParams[DeployPolygonMumbai.chainId] = DeployPolygonMumbai.getParams();
         deployParams[DeploySepolia.chainId] = DeploySepolia.getParams();
         deployParams[DeploySoneium.chainId] = DeploySoneium.getParams();
+        deployParams[DeploySuperseed.chainId] = DeploySuperseed.getParams();
         deployParams[DeployUnichain.chainId] = DeployUnichain.getParams();
         deployParams[DeployUnichainSepolia.chainId] = DeployUnichainSepolia.getParams();
         deployParams[DeployWorldchain.chainId] = DeployWorldchain.getParams();
