@@ -1,7 +1,7 @@
 import { Address, createPublicClient, http } from "viem";
 import { Chain, localhost } from "viem/chains";
 // TODO: delete?
-export const SUPERCHAIN_SWEEP_ADDRESS = "0x7eF899a107a9a98002E23910838731562A3e8dC4" as Address;
+export const SUPERCHAIN_SWEEP_ADDRESS = "0xf3DEC025df343CE374EB2dD316f08FC8B3Ce3b48" as Address;
 export const SUPERCHAIN_TOKEN_BRIDGE = "0x4200000000000000000000000000000000000028" as Address;
 export const SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER = "0x4200000000000000000000000000000000000023" as Address;
 
