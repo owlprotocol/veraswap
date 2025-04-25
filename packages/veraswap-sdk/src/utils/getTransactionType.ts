@@ -3,8 +3,6 @@ import { PoolKey } from "../types/PoolKey.js";
 
 import { assetFlowsToTransactionType, getAssetFlows } from "./getAssetFlows.js";
 
-import { getTokenAddress } from "./getTokenAddress.js";
-
 export interface TransactionTypeSwap {
     type: "SWAP";
     chainId: number;
