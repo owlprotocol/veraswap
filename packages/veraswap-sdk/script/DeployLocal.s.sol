@@ -22,6 +22,7 @@ import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
+import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
@@ -53,7 +54,12 @@ contract DeployLocal is DeployCoreContracts {
             vm.selectFork(forks[i]);
 
             vm.startBroadcast();
+
+            console2.log("Deploying contracts on chain: ", chains[i]);
             CoreContracts memory contracts = deployCoreContracts();
+
+            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
 
             // Deploy mock paymaster for local testing only
             (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();
