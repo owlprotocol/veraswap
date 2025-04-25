@@ -472,6 +472,15 @@ const TESTNET_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    [interopDevnet0.id]: [
+        createPoolKey({
+            currency0: testnetMockTokens[2].address,
+            currency1: testnetMockTokens[5].address,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
 };
 
 export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS };

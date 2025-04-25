@@ -110,6 +110,7 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
 
     if (!currencyIn || !chainOut) return disabledQueryOptions as any;
     if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
+
         return disabledQueryOptions as any;
     }
 

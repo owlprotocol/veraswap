@@ -28,6 +28,7 @@ export enum SwapStep {
 
 /** Steps that disable the transaction button */
 const enabledSteps = [
+    SwapStep.CONNECT_WALLET,
     SwapStep.APPROVE_PERMIT2,
     SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
     SwapStep.EXECUTE_SWAP,

@@ -290,7 +290,6 @@ export async function getTransaction(
             }
 
             // TODO: figure out why we have MockSuperchainERC20 here
-            // TODO: find better way to check for superchain collateral
             if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
