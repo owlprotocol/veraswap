@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, Hex } from "viem";
+import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
@@ -33,6 +33,9 @@ export function getSwapAndSuperchainBridgeTransaction({
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
+    const inputToken = zeroForOne ? poolKey.currency0 : poolKey.currency1;
+    const outputToken = zeroForOne ? poolKey.currency1 : poolKey.currency0;
+
     const routePlanner = new RoutePlanner();
 
     if (permit2PermitParams) {
@@ -54,15 +57,17 @@ export function getSwapAndSuperchainBridgeTransaction({
         getSuperchainBridgeCallTargetParams({
             destinationChain,
             receiver,
-            outputTokenAddress: poolKey.currency1,
+            outputTokenAddress: outputToken,
         }),
     );
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
+    const inputIsNative = inputToken === zeroAddress;
+
     return {
         to: universalRouter,
-        value: 0n,
+        value: inputIsNative ? amountIn : 0n,
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",

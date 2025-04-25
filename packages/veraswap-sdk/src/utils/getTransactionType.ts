@@ -1,6 +1,7 @@
 import { Address, zeroAddress } from "viem";
 
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
+import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 import { PoolKey } from "../types/PoolKey.js";
 import { Token } from "../types/Token.js";
 
@@ -305,6 +306,10 @@ export function getTransactionType({
 
         // TODO: remove this when we have a proper remote execution on Interop
         if (tokenIn.chainId === interopDevnet0.id || tokenIn.chainId === interopDevnet1.id) return null;
+
+        // TODO: support ETH bridging on superchain
+        const superchains: number[] = [interopDevnet0.id, interopDevnet1.id, opChainL1.id, opChainA.id, opChainB.id];
+        if (superchains.includes(tokenIn.chainId) && tokenIn.standard === "NativeToken") return null;
 
         return {
             type: "BRIDGE_SWAP",
