@@ -18,6 +18,7 @@ import {PoolUtils} from "./utils/PoolUtils.sol";
 import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
+import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
@@ -45,6 +46,10 @@ contract DeployInteropTestnet is DeployCoreContracts {
             vm.selectFork(forks[i]);
 
             vm.startBroadcast();
+
+            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
+
             CoreContracts memory contracts = deployCoreContracts();
             vm.stopBroadcast();
 
