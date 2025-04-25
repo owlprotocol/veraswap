@@ -43,6 +43,39 @@ export const currencyBalanceAtomFamily = atomFamily(
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
 
+export const currencyMultichainBalanceAtomFamily = atomFamily(
+    (symbol: string) =>
+        atom((get) => {
+            const allCurrencies = get(currenciesAtom);
+            const account = get(accountAtom);
+
+            const matchingCurrencies = allCurrencies.filter((c) => c.symbol === symbol);
+
+            const currenciesWithBalance = matchingCurrencies.map((currency) => {
+                const balanceRaw = account?.address
+                    ? (get(currencyBalanceAtomFamily({ currency, account: account.address })).data ?? 0n)
+                    : 0n;
+                const decimals = currency.decimals ?? 18;
+                const balance = Number(formatUnits(balanceRaw, decimals));
+
+                return {
+                    currency,
+                    balance,
+                };
+            });
+
+            const totalBalance = currenciesWithBalance.reduce((sum, item) => sum + item.balance, 0);
+
+            return {
+                balance: totalBalance,
+                currencies: currenciesWithBalance,
+            };
+        }),
+    (a, b) => a === b,
+);
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+currencyMultichainBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
 export const tokenAllowanceAtomFamily = atomFamily(
     ({ currency, account, spender }: { currency: Currency; account: Address; spender: Address }) =>
         atomWithQuery<bigint>(() => {
