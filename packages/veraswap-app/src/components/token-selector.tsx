@@ -112,10 +112,8 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                 <Button
                     variant="outline"
                     className={cn(
-                        "h-14 gap-3 pl-4 pr-3.5 bg-white dark:bg-gray-800",
-                        "hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors",
-                        "rounded-xl border-2 border-gray-100 dark:border-gray-700",
-                        "hover:border-gray-200 dark:hover:border-gray-600",
+                        "h-14 gap-3 pl-4 pr-3.5",
+                        "rounded-xl border-2",
                         "shadow-sm hover:shadow-md transition-all",
                     )}
                 >
@@ -143,7 +141,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
             </DialogTrigger>
 
             <DialogContent
-                className="max-w-2xl max-h-[800px] rounded-2xl border-0 p-0 gap-0 shadow-xl backdrop-blur-sm dark:backdrop-blur-lg overflow-hidden"
+                className="max-w-2xl max-h-[800px] rounded-2xl border-0 p-0 gap-0 shadow-xl overflow-hidden"
                 showCloseIcon={false}
                 aria-describedby={undefined}
             >
@@ -355,42 +353,43 @@ const TokenGroup = ({
             {isExpanded && (
                 <div className="bg-muted/20 px-4 py-2 animate-in slide-in-from-top duration-200">
                     {account?.address && tokensWithBalance.length > 0 && (
-                        <div className="mb-4">
-                            <div className="grid grid-cols-2 gap-2">
-                                {tokensWithBalance.map((token) => {
-                                    const chain = chains.find((c) => c.id === token.chainId);
-                                    return (
-                                        <ChainTokenBalance
-                                            key={token.chainId}
-                                            token={token}
-                                            chain={chain}
-                                            symbol={symbol}
-                                            onSelect={onSelect}
-                                            hasBalance={true}
-                                        />
-                                    );
-                                })}
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {tokensWithBalance.map((token) => {
+                                const chain = chains.find((c) => c.id === token.chainId);
+                                return (
+                                    <ChainTokenBalance
+                                        key={token.chainId}
+                                        token={token}
+                                        chain={chain}
+                                        symbol={symbol}
+                                        onSelect={onSelect}
+                                        hasBalance={true}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
 
                     {tokensWithoutBalance.length > 0 && (
-                        <div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {tokensWithoutBalance.map((token) => {
-                                    const chain = chains.find((c) => c.id === token.chainId);
-                                    return (
-                                        <ChainTokenBalance
-                                            key={token.chainId}
-                                            token={token}
-                                            chain={chain}
-                                            symbol={symbol}
-                                            onSelect={onSelect}
-                                        />
-                                    );
-                                })}
+                        <>
+                            <Separator className="my-2" />
+                            <div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {tokensWithoutBalance.map((token) => {
+                                        const chain = chains.find((c) => c.id === token.chainId);
+                                        return (
+                                            <ChainTokenBalance
+                                                key={token.chainId}
+                                                token={token}
+                                                chain={chain}
+                                                symbol={symbol}
+                                                onSelect={onSelect}
+                                            />
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
             )}
@@ -421,13 +420,12 @@ const ChainTokenBalance = ({
     const balance = Number(formatUnits(balanceValue, decimals));
 
     return (
-        <button
-            className="flex items-center gap-2 p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-            onClick={() => onSelect(token)}
-        >
+        <Button className="flex h-auto items-center gap-2 p-3 w-full" onClick={() => onSelect(token)}>
             <div className="flex-1 space-y-2 p-2">
-                <div className="flex justify-between items-center gap-2">
-                    <div className="font-medium">{chain?.name || `Chain ${token.chainId}`}</div>
+                <div className="flex-col md:flex-row flex items-center gap-2">
+                    <div className="font-medium text-center md:text-left">
+                        {chain?.name || `Chain ${token.chainId}`}
+                    </div>
                     <img
                         src={chain?.custom?.logoURI ?? "/placeholder.jpg"}
                         onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
@@ -442,6 +440,6 @@ const ChainTokenBalance = ({
                     </>
                 )}
             </div>
-        </button>
+        </Button>
     );
 };
