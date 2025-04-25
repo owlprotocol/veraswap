@@ -14,6 +14,7 @@ import {
     baseSepolia,
     optimismSepolia,
     sepolia,
+    ChainWithMetadata,
 } from "@owlprotocol/veraswap-sdk/chains";
 import { Chain } from "viem";
 
@@ -39,7 +40,7 @@ const allChains = [...testnetChains, ...mainnetChains];
 
 export const chains = (import.meta.env.MODE === "development"
     ? [...allChains, ...localChains]
-    : allChains) as unknown as [Chain, ...Chain[]];
+    : allChains) as unknown as [ChainWithMetadata, ...ChainWithMetadata[]];
 
 //TODO: Why not support all wallets even in devmode?
 const wallets =

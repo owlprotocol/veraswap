@@ -1,16 +1,24 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
-import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Currency, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
+import { Separator } from "./ui/separator.js";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, currencyInAtom, currencyOutAtom, currenciesAtom } from "@/atoms/index.js";
+import {
+    chainsAtom,
+    currencyInAtom,
+    currencyOutAtom,
+    currenciesAtom,
+    chainInAtom,
+    chainOutAtom,
+} from "@/atoms/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
 import { currencyBalancesAtom } from "@/atoms/token-balance.js";
 
@@ -27,6 +35,9 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
     const [currencyIn, setCurrencyIn] = useAtom(currencyInAtom);
     const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
+    const chainIn = useAtomValue(chainInAtom);
+    const chainOut = useAtomValue(chainOutAtom);
+    const chain = selectingTokenIn ? chainIn : chainOut;
 
     const currentToken = selectingTokenIn ? currencyIn : currencyOut;
     const currentTokenSymbol = currentToken?.symbol || null;
@@ -108,9 +119,9 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                     {currentToken ? (
                         <>
                             <img
-                                src={currentToken.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                                src={chain?.custom?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                                 alt={currentToken.symbol}
-                                className="h-7 w-7 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
+                                className="h-6 w-6"
                                 onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                             />
                             <div>
@@ -264,7 +275,7 @@ const TokenGroup = ({
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
-    chains: Chain[];
+    chains: ChainWithMetadata[];
     onToggle: () => void;
     onSelect: (token: Currency) => void;
 }) => {
@@ -340,13 +351,22 @@ const TokenGroup = ({
                                 className="flex items-center gap-2 p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                                 onClick={() => onSelect(token)}
                             >
-                                <div className="flex-1">
-                                    <div className="font-medium">{chain?.name || `Chain ${token.chainId}`}</div>
-                                    <div className="text-xs text-muted-foreground truncate">
+                                <div className="flex-1 space-y-2 p-2">
+                                    <div className="flex justify-between items-center gap-2">
+                                        <div className="font-medium">{chain?.name || `Chain ${token.chainId}`}</div>
+                                        <img
+                                            src={chain?.custom?.logoURI ?? "/placeholder.jpg"}
+                                            onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
+                                            alt={chain?.name || `Chain ${token.chainId}`}
+                                            className="h-6 w-6 rounded-full border"
+                                        />
+                                    </div>
+                                    <Separator className="my-2" />
+                                    <div className="text-sm truncate">
                                         {balance.toFixed(4)} {symbol}
                                     </div>
                                     <div className="text-xs text-muted-foreground truncate">
-                                        {getUniswapV4Address(token).substring(0, 6)}...
+                                        Address: {getUniswapV4Address(token).substring(0, 6)}...
                                         {getUniswapV4Address(token).substring(getUniswapV4Address(token).length - 4)}
                                     </div>
                                 </div>

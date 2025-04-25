@@ -1,7 +1,7 @@
 import { atom } from "jotai";
-import { Chain } from "viem";
 import { CURRENCIES } from "@owlprotocol/veraswap-sdk/constants";
 import { Currency } from "@owlprotocol/veraswap-sdk";
+import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
 import { currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { localChains, mainnetChains, testnetChains } from "@/config.js";
 
@@ -23,7 +23,7 @@ export const chainsTypeWriteAtom = atom(
 );
 
 /** Filter chains by category */
-export const chainsAtom = atom<Chain[]>((get) => {
+export const chainsAtom = atom<ChainWithMetadata[]>((get) => {
     const chainsType = get(chainsTypeAtom);
     if (chainsType === "local") return localChains;
     if (chainsType === "testnet") return testnetChains;

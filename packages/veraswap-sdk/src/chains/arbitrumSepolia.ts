@@ -1,5 +1,7 @@
 import { arbitrumSepolia as arbitrumSepoliaChain } from "wagmi/chains";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 export const arbitrumSepolia = {
     ...arbitrumSepoliaChain,
     rpcUrls: {
@@ -12,4 +14,7 @@ export const arbitrumSepolia = {
             ],
         },
     },
-};
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/arbitrum/logo.svg",
+    },
+} satisfies ChainWithMetadata;

@@ -1,5 +1,7 @@
 import { optimismSepolia as optimismSepoliaChain } from "wagmi/chains";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 export const optimismSepolia = {
     ...optimismSepoliaChain,
     rpcUrls: {
@@ -12,4 +14,7 @@ export const optimismSepolia = {
             ],
         },
     },
-};
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+    },
+} satisfies ChainWithMetadata;
