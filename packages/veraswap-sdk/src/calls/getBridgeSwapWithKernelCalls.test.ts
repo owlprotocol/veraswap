@@ -23,7 +23,7 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
-import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -62,10 +62,10 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
     let kernelInitDataOpA: Hex;
     let kernelSalt: Hex;
 
-    const tokenA = mockMailboxMockERC20Tokens[0]; // ERC20 on L1 with A/B Uniswap Pool
-    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0]; // HypERC20Collateral on L1
+    const tokenA = MOCK_MAILBOX_TOKENS[0].address; // ERC20 on L1 with A/B Uniswap Pool
+    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0].hyperlaneAddress!; // HypERC20Collateral on L1
     const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1]; //Token A on "remote" opChainA
-    const tokenB = mockMailboxMockERC20Tokens[1]; // ERC20 on L1 with A/B Uniswap Pool
+    const tokenB = MOCK_MAILBOX_TOKENS[2].address; // ERC20 on L1 with A/B Uniswap Pool
 
     let preCollateralBalance: bigint;
     let recipient: Address;
@@ -79,7 +79,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
         // Bridge TokenA L1 -> OPA (as we will be doing the reverse later)
         const transferRemoteCalls = await getTransferRemoteWithApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenAHypERC20Collateral.address,
+            token: tokenAHypERC20Collateral,
             tokenStandard: "HypERC20Collateral",
             account: anvilAccount.address,
             destination: 901,
@@ -165,10 +165,10 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
         });
         // Pre collateral balance
         preCollateralBalance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [tokenAHypERC20Collateral.address],
+            args: [tokenAHypERC20Collateral],
         });
     });
 
@@ -178,7 +178,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             const amountOutMinimum = 0n;
             // TODO: fix this
             const poolKey = LOCAL_POOLS[opChainL1.id][0];
-            const zeroForOne = tokenA.address === poolKey.currency0;
+            const zeroForOne = tokenA === poolKey.currency0;
 
             const amount = parseEther("1");
 
@@ -242,15 +242,15 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             await processNextInboundMessage(anvilClientL1, { mailbox: MOCK_MAILBOX_CONTRACTS[opChainL1.id].mailbox });
             // unlocked collateral
             const postCollateralBalance = await opChainL1Client.readContract({
-                address: tokenA.address,
+                address: tokenA,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
-                args: [tokenAHypERC20Collateral.address],
+                args: [tokenAHypERC20Collateral],
             });
             expect(postCollateralBalance - preCollateralBalance).toBe(-amount);
             // ERC20 balance of kernel on L1
             const tokenABalancePostBridge = await opChainL1Client.readContract({
-                address: tokenA.address,
+                address: tokenA,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
                 args: [kernelAddressL1],
@@ -267,14 +267,14 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             expect(roundedGas).toBeLessThanOrEqual(1_000_000n);
 
             const tokenABalancePostSwap = await opChainL1Client.readContract({
-                address: tokenA.address,
+                address: tokenA,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
                 args: [kernelAddressL1],
             });
             expect(tokenABalancePostSwap).toBe(0n);
             const tokenBBalancePostSwap = await opChainL1Client.readContract({
-                address: tokenB.address,
+                address: tokenB,
                 abi: IERC20.abi,
                 functionName: "balanceOf",
                 args: [recipient],
