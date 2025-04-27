@@ -1,4 +1,4 @@
-import { LOCAL_HYPERLANE_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { LOCAL_HYPERLANE_CONTRACTS, isMultichainToken } from "@owlprotocol/veraswap-sdk";
 import { HypERC20Collateral, IInterchainGasPaymaster } from "@owlprotocol/veraswap-sdk/artifacts";
 import { atom, Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
@@ -6,7 +6,7 @@ import { Address, numberToHex } from "viem";
 import { readContractQueryOptions } from "wagmi/query";
 import { mapKeys } from "lodash-es";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { chainInAtom, chainOutAtom, tokenInAtom } from "./tokens.js";
+import { chainInAtom, chainOutAtom, currencyInAtom } from "./tokens.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 
@@ -87,17 +87,17 @@ export const hyperlaneMailboxChainOut = atom((get) => {
 });
 
 export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
-    const tokenIn = get(tokenInAtom);
+    const currencyIn = get(currencyInAtom);
 
-    if (!tokenIn) return disabledQueryOptions as any;
+    if (!currencyIn) return disabledQueryOptions as any;
 
-    if (tokenIn.standard !== "HypERC20Collateral" && tokenIn.standard !== "HypSuperchainERC20Collateral") {
+    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 
     return readContractQueryOptions(config, {
-        chainId: tokenIn.chainId,
-        address: tokenIn.address,
+        chainId: currencyIn.chainId,
+        address: currencyIn.hyperlaneAddress,
         abi: HypERC20Collateral.abi,
         functionName: "wrappedToken",
         args: [],
@@ -105,17 +105,17 @@ export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
 }) as Atom<AtomWithQueryResult<Address>>;
 
 export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
-    const tokenIn = get(tokenInAtom);
+    const currencyIn = get(currencyInAtom);
     const chainOut = get(chainOutAtom);
 
-    if (!tokenIn || !chainOut) return disabledQueryOptions as any;
-    if (tokenIn.standard !== "HypERC20Collateral" && tokenIn.standard !== "HypSuperchainERC20Collateral") {
+    if (!currencyIn || !chainOut) return disabledQueryOptions as any;
+    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 
     return readContractQueryOptions(config, {
-        chainId: tokenIn.chainId,
-        address: tokenIn.address,
+        chainId: currencyIn.chainId,
+        address: currencyIn.hyperlaneAddress,
         abi: HypERC20Collateral.abi,
         functionName: "quoteGasPayment",
         args: [chainOut.id],

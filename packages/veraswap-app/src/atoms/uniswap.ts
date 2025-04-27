@@ -1,5 +1,5 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getTokenAddress, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { getUniswapV4Address, isMultichainToken, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
 import { WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
@@ -34,15 +34,15 @@ export const quoteInAtom = atomWithQuery((get) => {
     if (transactionType?.type === "SWAP") {
         chainId = transactionType.chainId;
         poolKey = transactionType.poolKey;
-        const tokenIn = transactionType.tokenIn;
-        tokenInAddress = getTokenAddress(tokenIn);
-        tokenInDecimals = tokenIn.decimals;
+        const currencyIn = transactionType.currencyIn;
+        tokenInAddress = getUniswapV4Address(currencyIn);
+        tokenInDecimals = tokenInDecimals;
     } else if (transactionType?.type === "SWAP_BRIDGE" || transactionType?.type === "BRIDGE_SWAP") {
         chainId = transactionType.swap.chainId;
         poolKey = transactionType.swap.poolKey;
-        const tokenIn = transactionType.swap.tokenIn;
-        tokenInAddress = getTokenAddress(tokenIn);
-        tokenInDecimals = tokenIn.decimals;
+        const currencyIn = transactionType.swap.currencyIn;
+        tokenInAddress = getUniswapV4Address(currencyIn);
+        tokenInDecimals = currencyIn.decimals;
     }
 
     const quoterAddress = chainId ? UNISWAP_CONTRACTS[chainId]?.v4Quoter : zeroAddress;
@@ -56,11 +56,7 @@ export const quoteInAtom = atomWithQuery((get) => {
     let amountIn = tokenInAmount;
 
     // TODO: generalize to any bridging that involves orbiter (e.g. USDC)
-    if (
-        transactionType?.type === "BRIDGE_SWAP" &&
-        transactionType?.bridge.tokenIn.standard === "NativeToken" &&
-        orbiterAmountOut
-    ) {
+    if (transactionType?.type === "BRIDGE_SWAP" && transactionType?.bridge.currencyIn.isNative && orbiterAmountOut) {
         amountIn = orbiterAmountOut;
     }
 

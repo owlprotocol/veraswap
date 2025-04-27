@@ -7,14 +7,14 @@ import {
     getHyperlaneMessageIdsFromReceipt,
     getTransaction,
     TransactionParams,
-    Token,
     chainIdToOrbiterChainId,
     TransactionType,
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
     TransactionTypeSwap,
     TransactionTypeSwapBridge,
-    getTokenAddress,
+    Currency,
+    getUniswapV4Address,
     getSuperchainMessageIdFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
@@ -39,9 +39,7 @@ import {
     swapStepAtom,
     tokenInAmountAtom,
     tokenInAmountInputAtom,
-    tokenInAtom,
     tokenInAccountBalanceQueryAtom,
-    tokenOutAtom,
     tokenOutAccountBalanceQueryAtom,
     transactionModalOpenAtom,
     transactionStepsAtom,
@@ -67,6 +65,10 @@ import {
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
+    currencyInAtom,
+    currencyOutAtom,
+    chainInAtom,
+    chainOutAtom,
     superchainBridgeMessageIdAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
@@ -85,9 +87,9 @@ import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMe
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
         type: z.enum(["mainnet", "testnet", "local"]).optional(),
-        tokenIn: z.string().optional(),
+        currencyIn: z.string().optional(),
         chainIdIn: z.coerce.number().optional(),
-        tokenOut: z.string().optional(),
+        currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
     }),
     component: Index,
@@ -102,11 +104,11 @@ function Index() {
 
     useAtomValue(prefetchQueriesAtom);
 
-    const tokenIn = useAtomValue(tokenInAtom);
-    const tokenOut = useAtomValue(tokenOutAtom);
+    const currencyIn = useAtomValue(currencyInAtom);
+    const currencyOut = useAtomValue(currencyOutAtom);
 
-    const chainIn = chains.find((c) => c.id === tokenIn?.chainId);
-    const chainOut = chains.find((c) => c.id === tokenOut?.chainId);
+    const chainIn = useAtomValue(chainInAtom);
+    const chainOut = useAtomValue(chainOutAtom);
 
     const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
 
@@ -146,9 +148,13 @@ function Index() {
     const [{ data: receipt }] = useAtom(waitForReceiptQueryAtom);
 
     const tokenInBalanceFormatted =
-        tokenInBalance != undefined ? `${formatUnits(tokenInBalance, tokenIn!.decimals)} ${tokenIn!.symbol}` : "-";
+        tokenInBalance != undefined
+            ? `${formatUnits(tokenInBalance, currencyIn!.decimals)} ${currencyIn!.symbol}`
+            : "-";
     const tokenOutBalanceFormatted =
-        tokenOutBalance != undefined ? `${formatUnits(tokenOutBalance, tokenOut!.decimals)} ${tokenOut!.symbol}` : "-";
+        tokenOutBalance != undefined
+            ? `${formatUnits(tokenOutBalance, currencyOut!.decimals)} ${currencyOut!.symbol}`
+            : "-";
 
     const [{ mutate: sendTransaction, isPending: transactionIsPending, data: hash }] =
         useAtom(sendTransactionMutationAtom);
@@ -184,10 +190,10 @@ function Index() {
     const amountOut =
         transactionType?.type === "BRIDGE"
             ? orbiterRouter
-                ? formatUnits(orbiterAmountOut ?? 0n, tokenOut?.decimals ?? 18)
-                : formatUnits(tokenInAmount ?? 0n, tokenOut?.decimals ?? 18)
+                ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
+                : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
             : quoterData
-              ? formatUnits(quoterData[0], tokenOut?.decimals ?? 18)
+              ? formatUnits(quoterData[0], currencyOut?.decimals ?? 18)
               : "";
 
     useDustAccount(walletAddress);
@@ -217,13 +223,13 @@ function Index() {
     useWatchContractEvent({
         abi: [Transfer],
         eventName: "Transfer",
-        chainId: tokenOut?.chainId ?? 0,
-        address: orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] ?? zeroAddress,
+        chainId: currencyOut?.chainId ?? 0,
+        address: orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] ?? zeroAddress,
         args: { to: walletAddress ?? zeroAddress },
         enabled:
-            !!tokenOut &&
+            !!currencyOut &&
             !!orbiterParams &&
-            !!orbiterRoutersEndpointContracts[tokenOut?.chainId ?? 0] &&
+            !!orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] &&
             !!hash &&
             !transactionType?.withSuperchain,
         strict: true,
@@ -233,8 +239,8 @@ function Index() {
     });
 
     useWatchBlocks({
-        chainId: tokenOut?.chainId ?? 0,
-        enabled: !!tokenOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
+        chainId: currencyOut?.chainId ?? 0,
+        enabled: !!currencyOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
@@ -243,14 +249,16 @@ function Index() {
             // TODO: Keep track of estimated value out and check that transaction value approximately matches to avoid issue if the address is receiving two bridging transactions from orbiter somewhat simultaneously
             // TODO: use includeTransactions in useWatchBlocks when we figure out why block.transactions is undefined
             // NOTE: This is a workaround for the issue with useWatchBlocks not returning transactions, even without includeTransactions
-            getBlock(config, { blockNumber: block.number, includeTransactions: true, chainId: tokenOut!.chainId }).then(
-                (block) => {
-                    const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
-                    if (tx) {
-                        setBridgeRemoteTransactionHash(tx.hash);
-                    }
-                },
-            );
+            getBlock(config, {
+                blockNumber: block.number,
+                includeTransactions: true,
+                chainId: currencyOut!.chainId,
+            }).then((block) => {
+                const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
+                if (tx) {
+                    setBridgeRemoteTransactionHash(tx.hash);
+                }
+            });
         },
     });
 
@@ -264,7 +272,7 @@ function Index() {
             !swapStep ||
             transactionIsPending ||
             !walletAddress ||
-            !tokenIn ||
+            !currencyIn ||
             (swapStep === SwapStep.EXECUTE_SWAP && !transactionType)
         )
             return;
@@ -276,8 +284,8 @@ function Index() {
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
-                to: getTokenAddress(tokenIn),
-                chainId: tokenIn.chainId,
+                to: getUniswapV4Address(currencyIn),
+                chainId: currencyIn.chainId,
                 data: encodeFunctionData({
                     abi: IERC20.abi,
                     functionName: "approve",
@@ -344,8 +352,8 @@ function Index() {
                             wagmiConfig: config,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
-            const inChainId = tokenIn.chainId;
-            const outChainId = tokenOut!.chainId;
+            const inChainId = currencyIn.chainId;
+            const outChainId = currencyOut!.chainId;
 
             //TODO: Add additional checks if registry not loaded yet
 
@@ -381,9 +389,9 @@ function Index() {
                 },
             });
             // Switch back to chainIn (in case chain was changed when requesting signature)
-            if (tokenIn) {
+            if (currencyIn) {
                 // Kinda weird to check this here
-                await switchChainAsync({ chainId: tokenIn.chainId });
+                await switchChainAsync({ chainId: currencyIn.chainId });
             }
 
             if (!transaction) {
@@ -396,7 +404,7 @@ function Index() {
             }
 
             sendTransaction(
-                { chainId: tokenIn.chainId, ...transaction },
+                { chainId: currencyIn.chainId, ...transaction },
                 {
                     onSuccess: (hash) => {
                         if (transactionType!.type === "BRIDGE" || transactionType!.type === "BRIDGE_SWAP") {
@@ -407,6 +415,8 @@ function Index() {
 
                         setTransactionHashes((prev) => ({ ...prev, swap: hash }));
                         updateTransactionStep({ id: "swap", status: "processing" });
+                        // TODO: Do smarter invalidation, this currently invalidates ALL queries
+                        queryClient.invalidateQueries();
                     },
                     onError: (error) => {
                         console.log(error);
@@ -415,6 +425,8 @@ function Index() {
                         } else {
                             updateTransactionStep({ id: "swap", status: "error" });
                         }
+                        // TODO: Do smarter invalidation, this currently invalidates ALL queries
+                        queryClient.invalidateQueries();
                         //TODO: show in UI instead
                         toast({
                             title: "Transaction Failed",
@@ -547,22 +559,22 @@ function Index() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bridgeRemoteTransactionHash, swapRemoteTransactionHash]);
 
-    const importToken = (token: Token) => {
-        if (!chainId || !token.chainId) return;
+    const importToken = (currency: Currency) => {
+        if (!chainId || !currency.chainId) return;
 
         const asset = {
             type: "ERC20" as const,
             options: {
-                address: token.address,
-                symbol: token.symbol,
-                decimals: token.decimals,
-                image: token.logoURI,
+                address: getUniswapV4Address(currency),
+                symbol: currency.symbol ?? "",
+                decimals: currency.decimals,
+                image: currency.logoURI ?? "",
             },
         };
 
-        if (chainId !== token.chainId) {
+        if (chainId !== currency.chainId) {
             switchChain(
-                { chainId: token.chainId },
+                { chainId: currency.chainId },
                 {
                     onSuccess: () => {
                         watchAsset(asset);
@@ -578,13 +590,16 @@ function Index() {
     };
 
     // TODO: clean this up more, but not urgent. Should we wait until token out is specified to handle max?
-    const setMaxToken = (token: Token, tokenBalance: bigint, transactionTypeType: TransactionType["type"] | null) => {
-        const isNative = token.standard === "NativeToken";
-        const decimals = token.decimals;
+    const setMaxToken = (
+        currency: Currency,
+        tokenBalance: bigint,
+        transactionTypeType: TransactionType["type"] | null,
+    ) => {
+        const decimals = currency.decimals;
 
         let max = tokenBalance;
         if (
-            !isNative ||
+            !currency.isNative ||
             !transactionTypeType ||
             !(transactionTypeType === "BRIDGE" || transactionTypeType === "BRIDGE_SWAP")
         ) {
@@ -596,7 +611,7 @@ function Index() {
         const mod = max % unit;
 
         const maxOrbiterChainId = 999;
-        const orbiterChainId: number = chainIdToOrbiterChainId[tokenOut?.chainId ?? 0] ?? maxOrbiterChainId;
+        const orbiterChainId: number = chainIdToOrbiterChainId[currencyOut?.chainId ?? 0] ?? maxOrbiterChainId;
         const code = 9000n + BigInt(orbiterChainId);
 
         max = mod > code ? (max / unit) * unit : (max / unit - 1n) * unit;
@@ -630,11 +645,11 @@ function Index() {
                                         "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                                     )}
                                     placeholder="0"
-                                    disabled={!tokenIn}
+                                    disabled={!currencyIn}
                                 />
-                                {tokenIn && chainId && tokenIn.address != zeroAddress && (
+                                {currencyIn && chainId && !currencyIn.isNative && (
                                     <button
-                                        onClick={() => importToken(tokenIn)}
+                                        onClick={() => importToken(currencyIn)}
                                         className="flex items-center gap-1 text-sm"
                                         type="button"
                                     >
@@ -651,7 +666,7 @@ function Index() {
                                         className="h-auto p-0 text-sm"
                                         disabled={!tokenInBalance}
                                         onClick={() =>
-                                            setMaxToken(tokenIn!, tokenInBalance!, transactionType?.type ?? null)
+                                            setMaxToken(currencyIn!, tokenInBalance!, transactionType?.type ?? null)
                                         }
                                     >
                                         Max
@@ -666,7 +681,7 @@ function Index() {
                                 size="icon"
                                 className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
                                 onClick={swapInvert}
-                                disabled={!tokenIn || !tokenOut}
+                                disabled={!currencyIn || !currencyOut}
                             >
                                 <ArrowUpDown className="h-6 w-6" />
                             </Button>
@@ -694,9 +709,9 @@ function Index() {
                                     }
                                     disabled={true}
                                 />
-                                {tokenOut && chainId && tokenOut.address != zeroAddress && (
+                                {currencyOut && chainId && !currencyOut.isNative && (
                                     <button
-                                        onClick={() => importToken(tokenOut)}
+                                        onClick={() => importToken(currencyOut)}
                                         className="flex items-center gap-1 text-sm"
                                         type="button"
                                     >
@@ -728,8 +743,8 @@ function Index() {
                 currentStepId={currentTransactionStepId}
                 hashes={transactionHashes}
                 chains={{
-                    source: chainIn,
-                    destination: chainOut,
+                    source: chainIn ?? undefined,
+                    destination: chainOut ?? undefined,
                 }}
                 networkType={networkType}
             />

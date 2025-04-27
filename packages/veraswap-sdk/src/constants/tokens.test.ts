@@ -1,9 +1,8 @@
-import { zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { opChainAClient, opChainBClient, opChainL1Client } from "../chains/index.js";
 
-import { LOCAL_TOKENS } from "./tokens.js";
+import { LOCAL_CURRENCIES } from "./tokens.js";
 
 describe("constants/tokens.test.ts", function () {
     const clients = {
@@ -13,17 +12,17 @@ describe("constants/tokens.test.ts", function () {
     };
     test("tokens exist", async () => {
         // Ignore zeroAddress tokens
-        for (const token of LOCAL_TOKENS.filter((t) => t.address != zeroAddress)) {
+        for (const token of LOCAL_CURRENCIES.filter((t) => !t.isNative)) {
             const client = clients[token.chainId as 900 | 901 | 902];
             await expect(
                 client.getCode({ address: token.address }),
                 `${token.standard}(${token.name}, ${token.symbol}) at ${token.chainId},${token.address}`,
             ).resolves.toBeDefined();
 
-            if (token.standard === "HypERC20Collateral") {
+            if (token.hyperlaneAddress != null && token.hyperlaneAddress !== token.address) {
                 await expect(
-                    client.getCode({ address: token.collateralAddress }),
-                    `MockERC20(${token.name}, ${token.symbol}) at ${token.chainId},${token.collateralAddress}`,
+                    client.getCode({ address: token.hyperlaneAddress }),
+                    `HypERC20Collateral(${token.name}, ${token.symbol}) at ${token.chainId},${token.hyperlaneAddress}`,
                 ).resolves.toBeDefined();
             }
         }

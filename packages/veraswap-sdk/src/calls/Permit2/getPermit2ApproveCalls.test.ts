@@ -10,9 +10,10 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { MockERC20 } from "../../artifacts/MockERC20.js";
 import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
-import { localMockTokens } from "../../constants/tokens.js";
+import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
 import { MAX_UINT_160 } from "../../constants/uint256.js";
 import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
+import { getUniswapV4Address } from "../../currency/currency.js";
 
 import { getPermit2ApproveCalls } from "./getPermit2ApproveCalls.js";
 
@@ -29,7 +30,8 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
     let accountClient: WalletClient<Transport, Chain, Account>;
     let spender: Account;
 
-    const tokenA = localMockTokens[0];
+    const tokenA = LOCAL_CURRENCIES[0];
+    const tokenAAddress = getUniswapV4Address(tokenA);
 
     beforeEach(async () => {
         const anvilAccount = getAnvilAccount();
@@ -56,7 +58,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         // Fund account with Token A
         await opChainL1Client.waitForTransactionReceipt({
             hash: await anvilClient.writeContract({
-                address: tokenA.address,
+                address: tokenAAddress,
                 abi: MockERC20.abi,
                 functionName: "mint",
                 args: [account.address, parseEther("100")],
@@ -68,7 +70,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         // Approve from account to spender
         const approvePermit2Call = await getPermit2ApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenA.address,
+            token: tokenAAddress,
             account: account.address,
             spender: spender.address,
             minAmount: 1n,
@@ -79,7 +81,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
 
         // ERC20.approve(PERMIT2_ADDRESS, 1)
         expect(approvePermit2Call.calls[0]).toBeDefined();
-        expect(approvePermit2Call.calls[0].to).toBe(tokenA.address);
+        expect(approvePermit2Call.calls[0].to).toBe(tokenAAddress);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(approvePermit2Call.calls[0], "account")),
         });
@@ -96,7 +98,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [account.address, tokenA.address, spender.address],
+            args: [account.address, tokenAAddress, spender.address],
         });
         expect(allowance[0]).toBe(1n);
     });
@@ -105,7 +107,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         // Approve from account to spender
         const approvePermit2Call = await getPermit2ApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenA.address,
+            token: tokenAAddress,
             account: account.address,
             spender: spender.address,
             minAmount: 1n,
@@ -117,7 +119,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
 
         // ERC20.approve(PERMIT2_ADDRESS, 1)
         expect(approvePermit2Call.calls[0]).toBeDefined();
-        expect(approvePermit2Call.calls[0].to).toBe(tokenA.address);
+        expect(approvePermit2Call.calls[0].to).toBe(tokenAAddress);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.sendTransaction(omit(approvePermit2Call.calls[0], "account")),
         });
@@ -134,7 +136,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [account.address, tokenA.address, spender.address],
+            args: [account.address, tokenAAddress, spender.address],
         });
         expect(allowance[0]).toBe(MAX_UINT_160);
     });
@@ -143,7 +145,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         // Approve PERMIT2 with MAX_UINT256
         await opChainL1Client.waitForTransactionReceipt({
             hash: await accountClient.writeContract({
-                address: tokenA.address,
+                address: tokenAAddress,
                 abi: IERC20.abi,
                 functionName: "approve",
                 args: [PERMIT2_ADDRESS, 2n ** 256n - 1n],
@@ -153,7 +155,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
         // Approve from account to spender
         const approvePermit2Call = await getPermit2ApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenA.address,
+            token: tokenAAddress,
             account: account.address,
             spender: spender.address,
             minAmount: 1n,
@@ -174,7 +176,7 @@ describe("calls/getPermit2ApproveCall.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [account.address, tokenA.address, spender.address],
+            args: [account.address, tokenAAddress, spender.address],
         });
         expect(allowance[0]).toBe(1n);
     });

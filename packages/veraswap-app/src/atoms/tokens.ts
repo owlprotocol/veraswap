@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { Token, getTransactionType, TransactionType } from "@owlprotocol/veraswap-sdk";
-import { POOLS, TOKENS_MAP } from "@owlprotocol/veraswap-sdk/constants";
+import { getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
+import { POOLS } from "@owlprotocol/veraswap-sdk/constants";
 import { chains } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -33,48 +33,50 @@ export const fetchedTokensAtom = atomWithQuery(() => ({
 
 /***** Token In *****/
 /** Selected tokenIn */
-export const tokenInAtom = atom<Token | null>(null);
+export const currencyInAtom = atom<Currency | null>(null);
+
 /** Selected tokenIn chain */
 export const chainInAtom = atom((get) => {
-    const tokenIn = get(tokenInAtom);
-    return chains.find((c) => c.id === tokenIn?.chainId) ?? null;
+    const currencyIn = get(currencyInAtom);
+    return chains.find((c) => c.id === currencyIn?.chainId) ?? null;
 });
 /** tokenIn amount: string */
 export const tokenInAmountInputAtom = atom<string>("");
 /** tokenIn amount: bigint (wei) */
 export const tokenInAmountAtom = atom<bigint | null>((get) => {
-    const tokenIn = get(tokenInAtom);
+    const currencyIn = get(currencyInAtom);
     const tokenInAmountInput = get(tokenInAmountInputAtom);
-    if (!tokenIn || tokenInAmountInput === "") return null;
+    if (!currencyIn || tokenInAmountInput === "") return null;
 
-    return parseUnits(tokenInAmountInput, tokenIn.decimals!);
+    return parseUnits(tokenInAmountInput, currencyIn.decimals);
 });
 
 /***** Token Out *****/
 /** Selected tokenOut */
-export const tokenOutAtom = atom<Token | null>(null);
+export const currencyOutAtom = atom<Currency | null>(null);
+
 /** Selected tokenOut chain */
 export const chainOutAtom = atom((get) => {
-    const tokenOut = get(tokenOutAtom);
-    return chains.find((c) => c.id === tokenOut?.chainId) ?? null;
+    const currencyOut = get(currencyOutAtom);
+    return chains.find((c) => c.id === currencyOut?.chainId) ?? null;
 });
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
 export const transactionTypeAtom = atom<TransactionType | null>((get) => {
-    const tokenIn = get(tokenInAtom);
-    const tokenOut = get(tokenOutAtom);
-    if (!tokenIn || !tokenOut) return null;
+    const currencyIn = get(currencyInAtom);
+    const currencyOut = get(currencyOutAtom);
+    if (!currencyIn || !currencyOut) return null;
 
     //TODO: Add better constants
-    return getTransactionType({ tokenIn, tokenOut, poolKeys: POOLS, tokens: TOKENS_MAP });
+    return getTransactionType({ currencyIn, currencyOut, poolKeys: POOLS });
 });
 
 /***** Invert *****/
 export const swapInvertAtom = atom(null, (get, set) => {
-    const currentTokenIn = get(tokenInAtom);
-    const currentTokenOut = get(tokenOutAtom);
+    const currentCurrencyIn = get(currencyInAtom);
+    const currentCurrencyOut = get(currencyOutAtom);
 
-    set(tokenInAtom, currentTokenOut);
-    set(tokenOutAtom, currentTokenIn);
+    set(currencyInAtom, currentCurrencyOut);
+    set(currencyOutAtom, currentCurrencyIn);
     set(tokenInAmountInputAtom, "");
 });

@@ -1,8 +1,9 @@
 import { prodChains, localChains, interopDevnetChains } from "@/config/chains";
 import { Execute } from "@owlprotocol/veraswap-sdk/artifacts";
 import {
-    localMockTokens,
-    testnetMockTokens,
+    LOCAL_CURRENCIES,
+    TESTNET_CURRENCIES,
+    LOCAL_KERNEL_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getExecMode } from "@zerodev/sdk";
@@ -22,8 +23,6 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import {
-    Token,
-    LOCAL_KERNEL_CONTRACTS,
     encodeCallArgsBatch,
 } from "@owlprotocol/veraswap-sdk";
 import { getDustAccountCalls } from "@/helpers/getDustAccountCalls";
@@ -33,7 +32,7 @@ const chains = (
     process.env.NODE_ENV === "development"
         ? localChains
         : // ? [...localChains, ...interopDevnetChains]
-          [...prodChains, ...interopDevnetChains]
+        [...prodChains, ...interopDevnetChains]
 ).filter((c) => c.testnet);
 
 export default async function handler(
@@ -69,15 +68,15 @@ export default async function handler(
                 transport: http(),
             });
 
-            const tokens = Object.values([
-                ...localMockTokens,
-                ...testnetMockTokens,
-            ]).filter((token) => token.chainId === chain.id) as Token[];
+            const currencies = Object.values([
+                ...LOCAL_CURRENCIES,
+                ...TESTNET_CURRENCIES,
+            ]).filter((token) => token.chainId === chain.id);
 
             const calls = await getDustAccountCalls({
                 account: receiver,
                 client: publicClient as PublicClient<Transport, Chain>,
-                tokens,
+                currencies,
             });
 
             if (calls.length === 0)
@@ -136,9 +135,8 @@ export default async function handler(
             results[res.value.chainId] = res.value.result;
         } else {
             console.error(`Error on chain ${chainId}:`, res.reason);
-            results[chainId] = `Error: ${
-                (res.reason as Error).message || "Unknown error"
-            }`;
+            results[chainId] = `Error: ${(res.reason as Error).message || "Unknown error"
+                }`;
         }
     });
 

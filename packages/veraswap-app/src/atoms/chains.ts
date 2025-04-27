@@ -1,7 +1,8 @@
 import { atom } from "jotai";
 import { Chain } from "viem";
-import { TOKENS } from "@owlprotocol/veraswap-sdk/constants";
-import { tokenInAmountInputAtom, tokenInAtom, tokenOutAtom } from "./tokens.js";
+import { CURRENCIES } from "@owlprotocol/veraswap-sdk/constants";
+import { Currency } from "@owlprotocol/veraswap-sdk";
+import { currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { localChains, mainnetChains, testnetChains } from "@/config.js";
 
 export type ChainsType = "local" | "testnet" | "mainnet";
@@ -15,9 +16,8 @@ export const chainsTypeWriteAtom = atom(
         const currChainsType = get(chainsTypeAtom);
         if (currChainsType != update) {
             set(chainsTypeAtom, update);
-            set(tokenInAtom, null);
-            set(tokenInAmountInputAtom, "");
-            set(tokenOutAtom, null);
+            set(currencyInAtom, null);
+            set(currencyOutAtom, null);
         }
     },
 );
@@ -31,9 +31,8 @@ export const chainsAtom = atom<Chain[]>((get) => {
     return [];
 });
 
-/** Filter tokens by enabled chains */
-export const tokensAtom = atom((get) => {
+export const currenciesAtom = atom<Currency[]>((get) => {
     const chains = get(chainsAtom);
     const chainIds = chains.map((c) => c.id);
-    return TOKENS.filter((t) => chainIds.includes(t.chainId));
+    return CURRENCIES.filter((t) => chainIds.includes(t.chainId));
 });

@@ -237,6 +237,156 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.stopBroadcast();
         }
+
+        /***** Deploy Superchain Tokens on OP Chains with Collateral *****/
+        {
+            // Deploy Token C and Collateral on OPChainA, and silently deploy Token D
+            {
+                vm.selectFork(forks[1]);
+                vm.startBroadcast();
+                CoreContracts storage contractsA = chainContracts[chainIds[1]];
+
+                MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+
+                (address superchainTokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+                tokens[chainIds[1]][keccak256("C")] = superchainTokenC;
+                console2.log("Deployed Superchain Token C on OPChainA:", superchainTokenC);
+
+                PoolUtils.setupToken(
+                    IERC20(superchainTokenC),
+                    IPositionManager(contractsA.uniswap.v4PositionManager),
+                    IUniversalRouter(contractsA.uniswap.universalRouter)
+                );
+                PoolUtils.deployPool(
+                    superchainTokenC,
+                    address(0),
+                    IPositionManager(contractsA.uniswap.v4PositionManager),
+                    IStateView(contractsA.uniswap.v4StateView)
+                );
+
+                (address hypERC20CollateralTokenC, ) = HypERC20CollateralUtils.getOrCreate2(
+                    superchainTokenC,
+                    contractsA.hyperlane.mailbox
+                );
+                console2.log("hypERC20CollateralTokenC on OPChainA:", hypERC20CollateralTokenC);
+                tokens[chainIds[1]][keccak256("CollateralC")] = hypERC20CollateralTokenC;
+
+                vm.stopBroadcast();
+            }
+
+            // Deploy Token D and Collateral on OPChainB and silently deploy Token C
+            {
+                vm.selectFork(forks[2]);
+                vm.startBroadcast();
+                CoreContracts storage contractsB = chainContracts[chainIds[2]];
+
+                MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+
+                (address superchainTokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+                tokens[chainIds[2]][keccak256("D")] = superchainTokenD;
+                console2.log("Deployed Superchain Token D on OPChainB:", superchainTokenD);
+
+                // Setup token and deploy pool
+                PoolUtils.setupToken(
+                    IERC20(superchainTokenD),
+                    IPositionManager(contractsB.uniswap.v4PositionManager),
+                    IUniversalRouter(contractsB.uniswap.universalRouter)
+                );
+                PoolUtils.deployPool(
+                    superchainTokenD,
+                    address(0),
+                    IPositionManager(contractsB.uniswap.v4PositionManager),
+                    IStateView(contractsB.uniswap.v4StateView)
+                );
+
+                (address hypERC20CollateralTokenD, ) = HypERC20CollateralUtils.getOrCreate2(
+                    superchainTokenD,
+                    contractsB.hyperlane.mailbox
+                );
+                console2.log("hypERC20CollateralTokenD on OPChainB:", hypERC20CollateralTokenD);
+                tokens[chainIds[2]][keccak256("CollateralD")] = hypERC20CollateralTokenD;
+
+                vm.stopBroadcast();
+            }
+
+            // Deploy HypERC20 tokens for C and D on localhost (L1)
+            {
+                vm.selectFork(forks[0]); // localhost
+                vm.startBroadcast();
+                CoreContracts storage contractsL1 = chainContracts[chainIds[0]];
+
+                (address hypERC20TokenC, ) = HypERC20Utils.getOrCreate2(
+                    18,
+                    contractsL1.hyperlane.mailbox,
+                    0,
+                    "Token C",
+                    "C"
+                );
+                console2.log("hypERC20TokenC on localhost:", hypERC20TokenC);
+                tokens[chainIds[0]][keccak256("C")] = hypERC20TokenC;
+
+                (address hypERC20TokenD, ) = HypERC20Utils.getOrCreate2(
+                    18,
+                    contractsL1.hyperlane.mailbox,
+                    0,
+                    "Token D",
+                    "D"
+                );
+                console2.log("hypERC20TokenD on localhost:", hypERC20TokenD);
+                tokens[chainIds[0]][keccak256("D")] = hypERC20TokenD;
+
+                vm.stopBroadcast();
+            }
+        }
+
+        /***** Enroll Tokens C & D *****/
+        {
+            // Enroll C: OPChainA (Collateral) <-> L1 (HypERC20)
+            {
+                vm.selectFork(forks[1]); // OPChainA
+                vm.startBroadcast();
+                TokenRouter routerC = TokenRouter(tokens[chainIds[1]][keccak256("CollateralC")]);
+                // Enroll L1's HypERC20 C as remote router for OPChainA's Collateral C
+                bytes32 remoteRouterC = bytes32(uint256(uint160(tokens[chainIds[0]][keccak256("C")])));
+                if (routerC.routers(uint32(chainIds[0])) != remoteRouterC) {
+                    routerC.enrollRemoteRouter(uint32(chainIds[0]), remoteRouterC);
+                }
+                vm.stopBroadcast();
+
+                // Enroll the other direction
+                vm.selectFork(forks[0]); // localhost
+                vm.startBroadcast();
+                TokenRouter routerCL1 = TokenRouter(tokens[chainIds[0]][keccak256("C")]);
+                bytes32 remoteCollateralC = bytes32(uint256(uint160(tokens[chainIds[1]][keccak256("CollateralC")])));
+                if (routerCL1.routers(uint32(chainIds[1])) != remoteCollateralC) {
+                    routerCL1.enrollRemoteRouter(uint32(chainIds[1]), remoteCollateralC);
+                }
+                vm.stopBroadcast();
+            }
+
+            // Enroll D: OPChainB (Collateral) <-> L1 (HypERC20)
+            {
+                vm.selectFork(forks[2]); // OPChainB
+                vm.startBroadcast();
+                TokenRouter routerD = TokenRouter(tokens[chainIds[2]][keccak256("CollateralD")]);
+                // Enroll L1's HypERC20 D as remote router for OPChainB's Collateral D
+                bytes32 remoteRouterD = bytes32(uint256(uint160(tokens[chainIds[0]][keccak256("D")])));
+                if (routerD.routers(uint32(chainIds[0])) != remoteRouterD) {
+                    routerD.enrollRemoteRouter(uint32(chainIds[0]), remoteRouterD);
+                }
+                vm.stopBroadcast();
+
+                // Enroll the other direction
+                vm.selectFork(forks[0]); // localhost
+                vm.startBroadcast();
+                TokenRouter routerDL1 = TokenRouter(tokens[chainIds[0]][keccak256("D")]);
+                bytes32 remoteCollateralD = bytes32(uint256(uint160(tokens[chainIds[2]][keccak256("CollateralD")])));
+                if (routerDL1.routers(uint32(chainIds[2])) != remoteCollateralD) {
+                    routerDL1.enrollRemoteRouter(uint32(chainIds[2]), remoteCollateralD);
+                }
+                vm.stopBroadcast();
+            }
+        }
     }
 
     function deployTokensAndPools(

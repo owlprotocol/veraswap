@@ -10,7 +10,7 @@ import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { IAllowanceTransfer } from "../../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "../../artifacts/IERC20.js";
 import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
-import { localMockTokens } from "../../constants/tokens.js";
+import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
 import { MAX_UINT_160, MAX_UINT_48 } from "../../constants/uint256.js";
 import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
 
@@ -42,8 +42,7 @@ describe("calls/getPermit2TransferFromCalls.test.ts", function () {
     let account: Account;
     let accountClient: WalletClient<Transport, Chain, Account>;
 
-    const tokenA = localMockTokens[0];
-    // const tokenAHypERC20Collateral = LOCAL_TOKENS[0];
+    const tokenA = LOCAL_CURRENCIES[0].wrapped.address;
 
     beforeAll(async () => {
         await connect(config, {
@@ -73,7 +72,7 @@ describe("calls/getPermit2TransferFromCalls.test.ts", function () {
         // Set approvals to MAX
         const transferFromCall = await getPermit2TransferFromCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenA.address,
+            token: tokenA,
             account: account.address,
             funder: anvilAccount.address,
             minAmount: 1n,
@@ -99,7 +98,7 @@ describe("calls/getPermit2TransferFromCalls.test.ts", function () {
 
         // Check balance of account
         const balance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
             args: [account.address],
@@ -110,7 +109,7 @@ describe("calls/getPermit2TransferFromCalls.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [anvilAccount.address, tokenA.address, account.address],
+            args: [anvilAccount.address, tokenA, account.address],
         });
         expect(allowance[0]).toBe(MAX_UINT_160);
         expect(allowance[1]).toBe(MAX_UINT_48);

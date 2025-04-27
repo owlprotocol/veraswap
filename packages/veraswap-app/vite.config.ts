@@ -49,4 +49,7 @@ export default defineConfig({
             jsbi: path.resolve(__dirname, ".", "node_modules", "jsbi", "dist", "jsbi-cjs.js"),
         },
     },
+    optimizeDeps: {
+        exclude: ["@veraswap/sdk"],
+    },
 });

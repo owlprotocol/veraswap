@@ -12,11 +12,12 @@ import {
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
+import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
-import { getTokenAddress } from "../utils/getTokenAddress.js";
+import { TokenStandard } from "../types/Token.js";
 import {
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
@@ -128,7 +129,7 @@ export async function getTransaction(
     switch (params.type) {
         case "SWAP": {
             const {
-                tokenIn,
+                currencyIn,
                 poolKey,
                 zeroForOne,
                 amountIn,
@@ -141,14 +142,14 @@ export async function getTransaction(
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
             // Permit2 is not needed when swapping a native token
-            if (tokenIn.standard !== "NativeToken") {
+            if (!currencyIn.isNative) {
                 const getPermit2Params: GetPermit2PermitSignatureParams = {
-                    chainId: tokenIn.chainId,
+                    chainId: currencyIn.chainId,
                     minAmount: amountIn,
                     approveAmount: MAX_UINT_160,
                     approveExpiration: "MAX_UINT_48",
-                    spender: contracts[tokenIn.chainId].universalRouter,
-                    token: getTokenAddress(tokenIn),
+                    spender: contracts[currencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(currencyIn),
                     account: walletAddress,
                 };
                 const { permitSingle, signature } = await getPermit2PermitSignature(
@@ -160,7 +161,7 @@ export async function getTransaction(
             }
 
             return getSwapExactInExecuteData({
-                universalRouter: contracts[tokenIn.chainId].universalRouter,
+                universalRouter: contracts[currencyIn.chainId].universalRouter,
                 poolKey,
                 zeroForOne,
                 amountIn,
@@ -170,9 +171,9 @@ export async function getTransaction(
         }
 
         case "BRIDGE": {
-            const { tokenIn, tokenOut, amountIn, walletAddress, orbiterParams } = params;
+            const { currencyIn, currencyOut, amountIn, walletAddress, orbiterParams } = params;
 
-            if (tokenIn.standard === "NativeToken" && tokenOut.standard === "NativeToken") {
+            if (currencyIn.isNative && currencyOut.isNative) {
                 if (!orbiterParams) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
@@ -183,19 +184,15 @@ export async function getTransaction(
                 });
             }
 
-            if (
-                (tokenIn.standard === "SuperchainERC20" || tokenIn.standard === "HypSuperchainERC20Collateral") &&
-                (tokenOut.standard === "SuperchainERC20" || tokenOut.standard === "HypSuperchainERC20Collateral")
-            ) {
+            if (isSuperOrLinkedToSuper(currencyIn) && isSuperOrLinkedToSuper(currencyOut)) {
                 return getSuperchainBridgeTransaction({
-                    token: getTokenAddress(tokenIn),
+                    token: getUniswapV4Address(currencyIn),
                     recipient: walletAddress,
                     amount: amountIn,
-                    destination: tokenOut.chainId,
+                    destination: currencyOut.chainId,
                 });
             }
-
-            if (tokenIn.standard === "HypERC20Collateral" || tokenIn.standard === "HypSuperchainERC20Collateral") {
+            if (isMultichainToken(currencyIn) && currencyIn.hyperlaneAddress) {
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
@@ -205,23 +202,23 @@ export async function getTransaction(
                 }
 
                 const bridgeParams: GetTransferRemoteWithKernelCallsParams = {
-                    chainId: tokenIn.chainId,
-                    token: tokenIn.address,
-                    tokenStandard: tokenIn.standard,
+                    chainId: currencyIn.chainId,
+                    token: currencyIn.hyperlaneAddress,
+                    tokenStandard: getTokenStandard(currencyIn),
                     account: walletAddress,
-                    destination: tokenOut.chainId,
+                    destination: currencyOut.chainId,
                     recipient: walletAddress,
                     amount: amountIn,
                     //TODO: LOCAL CONTRACTS
                     createAccount: {
                         initData,
                         salt: zeroHash,
-                        factoryAddress: contracts[tokenIn.chainId].kernelFactory,
+                        factoryAddress: contracts[currencyIn.chainId].kernelFactory,
                     },
                     contracts: {
-                        execute: contracts[tokenIn.chainId].execute,
-                        ownableSignatureExecutor: contracts[tokenIn.chainId].ownableSignatureExecutor,
-                        erc7579Router: contracts[tokenIn.chainId].erc7579Router,
+                        execute: contracts[currencyIn.chainId].execute,
+                        ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
+                        erc7579Router: contracts[currencyIn.chainId].erc7579Router,
                     },
                 };
 
@@ -235,8 +232,8 @@ export async function getTransaction(
             }
 
             return getTransferRemoteCall({
-                address: tokenIn.address,
-                destination: tokenOut.chainId,
+                address: getUniswapV4Address(currencyIn),
+                destination: currencyOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
                 bridgePayment: params.bridgePayment!,
@@ -255,13 +252,15 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { tokenIn: swapTokenIn, poolKey, zeroForOne } = swap;
-            const { tokenIn: bridgeTokenIn, tokenOut: bridgeTokenOut } = bridge;
+            const { currencyIn: swapCurrencyIn, poolKey, zeroForOne } = swap;
+            const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
-            const bridgeAddress = bridgeTokenIn.address;
+            const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
+                ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
+                : getUniswapV4Address(bridgeCurrencyIn);
 
             // TODO: add orbiter bridging
-            if (bridgeTokenIn.standard === "NativeToken" && bridgeTokenOut.standard === "NativeToken") {
+            if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
                 if (!orbiterParams) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
@@ -272,14 +271,14 @@ export async function getTransaction(
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
             // Permit2 is not needed when swapping a native token
-            if (swapTokenIn.standard !== "NativeToken") {
+            if (!swapCurrencyIn.isNative) {
                 const getPermit2Params: GetPermit2PermitSignatureParams = {
-                    chainId: swapTokenIn.chainId,
+                    chainId: swapCurrencyIn.chainId,
                     minAmount: amountIn,
                     approveAmount: MAX_UINT_160,
                     approveExpiration: "MAX_UINT_48",
-                    spender: contracts[swapTokenIn.chainId].universalRouter,
-                    token: getTokenAddress(swapTokenIn),
+                    spender: contracts[swapCurrencyIn.chainId].universalRouter,
+                    token: getUniswapV4Address(swapCurrencyIn),
                     account: walletAddress,
                 };
                 const { permitSingle, signature } = await getPermit2PermitSignature(
@@ -291,32 +290,25 @@ export async function getTransaction(
             }
 
             // TODO: figure out why we have MockSuperchainERC20 here
-            if (
-                (bridgeTokenIn.standard === "SuperchainERC20" ||
-                    bridgeTokenIn.standard === "HypSuperchainERC20Collateral" ||
-                    bridgeTokenIn.standard === "MockSuperchainERC20") &&
-                (bridgeTokenOut.standard === "SuperchainERC20" ||
-                    bridgeTokenOut.standard === "HypSuperchainERC20Collateral" ||
-                    bridgeTokenOut.standard === "MockSuperchainERC20")
-            ) {
+            if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
                     amountOutMinimum,
-                    destinationChain: bridgeTokenOut.chainId,
+                    destinationChain: bridgeCurrencyOut.chainId,
                     poolKey,
                     receiver: walletAddress,
-                    universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                    universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     zeroForOne,
                     permit2PermitParams,
                 });
             }
 
             return getSwapAndHyperlaneSweepBridgeTransaction({
-                universalRouter: contracts[swapTokenIn.chainId].universalRouter,
+                universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                 bridgeAddress,
                 // Default for local env
                 bridgePayment: bridgePayment ?? 1n,
-                destinationChain: bridgeTokenOut.chainId,
+                destinationChain: bridgeCurrencyOut.chainId,
                 receiver: walletAddress,
                 poolKey,
                 zeroForOne,
@@ -339,61 +331,63 @@ export async function getTransaction(
                 orbiterParams,
                 orbiterAmountOut,
             } = params;
-
-            const { tokenIn, tokenOut, withSuperchain } = bridge;
+            // TODO: check if withSuperchain is needed
+            const { currencyIn, currencyOut } = bridge;
             const { poolKey, zeroForOne } = swap;
 
-            if (tokenIn.standard === "NativeToken" && !withSuperchain && (!orbiterParams || !orbiterAmountOut)) {
+            if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
             // TODO: fix this for non local env
-            const originERC7579ExecutorRouter = contracts[tokenIn.chainId].erc7579Router;
-            const remoteERC7579ExecutorRouter = contracts[tokenOut.chainId].erc7579Router;
+            const originERC7579ExecutorRouter = contracts[currencyIn.chainId].erc7579Router;
+            const remoteERC7579ExecutorRouter = contracts[currencyOut.chainId].erc7579Router;
 
             if (!originERC7579ExecutorRouter) {
-                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenIn.chainId}`);
+                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${currencyIn.chainId}`);
             }
 
             if (!remoteERC7579ExecutorRouter) {
-                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${tokenOut.chainId}`);
+                throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${currencyOut.chainId}`);
             }
 
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
-                chainId: tokenIn.chainId,
-                token: tokenIn.address,
-                tokenStandard: tokenIn.standard,
-                tokenOutStandard: tokenOut.standard,
+                chainId: currencyIn.chainId,
+                token: isMultichainToken(currencyIn)
+                    ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
+                    : getUniswapV4Address(currencyIn),
+                tokenStandard: getTokenStandard(currencyIn),
+                tokenOutStandard: getTokenStandard(currencyOut),
                 account: walletAddress,
-                destination: tokenOut.chainId,
+                destination: currencyOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
                 //TODO: LOCAL CONTRACTS
                 contracts: {
                     // static
-                    execute: contracts[tokenIn.chainId].execute,
-                    ownableSignatureExecutor: contracts[tokenIn.chainId].ownableSignatureExecutor,
+                    execute: contracts[currencyIn.chainId].execute,
+                    ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
                     // mailbox
-                    erc7579Router: contracts[tokenIn.chainId].erc7579Router,
-                    interchainGasPaymaster: contracts[tokenIn.chainId].interchainGasPaymaster,
+                    erc7579Router: contracts[currencyIn.chainId].erc7579Router,
+                    interchainGasPaymaster: contracts[currencyIn.chainId].interchainGasPaymaster,
                 },
                 contractsRemote: {
-                    execute: contracts[tokenOut.chainId].execute,
-                    ownableSignatureExecutor: contracts[tokenOut.chainId].ownableSignatureExecutor,
+                    execute: contracts[currencyOut.chainId].execute,
+                    ownableSignatureExecutor: contracts[currencyOut.chainId].ownableSignatureExecutor,
                     // mailbox
-                    erc7579Router: contracts[tokenOut.chainId].erc7579Router,
+                    erc7579Router: contracts[currencyOut.chainId].erc7579Router,
                 },
                 createAccount: {
                     initData,
                     salt: zeroHash,
                     // static
-                    factoryAddress: contracts[tokenIn.chainId].kernelFactory,
+                    factoryAddress: contracts[currencyIn.chainId].kernelFactory,
                 },
                 createAccountRemote: {
                     initData,
                     salt: zeroHash,
                     // static
-                    factoryAddress: contracts[tokenOut.chainId].kernelFactory,
+                    factoryAddress: contracts[currencyOut.chainId].kernelFactory,
                 },
                 // erc7579RouterOwners: [],
                 // erc7579RouterOwnersRemote: [],
@@ -403,7 +397,7 @@ export async function getTransaction(
                     amountOutMinimum,
                     poolKey,
                     receiver: walletAddress,
-                    universalRouter: contracts[tokenOut.chainId].universalRouter,
+                    universalRouter: contracts[currencyOut.chainId].universalRouter,
                     zeroForOne,
                 },
                 orbiterParams,
@@ -421,4 +415,15 @@ export async function getTransaction(
         default:
             return null;
     }
+}
+
+// TODO: Temp function to match old TokenStandard
+function getTokenStandard(currency: Currency): TokenStandard {
+    if (currency.isNative) return "NativeToken";
+    if (isMultichainToken(currency)) {
+        if (currency.isSuperERC20()) return "SuperchainERC20";
+        if (currency.isHypERC20()) return "HypERC20";
+        if (currency.hyperlaneAddress) return "HypERC20Collateral";
+    }
+    return "ERC20";
 }

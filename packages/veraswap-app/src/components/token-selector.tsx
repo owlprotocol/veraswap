@@ -4,15 +4,15 @@ import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { getTokenAddress, Token } from "@owlprotocol/veraswap-sdk";
+import { Currency, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, tokensAtom, tokenInAtom, tokenOutAtom, chainsTypeAtom } from "@/atoms/index.js";
+import { chainsAtom, currencyInAtom, currencyOutAtom, currenciesAtom } from "@/atoms/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
-import { tokenBalancesAtom } from "@/atoms/token-balance.js";
+import { currencyBalancesAtom } from "@/atoms/token-balance.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -20,47 +20,50 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
 
     const chains = useAtomValue(chainsAtom);
-    const allTokens = useAtomValue(tokensAtom);
-    const uniqueTokens = useMemo(() => groupBy(allTokens, "symbol"), [allTokens]);
+    const allCurrencies = useAtomValue(currenciesAtom);
+    const uniqueTokens = useMemo(() => groupBy(allCurrencies, "symbol"), [allCurrencies]);
 
-    useSyncSwapSearchParams(allTokens);
+    useSyncSwapSearchParams(allCurrencies);
 
-    const [tokenIn, setTokenIn] = useAtom(tokenInAtom);
-    const [tokenOut, setTokenOut] = useAtom(tokenOutAtom);
-    const networkType = useAtomValue(chainsTypeAtom);
+    const [currencyIn, setCurrencyIn] = useAtom(currencyInAtom);
+    const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
 
-    const currentToken = selectingTokenIn ? tokenIn : tokenOut;
+    const currentToken = selectingTokenIn ? currencyIn : currencyOut;
     const currentTokenSymbol = currentToken?.symbol || null;
 
     const filteredTokens = useMemo(() => {
         return Object.entries(uniqueTokens)
             .map(([symbol, tokenList]) => {
-                const oppositeToken = selectingTokenIn ? tokenOut : tokenIn;
+                const oppositeToken = selectingTokenIn ? currencyOut : currencyIn;
 
                 const filteredList = oppositeToken
                     ? tokenList.filter(
-                          (t) => !(t.address === oppositeToken.address && t.chainId === oppositeToken.chainId),
+                          (t) =>
+                              !(
+                                  getUniswapV4Address(t) === getUniswapV4Address(oppositeToken) &&
+                                  t.chainId === oppositeToken.chainId
+                              ),
                       )
                     : tokenList;
 
                 const lowerQuery = searchQuery.toLowerCase();
                 const matchesQuery =
                     symbol.toLowerCase().includes(lowerQuery) ||
-                    (filteredList[0]?.name.toLowerCase().includes(lowerQuery) ?? false) ||
-                    (filteredList[0]?.address.toLowerCase().includes(lowerQuery) ?? false);
+                    (filteredList[0]?.name?.toLowerCase().includes(lowerQuery) ?? false) ||
+                    (filteredList[0] ? getUniswapV4Address(filteredList[0]).toLowerCase().includes(lowerQuery) : false);
 
                 return matchesQuery && filteredList.length > 0 ? [symbol, filteredList] : null;
             })
-            .filter(Boolean) as [string, Token[]][];
-    }, [uniqueTokens, searchQuery, tokenIn, tokenOut, selectingTokenIn]);
+            .filter(Boolean) as [string, Currency[]][];
+    }, [uniqueTokens, searchQuery, currencyIn, currencyOut, selectingTokenIn]);
 
     const popularTokens = ["AAVE", "USDT", "USDC"];
 
-    const handleTokenSelect = (token: Token) => {
+    const handleTokenSelect = (currency: Currency) => {
         if (selectingTokenIn) {
-            setTokenIn(token);
+            setCurrencyIn(currency);
         } else {
-            setTokenOut(token);
+            setCurrencyOut(currency);
         }
         setExpandedSymbol(null);
         setIsOpen(false);
@@ -215,7 +218,7 @@ const PopularTokens = ({
     onExpand,
 }: {
     popularTokens: string[];
-    uniqueTokens: { [symbol: string]: Token[] };
+    uniqueTokens: { [symbol: string]: Currency[] };
     onExpand: (symbol: string) => void;
 }) => {
     return (
@@ -257,19 +260,19 @@ const TokenGroup = ({
     onToggle,
     onSelect,
 }: {
-    tokenList: Token[];
+    tokenList: Currency[];
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
     chains: Chain[];
     onToggle: () => void;
-    onSelect: (token: Token) => void;
+    onSelect: (token: Currency) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
-    const balances = useAtomValue(tokenBalancesAtom);
+    const balances = useAtomValue(currencyBalancesAtom);
 
     const totalBalance = useMemo(
-        () => balances.filter((b) => b.token.symbol === symbol).reduce((sum, b) => sum + (b.balance ?? 0), 0),
+        () => balances.filter((b) => b.currency.symbol === symbol).reduce((sum, b) => sum + (b.balance ?? 0), 0),
         [balances, symbol],
     );
 
@@ -325,9 +328,12 @@ const TokenGroup = ({
                     {tokenList.map((token) => {
                         const chain = chains.find((c) => c.id === token.chainId);
                         const balance =
-                            balances.find((b) => b.token.chainId === token.chainId && b.token.address === token.address)
-                                ?.balance ?? 0;
-                        const displayedAddress = getTokenAddress(token);
+                            balances.find(
+                                (b) =>
+                                    b.currency.chainId === token.chainId &&
+                                    getUniswapV4Address(b.currency) === getUniswapV4Address(token),
+                            )?.balance ?? 0;
+
                         return (
                             <button
                                 key={token.chainId}
@@ -340,8 +346,8 @@ const TokenGroup = ({
                                         {balance.toFixed(4)} {symbol}
                                     </div>
                                     <div className="text-xs text-muted-foreground truncate">
-                                        {displayedAddress.substring(0, 6)}...
-                                        {displayedAddress.substring(displayedAddress.length - 4)}
+                                        {getUniswapV4Address(token).substring(0, 6)}...
+                                        {getUniswapV4Address(token).substring(getUniswapV4Address(token).length - 4)}
                                     </div>
                                 </div>
                             </button>

@@ -6,8 +6,8 @@ import {
     chainInAtom,
     chainOutAtom,
     tokenInAmountAtom,
-    tokenInAtom,
-    tokenOutAtom,
+    currencyInAtom,
+    currencyOutAtom,
     transactionTypeAtom,
 } from "./tokens.js";
 
@@ -32,24 +32,24 @@ export const orbiterRoutersEndpointContractsAtom = atom((get) => {
 });
 
 export const orbiterChainIdOutAtom = atom((get) => {
-    const tokenOut = get(tokenOutAtom);
+    const currencyOut = get(currencyOutAtom);
 
-    if (!tokenOut) return undefined;
-    return chainIdToOrbiterChainId[tokenOut.chainId] as number | undefined;
+    if (!currencyOut) return undefined;
+    return chainIdToOrbiterChainId[currencyOut.chainId] as number | undefined;
 });
 
 // TODO: Handle USDC
 export const orbiterRouterAtom = atom((get) => {
     const orbiterRoutersAll = get(orbiterRoutersAllAtom);
 
-    const tokenIn = get(tokenInAtom);
+    const currencyIn = get(currencyInAtom);
     const chainIn = get(chainInAtom);
-    const tokenOut = get(tokenOutAtom);
+    const currencyOut = get(currencyOutAtom);
     const chainOut = get(chainOutAtom);
 
     const transactionType = get(transactionTypeAtom);
 
-    if (!tokenIn || !tokenOut || !chainIn || !chainOut || !transactionType) return undefined;
+    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType) return undefined;
 
     if (transactionType.type === "SWAP") return undefined;
 
@@ -57,17 +57,17 @@ export const orbiterRouterAtom = atom((get) => {
     const chainInSymbol = chainIn.nativeCurrency.symbol;
 
     if (transactionType.type === "SWAP_BRIDGE") {
-        if (tokenOut.standard === "NativeToken" && (tokenOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
+        if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
             // If bridging on output a native token, must be ETH on both chains
             return undefined;
         }
         // Type is either "BRIDGE" or "BRIDGE_SWAP"
-    } else if (tokenIn.standard !== "NativeToken" || tokenIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
+    } else if (currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
         // If bridging on input a native token, must be ETH on both chains
         return undefined;
     }
 
-    const line = `${tokenIn.chainId}/${chainOut.id}-${tokenIn.symbol}/${chainOutSymbol}`;
+    const line = `${currencyIn.chainId}/${chainOut.id}-${currencyIn.symbol}/${chainOutSymbol}`;
 
     return orbiterRoutersAll.find((router) => router.line === line);
 });
@@ -88,20 +88,20 @@ export const orbiterParamsAtom = atom((get) => {
 });
 
 export const orbiterAmountOutAtom = atom((get) => {
-    const tokenIn = get(tokenInAtom);
+    const currencyIn = get(currencyInAtom);
     const amountIn = get(tokenInAmountAtom);
-    const tokenOut = get(tokenOutAtom);
+    const currencyOut = get(currencyOutAtom);
     const router = get(orbiterRouterAtom);
 
     const orbiterChainIdOut = get(orbiterChainIdOutAtom);
 
-    if (!router || !tokenIn || !tokenOut || !amountIn || !orbiterChainIdOut) return undefined;
+    if (!router || !currencyIn || !currencyOut || !amountIn || !orbiterChainIdOut) return undefined;
 
     const { withholdingFee, tradeFee, minAmt, maxAmt } = router;
 
-    const withholdingFeeParsed = parseUnits(withholdingFee, tokenIn.decimals);
-    const minAmtParsed = parseUnits(minAmt, tokenIn.decimals);
-    const maxAmtParsed = parseUnits(maxAmt, tokenIn.decimals);
+    const withholdingFeeParsed = parseUnits(withholdingFee, currencyIn.decimals);
+    const minAmtParsed = parseUnits(minAmt, currencyIn.decimals);
+    const maxAmtParsed = parseUnits(maxAmt, currencyIn.decimals);
 
     // minAmt already includes withholdingFee
     if (amountIn < minAmtParsed) return undefined;
