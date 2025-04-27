@@ -235,6 +235,8 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
+    /*
+    // Commented out Super Tokens, (Pools are also commented out below)
     ...(() => {
         const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
         const tokenCA = MultichainToken.createSuperERC20({
@@ -279,6 +281,7 @@ export const LOCAL_CURRENCIES = [
         MultichainToken.connect([tokenDA, tokenDB]);
         return [tokenDA, tokenDB];
     })(),
+    */
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),
@@ -433,6 +436,7 @@ export const LOCAL_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    /*
     [opChainA.id]: [
         createPoolKey({
             currency0: zeroAddress,
@@ -451,6 +455,7 @@ export const LOCAL_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    */
 };
 
 const TESTNET_POOLS = {
