@@ -1,5 +1,7 @@
 import { baseSepolia as baseSepoliaChain } from "wagmi/chains";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 export const baseSepolia = {
     ...baseSepoliaChain,
     rpcUrls: {
@@ -10,4 +12,7 @@ export const baseSepolia = {
             ],
         },
     },
-};
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/base/logo.svg",
+    },
+} satisfies ChainWithMetadata;

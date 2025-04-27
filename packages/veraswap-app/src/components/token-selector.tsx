@@ -1,18 +1,29 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
-import { Chain } from "viem";
 import { groupBy } from "lodash-es";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Currency, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
+import { formatUnits } from "viem";
+import { atom } from "jotai";
+import { Separator } from "./ui/separator.js";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { cn } from "@/lib/utils.js";
-import { chainsAtom, currencyInAtom, currencyOutAtom, currenciesAtom } from "@/atoms/index.js";
+import {
+    chainsAtom,
+    currencyInAtom,
+    currencyOutAtom,
+    currenciesAtom,
+    chainInAtom,
+    chainOutAtom,
+} from "@/atoms/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
-import { currencyBalancesAtom } from "@/atoms/token-balance.js";
+import { currencyBalanceAtomFamily, currencyMultichainBalanceAtomFamily } from "@/atoms/token-balance.js";
+import { accountAtom } from "@/atoms/account.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +38,9 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
     const [currencyIn, setCurrencyIn] = useAtom(currencyInAtom);
     const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
+    const chainIn = useAtomValue(chainInAtom);
+    const chainOut = useAtomValue(chainOutAtom);
+    const chain = selectingTokenIn ? chainIn : chainOut;
 
     const currentToken = selectingTokenIn ? currencyIn : currencyOut;
     const currentTokenSymbol = currentToken?.symbol || null;
@@ -38,12 +52,12 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
                 const filteredList = oppositeToken
                     ? tokenList.filter(
-                          (t) =>
-                              !(
-                                  getUniswapV4Address(t) === getUniswapV4Address(oppositeToken) &&
-                                  t.chainId === oppositeToken.chainId
-                              ),
-                      )
+                        (t) =>
+                            !(
+                                getUniswapV4Address(t) === getUniswapV4Address(oppositeToken) &&
+                                t.chainId === oppositeToken.chainId
+                            ),
+                    )
                     : tokenList;
 
                 const lowerQuery = searchQuery.toLowerCase();
@@ -98,19 +112,17 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                 <Button
                     variant="outline"
                     className={cn(
-                        "h-14 gap-3 pl-4 pr-3.5 bg-white dark:bg-gray-800",
-                        "hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-colors",
-                        "rounded-xl border-2 border-gray-100 dark:border-gray-700",
-                        "hover:border-gray-200 dark:hover:border-gray-600",
+                        "h-14 gap-3 pl-4 pr-3.5",
+                        "rounded-xl border-2",
                         "shadow-sm hover:shadow-md transition-all",
                     )}
                 >
                     {currentToken ? (
                         <>
                             <img
-                                src={currentToken.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                                src={chain?.custom?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                                 alt={currentToken.symbol}
-                                className="h-7 w-7 rounded-full ring-2 ring-gray-100 dark:ring-gray-700"
+                                className="h-6 w-6"
                                 onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
                             />
                             <div>
@@ -129,19 +141,19 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
             </DialogTrigger>
 
             <DialogContent
-                className="max-w-md max-h-[500px] rounded-2xl border-0 p-0 gap-0 shadow-xl backdrop-blur-sm dark:backdrop-blur-lg overflow-hidden"
+                className="max-w-2xl max-h-[800px] rounded-2xl border-0 p-0 gap-0 shadow-xl overflow-hidden"
                 showCloseIcon={false}
                 aria-describedby={undefined}
             >
                 <DialogTitle>
                     <VisuallyHidden>Loading</VisuallyHidden>
                 </DialogTitle>
-                <div className="p-4">
+                <div className="p-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                         <Input
                             placeholder="Search by name or paste address"
-                            className="pl-10 bg-muted border-none"
+                            className="pl-10 bg-muted border-none h-12 text-lg"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -162,7 +174,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                     }}
                 />
 
-                <div ref={scrollContainerRef} className="max-h-[350px] overflow-y-auto p-2">
+                <div ref={scrollContainerRef} className="max-h-[400px] overflow-y-auto p-4">
                     {filteredTokens.length === 0 ? (
                         <div className="flex h-full items-center justify-center p-8">
                             <span className="text-muted-foreground">
@@ -264,17 +276,32 @@ const TokenGroup = ({
     isExpanded: boolean;
     isSelected: boolean;
     symbol: string;
-    chains: Chain[];
+    chains: ChainWithMetadata[];
     onToggle: () => void;
     onSelect: (token: Currency) => void;
 }) => {
     const ref = useRef<HTMLDivElement>(null);
-    const balances = useAtomValue(currencyBalancesAtom);
+    const account = useAtomValue(accountAtom);
+    const { balance: totalBalance } = useAtomValue(currencyMultichainBalanceAtomFamily(symbol));
 
-    const totalBalance = useMemo(
-        () => balances.filter((b) => b.currency.symbol === symbol).reduce((sum, b) => sum + (b.balance ?? 0), 0),
-        [balances, symbol],
+    const balanceAtoms = tokenList.map((token) =>
+        account?.address ? currencyBalanceAtomFamily({ currency: token, account: account.address }) : atom(null),
     );
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const balanceValues = balanceAtoms.map((atom) => useAtomValue(atom));
+
+    const tokensWithBalance: Currency[] = [];
+    const tokensWithoutBalance: Currency[] = [];
+
+    tokenList.forEach((token, index) => {
+        const balance = balanceValues[index];
+        if (balance?.data && balance.data > 0n) {
+            tokensWithBalance.push(token);
+        } else {
+            tokensWithoutBalance.push(token);
+        }
+    });
 
     useEffect(() => {
         if (isExpanded && ref.current) {
@@ -312,7 +339,7 @@ const TokenGroup = ({
                 <div className="flex items-center gap-1">
                     <div className="text-right">
                         <div className="text-sm text-muted-foreground">
-                            {totalBalance.toFixed(4)} {symbol}
+                            {account?.address && `${totalBalance.toFixed(4)} ${symbol}`}
                         </div>
                     </div>
                     {isExpanded ? (
@@ -324,37 +351,95 @@ const TokenGroup = ({
             </button>
 
             {isExpanded && (
-                <div className="bg-muted/20 px-4 py-2 grid grid-cols-2 gap-2 animate-in slide-in-from-top duration-200">
-                    {tokenList.map((token) => {
-                        const chain = chains.find((c) => c.id === token.chainId);
-                        const balance =
-                            balances.find(
-                                (b) =>
-                                    b.currency.chainId === token.chainId &&
-                                    getUniswapV4Address(b.currency) === getUniswapV4Address(token),
-                            )?.balance ?? 0;
+                <div className="bg-muted/20 px-4 py-2 animate-in slide-in-from-top duration-200">
+                    {account?.address && tokensWithBalance.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {tokensWithBalance.map((token) => {
+                                const chain = chains.find((c) => c.id === token.chainId);
+                                return (
+                                    <ChainTokenBalance
+                                        key={token.chainId}
+                                        token={token}
+                                        chain={chain}
+                                        symbol={symbol}
+                                        onSelect={onSelect}
+                                        hasBalance={true}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
 
-                        return (
-                            <button
-                                key={token.chainId}
-                                className="flex items-center gap-2 p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-                                onClick={() => onSelect(token)}
-                            >
-                                <div className="flex-1">
-                                    <div className="font-medium">{chain?.name || `Chain ${token.chainId}`}</div>
-                                    <div className="text-xs text-muted-foreground truncate">
-                                        {balance.toFixed(4)} {symbol}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground truncate">
-                                        {getUniswapV4Address(token).substring(0, 6)}...
-                                        {getUniswapV4Address(token).substring(getUniswapV4Address(token).length - 4)}
-                                    </div>
+                    {tokensWithoutBalance.length > 0 && (
+                        <>
+                            <Separator className="my-2" />
+                            <div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {tokensWithoutBalance.map((token) => {
+                                        const chain = chains.find((c) => c.id === token.chainId);
+                                        return (
+                                            <ChainTokenBalance
+                                                key={token.chainId}
+                                                token={token}
+                                                chain={chain}
+                                                symbol={symbol}
+                                                onSelect={onSelect}
+                                            />
+                                        );
+                                    })}
                                 </div>
-                            </button>
-                        );
-                    })}
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
         </div>
+    );
+};
+
+const ChainTokenBalance = ({
+    token,
+    chain,
+    symbol,
+    onSelect,
+    hasBalance = false,
+}: {
+    token: Currency;
+    chain?: ChainWithMetadata;
+    symbol: string;
+    onSelect: (token: Currency) => void;
+    hasBalance?: boolean;
+}) => {
+    const account = useAtomValue(accountAtom);
+    const balanceQuery = useAtomValue(
+        account?.address ? currencyBalanceAtomFamily({ currency: token, account: account.address }) : atom(null),
+    );
+
+    const balanceValue = balanceQuery?.data ?? 0n;
+    const decimals = token.decimals ?? 18;
+    const balance = Number(formatUnits(balanceValue, decimals));
+
+    return (
+        <Button className="flex h-auto items-center gap-2 p-3 w-full" onClick={() => onSelect(token)}>
+            <div className="flex-1 space-y-2 p-2">
+                <div className="flex-col md:flex-row flex items-center gap-2">
+                    <div className="font-medium text-center md:text-left">
+                        {chain?.name || `Chain ${token.chainId}`}
+                    </div>
+                    <img
+                        src={chain?.custom?.logoURI ?? "/placeholder.jpg"}
+                        onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
+                        alt={chain?.name || `Chain ${token.chainId}`}
+                        className="h-6 w-6 rounded-full border"
+                    />
+                </div>
+                {hasBalance && (
+                    <>
+                        <Separator className="my-2" />
+                        <div className="text-md truncate">{account?.address && `${balance.toFixed(4)} ${symbol}`}</div>
+                    </>
+                )}
+            </div>
+        </Button>
     );
 };

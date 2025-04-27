@@ -1,6 +1,8 @@
 import { defineChain } from "viem";
 import { chainConfig } from "viem/op-stack";
 
+import { ChainWithMetadata } from "./chainWithMetadata.js";
+
 const sourceId = 11_155_111; // sepolia
 
 /*** Devnet chains with Sepolia L1 ***/
@@ -34,7 +36,10 @@ export const interopDevnet0 = defineChain({
     },
     testnet: true,
     sourceId,
-});
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+    },
+}) satisfies ChainWithMetadata;
 
 export const interopDevnet1 = defineChain({
     ...chainConfig,
@@ -66,4 +71,7 @@ export const interopDevnet1 = defineChain({
     },
     testnet: true,
     sourceId,
-});
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+    },
+}) satisfies ChainWithMetadata;
