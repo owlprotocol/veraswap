@@ -22,10 +22,10 @@ describe("test/constants.test.ts", function () {
                 `${token.standard}(${token.name}, ${token.symbol}) at ${token.chainId},${token.address}`,
             ).resolves.toBeDefined();
 
-            if (token.standard === "HypERC20Collateral") {
+            if (token.hyperlaneAddress != null && token.hyperlaneAddress !== token.address) {
                 await expect(
-                    opChainL1Client.getCode({ address: token.collateralAddress }),
-                    `MockERC20(${token.name}, ${token.symbol}) at ${token.chainId},${token.collateralAddress}`,
+                    opChainL1Client.getCode({ address: token.hyperlaneAddress }),
+                    `HypERC20Collateral(${token.name}, ${token.symbol}) at ${token.chainId},${token.hyperlaneAddress}`,
                 ).resolves.toBeDefined();
             }
         }

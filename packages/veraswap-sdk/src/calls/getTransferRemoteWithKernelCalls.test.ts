@@ -29,7 +29,7 @@ import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { getSignatureExecutionData, installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
-import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
@@ -66,9 +66,9 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     let kernelInitData: Hex;
     let kernelSalt: Hex;
 
-    const tokenA = mockMailboxMockERC20Tokens[0];
-    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0];
-    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1]; //Token A on "remote" opChainA
+    const tokenA = MOCK_MAILBOX_TOKENS[0].address;
+    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0].hyperlaneAddress!;
+    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1].address; //Token A on "remote" opChainA
 
     let preCollateralBalance: bigint;
     let recipient: Address;
@@ -117,10 +117,10 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         });
         // Pre collateral balance
         preCollateralBalance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [tokenAHypERC20Collateral.address],
+            args: [tokenAHypERC20Collateral],
         });
     });
 
@@ -141,7 +141,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         test("auto", async () => {
             const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id,
-                token: tokenAHypERC20Collateral.address,
+                token: tokenAHypERC20Collateral,
                 tokenStandard: "HypERC20Collateral",
                 account: anvilAccount.address,
                 destination: 901,
@@ -200,7 +200,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         test("manual", async () => {
             const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, config, {
                 chainId: opChainL1.id,
-                token: tokenAHypERC20Collateral.address,
+                token: tokenAHypERC20Collateral,
                 tokenStandard: "HypERC20Collateral",
                 account: kernelAddress,
                 funder: anvilAccount.address,
@@ -223,10 +223,10 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             expect(transferRemoteCalls.calls[1].to).toBe(PERMIT2_ADDRESS);
             // ERC20.approve(HypERC20Collateral, 1)
             expect(transferRemoteCalls.calls[2]).toBeDefined();
-            expect(transferRemoteCalls.calls[2].to).toBe(tokenA.address);
+            expect(transferRemoteCalls.calls[2].to).toBe(tokenA);
             // HypERC20Collateral.transferRemote(...)
             expect(transferRemoteCalls.calls[3]).toBeDefined();
-            expect(transferRemoteCalls.calls[3].to).toBe(tokenAHypERC20Collateral.address);
+            expect(transferRemoteCalls.calls[3].to).toBe(tokenAHypERC20Collateral);
 
             // Execute batched calls
             const callData = encodeCallArgsBatch(transferRemoteCalls.calls);
@@ -246,7 +246,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         test("auto", async () => {
             const transferRemoteCalls = await getTransferRemoteWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id,
-                token: tokenAHypERC20Collateral.address,
+                token: tokenAHypERC20Collateral,
                 tokenStandard: "HypERC20Collateral",
                 account: anvilAccount.address,
                 destination: 901,
@@ -318,7 +318,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
 
             const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, config, {
                 chainId: opChainL1.id,
-                token: tokenAHypERC20Collateral.address,
+                token: tokenAHypERC20Collateral,
                 tokenStandard: "HypERC20Collateral",
                 account: kernelAddress,
                 funder: anvilAccount.address,
@@ -341,10 +341,10 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             expect(transferRemoteCalls.calls[1].to).toBe(PERMIT2_ADDRESS);
             // ERC20.approve(HypERC20Collateral, 1)
             expect(transferRemoteCalls.calls[2]).toBeDefined();
-            expect(transferRemoteCalls.calls[2].to).toBe(tokenA.address);
+            expect(transferRemoteCalls.calls[2].to).toBe(tokenA);
             // HypERC20Collateral.transferRemote(...)
             expect(transferRemoteCalls.calls[3]).toBeDefined();
-            expect(transferRemoteCalls.calls[3].to).toBe(tokenAHypERC20Collateral.address);
+            expect(transferRemoteCalls.calls[3].to).toBe(tokenAHypERC20Collateral);
 
             // Execute batched calls
             const smartAccountCallData = encodeCallArgsBatch(transferRemoteCalls.calls);
@@ -397,10 +397,10 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
     afterEach(async () => {
         // locked collateral
         const postCollateralBalance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [tokenAHypERC20Collateral.address],
+            args: [tokenAHypERC20Collateral],
         });
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
         // Process Hyperlane Message
@@ -408,7 +408,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
 
         // hypERC20 balance of recipient
         const hypERC20Balance = await opChainL1Client.readContract({
-            address: tokenAHypERC20.address,
+            address: tokenAHypERC20,
             abi: IERC20.abi,
             functionName: "balanceOf",
             args: [recipient],
@@ -427,10 +427,10 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
         expect(owners, "OwnableExecutor.getOwners(kernelAddress).includes(owner)").toContain(anvilAccount.address);
 
         const hypERC20CollateralAllowance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "allowance",
-            args: [kernelAddress, tokenAHypERC20Collateral.address],
+            args: [kernelAddress, tokenAHypERC20Collateral],
         });
         expect(hypERC20CollateralAllowance, "ERC20(tokenA).allowance(kernelAddress, tokenACollateral) == max").toBe(
             MAX_UINT_256,
@@ -440,7 +440,7 @@ describe("calls/getTransferRemoteWithKernelCalls.test.ts", function () {
             address: PERMIT2_ADDRESS,
             abi: IAllowanceTransfer.abi,
             functionName: "allowance",
-            args: [anvilAccount.address, tokenA.address, kernelAddress],
+            args: [anvilAccount.address, tokenA, kernelAddress],
         });
         expect(permit2Allowance[0], "Permit2.allowance(funder, token, kernelAddress) == max").toBe(MAX_UINT_160);
     });

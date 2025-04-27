@@ -8,7 +8,7 @@ import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import { IERC20 } from "../artifacts/IERC20.js";
 import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
-import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS, mockMailboxMockERC20Tokens } from "../test/constants.js";
+import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getTransferRemoteWithApproveCalls } from "./getTransferRemoteWithApproveCalls.js";
@@ -38,9 +38,9 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
 
     let account: Account;
 
-    const tokenA = mockMailboxMockERC20Tokens[0];
-    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0];
-    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1]; //Token A on "remote" opChainA
+    const tokenA = MOCK_MAILBOX_TOKENS[0].address;
+    const tokenAHypERC20Collateral = MOCK_MAILBOX_TOKENS[0].hyperlaneAddress!;
+    const tokenAHypERC20 = MOCK_MAILBOX_TOKENS[1].address; //Token A on "remote" opChainA
 
     beforeAll(async () => {
         await connect(config, {
@@ -63,16 +63,16 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
     test("getTransferRemoteWithApproveCalls", async () => {
         // locked collateral
         const preCollateralBalance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [tokenAHypERC20Collateral.address],
+            args: [tokenAHypERC20Collateral],
         });
 
         // Approve from anvilAccount to account
         const transferRemoteCalls = await getTransferRemoteWithApproveCalls(queryClient, config, {
             chainId: opChainL1.id,
-            token: tokenAHypERC20Collateral.address,
+            token: tokenAHypERC20Collateral,
             tokenStandard: "HypERC20Collateral",
             account: anvilAccount.address,
             destination: 901,
@@ -100,16 +100,16 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
         */
 
         // HypERC20Collateral.transferRemote()
-        expect(transferRemoteCalls.calls[0].to).toBe(tokenAHypERC20Collateral.address);
+        expect(transferRemoteCalls.calls[0].to).toBe(tokenAHypERC20Collateral);
         await opChainL1Client.waitForTransactionReceipt({
             hash: await anvilClient.sendTransaction(transferRemoteCalls.calls[0]),
         });
         // locked collateral
         const postCollateralBalance = await opChainL1Client.readContract({
-            address: tokenA.address,
+            address: tokenA,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [tokenAHypERC20Collateral.address],
+            args: [tokenAHypERC20Collateral],
         });
         expect(postCollateralBalance - preCollateralBalance).toBe(1n);
 
@@ -118,7 +118,7 @@ describe("calls/getTransferRemoteWithApproveCalls.test.ts", function () {
 
         // hypERC20 balance of recipient
         const hypERC20Balance = await opChainL1Client.readContract({
-            address: tokenAHypERC20.address,
+            address: tokenAHypERC20,
             abi: IERC20.abi,
             functionName: "balanceOf",
             args: [account.address],

@@ -1,7 +1,7 @@
 import invariant from "tiny-invariant";
 
 import { Currency } from "./currency.js";
-import { Token2 } from "./token.js";
+import { Token } from "./token.js";
 
 /**
  * The base currency data
@@ -89,5 +89,5 @@ export abstract class BaseCurrency {
      * Return the wrapped version of this currency that can be used with the Uniswap contracts. Currencies must
      * implement this to be used in Uniswap
      */
-    public abstract get wrapped(): Token2;
+    public abstract get wrapped(): Token;
 }

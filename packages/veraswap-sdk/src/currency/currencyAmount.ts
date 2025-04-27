@@ -4,7 +4,7 @@ import { formatUnits, parseUnits } from "viem";
 import { MAX_UINT_256 } from "../constants/uint256.js";
 
 import { Currency } from "./currency.js";
-import { Token2 } from "./token.js";
+import { Token } from "./token.js";
 
 //TODO: Replace with bignumber.js library for fractional computations such as substracting a percentage?
 export class CurrencyAmount<T extends Currency> {
@@ -40,8 +40,8 @@ export class CurrencyAmount<T extends Currency> {
         return formatUnits(this.rawAmount, decimalPlaces);
     }
 
-    public get wrapped(): CurrencyAmount<Token2> {
-        if (this.currency.isToken) return this as CurrencyAmount<Token2>;
+    public get wrapped(): CurrencyAmount<Token> {
+        if (this.currency.isToken) return this as CurrencyAmount<Token>;
         return CurrencyAmount.fromRawAmount(this.currency.wrapped, this.rawAmount);
     }
 }

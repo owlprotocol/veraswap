@@ -52,12 +52,12 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
 
                 const filteredList = oppositeToken
                     ? tokenList.filter(
-                        (t) =>
-                            !(
-                                getUniswapV4Address(t) === getUniswapV4Address(oppositeToken) &&
-                                t.chainId === oppositeToken.chainId
-                            ),
-                    )
+                          (t) =>
+                              !(
+                                  getUniswapV4Address(t) === getUniswapV4Address(oppositeToken) &&
+                                  t.chainId === oppositeToken.chainId
+                              ),
+                      )
                     : tokenList;
 
                 const lowerQuery = searchQuery.toLowerCase();

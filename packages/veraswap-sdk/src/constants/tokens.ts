@@ -9,7 +9,6 @@ import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { createPoolKey } from "../types/PoolKey.js";
-import { HypERC20CollateralToken, HypERC20Token, TokenBase } from "../types/Token.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -67,62 +66,6 @@ export function connectTokens<T extends { chainId: number; address: Address } = 
     });
 }
 
-/**
- * Create a MockERC20, HypERC20Collateral, HypERC20Synthetic
- */
-// TODO: Remove
-export function createMockERC20WarpRoute({
-    token,
-    mailboxByChain,
-    msgSender = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-}: {
-    token: TokenBase<"MockERC20">;
-    mailboxByChain: Record<number, Address>;
-    msgSender?: Address;
-}): [HypERC20CollateralToken, ...HypERC20Token[]] {
-    const mailbox = mailboxByChain[token.chainId];
-    invariant(mailbox != undefined, `Mailbox not found for token chainId ${token.chainId}`);
-
-    const hypERC20CollateralAddress = getHypERC20CollateralAddress({
-        erc20: token.address,
-        mailbox,
-    });
-    const hypERC20Collateral: HypERC20CollateralToken = {
-        ...token,
-        standard: "HypERC20Collateral",
-        address: hypERC20CollateralAddress,
-        collateralAddress: token.address,
-        connections: [],
-    };
-
-    const connections = Object.entries(mailboxByChain)
-        .filter(([chainId]) => chainId != `${token.chainId}`)
-        .map(([chainId, mailbox]) => {
-            return { chainId: parseInt(chainId), mailbox };
-        });
-
-    const hypERC20s = connections.map(({ chainId, mailbox }) => {
-        const address = getHypERC20Address({
-            decimals: token.decimals,
-            mailbox,
-            totalSupply: 0n,
-            name: token.name,
-            symbol: token.symbol,
-            msgSender,
-        });
-        return {
-            ...token,
-            standard: "HypERC20",
-            chainId,
-            address,
-            connections: [],
-        } as HypERC20Token;
-    });
-
-    const tokens = connectTokens([hypERC20Collateral, ...hypERC20s]);
-    return tokens as [HypERC20CollateralToken, ...HypERC20Token[]];
-}
-
 //Token Class
 function createMockERC20Token(
     {
@@ -152,7 +95,7 @@ function createMockERC20Token(
     });
 }
 
-function createMockERC20ConnectedTokens(
+export function createMockERC20ConnectedTokens(
     {
         chainId,
         name,
