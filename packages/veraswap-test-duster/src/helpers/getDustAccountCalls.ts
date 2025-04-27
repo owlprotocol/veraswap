@@ -25,13 +25,22 @@ export async function getDustAccountCalls({
 }): Promise<CallArgs[]> {
     const calls: CallArgs[] = [];
 
-    const filteredTokens = currencies.filter(
+    let filteredTokens = currencies.filter(
         (token): token is MultichainToken =>
             isMultichainToken(token) &&
             token.chainId === client.chain?.id &&
             (token.standard === "ERC20" ||
                 token.standard === "SuperERC20")
     );
+
+    if (client.chain.id === 900 || client.chain.id === 901 || client.chain.id === 902) {
+        // Dev environment, check if tokens exist
+        const filteredTokenExists = await Promise.all(filteredTokens.map(async (token) => {
+            const code = await client.getCode({ address: token.address })
+            return !!code;
+        }))
+        filteredTokens = filteredTokens.filter((_, idx) => filteredTokenExists[idx])
+    }
 
     const ethBalancePromise = client.getBalance({ address: account });
     const tokenBalancePromises = filteredTokens.map((token) =>

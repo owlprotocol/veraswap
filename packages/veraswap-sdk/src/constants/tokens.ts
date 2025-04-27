@@ -4,7 +4,7 @@ import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { optimismSepolia, sepolia } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
@@ -235,6 +235,8 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
+    /*
+    // Commented out Super Tokens, (Pools are also commented out below)
     ...(() => {
         const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
         const tokenCA = MultichainToken.createSuperERC20({
@@ -279,6 +281,7 @@ export const LOCAL_CURRENCIES = [
         MultichainToken.connect([tokenDA, tokenDB]);
         return [tokenDA, tokenDB];
     })(),
+    */
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),
@@ -373,6 +376,7 @@ export const TESTNET_CURRENCIES = [
         },
         testnetMailboxByChain,
     ),
+    /*
     ...(() => {
         const tokenC0 = MultichainToken.createSuperERC20({
             chainId: interopDevnet0.id,
@@ -409,11 +413,12 @@ export const TESTNET_CURRENCIES = [
         MultichainToken.connect([tokenD0, tokenD1]);
         return [tokenD0, tokenD1];
     })(),
+    */
     Ether.onChain(sepolia.id),
     Ether.onChain(optimismSepolia.id),
     Ether.onChain(unichainSepolia.id),
-    Ether.onChain(interopDevnet0.id),
-    Ether.onChain(interopDevnet1.id),
+    // Ether.onChain(interopDevnet0.id),
+    // Ether.onChain(interopDevnet1.id),
 ];
 
 export const LOCAL_POOLS = {
@@ -433,6 +438,7 @@ export const LOCAL_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    /*
     [opChainA.id]: [
         createPoolKey({
             currency0: zeroAddress,
@@ -451,6 +457,7 @@ export const LOCAL_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    */
 };
 
 const TESTNET_POOLS = {
@@ -463,6 +470,7 @@ const TESTNET_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    /*
     [interopDevnet0.id]: [
         createPoolKey({
             currency0: getUniswapV4Address(TESTNET_CURRENCIES[6]),
@@ -472,6 +480,7 @@ const TESTNET_POOLS = {
             hooks: zeroAddress,
         }),
     ],
+    */
 };
 
 export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS };
