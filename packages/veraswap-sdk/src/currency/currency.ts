@@ -2,9 +2,9 @@ import { Address, zeroAddress } from "viem";
 
 import { MultichainToken } from "./multichainToken.js";
 import { type NativeCurrency } from "./nativeCurrency.js";
-import { type Token2 } from "./token.js";
+import { type Token } from "./token.js";
 
-export type Currency = NativeCurrency | Token2 | MultichainToken;
+export type Currency = NativeCurrency | Token | MultichainToken;
 
 /**
  * Typeguard to determinie if Currency is NativeCurrency
@@ -18,7 +18,7 @@ export function isNativeCurrency(currency: Currency): currency is NativeCurrency
  * Typeguard to determine if Currency is Token
  * This one is not really needed because you can just check !token.isNative()
  */
-export function isToken(currency: Currency): currency is Token2 {
+export function isToken(currency: Currency): currency is Token {
     return !currency.isNative;
 }
 
