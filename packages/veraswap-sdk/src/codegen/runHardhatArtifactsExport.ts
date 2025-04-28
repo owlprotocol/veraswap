@@ -28,6 +28,7 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/MockMailbox.sol/*.json",
     "out/NoopIsm.sol/*.json",
     "out/PausableHook.sol/*.json",
+    "out/GasRouter.sol/*.json",
     // Hyperlane (custom)
     "out/HypERC20FlashCollateral.sol/*.json",
     "out/HypTokenRouterSweep.sol/*.json",

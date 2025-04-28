@@ -1,5 +1,5 @@
 import { LOCAL_HYPERLANE_CONTRACTS, isMultichainToken } from "@owlprotocol/veraswap-sdk";
-import { HypERC20Collateral, IInterchainGasPaymaster } from "@owlprotocol/veraswap-sdk/artifacts";
+import { HypERC20Collateral, IInterchainGasPaymaster, GasRouter } from "@owlprotocol/veraswap-sdk/artifacts";
 import { atom, Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, numberToHex } from "viem";
@@ -109,14 +109,14 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
 
     if (!currencyIn || !chainOut) return disabledQueryOptions as any;
-    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
+    if (!isMultichainToken(currencyIn) || !currencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 
     return readContractQueryOptions(config, {
         chainId: currencyIn.chainId,
         address: currencyIn.hyperlaneAddress,
-        abi: HypERC20Collateral.abi,
+        abi: GasRouter.abi,
         functionName: "quoteGasPayment",
         args: [chainOut.id],
     });
