@@ -1,6 +1,7 @@
 export { ECDSAValidator } from "./ECDSAValidator.js";
 export { ERC7579ExecutorRouter } from "./ERC7579ExecutorRouter.js";
 export { Execute } from "./Execute.js";
+export { GasRouter } from "./GasRouter.js";
 export { HypERC20 } from "./HypERC20.js";
 export { HypERC20Collateral } from "./HypERC20Collateral.js";
 export { HypERC20FlashCollateral } from "./HypERC20FlashCollateral.js";
