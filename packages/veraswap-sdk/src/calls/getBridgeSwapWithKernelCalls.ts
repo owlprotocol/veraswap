@@ -5,7 +5,7 @@ import { readContractQueryOptions } from "@wagmi/core/query";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import invariant from "tiny-invariant";
-import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddress, zeroHash } from "viem";
+import { Address, encodeFunctionData, encodePacked, formatEther, Hex, numberToHex, zeroAddress, zeroHash } from "viem";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
@@ -94,10 +94,10 @@ export async function getBridgeSwapWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-            tokenStandard === "HypERC20Collateral" ||
-            tokenStandard === "HypSuperchainERC20Collateral" ||
-            tokenStandard === "SuperchainERC20" ||
-            tokenStandard === "NativeToken",
+        tokenStandard === "HypERC20Collateral" ||
+        tokenStandard === "HypSuperchainERC20Collateral" ||
+        tokenStandard === "SuperchainERC20" ||
+        tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
@@ -299,7 +299,7 @@ export async function getBridgeSwapWithKernelCalls(
     // Estimated using test in getBridgeSwapWithKernelCalls.test.ts
     const callRemoteGas = 1_000_000n;
 
-    const callRemotePayment = await queryClient.fetchQuery(
+    let callRemotePayment = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: contracts.interchainGasPaymaster,
@@ -308,6 +308,7 @@ export async function getBridgeSwapWithKernelCalls(
             args: [destination, numberToHex(callRemoteGas) as unknown as bigint], //wagmi/core has issues with bigint encoding for query key
         }),
     );
+    callRemotePayment = (callRemotePayment * 101n) / 100n; // +1% //TODO: Fix this, might be to the orbiter rouding logic
 
     // Format hook metadata according to Hyperlane's StandardHookMetadata format
     // See: https://docs.hyperlane.xyz/docs/reference/hooks/interchain-gas#determine-and-override-the-gas-limit
@@ -395,6 +396,8 @@ export async function getBridgeSwapWithKernelCalls(
         }),
         value,
     };
+
+    console.debug({ callRemotePayment: formatEther(callRemotePayment), value: formatEther(value) });
 
     return { calls: [executeCall] };
 }
