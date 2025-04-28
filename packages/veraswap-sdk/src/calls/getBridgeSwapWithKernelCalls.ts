@@ -299,7 +299,7 @@ export async function getBridgeSwapWithKernelCalls(
     // Estimated using test in getBridgeSwapWithKernelCalls.test.ts
     const callRemoteGas = 1_000_000n;
 
-    const callRemotePayment = await queryClient.fetchQuery(
+    let callRemotePayment = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: contracts.interchainGasPaymaster,
@@ -308,6 +308,7 @@ export async function getBridgeSwapWithKernelCalls(
             args: [destination, numberToHex(callRemoteGas) as unknown as bigint], //wagmi/core has issues with bigint encoding for query key
         }),
     );
+    callRemotePayment = (callRemotePayment * 101n) / 100n; // +1% //TODO: Fix this, might be to the orbiter rouding logic
 
     // Format hook metadata according to Hyperlane's StandardHookMetadata format
     // See: https://docs.hyperlane.xyz/docs/reference/hooks/interchain-gas#determine-and-override-the-gas-limit
