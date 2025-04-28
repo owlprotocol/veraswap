@@ -16,6 +16,7 @@ import {
     sepolia,
     optimism,
     ChainWithMetadata,
+    superseed,
 } from "@owlprotocol/veraswap-sdk/chains";
 import { Chain } from "viem";
 
@@ -25,7 +26,7 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [base, optimism];
+export const mainnetChains = [base, optimism, superseed];
 
 export const testnetChains = [
     sepolia,

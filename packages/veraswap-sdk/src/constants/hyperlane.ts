@@ -11,7 +11,7 @@ import { Mailbox } from "../artifacts/Mailbox.js";
 import { MockInterchainGasPaymaster } from "../artifacts/MockInterchainGasPaymaster.js";
 import { NoopIsm } from "../artifacts/NoopIsm.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
-import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
 import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
 
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
@@ -148,6 +148,9 @@ export const HYPERLANE_CONTRACTS: Record<
     },
     [optimism.id]: {
         erc7579Router: "0xbf22dd2c75a5e1440238e9ea921053dc0547c56a",
+    },
+    [superseed.id]: {
+        erc7579Router: "0x4c48F22772A96F14EF89c01598e07A5156A1109B",
     },
 };
 
