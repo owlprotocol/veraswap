@@ -19,7 +19,7 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
     tmux new-window -t $session -n duster;
-    tmux new-window -t $session -n scoutup;
+    # tmux new-window -t $session -n scoutup;
     # Start blockchains
     tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --interop.autorelay --l1.port 8547" ENTER
     # tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900" ENTER
