@@ -108,7 +108,11 @@ export const sendTransactionMutationAtom = atomWithMutation(() => {
 export const waitForReceiptQueryAtom = atomWithQuery((get) => {
     const mutation = get(sendTransactionMutationAtom);
     const hash = mutation.data;
-    return waitForTransactionReceiptQueryOptions(config, { hash });
+    return {
+        ...waitForTransactionReceiptQueryOptions(config, { hash }),
+        staleTime: Infinity,
+        refetchInterval: false,
+    };
 });
 
 export const transactionModalOpenAtom = atom<boolean>(false);
@@ -192,3 +196,11 @@ export const superchainBridgeMessageIdAtom = atom<Hash | null>(null);
 
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
+
+export const resetTransactionStateAtom = atom(null, (_, set) => {
+    set(bridgeRemoteTransactionHashAtom, null);
+    set(swapRemoteTransactionHashAtom, null);
+    set(superchainBridgeMessageIdAtom, null);
+    set(bridgeMessageIdAtom, null);
+    set(swapMessageIdAtom, null);
+});

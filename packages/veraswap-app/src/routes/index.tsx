@@ -70,6 +70,7 @@ import {
     chainInAtom,
     chainOutAtom,
     superchainBridgeMessageIdAtom,
+    resetTransactionStateAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -139,6 +140,7 @@ function Index() {
     // const [transactionStep, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [_, updateTransactionStep] = useAtom(updateTransactionStepAtom);
     const [, initializeTransactionSteps] = useAtom(initializeTransactionStepsAtom);
+    const [, resetTransactionState] = useAtom(resetTransactionStateAtom);
 
     const hyperlaneRegistry = useAtomValue(hyperlaneRegistryAtom);
     const hyperlaneMailboxAddress = useAtomValue(hyperlaneMailboxChainOut);
@@ -281,6 +283,8 @@ function Index() {
             await switchChainAsync({ chainId: chainIn!.id });
         }
 
+        resetTransactionState();
+
         if (swapStep === SwapStep.APPROVE_PERMIT2) {
             // TODO: use a different sendTransaction call for this to track a different receipt
             sendTransaction({
@@ -299,15 +303,6 @@ function Index() {
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
-
-            console.debug({ transactionType });
-
-            // TODO: reset somewhere cleaner
-            setBridgeRemoteTransactionHash(null);
-            setSwapRemoteTransactionHash(null);
-            setSuperchainBridgeMessageId(null);
-            setBridgeMessageId(null);
-            setSwapMessageId(null);
 
             // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
             const amountOutMinimum = quoterData?.[0] ?? null;
@@ -454,6 +449,12 @@ function Index() {
             });
             return;
         }
+        if (swapStep === SwapStep.APPROVE_PERMIT2) {
+            queryClient.invalidateQueries({
+                queryKey: ["waitForTransactionReceipt", { hash }],
+            });
+            return;
+        }
 
         const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
         const superchainBridgeMessageId = getSuperchainMessageIdFromReceipt(receipt, chainIn!.id);
@@ -520,7 +521,7 @@ function Index() {
     }, [receipt]);
 
     useEffect(() => {
-        if (!transactionType) return;
+        if (!transactionType || !bridgeRemoteTransactionHash) return;
 
         if (
             (transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
