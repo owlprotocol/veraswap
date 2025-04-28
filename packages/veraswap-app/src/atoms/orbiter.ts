@@ -114,11 +114,12 @@ export const orbiterAmountOutAtom = atom((get) => {
     const tradeFeeComplement = 100 - Number(tradeFee);
 
     // Assume tradeFee has at most 3 decimals and add 100 to make it a percentage
-    const scale = 1000n;
-    const tradeFeeComplementScaled = BigInt(tradeFeeComplement) * scale;
+    const scale = 1000;
+    const scaleBigInt = 1000n;
+    const tradeFeeComplementScaled = BigInt(tradeFeeComplement * scale);
 
     // 100%, same scale as tradeFeeComplementScaled
-    const percentScaled = 100n * scale;
+    const percentScaled = 100n * scaleBigInt;
 
     return ((amountIn - withholdingFeeParsed) * tradeFeeComplementScaled) / percentScaled;
 });
