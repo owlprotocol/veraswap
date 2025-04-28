@@ -413,7 +413,7 @@ export const MAINNET_CURRENCIES = [
         // NOTE: base and mainnet are not connected
         MultichainToken.connect([tokenBase, tokenSuperseed]);
         MultichainToken.connect([tokenMainnet, tokenSuperseed]);
-        return [tokenBase, tokenMainnet];
+        return [tokenBase, tokenMainnet, tokenSuperseed];
     })(),
     ...(() => {
         const tokenSuperseed = MultichainToken.create({
