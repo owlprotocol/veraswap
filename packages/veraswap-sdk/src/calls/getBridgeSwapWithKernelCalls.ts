@@ -5,7 +5,7 @@ import { readContractQueryOptions } from "@wagmi/core/query";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
 import invariant from "tiny-invariant";
-import { Address, encodeFunctionData, encodePacked, formatEther, Hex, numberToHex, zeroAddress, zeroHash } from "viem";
+import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddress, zeroHash } from "viem";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
@@ -94,10 +94,10 @@ export async function getBridgeSwapWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-        tokenStandard === "HypERC20Collateral" ||
-        tokenStandard === "HypSuperchainERC20Collateral" ||
-        tokenStandard === "SuperchainERC20" ||
-        tokenStandard === "NativeToken",
+            tokenStandard === "HypERC20Collateral" ||
+            tokenStandard === "HypSuperchainERC20Collateral" ||
+            tokenStandard === "SuperchainERC20" ||
+            tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
@@ -396,8 +396,6 @@ export async function getBridgeSwapWithKernelCalls(
         }),
         value,
     };
-
-    console.debug({ callRemotePayment: formatEther(callRemotePayment), value: formatEther(value) });
 
     return { calls: [executeCall] };
 }
