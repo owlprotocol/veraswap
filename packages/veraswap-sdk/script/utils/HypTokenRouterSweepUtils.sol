@@ -20,4 +20,8 @@ library HypTokenRouterSweepUtils {
             vm.assertEq(deployed, addr);
         }
     }
+
+    function getAddressExists() internal view returns (address expected, bool contractExists) {
+        return Create2Utils.getAddressExists(getDeployBytecode());
+    }
 }
