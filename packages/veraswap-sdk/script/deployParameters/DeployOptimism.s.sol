@@ -22,7 +22,9 @@ library DeployOptimism {
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0xd4C1905BB1D26BC93DAC913e13CaCC278CdCC80D
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

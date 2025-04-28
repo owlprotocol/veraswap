@@ -1,5 +1,12 @@
 import { Token } from "./token.js";
 
+const wETHData = {
+    decimals: 18,
+    symbol: "WETH",
+    name: "Wrapped Ether",
+    logoURI: "https://assets.coingecko.com/coins/images/2518/standard/weth.png",
+};
+
 /**
  * Known WETH9 implementation addresses, used in our implementation of Ether#wrapped
  */
@@ -7,86 +14,62 @@ export const WETH9: Record<number, Token> = {
     [1]: new Token({
         chainId: 1,
         address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [3]: new Token({
         chainId: 3,
         address: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [4]: new Token({
         chainId: 4,
         address: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [5]: new Token({
         chainId: 5,
         address: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [42]: new Token({
         chainId: 42,
         address: "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [10]: new Token({
         chainId: 10,
         address: "0x4200000000000000000000000000000000000006",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [69]: new Token({
         chainId: 69,
         address: "0x4200000000000000000000000000000000000006",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [11155420]: new Token({
         chainId: 11155420,
         address: "0x4200000000000000000000000000000000000006",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [42161]: new Token({
         chainId: 42161,
         address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [421611]: new Token({
         chainId: 421611,
         address: "0xB47e6A5f8b33b3F17603C83a0535A9dcD7E32681",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [421614]: new Token({
         chainId: 421614,
         address: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [8453]: new Token({
         chainId: 8453,
         address: "0x4200000000000000000000000000000000000006",
-        decimals: 18,
-        symbol: "WETH",
-        name: "Wrapped Ether",
+        ...wETHData,
     }),
     [56]: new Token({
         chainId: 56,
