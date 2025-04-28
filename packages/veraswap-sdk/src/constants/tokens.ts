@@ -1,13 +1,14 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
-import { optimismSepolia, sepolia } from "viem/chains";
+import { base, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
 import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
+import { Token } from "../currency/token.js";
 import { createPoolKey } from "../types/PoolKey.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
@@ -364,6 +365,73 @@ export const TESTNET_CURRENCIES = [
     // Ether.onChain(interopDevnet1.id),
 ];
 
+const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
+
+const cbBTCData = {
+    decimals: 8,
+    name: "Coinbase Wrapped BTC",
+    symbol: "cbBTC",
+    logoURI: "https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp",
+};
+
+const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+
+const usdcData = {
+    name: "USD Coin",
+    symbol: "USDC",
+    decimals: 6,
+    logoURI: "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
+};
+
+export const MAINNET_CURRENCIES = [
+    ...(() => {
+        const tokenBase = MultichainToken.create({
+            ...cbBTCData,
+            chainId: base.id,
+            address: cbBTCBaseAddress,
+            hypERC20Collateral: "0x66477F84bd21697c7781fc3992b3163463e3B224",
+            standard: "ERC20",
+        });
+
+        const tokenMainnet = MultichainToken.create({
+            ...cbBTCData,
+            chainId: mainnet.id,
+            standard: "ERC20",
+            address: "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+            hypERC20Collateral: "0x7710d2FC9A2E0452b28a2cBf550429b579347199",
+        });
+
+        // TODO: add superseed
+        // const tokenSuperseed = MultichainToken.create({
+        //     ...cbBTCData,
+        //     chainId: superseed.id,
+        //     standard: "ERC20",
+        //     address: "0x6f36dbd829de9b7e077db8a35b480d4329ceb331",
+        //     hypERC20Collateral: "0x0a78BC3CBBC79C4C6E5d4e5b2bbD042E58e93484",
+        // });
+        //
+        //
+        // NOTE: base and mainnet are not connected
+        // MultichainToken.connect([tokenBase, tokenSuperseed]);
+        // MultichainToken.connect([tokenMainnet, tokenSuperseed]);
+        return [tokenBase, tokenMainnet];
+    })(),
+    new Token({
+        address: usdcBaseAddress,
+        chainId: base.id,
+        ...usdcData,
+    }),
+    new Token({
+        address: usdcOptimismAddress,
+        chainId: optimism.id,
+        ...usdcData,
+    }),
+
+    Ether.onChain(optimism.id),
+    Ether.onChain(base.id),
+];
+
 export const LOCAL_POOLS = {
     [opChainL1.id]: [
         createPoolKey({
@@ -426,5 +494,40 @@ const TESTNET_POOLS = {
     */
 };
 
-export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS };
-export const CURRENCIES = [...LOCAL_CURRENCIES, ...TESTNET_CURRENCIES];
+const MAINNET_POOLS = {
+    [base.id]: [
+        createPoolKey({
+            currency0: getUniswapV4Address(Ether.onChain(base.id)),
+            currency1: cbBTCBaseAddress,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+        createPoolKey({
+            currency0: getUniswapV4Address(Ether.onChain(base.id)),
+            currency1: usdcBaseAddress,
+            fee: 500,
+            tickSpacing: 10,
+            hooks: zeroAddress,
+        }),
+        createPoolKey({
+            currency0: usdcBaseAddress,
+            currency1: cbBTCBaseAddress,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: zeroAddress,
+        }),
+    ],
+    [optimism.id]: [
+        createPoolKey({
+            currency0: getUniswapV4Address(Ether.onChain(optimism.id)),
+            currency1: usdcOptimismAddress,
+            fee: 500,
+            tickSpacing: 10,
+            hooks: zeroAddress,
+        }),
+    ],
+};
+
+export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS, ...MAINNET_POOLS };
+export const CURRENCIES = [...LOCAL_CURRENCIES, ...TESTNET_CURRENCIES, ...MAINNET_CURRENCIES];

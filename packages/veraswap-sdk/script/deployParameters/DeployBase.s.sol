@@ -23,7 +23,7 @@ library DeployBase {
         });
 
         HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
-            mailbox: 0xb2e2060A682f2974a19f138101D4d2C31D124CF7
+            mailbox: 0xeA87ae93Fa0019a82A727bfd3eBd1cFCa8f64f1D
         });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});

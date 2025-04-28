@@ -7,4 +7,5 @@ export * from "./baseSepolia.js";
 export * from "./sepolia.js";
 export * from "./arbitrumSepolia.js";
 export * from "./optimismSepolia.js";
+export * from "./optimism.js";
 export * from "./base.js";

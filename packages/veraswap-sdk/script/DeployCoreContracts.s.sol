@@ -42,6 +42,7 @@ contract DeployCoreContracts is DeployParameters {
 
         console2.log("v4PoolManager:", contracts.uniswap.v4PoolManager);
         console2.log("v4PositionManager:", contracts.uniswap.v4PositionManager);
+        console2.log("universalRouter:", contracts.uniswap.universalRouter);
 
         console2.log("mailbox:", contracts.hyperlane.mailbox);
 
