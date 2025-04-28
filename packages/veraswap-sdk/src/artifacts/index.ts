@@ -19,6 +19,7 @@ export { IStateView } from "./IStateView.js";
 export { ISuperchainTokenBridge } from "./ISuperchainTokenBridge.js";
 export { IUniversalRouter } from "./IUniversalRouter.js";
 export { IV4Quoter } from "./IV4Quoter.js";
+export { InterchainGasPaymaster } from "./InterchainGasPaymaster.js";
 export { Kernel } from "./Kernel.js";
 export { KernelFactory } from "./KernelFactory.js";
 export { Mailbox } from "./Mailbox.js";

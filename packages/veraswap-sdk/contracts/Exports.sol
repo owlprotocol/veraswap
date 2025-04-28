@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 // Hyperlane
 import {MockMailbox} from "@hyperlane-xyz/core/mock/MockMailbox.sol";
+import {InterchainGasPaymaster} from "@hyperlane-xyz/core/hooks/igp/InterchainGasPaymaster.sol";
 // Superchain
 import {IL2ToL2CrossDomainMessenger} from "@interop-lib/interfaces/IL2ToL2CrossDomainMessenger.sol";
 // Kernel
