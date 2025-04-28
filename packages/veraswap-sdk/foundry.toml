@@ -50,6 +50,7 @@ base = { url = "https://api.basescan.org/api", key = "${ETHERSCAN_BASE_KEY}" }
 base-sepolia = { url = "https://api-sepolia.basescan.org/api", key = "${ETHERSCAN_BASE_SEPOLIA_KEY}" }
 #unichain = { url = "https://uniscan.xyz" }
 unichain-sepolia = { url = "https://api-sepolia.uniscan.xyz/api", key = "${ETHERSCAN_UNICHAIN_SEPOLIA_KEY}" }
+superseed = { url = "https://explorer-superseed-mainnet-0.t.conduit.xyz/api/", key = "", verifier = "blockscout", chain = "5330"}
 #zircuit = { url = "https://explorer.zircuit.com" }
 #zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
 #ink = { url = "https://explorer.inkonchain.com" }

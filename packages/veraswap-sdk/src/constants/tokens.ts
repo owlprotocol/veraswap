@@ -4,11 +4,10 @@ import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { base, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import { opChainA, opChainB, opChainL1, unichainSepolia } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { Token } from "../currency/token.js";
 import { createPoolKey } from "../types/PoolKey.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
@@ -376,6 +375,7 @@ const cbBTCData = {
 
 const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
 
 const usdcData = {
     name: "USD Coin",
@@ -402,34 +402,52 @@ export const MAINNET_CURRENCIES = [
             hypERC20Collateral: "0x7710d2FC9A2E0452b28a2cBf550429b579347199",
         });
 
-        // TODO: add superseed
-        // const tokenSuperseed = MultichainToken.create({
-        //     ...cbBTCData,
-        //     chainId: superseed.id,
-        //     standard: "ERC20",
-        //     address: "0x6f36dbd829de9b7e077db8a35b480d4329ceb331",
-        //     hypERC20Collateral: "0x0a78BC3CBBC79C4C6E5d4e5b2bbD042E58e93484",
-        // });
-        //
-        //
+        const tokenSuperseed = MultichainToken.create({
+            ...cbBTCData,
+            chainId: superseed.id,
+            standard: "ERC20",
+            address: "0x6f36dbd829de9b7e077db8a35b480d4329ceb331",
+            hypERC20Collateral: "0x0a78BC3CBBC79C4C6E5d4e5b2bbD042E58e93484",
+        });
+
         // NOTE: base and mainnet are not connected
-        // MultichainToken.connect([tokenBase, tokenSuperseed]);
-        // MultichainToken.connect([tokenMainnet, tokenSuperseed]);
+        MultichainToken.connect([tokenBase, tokenSuperseed]);
+        MultichainToken.connect([tokenMainnet, tokenSuperseed]);
         return [tokenBase, tokenMainnet];
     })(),
-    new Token({
-        address: usdcBaseAddress,
-        chainId: base.id,
-        ...usdcData,
-    }),
-    new Token({
-        address: usdcOptimismAddress,
-        chainId: optimism.id,
-        ...usdcData,
-    }),
+    ...(() => {
+        const tokenSuperseed = MultichainToken.create({
+            ...usdcData,
+            chainId: superseed.id,
+            standard: "ERC20",
+            address: usdcSuperseedAddress,
+            hypERC20Collateral: "0xa7D6042eEf06E81168e640b5C41632eE5295227D",
+        });
 
+        const tokenBase = MultichainToken.create({
+            ...usdcData,
+            chainId: base.id,
+            standard: "ERC20",
+            address: usdcBaseAddress,
+            hypERC20Collateral: "0x955132016f9B6376B1392aA7BFF50538d21Ababc",
+        });
+
+        const tokenOptimism = MultichainToken.create({
+            ...usdcData,
+            chainId: optimism.id,
+            standard: "ERC20",
+            address: usdcOptimismAddress,
+            hypERC20Collateral: "0x741B077c69FA219CEdb11364706a3880A792423e",
+        });
+
+        MultichainToken.connect([tokenSuperseed, tokenBase]);
+        MultichainToken.connect([tokenSuperseed, tokenOptimism]);
+
+        return [tokenSuperseed, tokenBase, tokenOptimism];
+    })(),
     Ether.onChain(optimism.id),
     Ether.onChain(base.id),
+    Ether.onChain(superseed.id),
 ];
 
 export const LOCAL_POOLS = {

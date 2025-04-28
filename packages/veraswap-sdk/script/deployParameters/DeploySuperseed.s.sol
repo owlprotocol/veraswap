@@ -6,13 +6,14 @@ import {UniswapContracts, HyperlaneDeployParams, DeployParams} from "../Structs.
 library DeploySuperseed {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     uint256 constant chainId = 5330;
+    address constant UNSUPPORTED_PROTOCOL = address(0);
 
     function getParams() internal pure returns (DeployParams memory params) {
         UniswapContracts memory uniswap = UniswapContracts({
-            permit2: address(0),
-            weth9: address(0),
-            v2Factory: address(0),
-            v3Factory: address(0),
+            permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
+            weth9: 0x4200000000000000000000000000000000000006,
+            v2Factory: UNSUPPORTED_PROTOCOL,
+            v3Factory: UNSUPPORTED_PROTOCOL,
             pairInitCodeHash: BYTES32_ZERO,
             poolInitCodeHash: BYTES32_ZERO,
             v4PoolManager: address(0),

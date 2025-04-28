@@ -9,6 +9,7 @@ import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
+import { superseed } from "../chains/superseed.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
 export const V4_SWAP = 0x10;
@@ -145,6 +146,14 @@ export const UNISWAP_CONTRACTS: Record<
         v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
         universalRouter: "0x2a229f4f81d0b9a434584d6ebc2ffa9e30b8d82d",
     },
+    // TODO: add when uniswap supports
+    // [superseed.id]: {
+    //     v4PoolManager: "",
+    //     v4PositionManager: "",
+    //     v4StateView: "",
+    //     v4Quoter: "",
+    //     universalRouter: "",
+    // },
     [interopDevnet0.id]: {
         v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
         v4PositionManager: "0xb1163e279741D353540afF310ffAb329fbd78C08",
