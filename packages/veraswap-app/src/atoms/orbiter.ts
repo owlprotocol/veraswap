@@ -62,7 +62,7 @@ export const orbiterRouterAtom = atom((get) => {
             return undefined;
         }
         // Type is either "BRIDGE" or "BRIDGE_SWAP"
-    } else if (currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
+    } else if (!currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
         // If bridging on input a native token, must be ETH on both chains
         return undefined;
     }

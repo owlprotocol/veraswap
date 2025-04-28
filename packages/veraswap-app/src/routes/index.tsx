@@ -79,7 +79,7 @@ import { useToast } from "@/components/ui/use-toast.js";
 import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
-import { chains, config } from "@/config.js";
+import { config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
 import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
@@ -223,13 +223,13 @@ function Index() {
     useWatchContractEvent({
         abi: [Transfer],
         eventName: "Transfer",
-        chainId: currencyOut?.chainId ?? 0,
+        chainId: chainOut?.id ?? 0,
         address: orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] ?? zeroAddress,
         args: { to: walletAddress ?? zeroAddress },
         enabled:
-            !!currencyOut &&
+            !!chainOut &&
             !!orbiterParams &&
-            !!orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] &&
+            !!orbiterRoutersEndpointContracts[chainOut?.id ?? 0] &&
             !!hash &&
             !transactionType?.withSuperchain,
         strict: true,
@@ -239,8 +239,8 @@ function Index() {
     });
 
     useWatchBlocks({
-        chainId: currencyOut?.chainId ?? 0,
-        enabled: !!currencyOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
+        chainId: chainOut?.id ?? 0,
+        enabled: !!chainOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
         onBlock(block) {
             const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
             // Assume bridging only to same address
