@@ -1,4 +1,5 @@
-import { Address, encodeAbiParameters, keccak256, zeroAddress } from "viem";
+import invariant from "tiny-invariant";
+import { Address, encodeAbiParameters, Hash, Hex, keccak256, zeroAddress } from "viem";
 
 export interface PoolKey {
     currency0: Address;
@@ -20,8 +21,12 @@ export const PoolKeyAbi = {
     type: "tuple",
 } as const;
 
-export function getPoolId(poolKey: PoolKey) {
-    return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
+export function getPoolKeyEncoding(poolKey: PoolKey): Hex {
+    return encodeAbiParameters([PoolKeyAbi], [poolKey]);
+}
+
+export function getPoolId(poolKey: PoolKey): Hash {
+    return keccak256(getPoolKeyEncoding(poolKey));
 }
 
 export interface PoolKeyOptions {
@@ -58,9 +63,58 @@ export const DEFAULT_POOL_PARAMS = {
  * @param poolKey
  */
 export function createPoolKey(poolKey: PoolKey): PoolKey {
+    invariant(poolKey.currency0 != poolKey.currency1, "PoolKey currency0 == currency1 !");
     return {
         ...poolKey,
         currency0: poolKey.currency0 < poolKey.currency1 ? poolKey.currency0 : poolKey.currency1,
         currency1: poolKey.currency0 < poolKey.currency1 ? poolKey.currency1 : poolKey.currency0,
     };
+}
+
+export function poolKeyEqual(a: PoolKey, b: PoolKey): boolean {
+    return (
+        a.currency0 === b.currency0 &&
+        a.currency1 === b.currency1 &&
+        a.fee === b.fee &&
+        a.tickSpacing === b.tickSpacing &&
+        a.hooks === b.hooks
+    );
+}
+
+/**
+ * Path Key for multihop quoting
+ */
+export interface PathKey {
+    intermediateCurrency: Address;
+    fee: number;
+    tickSpacing: number;
+    hooks: Address;
+    hookData: Hex;
+}
+
+/**
+ * Convert list of pool keys to a path for multihop quoting
+ * @param exactCurrency
+ * @param poolKeys
+ */
+export function poolKeysToPath(exactCurrency: Address, poolKeys: PoolKey[]): PathKey[] {
+    const path: PathKey[] = [];
+
+    let currentCurrency = exactCurrency;
+
+    poolKeys.forEach((poolKey) => {
+        // Intermediate currency is whichever isn't current
+        const intermediateCurrency = poolKey.currency0 != currentCurrency ? poolKey.currency0 : poolKey.currency1;
+        path.push({
+            intermediateCurrency,
+            fee: poolKey.fee,
+            tickSpacing: poolKey.tickSpacing,
+            hooks: poolKey.hooks,
+            hookData: "0x",
+        });
+        // Update currentCurrency
+        currentCurrency = intermediateCurrency;
+    });
+
+    return path;
 }
