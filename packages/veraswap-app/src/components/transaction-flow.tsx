@@ -10,7 +10,7 @@ function TokenBadge({ currency }: { currency: Currency }) {
             <img
                 src={currency.logoURI ?? "https://etherscan.io/images/main/empty-token.png"}
                 alt={`${currency.symbol} logo`}
-                className="h-5 w-5 rounded-full"
+                className="h-5 w-5 rounded-full object-contain"
                 onError={(e) => (e.currentTarget.src = "https://etherscan.io/images/main/empty-token.png")}
             />
 
