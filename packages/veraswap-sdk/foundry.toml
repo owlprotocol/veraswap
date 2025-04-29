@@ -48,12 +48,12 @@ somnia-testnet = "https://dream-rpc.somnia.network"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_MAINNET_KEY}" }
-sepolia = { url = "https://api-sepolia.etherscan.io/api", key = "${ETHERSCAN_SEPOLIA_KEY}" }
-optimism-sepolia = { url = "https://api-sepolia-optimism.etherscan.io/api", key = "${ETHERSCAN_OPTIMISM_SEPOLIA_KEY}" }
-base = { url = "https://api.basescan.org/api", key = "${ETHERSCAN_BASE_KEY}" }
-base-sepolia = { url = "https://api-sepolia.basescan.org/api", key = "${ETHERSCAN_BASE_SEPOLIA_KEY}" }
-#unichain = { url = "https://uniscan.xyz" }
-unichain-sepolia = { url = "https://api-sepolia.uniscan.xyz/api", key = "${ETHERSCAN_UNICHAIN_SEPOLIA_KEY}" }
+sepolia = { url = "https://api.etherscan.io/v2/api?chainid=11155111", key = "${ETHERSCAN_MAINNET_KEY}" }
+optimism-sepolia = { url = "https://api.etherscan.io/v2/api?chainid=11155420", key = "${ETHERSCAN_MAINNET_KEY}" }
+base = { url = "https://api.etherscan.io/v2/api?chainid=8453", key = "${ETHERSCAN_MAINNET_KEY}" }
+base-sepolia = { url = "https://api.etherscan.io/v2/api?chainid=84532", key = "${ETHERSCAN_MAINNET_KEY}" }
+unichain = { url = "https://api.etherscan.io/v2/api?chainid=130", key = "${ETHERSCAN_MAINNET_KEY}" }
+unichain-sepolia = { url = "https://api.etherscan.io/v2/api?chainid=1301", key = "${ETHERSCAN_MAINNET_KEY}" }
 superseed = { url = "https://explorer-superseed-mainnet-0.t.conduit.xyz/api/", key = "", verifier = "blockscout", chain = "5330" }
 #zircuit = { url = "https://explorer.zircuit.com" }
 #zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
