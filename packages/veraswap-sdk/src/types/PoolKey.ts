@@ -24,6 +24,12 @@ export function getPoolId(poolKey: PoolKey) {
     return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 }
 
+export interface PoolKeyOptions {
+    fee: number;
+    tickSpacing: number;
+    hooks: Address;
+}
+
 export const DEFAULT_POOL_PARAMS = {
     FEE_100_TICK_1: {
         fee: 100,
@@ -42,10 +48,10 @@ export const DEFAULT_POOL_PARAMS = {
     },
     FEE_10_000_TICK_200: {
         fee: 10_000,
-        tickspacing: 200,
+        tickSpacing: 200,
         hooks: zeroAddress,
     },
-};
+} satisfies Record<string, PoolKeyOptions>;
 
 /**
  * Create pool key with validation
