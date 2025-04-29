@@ -39,6 +39,7 @@ export const interopDevnet0 = defineChain({
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
     },
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
 
 export const interopDevnet1 = defineChain({
@@ -74,4 +75,5 @@ export const interopDevnet1 = defineChain({
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
     },
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;

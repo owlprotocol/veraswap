@@ -58,7 +58,7 @@ export const superseedViem = /*#__PURE__*/ defineChain({
     sourceId,
 });
 
-export const superseed = {
+export const superseed = defineChain({
     ...superseedViem,
     rpcUrls: {
         default: {
@@ -69,4 +69,5 @@ export const superseed = {
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/superseed/logo.svg",
     },
-} satisfies ChainWithMetadata;
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/superseed/logo.svg",
+}) satisfies ChainWithMetadata;
