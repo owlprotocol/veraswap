@@ -1,4 +1,4 @@
-import { Address, createPublicClient, http } from "viem";
+import { Address, createPublicClient, defineChain, http } from "viem";
 import { localhost } from "viem/chains";
 
 import { ChainWithMetadata } from "./chainWithMetadata.js";
@@ -9,7 +9,7 @@ export const SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER = "0x4200000000000000000
 
 /*** Local Supersim Chains ***/
 export const opChainL1Port = 8547;
-export const opChainL1 = {
+export const opChainL1 = defineChain({
     ...localhost,
     id: 900,
     name: "OP Chain L1",
@@ -17,11 +17,15 @@ export const opChainL1 = {
     rpcUrls: {
         default: { http: [`http://127.0.0.1:${opChainL1Port}`], webSocket: [`ws://127.0.0.1:${opChainL1Port}`] },
     },
-} satisfies ChainWithMetadata;
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/ethereum/logo.svg",
+    },
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+}) satisfies ChainWithMetadata;
 export const opChainL1Client = createPublicClient({ chain: opChainL1, transport: http() });
 
 export const opChainAPort = 9545;
-export const opChainA = {
+export const opChainA = defineChain({
     ...localhost,
     id: 901,
     name: "OP Chain A",
@@ -30,11 +34,12 @@ export const opChainA = {
         // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
         default: { http: [`http://127.0.0.1:${opChainAPort}`] },
     },
-} as const satisfies ChainWithMetadata;
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+}) satisfies ChainWithMetadata;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
 
 export const opChainBPort = 9546;
-export const opChainB = {
+export const opChainB = defineChain({
     ...localhost,
     id: 902,
     name: "OP Chain B",
@@ -43,5 +48,6 @@ export const opChainB = {
         // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
         default: { http: [`http://127.0.0.1:${opChainBPort}`] },
     },
-} satisfies ChainWithMetadata;
+    iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+}) satisfies ChainWithMetadata;
 export const opChainBClient = createPublicClient({ chain: opChainB, transport: http() });
