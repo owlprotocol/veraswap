@@ -8,7 +8,7 @@ import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../ch
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { createPoolKey } from "../types/PoolKey.js";
+import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -455,14 +455,12 @@ export const LOCAL_POOLS = {
         createPoolKey({
             currency0: getUniswapV4Address(LOCAL_CURRENCIES[0]),
             currency1: getUniswapV4Address(LOCAL_CURRENCIES[3]),
-            fee: 3000,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
         }),
         createPoolKey({
             currency0: zeroAddress,
             currency1: getUniswapV4Address(LOCAL_CURRENCIES[0]),
-            fee: 3000,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
         }),
     ],
     /*
@@ -492,8 +490,7 @@ const TESTNET_POOLS = {
         createPoolKey({
             currency0: getUniswapV4Address(TESTNET_CURRENCIES[0]),
             currency1: getUniswapV4Address(TESTNET_CURRENCIES[3]),
-            fee: 3000,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
         }),
     ],
     /*
@@ -514,28 +511,24 @@ const MAINNET_POOLS = {
         createPoolKey({
             currency0: getUniswapV4Address(Ether.onChain(base.id)),
             currency1: cbBTCBaseAddress,
-            fee: 3000,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
         }),
         createPoolKey({
             currency0: getUniswapV4Address(Ether.onChain(base.id)),
             currency1: usdcBaseAddress,
-            fee: 500,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
         }),
         createPoolKey({
             currency0: usdcBaseAddress,
             currency1: cbBTCBaseAddress,
-            fee: 3000,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
         }),
     ],
     [optimism.id]: [
         createPoolKey({
             currency0: getUniswapV4Address(Ether.onChain(optimism.id)),
             currency1: usdcOptimismAddress,
-            fee: 500,
-            hooks: zeroAddress,
+            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
         }),
     ],
 };

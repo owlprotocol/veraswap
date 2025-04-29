@@ -1,4 +1,4 @@
-import { Address, encodeAbiParameters, keccak256 } from "viem";
+import { Address, encodeAbiParameters, keccak256, zeroAddress } from "viem";
 
 export interface PoolKey {
     currency0: Address;
@@ -24,32 +24,36 @@ export function getPoolId(poolKey: PoolKey) {
     return keccak256(encodeAbiParameters([PoolKeyAbi], [poolKey]));
 }
 
+export const DEFAULT_POOL_PARAMS = {
+    FEE_100_TICK_1: {
+        fee: 100,
+        tickSpacing: 1,
+        hooks: zeroAddress,
+    },
+    FEE_500_TICK_10: {
+        fee: 500,
+        tickSpacing: 10,
+        hooks: zeroAddress,
+    },
+    FEE_3000_TICK_60: {
+        fee: 3000,
+        tickSpacing: 60,
+        hooks: zeroAddress,
+    },
+    FEE_10_000_TICK_200: {
+        fee: 10_000,
+        tickspacing: 200,
+        hooks: zeroAddress,
+    },
+};
+
 /**
  * Create pool key with validation
  * @param poolKey
  */
-export function createPoolKey(
-    poolKey: Omit<PoolKey, "tickSpacing" | "fee"> &
-        ({ tickSpacing?: number; fee: 100 | 500 | 3000 | 10000 } | { tickSpacing: number; fee: number }),
-): PoolKey {
-    let tickSpacing = poolKey.tickSpacing;
-    if (!poolKey.tickSpacing) {
-        if (poolKey.fee === 100) {
-            tickSpacing = 1;
-        } else if (poolKey.fee === 500) {
-            tickSpacing = 10;
-        } else if (poolKey.fee === 3000) {
-            tickSpacing = 60;
-        } else if (poolKey.fee === 10000) {
-            tickSpacing = 200;
-        } else {
-            throw new Error("Invalid fee without tick spacing");
-        }
-    }
-
+export function createPoolKey(poolKey: PoolKey): PoolKey {
     return {
         ...poolKey,
-        tickSpacing: tickSpacing!,
         currency0: poolKey.currency0 < poolKey.currency1 ? poolKey.currency0 : poolKey.currency1,
         currency1: poolKey.currency0 < poolKey.currency1 ? poolKey.currency1 : poolKey.currency0,
     };
