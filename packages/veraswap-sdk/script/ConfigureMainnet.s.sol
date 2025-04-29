@@ -26,6 +26,7 @@ contract DeployMainnet is Script {
         chains[1] = "base";
         chains[2] = "optimism";
         chains[3] = "superseed";
+        chains[4] = "unichain";
 
         (uint256[] memory chainIds, uint256[] memory forks) = MultichainFork.getForks(chains);
 
