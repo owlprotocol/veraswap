@@ -2218,6 +2218,16 @@ export const functions = [
     },
     {
         type: "function",
+        name: "destinationGasLimit",
+        inputs: [
+            { name: "_destinationDomain", type: "uint32", internalType: "uint32" },
+            { name: "_gasAmount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
         name: "payForGas",
         inputs: [
             { name: "_messageId", type: "bytes32", internalType: "bytes32" },
@@ -2254,16 +2264,6 @@ export const functions = [
             { name: "gasOracle", type: "address", internalType: "contract IGasOracle" },
             { name: "gasOverhead", type: "uint96", internalType: "uint96" },
         ],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
-        name: "destinationGasLimit",
-        inputs: [
-            { name: "_destinationDomain", type: "uint32", internalType: "uint32" },
-            { name: "_gasLimit", type: "uint256", internalType: "uint256" },
-        ],
-        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
         stateMutability: "view",
     },
     {
