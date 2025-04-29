@@ -28,9 +28,28 @@ export function getPoolId(poolKey: PoolKey) {
  * Create pool key with validation
  * @param poolKey
  */
-export function createPoolKey(poolKey: PoolKey) {
+export function createPoolKey(
+    poolKey: Omit<PoolKey, "tickSpacing" | "fee"> &
+        ({ tickSpacing?: number; fee: 100 | 500 | 3000 | 10000 } | { tickSpacing: number; fee: number }),
+): PoolKey {
+    let tickSpacing = poolKey.tickSpacing;
+    if (!poolKey.tickSpacing) {
+        if (poolKey.fee === 100) {
+            tickSpacing = 1;
+        } else if (poolKey.fee === 500) {
+            tickSpacing = 10;
+        } else if (poolKey.fee === 3000) {
+            tickSpacing = 60;
+        } else if (poolKey.fee === 10000) {
+            tickSpacing = 200;
+        } else {
+            throw new Error("Invalid fee without tick spacing");
+        }
+    }
+
     return {
         ...poolKey,
+        tickSpacing: tickSpacing!,
         currency0: poolKey.currency0 < poolKey.currency1 ? poolKey.currency0 : poolKey.currency1,
         currency1: poolKey.currency0 < poolKey.currency1 ? poolKey.currency1 : poolKey.currency0,
     };
