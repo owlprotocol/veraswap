@@ -409,6 +409,22 @@ export const events = [
     },
     {
         type: "event",
+        name: "BeneficiarySet",
+        inputs: [{ name: "beneficiary", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "DestinationGasConfigSet",
+        inputs: [
+            { name: "remoteDomain", type: "uint32", indexed: false, internalType: "uint32" },
+            { name: "gasOracle", type: "address", indexed: false, internalType: "address" },
+            { name: "gasOverhead", type: "uint96", indexed: false, internalType: "uint96" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "RelayedMessage",
         inputs: [
             { name: "source", type: "uint256", indexed: true, internalType: "uint256" },

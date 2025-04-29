@@ -35,6 +35,7 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/ERC7579ExecutorRouter.sol/*.json",
     "out/MockInterchainGasPaymaster.sol/*.json",
     "out/IInterchainGasPaymaster.sol/*.json",
+    "out/InterchainGasPaymaster.sol/*.json",
     // Superchain
     "out/IL2ToL2CrossDomainMessenger.sol/*.json",
     // Superchain (custom)

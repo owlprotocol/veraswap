@@ -2218,6 +2218,16 @@ export const functions = [
     },
     {
         type: "function",
+        name: "destinationGasLimit",
+        inputs: [
+            { name: "_destinationDomain", type: "uint32", internalType: "uint32" },
+            { name: "_gasAmount", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
         name: "payForGas",
         inputs: [
             { name: "_messageId", type: "bytes32", internalType: "bytes32" },
@@ -2237,6 +2247,76 @@ export const functions = [
         ],
         outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
         stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "beneficiary",
+        inputs: [],
+        outputs: [{ name: "", type: "address", internalType: "address" }],
+        stateMutability: "view",
+    },
+    { type: "function", name: "claim", inputs: [], outputs: [], stateMutability: "nonpayable" },
+    {
+        type: "function",
+        name: "destinationGasConfigs",
+        inputs: [{ name: "", type: "uint32", internalType: "uint32" }],
+        outputs: [
+            { name: "gasOracle", type: "address", internalType: "contract IGasOracle" },
+            { name: "gasOverhead", type: "uint96", internalType: "uint96" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "getExchangeRateAndGasPrice",
+        inputs: [{ name: "_destinationDomain", type: "uint32", internalType: "uint32" }],
+        outputs: [
+            { name: "tokenExchangeRate", type: "uint128", internalType: "uint128" },
+            { name: "gasPrice", type: "uint128", internalType: "uint128" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "initialize",
+        inputs: [
+            { name: "_owner", type: "address", internalType: "address" },
+            { name: "_beneficiary", type: "address", internalType: "address" },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "setBeneficiary",
+        inputs: [{ name: "_beneficiary", type: "address", internalType: "address" }],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "setDestinationGasConfigs",
+        inputs: [
+            {
+                name: "_configs",
+                type: "tuple[]",
+                internalType: "struct InterchainGasPaymaster.GasParam[]",
+                components: [
+                    { name: "remoteDomain", type: "uint32", internalType: "uint32" },
+                    {
+                        name: "config",
+                        type: "tuple",
+                        internalType: "struct InterchainGasPaymaster.DomainGasConfig",
+                        components: [
+                            { name: "gasOracle", type: "address", internalType: "contract IGasOracle" },
+                            { name: "gasOverhead", type: "uint96", internalType: "uint96" },
+                        ],
+                    },
+                ],
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
     },
     { type: "function", name: "__constructor__", inputs: [], outputs: [], stateMutability: "nonpayable" },
     {

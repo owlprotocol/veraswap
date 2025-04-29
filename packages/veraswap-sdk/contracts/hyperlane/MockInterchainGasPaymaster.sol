@@ -11,6 +11,10 @@ contract MockInterchainGasPaymaster is IInterchainGasPaymaster {
     // Fixed gas price of 1 gwei
     uint256 public constant FIXED_GAS_PRICE = 1 gwei;
 
+    function destinationGasLimit(uint32 _destinationDomain, uint256 _gasAmount) external pure returns (uint256) {
+        return _gasAmount;
+    }
+
     function quoteGasPayment(uint32 _destinationDomain, uint256 _gasAmount) external pure override returns (uint256) {
         return _gasAmount * FIXED_GAS_PRICE;
     }

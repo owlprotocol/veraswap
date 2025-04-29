@@ -9,7 +9,7 @@ import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddres
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
-import { IInterchainGasPaymaster } from "../artifacts/IInterchainGasPaymaster.js";
+import { InterchainGasPaymaster } from "../artifacts/InterchainGasPaymaster.js";
 import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
@@ -299,16 +299,27 @@ export async function getBridgeSwapWithKernelCalls(
     // Estimated using test in getBridgeSwapWithKernelCalls.test.ts
     const callRemoteGas = 1_000_000n;
 
-    let callRemotePayment = await queryClient.fetchQuery(
+    //Note: Hyperlane docs do not mention the fact that we must account for this
+    // Compute gas + overhead
+    const callRemoteGasWithOverhead = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: contracts.interchainGasPaymaster,
-            abi: IInterchainGasPaymaster.abi,
-            functionName: "quoteGasPayment",
+            abi: InterchainGasPaymaster.abi,
+            functionName: "destinationGasLimit",
             args: [destination, numberToHex(callRemoteGas) as unknown as bigint], //wagmi/core has issues with bigint encoding for query key
         }),
     );
-    callRemotePayment = (callRemotePayment * 101n) / 100n; // +1% //TODO: Fix this, might be to the orbiter rouding logic
+
+    const callRemotePayment = await queryClient.fetchQuery(
+        readContractQueryOptions(wagmiConfig, {
+            chainId,
+            address: contracts.interchainGasPaymaster,
+            abi: InterchainGasPaymaster.abi,
+            functionName: "quoteGasPayment",
+            args: [destination, numberToHex(callRemoteGasWithOverhead) as unknown as bigint], //wagmi/core has issues with bigint encoding for query key
+        }),
+    );
 
     // Format hook metadata according to Hyperlane's StandardHookMetadata format
     // See: https://docs.hyperlane.xyz/docs/reference/hooks/interchain-gas#determine-and-override-the-gas-limit

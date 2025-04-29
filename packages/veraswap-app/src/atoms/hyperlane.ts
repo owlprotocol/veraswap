@@ -1,5 +1,10 @@
 import { LOCAL_HYPERLANE_CONTRACTS, isMultichainToken } from "@owlprotocol/veraswap-sdk";
-import { HypERC20Collateral, IInterchainGasPaymaster, GasRouter } from "@owlprotocol/veraswap-sdk/artifacts";
+import {
+    HypERC20Collateral,
+    IInterchainGasPaymaster,
+    GasRouter,
+    InterchainGasPaymaster,
+} from "@owlprotocol/veraswap-sdk/artifacts";
 import { atom, Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, numberToHex } from "viem";
@@ -122,7 +127,7 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
     });
 }) as Atom<AtomWithQueryResult<bigint>>;
 
-export const igpQuotePaymentQueryAtom = atomWithQuery((get) => {
+export const igpDestinationGasLimitQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
     const callRemoteGas = 1_000_000n;
@@ -136,11 +141,37 @@ export const igpQuotePaymentQueryAtom = atomWithQuery((get) => {
 
     if (!interchainGasPaymaster) return disabledQueryOptions as any;
 
+    //TODO: Set stale as MAX as overhead never changes
+    return readContractQueryOptions(config, {
+        chainId: chainIn.id,
+        address: interchainGasPaymaster,
+        abi: InterchainGasPaymaster.abi,
+        functionName: "destinationGasLimit",
+        args: [chainOut.id, numberToHex(callRemoteGas) as unknown as bigint],
+    });
+}) as Atom<AtomWithQueryResult<bigint>>;
+
+export const igpQuotePaymentQueryAtom = atomWithQuery((get) => {
+    const chainIn = get(chainInAtom);
+    const chainOut = get(chainOutAtom);
+    const hyperlaneRegistry = get(hyperlaneRegistryAtom);
+
+    if (!chainIn || !chainOut || !hyperlaneRegistry) return disabledQueryOptions as any;
+
+    const interchainGasPaymaster =
+        hyperlaneRegistry.addresses[chainIn.id]?.interchainGasPaymaster ??
+        LOCAL_HYPERLANE_CONTRACTS[chainIn.id]?.mockInterchainGasPaymaster;
+
+    if (!interchainGasPaymaster) return disabledQueryOptions as any;
+
+    const { data: callRemoteGasWithOverhead } = get(igpDestinationGasLimitQueryAtom);
+    if (!callRemoteGasWithOverhead) return disabledQueryOptions as any;
+
     return readContractQueryOptions(config, {
         chainId: chainIn.id,
         address: interchainGasPaymaster,
         abi: IInterchainGasPaymaster.abi,
         functionName: "quoteGasPayment",
-        args: [chainOut.id, numberToHex(callRemoteGas) as unknown as bigint],
+        args: [chainOut.id, numberToHex(callRemoteGasWithOverhead) as unknown as bigint],
     });
 }) as Atom<AtomWithQueryResult<bigint>>;
