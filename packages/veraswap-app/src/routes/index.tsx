@@ -484,7 +484,7 @@ function Index() {
         if (transactionType.type === "BRIDGE" || transactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId) {
+            if (hyperlaneBridgeMessageId || orbiterParams) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
