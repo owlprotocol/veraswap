@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createConfig, http } from "@wagmi/core";
-import { parseEther, zeroAddress } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { opChainL1 } from "../chains/supersim.js";
@@ -19,16 +19,17 @@ describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
     });
     const queryClient = new QueryClient();
 
-    const tokenA = getUniswapV4Address(LOCAL_CURRENCIES[0]);
-    const tokenB = getUniswapV4Address(LOCAL_CURRENCIES[3]);
+    const tokenA = LOCAL_CURRENCIES[0];
+    const tokenAAddress = getUniswapV4Address(tokenA);
+    const tokenBAddress = getUniswapV4Address(LOCAL_CURRENCIES[3]);
 
     test("getUniswapV4Route - single hop", async () => {
         const result = await getUniswapV4Route(queryClient, config, {
             chainId: opChainL1.id,
-            currencyIn: tokenA,
+            currencyIn: tokenAAddress,
             currencyOut: zeroAddress,
             currencyHops: [],
-            exactAmount: parseEther("1"),
+            exactAmount: parseUnits("1", tokenA.decimals),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
@@ -43,10 +44,10 @@ describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
     test("getUniswapV4Route - multi hop", async () => {
         const result = await getUniswapV4Route(queryClient, config, {
             chainId: opChainL1.id,
-            currencyIn: tokenA,
-            currencyOut: tokenB,
+            currencyIn: tokenAAddress,
+            currencyOut: tokenBAddress,
             currencyHops: [zeroAddress],
-            exactAmount: parseEther("1"),
+            exactAmount: parseUnits("1", tokenA.decimals),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,

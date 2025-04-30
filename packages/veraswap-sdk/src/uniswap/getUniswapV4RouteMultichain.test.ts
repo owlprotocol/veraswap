@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createConfig, http } from "@wagmi/core";
-import { parseEther, zeroAddress } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
@@ -49,7 +49,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getUniswapV4RouteMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -66,7 +66,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getUniswapV4RouteMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_901,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -83,7 +83,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getUniswapV4RouteMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_902,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -102,7 +102,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getRouteMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenA_901,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -120,7 +120,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getRouteMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -140,7 +140,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getRouteMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_901,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -164,7 +164,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getRouteMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_900,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -188,7 +188,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             const result = await getRouteMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_902,
-                exactAmount: parseEther("1"),
+                exactAmount: parseUnits("1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
