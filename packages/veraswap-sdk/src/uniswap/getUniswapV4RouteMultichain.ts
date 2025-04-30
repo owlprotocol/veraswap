@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { maxBy, zip } from "lodash-es";
 import invariant from "tiny-invariant";
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
@@ -13,9 +13,9 @@ import { getUniswapV4Route, getUniswapV4RoutesWithLiquidity } from "./getUniswap
 export interface GetUniswapV4RouteMultichainParams {
     currencyIn: Currency;
     currencyOut: Currency;
-    currencyHopsByChain: Record<number, Address[]>;
+    currencyHopsByChain: Record<number, Address[] | undefined>;
     exactAmount: bigint;
-    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address }>;
+    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address } | undefined>;
     poolKeyOptions?: PoolKeyOptions[];
 }
 
@@ -47,7 +47,7 @@ export async function getUniswapV4RouteMultichain(
             tokenPairs.map(async (pair) => {
                 const [currIn, currOut] = pair;
                 const chainId = currIn.chainId;
-                const currencyHops = currencyHopsByChain[chainId] ?? [];
+                const currencyHops = currencyHopsByChain[chainId] ?? [zeroAddress];
                 const contracts = contractsByChain[chainId];
                 if (!contracts) return null; // No uniswap deployment on this chain
 
@@ -105,7 +105,7 @@ export async function getUniswapV4RoutesWithLiquidityMultichain(
         tokenPairs.map(async (pair) => {
             const [currIn, currOut] = pair;
             const chainId = currIn.chainId;
-            const currencyHops = currencyHopsByChain[chainId] ?? [];
+            const currencyHops = currencyHopsByChain[chainId] ?? [zeroAddress]; // Default to just checking native token
             const contracts = contractsByChain[chainId];
             invariant(
                 !!contracts,

@@ -1,11 +1,25 @@
-import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { getUniswapV4Address, isMultichainToken, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
+import {
+    getRouteMultichain,
+    getUniswapV4Address,
+    isMultichainToken,
+    PoolKey,
+    quoteQueryOptions,
+} from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
-import { WritableAtom } from "jotai";
+import { Atom, atom, WritableAtom } from "jotai";
 import { Address, zeroAddress } from "viem";
 import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
-import { tokenInAmountAtom, transactionTypeAtom } from "./tokens.js";
+import { queryOptions } from "@tanstack/react-query";
+import {
+    currencyInAtom,
+    currencyOutAtom,
+    tokenInAmountAtom,
+    tokenInAmountInputAtom,
+    transactionTypeAtom,
+} from "./tokens.js";
 import { orbiterAmountOutAtom } from "./orbiter.js";
+import { disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
 
 // const emptyToken = new Token(1, zeroAddress, 1);
@@ -76,3 +90,30 @@ export const quoteInAtom = atomWithQuery((get) => {
         enabled,
     };
 }) as unknown as WritableAtom<AtomWithQueryResult<[bigint, bigint], Error>, [], void>;
+
+//TODO: As tanstack query so that it refreshes
+export const routeMultichainAtom = atomWithQuery((get) => {
+    const queryClient = get(queryClientAtom);
+    const currencyIn = get(currencyInAtom);
+    const currencyOut = get(currencyOutAtom);
+    const exactAmount = get(tokenInAmountAtom);
+
+    if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
+
+    return queryOptions({
+        queryFn: async () => {
+            const route = await getRouteMultichain(queryClient, config, {
+                currencyIn,
+                currencyOut,
+                exactAmount,
+                contractsByChain: UNISWAP_CONTRACTS,
+                currencyHopsByChain: {},
+            });
+
+            console.debug({ route });
+
+            return route;
+        },
+        queryKey: ["getRouteMultichain"],
+    });
+}) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;

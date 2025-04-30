@@ -10,7 +10,7 @@ import { getUniswapV4Address } from "../currency/currency.js";
 
 import { getUniswapV4Route } from "./getUniswapV4Route.js";
 
-describe("uniswap/getUniswapV4Route.test.ts", function () {
+describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {

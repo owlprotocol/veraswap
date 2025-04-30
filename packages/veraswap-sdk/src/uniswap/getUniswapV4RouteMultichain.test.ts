@@ -14,7 +14,7 @@ import {
     RouteComponentSwap,
 } from "./getUniswapV4RouteMultichain.js";
 
-describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
+describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {

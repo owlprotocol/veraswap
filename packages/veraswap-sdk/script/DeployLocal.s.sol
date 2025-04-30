@@ -249,7 +249,7 @@ contract DeployLocal is DeployCoreContracts {
 
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
-        // PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
         PoolUtils.deployPool(tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
         PoolUtils.deployPool(tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
 
