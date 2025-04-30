@@ -107,11 +107,11 @@ function StepCard({ step, isActive, url }: { step: TransactionStep; isActive: bo
                     </div>
                     <StatusIcon status={step.status} />
                 </div>
-                <CardDescription className="text-gray-200">{step.description}</CardDescription>
+                <CardDescription>{step.description}</CardDescription>
             </CardHeader>
             <CardContent>
                 {step.status === "processing" && (
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div className="w-full rounded-full h-2.5">
                         <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full animate-pulse w-full"></div>
                     </div>
                 )}

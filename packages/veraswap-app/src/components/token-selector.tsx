@@ -120,7 +120,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                     {currentToken ? (
                         <>
                             <img
-                                src={chain?.custom?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                                src={currentToken.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                                 alt={currentToken.symbol}
                                 className="h-6 w-6"
                                 onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
@@ -351,7 +351,7 @@ const TokenGroup = ({
             </button>
 
             {isExpanded && (
-                <div className="bg-muted/20 px-4 py-2 animate-in slide-in-from-top duration-200">
+                <div className="bg-muted/20 space-y-2 px-4 py-2 animate-in slide-in-from-top duration-200">
                     {account?.address && tokensWithBalance.length > 0 && (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                             {tokensWithBalance.map((token) => {
@@ -371,25 +371,22 @@ const TokenGroup = ({
                     )}
 
                     {tokensWithoutBalance.length > 0 && (
-                        <>
-                            <Separator className="my-2" />
-                            <div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                    {tokensWithoutBalance.map((token) => {
-                                        const chain = chains.find((c) => c.id === token.chainId);
-                                        return (
-                                            <ChainTokenBalance
-                                                key={token.chainId}
-                                                token={token}
-                                                chain={chain}
-                                                symbol={symbol}
-                                                onSelect={onSelect}
-                                            />
-                                        );
-                                    })}
-                                </div>
+                        <div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {tokensWithoutBalance.map((token) => {
+                                    const chain = chains.find((c) => c.id === token.chainId);
+                                    return (
+                                        <ChainTokenBalance
+                                            key={token.chainId}
+                                            token={token}
+                                            chain={chain}
+                                            symbol={symbol}
+                                            onSelect={onSelect}
+                                        />
+                                    );
+                                })}
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             )}
@@ -420,24 +417,27 @@ const ChainTokenBalance = ({
     const balance = Number(formatUnits(balanceValue, decimals));
 
     return (
-        <Button className="flex h-auto items-center gap-2 p-3 w-full" onClick={() => onSelect(token)}>
-            <div className="flex-1 space-y-2 p-2">
-                <div className="flex-col md:flex-row flex items-center gap-2">
-                    <div className="font-medium text-center md:text-left">
-                        {chain?.name || `Chain ${token.chainId}`}
-                    </div>
-                    <img
-                        src={chain?.custom?.logoURI ?? "/placeholder.jpg"}
-                        onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
-                        alt={chain?.name || `Chain ${token.chainId}`}
-                        className="h-6 w-6 rounded-full border"
-                    />
+        <Button
+            className="flex h-auto items-center gap-2 p-3 w-full justify-start transition-colors"
+            onClick={() => onSelect(token)}
+            variant="secondary"
+        >
+            <div className="flex-1 space-y-1">
+                <div className="flex w-full items-center justify-between gap-2">
+                    <div className="font-medium text-left">{chain?.name || `Chain ${token.chainId}`}</div>
+                    {chain?.custom?.logoURI && (
+                        <img
+                            src={chain.custom.logoURI}
+                            onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
+                            alt={chain?.name || `Chain ${token.chainId}`}
+                            className="h-5 w-5 rounded-full border"
+                        />
+                    )}
                 </div>
                 {hasBalance && (
-                    <>
-                        <Separator className="my-2" />
-                        <div className="text-md truncate">{account?.address && `${balance.toFixed(4)} ${symbol}`}</div>
-                    </>
+                    <div className="text-sm truncate text-left text-muted-foreground">
+                        {account?.address && `${balance.toFixed(4)} ${symbol}`}
+                    </div>
                 )}
             </div>
         </Button>

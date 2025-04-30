@@ -18,7 +18,7 @@ export const opChainL1 = defineChain({
         default: { http: [`http://127.0.0.1:${opChainL1Port}`], webSocket: [`ws://127.0.0.1:${opChainL1Port}`] },
     },
     custom: {
-        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/ethereum/logo.svg",
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
     },
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
@@ -34,6 +34,9 @@ export const opChainA = defineChain({
         // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
         default: { http: [`http://127.0.0.1:${opChainAPort}`] },
     },
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+    },
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
@@ -47,6 +50,9 @@ export const opChainB = defineChain({
     rpcUrls: {
         // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
         default: { http: [`http://127.0.0.1:${opChainBPort}`] },
+    },
+    custom: {
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
     },
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
