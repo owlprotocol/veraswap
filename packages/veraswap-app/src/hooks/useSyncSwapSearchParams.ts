@@ -22,7 +22,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
         const chainsType = domainType || type || "mainnet";
         setNetworkType(chainsType);
 
-        if (!type || (domainType && type !== domainType)) {
+        if (domainType === null && !type) {
             navigate({
                 search: {
                     ...search,
@@ -53,6 +53,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     }, [allCurrencies, domainType]);
 
     useEffect(() => {
+        if (domainType !== null) return;
         if (!currencyIn && !currencyOut) return;
 
         navigate({
@@ -70,5 +71,5 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
             replace: true,
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currencyIn, currencyOut]);
+    }, [currencyIn, currencyOut, domainType]);
 }
