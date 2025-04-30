@@ -173,15 +173,9 @@ export function getAssetFlows(
     }
 
     if (currencyIn instanceof MultichainToken) {
-        // BRIDGE: `currencyIn.getRemoteToken(currencyOut.chainId).equals(currencyOut)`
+        // BRIDGE
         if (currencyIn.getRemoteToken(currencyOut.chainId)?.equals(currencyOut)) {
-            return [
-                {
-                    type: "BRIDGE",
-                    currencyIn: currencyIn,
-                    currencyOut: currencyOut,
-                },
-            ];
+            return [{ type: "BRIDGE", currencyIn: currencyIn, currencyOut: currencyOut }];
         }
     }
 
@@ -214,7 +208,7 @@ export function getAssetFlows(
     // Add swap
     flows.push(swap);
     if (!swap.currencyOut.equals(currencyOut)) {
-        // Add ouput bridge flow
+        // Add output bridge flow
         flows.push({
             type: "BRIDGE",
             currencyIn: swap.currencyOut,
