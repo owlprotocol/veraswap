@@ -1,46 +1,7 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { Currency, registryTokensQueryOptions } from "@owlprotocol/veraswap-sdk";
-import { atomWithQuery } from "jotai-tanstack-query";
-import { chainsTypeAtom } from "./chains.js";
+import { Currency } from "@owlprotocol/veraswap-sdk";
 import { chains } from "@/config.js";
-
-/***** Tokens Fetch *****/
-//TODO: Hard-coded for now
-/**
- * // TODO: move it all in one file?
-const fetchTokens = async () => {
-    const [tokensResponse, bridgedTokensResponse] = await Promise.all([
-        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens-list.json"),
-        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/bridged-tokens.json"),
-    ]);
-
-    if (!tokensResponse.ok || !bridgedTokensResponse.ok) {
-        throw new Error("Failed to fetch tokens");
-    }
-
-    const standardTokens = await tokensResponse.json();
-    const bridgedTokens = await bridgedTokensResponse.json();
-
-    return [...standardTokens, ...bridgedTokens];
-};
-
-export const fetchedTokensAtom = atomWithQuery(() => ({
-    queryKey: ["tokens"],
-    queryFn: fetchTokens,
-}));
-
- */
-
-export const currenciesQueryAtom = atomWithQuery((get) => {
-    const chainsType = get(chainsTypeAtom);
-    return registryTokensQueryOptions(chainsType);
-});
-
-export const currenciesAtom = atom<Currency[]>((get) => {
-    const queryResult = get(currenciesQueryAtom);
-    return queryResult.data ?? [];
-});
 
 /***** Token In *****/
 /** Selected tokenIn */
