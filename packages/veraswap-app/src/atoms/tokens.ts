@@ -1,6 +1,8 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { Currency } from "@owlprotocol/veraswap-sdk";
+import { Currency, registryTokensQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { atomWithQuery } from "jotai-tanstack-query";
+import { chainsTypeAtom } from "./chains.js";
 import { chains } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -29,6 +31,16 @@ export const fetchedTokensAtom = atomWithQuery(() => ({
 }));
 
  */
+
+export const currenciesQueryAtom = atomWithQuery((get) => {
+    const chainsType = get(chainsTypeAtom);
+    return registryTokensQueryOptions(chainsType);
+});
+
+export const currenciesAtom = atom<Currency[]>((get) => {
+    const queryResult = get(currenciesQueryAtom);
+    return queryResult.data ?? [];
+});
 
 /***** Token In *****/
 /** Selected tokenIn */

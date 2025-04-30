@@ -9,8 +9,7 @@ import { Address, formatUnits } from "viem";
 import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
-import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
-import { currenciesAtom } from "./chains.js";
+import { currencyInAtom, currencyOutAtom, tokenInAmountAtom, currenciesAtom } from "./tokens.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
@@ -285,6 +284,6 @@ export const amountOutAtom = atom((get) => {
             ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
             : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
         : quoterData
-          ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
-          : "";
+            ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
+            : "";
 });
