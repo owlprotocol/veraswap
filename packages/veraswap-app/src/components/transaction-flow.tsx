@@ -1,12 +1,11 @@
 import { ArrowRight, ArrowDown } from "lucide-react";
-import * as Chains from "viem/chains";
 import type { LucideIcon } from "lucide-react";
 import { TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
+import { chains } from "@/config.js";
 
 function TokenBadge({ currency }: { currency: Currency }) {
-    const chain =
-        currency.chainId !== undefined ? Object.values(Chains).find((chain) => chain.id === currency.chainId) : null;
-    const chainName = chain?.name ?? (currency.chainId !== undefined ? `Chain ${currency.chainId}` : null);
+    const chain = chains.find((chain) => chain.id === currency.chainId);
+    const chainName = chain?.name ?? `Chain ${currency.chainId}`;
 
     return (
         <div className="flex flex-col items-center justify-center space-y-1 border-2 rounded-lg px-2 py-2 shadow-sm w-20 md:w-32">
