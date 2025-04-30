@@ -42,11 +42,12 @@ export async function getUniswapV4Route(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetUniswapV4RouteParams,
-) {
+): Promise<{ route: PoolKey[]; amountOut: bigint; gasEstimate: bigint } | null> {
     const { chainId, exactAmount, currencyIn, currencyOut, contracts } = params;
     const zeroForOne = currencyIn < currencyOut;
 
     const routesWithLiquidity = await getUniswapV4RoutesWithLiquidity(queryClient, wagmiConfig, params);
+    if (routesWithLiquidity.length === 0) return null; // No active liquidity
 
     const routeQuotes = (await Promise.all(
         routesWithLiquidity.map((route) => {
@@ -112,10 +113,10 @@ export interface GetUniswapV4RoutesWithLiquidityParams {
     currencyIn: Address;
     currencyOut: Address;
     currencyHops: Address[];
-    poolKeyOptions?: PoolKeyOptions[];
     contracts: {
         v4StateView: Address;
     };
+    poolKeyOptions?: PoolKeyOptions[];
 }
 
 /**
@@ -131,9 +132,7 @@ export async function getUniswapV4RoutesWithLiquidity(
     params: GetUniswapV4RoutesWithLiquidityParams,
 ) {
     const { chainId, currencyIn, currencyOut, currencyHops, contracts } = params;
-    const poolKeyOptions: PoolKeyOptions[] = params.poolKeyOptions ?? Object.values(DEFAULT_POOL_PARAMS);
-
-    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, poolKeyOptions);
+    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, params.poolKeyOptions);
 
     // Find pools with liquidity
     const poolKeys = uniqWith(flatten(routes), poolKeyEqual);
@@ -170,7 +169,7 @@ export function getPoolKeyRoutePermutations(
     currencyIn: Address,
     currencyOut: Address,
     currencyHops: Address[],
-    poolKeyOptions: PoolKeyOptions[] = Object.values(DEFAULT_POOL_PARAMS),
+    poolKeyOptions?: PoolKeyOptions[],
 ): PoolKey[][] {
     // Filter out any duplicates
     const currencyHopsUniq = currencyHops.filter(

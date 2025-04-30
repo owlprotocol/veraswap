@@ -10,7 +10,7 @@ import { getUniswapV4Address } from "../currency/currency.js";
 
 import { getUniswapV4Route } from "./getUniswapV4Route.js";
 
-describe("calls/getERC20ApproveCall.test.ts", function () {
+describe("uniswap/getUniswapV4Route.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {
@@ -35,9 +35,9 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
             },
         });
 
-        expect(result).toBeDefined();
-        expect(result.route.length).toBe(1);
-        expect(result.amountOut).toBeGreaterThan(0n);
+        expect(result).not.toBe(null);
+        expect(result!.route.length).toBe(1);
+        expect(result!.amountOut).toBeGreaterThan(0n);
     });
 
     test("getUniswapV4Route - multi hop", async () => {
@@ -53,8 +53,8 @@ describe("calls/getERC20ApproveCall.test.ts", function () {
             },
         });
 
-        expect(result).toBeDefined();
-        expect(result.route.length).toBe(2);
-        expect(result.amountOut).toBeGreaterThan(0n);
+        expect(result).not.toBe(null);
+        expect(result!.route.length).toBe(2);
+        expect(result!.amountOut).toBeGreaterThan(0n);
     });
 });
