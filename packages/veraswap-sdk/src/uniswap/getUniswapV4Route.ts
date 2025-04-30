@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { flatten, maxBy, uniqWith, zip } from "lodash-es";
-import { Address } from "viem";
+import { Address, numberToHex } from "viem";
 
 import { IStateView } from "../artifacts/IStateView.js";
 import {
@@ -169,7 +169,7 @@ export async function getUniswapV4Route(
                             {
                                 poolKey,
                                 zeroForOne,
-                                exactAmount,
+                                exactAmount: numberToHex(exactAmount),
                                 hookData: "0x",
                             },
                         ],
@@ -188,7 +188,7 @@ export async function getUniswapV4Route(
                             {
                                 exactCurrency: currencyIn,
                                 path,
-                                exactAmount,
+                                exactAmount: numberToHex(exactAmount),
                             },
                         ],
                     }),

@@ -100,6 +100,9 @@ export const routeMultichainAtom = atomWithQuery((get) => {
 
     if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
 
+    const currencyInAddress = getUniswapV4Address(currencyIn);
+    const currencyOutAddress = getUniswapV4Address(currencyOut);
+
     return queryOptions({
         queryFn: async () => {
             const route = await getRouteMultichain(queryClient, config, {
@@ -114,6 +117,13 @@ export const routeMultichainAtom = atomWithQuery((get) => {
 
             return route;
         },
-        queryKey: ["getRouteMultichain"],
+        queryKey: [
+            "getRouteMultichain",
+            currencyIn.chainId,
+            currencyInAddress,
+            currencyOut.chainId,
+            currencyOutAddress,
+            exactAmount,
+        ],
     });
 }) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;
