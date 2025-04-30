@@ -99,12 +99,12 @@ export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 export const UNISWAP_CONTRACTS: Record<
     number,
     | {
-        v4PoolManager: `0x${string}`;
-        v4PositionManager: `0x${string}`;
-        v4StateView: `0x${string}`;
-        v4Quoter: `0x${string}`;
-        universalRouter: `0x${string}`;
-    }
+          v4PoolManager: `0x${string}`;
+          v4PositionManager: `0x${string}`;
+          v4StateView: `0x${string}`;
+          v4Quoter: `0x${string}`;
+          universalRouter: `0x${string}`;
+      }
     | undefined
 > = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
