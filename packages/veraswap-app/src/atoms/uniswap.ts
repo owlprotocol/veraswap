@@ -1,23 +1,11 @@
 import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
-import {
-    getRouteMultichain,
-    getUniswapV4Address,
-    isMultichainToken,
-    PoolKey,
-    quoteQueryOptions,
-} from "@owlprotocol/veraswap-sdk";
+import { getRouteMultichain, getUniswapV4Address, PoolKey, quoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Token, CurrencyAmount, Ether } from "@uniswap/sdk-core";
-import { Atom, atom, WritableAtom } from "jotai";
-import { Address, zeroAddress } from "viem";
+import { Atom, WritableAtom } from "jotai";
+import { Address, numberToHex, zeroAddress } from "viem";
 import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
-import {
-    currencyInAtom,
-    currencyOutAtom,
-    tokenInAmountAtom,
-    tokenInAmountInputAtom,
-    transactionTypeAtom,
-} from "./tokens.js";
+import { currencyInAtom, currencyOutAtom, tokenInAmountAtom, transactionTypeAtom } from "./tokens.js";
 import { orbiterAmountOutAtom } from "./orbiter.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
@@ -123,7 +111,7 @@ export const routeMultichainAtom = atomWithQuery((get) => {
             currencyInAddress,
             currencyOut.chainId,
             currencyOutAddress,
-            exactAmount,
+            numberToHex(exactAmount),
         ],
     });
 }) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;

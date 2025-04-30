@@ -176,15 +176,9 @@ export async function getRouteMultichain(
     }
 
     if (currencyIn instanceof MultichainToken) {
-        // BRIDGE: `currencyIn.getRemoteToken(currencyOut.chainId).equals(currencyOut)`
+        // BRIDGE
         if (currencyIn.getRemoteToken(currencyOut.chainId)?.equals(currencyOut)) {
-            return [
-                {
-                    type: "BRIDGE",
-                    currencyIn: currencyIn,
-                    currencyOut: currencyOut,
-                },
-            ];
+            return [{ type: "BRIDGE", currencyIn, currencyOut }];
         }
     }
 
