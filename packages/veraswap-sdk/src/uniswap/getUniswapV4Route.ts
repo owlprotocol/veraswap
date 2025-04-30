@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { flatten, maxBy, uniqWith, zip } from "lodash-es";
-import { Address, numberToHex } from "viem";
+import { Address } from "viem";
 
 import { IStateView } from "../artifacts/IStateView.js";
 import {
@@ -137,7 +137,7 @@ export interface GetUniswapV4RouteParams extends GetUniswapV4RoutesWithLiquidity
 }
 
 /**
- * Get best Uniswap V4 Route
+ * GetUniswap V4 Route with best amount out quoted
  * @param queryClient
  * @param wagmiConfig
  * @param params
@@ -169,7 +169,7 @@ export async function getUniswapV4Route(
                             {
                                 poolKey,
                                 zeroForOne,
-                                exactAmount: numberToHex(exactAmount),
+                                exactAmount,
                                 hookData: "0x",
                             },
                         ],
@@ -188,7 +188,7 @@ export async function getUniswapV4Route(
                             {
                                 exactCurrency: currencyIn,
                                 path,
-                                exactAmount: numberToHex(exactAmount),
+                                exactAmount,
                             },
                         ],
                     }),
