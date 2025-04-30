@@ -32,7 +32,8 @@ export function getPoolKeysForOptions(
 }
 
 /**
- * Return route (list of pool keys) permutations that have [A, ..., B]
+ * Returns trade routes as lists of pool keys that start with currencyIn and output currencyOut
+ * @param currencyHops an array of possible intermediate tokens to swap currencyIn and currencyOut with
  */
 export function getPoolKeyRoutePermutations(
     currencyIn: Address,
@@ -93,8 +94,8 @@ export async function getUniswapV4RoutesWithLiquidity(
     wagmiConfig: Config,
     params: GetUniswapV4RoutesWithLiquidityParams,
 ) {
-    const { chainId, currencyIn, currencyOut, currencyHops, contracts } = params;
-    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, params.poolKeyOptions);
+    const { chainId, currencyIn, currencyOut, currencyHops, contracts, poolKeyOptions } = params;
+    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, poolKeyOptions);
 
     // Find pools with liquidity
     const poolKeys = uniqWith(flatten(routes), poolKeyEqual);
