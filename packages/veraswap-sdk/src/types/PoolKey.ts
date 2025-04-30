@@ -63,7 +63,7 @@ export const DEFAULT_POOL_PARAMS = {
  * @param poolKey
  */
 export function createPoolKey(poolKey: PoolKey): PoolKey {
-    invariant(poolKey.currency0 != poolKey.currency1, "PoolKey currency0 == currency1 !");
+    invariant(poolKey.currency0 != poolKey.currency1, "poolKey currency0 must be != currency1");
     return {
         ...poolKey,
         currency0: poolKey.currency0 < poolKey.currency1 ? poolKey.currency0 : poolKey.currency1,
