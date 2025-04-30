@@ -112,15 +112,15 @@ export async function getUniswapV4RoutesWithLiquidity(
             ),
         ),
     );
-    const poolKeysWithLiquidity = new Set(
-        poolKeys.filter((_, idx) => poolKeysLiquidity[idx] > 0n).map((poolKey) => getPoolKeyEncoding(poolKey)),
-    );
+
+    const poolKeysWithLiquidity = poolKeys.filter((_, idx) => poolKeysLiquidity[idx] > 0n);
+    const poolKeysWithLiquidityEncoded = new Set(poolKeysWithLiquidity.map((poolKey) => getPoolKeyEncoding(poolKey)));
 
     // Filter out routes with no liquidity
-    const routesWithLiquidity = routes.filter((route) => {
-        // All pool keys must have liquidity
-        return route.reduce((acc, poolKey) => acc && poolKeysWithLiquidity.has(getPoolKeyEncoding(poolKey)), true);
-    });
+    const routesWithLiquidity = routes.filter((route) =>
+        // All pool keys in the route must have liquidity
+        route.every((poolKey) => poolKeysWithLiquidityEncoded.has(getPoolKeyEncoding(poolKey))),
+    );
 
     return routesWithLiquidity;
 }
