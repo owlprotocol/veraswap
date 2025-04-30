@@ -1,15 +1,15 @@
 import { Currency } from "../currency/currency.js";
 import { PoolKey } from "../types/PoolKey.js";
+import { RouteComponent } from "../uniswap/getUniswapV4RouteMultichain.js";
 
-import { assetFlowsToTransactionType, getAssetFlows } from "./getAssetFlows.js";
+import { assetFlowsToTransactionType } from "./getAssetFlows.js";
 
 export interface TransactionTypeSwap {
     type: "SWAP";
     chainId: number;
     currencyIn: Currency;
     currencyOut: Currency;
-    poolKey: PoolKey;
-    zeroForOne: boolean;
+    route: PoolKey[];
     // Not needed here but used for consistency
     withSuperchain?: boolean;
 }
@@ -49,14 +49,15 @@ export type TransactionType =
 export function getTransactionType({
     currencyIn,
     currencyOut,
-    poolKeys,
+    routeComponents,
 }: {
     currencyIn: Currency;
     currencyOut: Currency;
-    poolKeys: Record<number, PoolKey[]>;
+    routeComponents: [RouteComponent, ...RouteComponent[]] | null;
 }): TransactionType | null {
     if (currencyIn.equals(currencyOut)) return null;
-    const flows = getAssetFlows(currencyIn, currencyOut, poolKeys);
-    if (!flows) return null;
-    return assetFlowsToTransactionType(flows);
+
+    if (!routeComponents) return null;
+    // TODO: refactor this to take route components
+    return assetFlowsToTransactionType(routeComponents);
 }

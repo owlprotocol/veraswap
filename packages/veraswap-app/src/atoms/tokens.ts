@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { parseUnits } from "viem";
 import { getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
 import { POOLS } from "@owlprotocol/veraswap-sdk/constants";
+import { routeMultichainAtom } from "./uniswap.js";
 import { chains } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -65,10 +66,12 @@ export const chainOutAtom = atom((get) => {
 export const transactionTypeAtom = atom<TransactionType | null>((get) => {
     const currencyIn = get(currencyInAtom);
     const currencyOut = get(currencyOutAtom);
-    if (!currencyIn || !currencyOut) return null;
+
+    const routeMultichain = get(routeMultichainAtom).data;
+    if (!currencyIn || !currencyOut || !routeMultichain) return null;
 
     //TODO: Add better constants
-    return getTransactionType({ currencyIn, currencyOut, poolKeys: POOLS });
+    return getTransactionType({ currencyIn, currencyOut, routeComponents: routeMultichain });
 });
 
 /***** Invert *****/

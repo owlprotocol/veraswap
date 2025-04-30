@@ -17,6 +17,7 @@ import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransf
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
+import { poolKeysToPath } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
 import {
     TransactionTypeBridge,
@@ -130,8 +131,8 @@ export async function getTransaction(
         case "SWAP": {
             const {
                 currencyIn,
-                poolKey,
-                zeroForOne,
+                currencyOut,
+                route,
                 amountIn,
                 walletAddress,
                 amountOutMinimum,
@@ -160,10 +161,14 @@ export async function getTransaction(
                 permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
             }
 
+            // TODO: do the conversion inside of getTransactionType
+            const path = poolKeysToPath(getUniswapV4Address(currencyIn), route);
+
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
-                poolKey,
-                zeroForOne,
+                currencyIn: getUniswapV4Address(currencyIn),
+                currencyOut: getUniswapV4Address(currencyOut),
+                path,
                 amountIn,
                 amountOutMinimum,
                 permit2PermitParams,
@@ -252,8 +257,11 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { currencyIn: swapCurrencyIn, poolKey, zeroForOne } = swap;
+            const { currencyIn: swapCurrencyIn, route, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
+
+            // TODO: do the conversion inside of getTransactionType
+            const path = poolKeysToPath(getUniswapV4Address(swapCurrencyIn), route);
 
             const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
                 ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
@@ -295,10 +303,12 @@ export async function getTransaction(
                     amountIn,
                     amountOutMinimum,
                     destinationChain: bridgeCurrencyOut.chainId,
-                    poolKey,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    path,
                     receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
-                    zeroForOne,
+
                     permit2PermitParams,
                 });
             }
@@ -310,8 +320,9 @@ export async function getTransaction(
                 bridgePayment: bridgePayment ?? 1n,
                 destinationChain: bridgeCurrencyOut.chainId,
                 receiver: walletAddress,
-                poolKey,
-                zeroForOne,
+                currencyIn: getUniswapV4Address(swapCurrencyIn),
+                currencyOut: getUniswapV4Address(swapCurrencyOut),
+                path,
                 permit2PermitParams,
                 amountIn,
                 amountOutMinimum,
@@ -333,11 +344,14 @@ export async function getTransaction(
             } = params;
             // TODO: check if withSuperchain is needed
             const { currencyIn, currencyOut } = bridge;
-            const { poolKey, zeroForOne } = swap;
+            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, route } = swap;
 
             if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
+
+            // TODO: do the conversion inside of getTransactionType
+            const path = poolKeysToPath(getUniswapV4Address(swapCurrencyIn), route);
 
             // TODO: fix this for non local env
             const originERC7579ExecutorRouter = contracts[currencyIn.chainId].erc7579Router;
@@ -395,10 +409,11 @@ export async function getTransaction(
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: orbiterAmountOut ?? amountIn,
                     amountOutMinimum,
-                    poolKey,
+                    path,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
                     receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
-                    zeroForOne,
                 },
                 orbiterParams,
             };

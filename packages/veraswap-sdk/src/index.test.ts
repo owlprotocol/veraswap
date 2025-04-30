@@ -40,7 +40,7 @@ import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
+import { PoolKey, PoolKeyAbi, poolKeysToPath } from "./types/PoolKey.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;
@@ -319,12 +319,14 @@ describe("index.test.ts", function () {
             const approvePermit2 = permit2Allowance < amountIn;
 
             const amountOutMinimum = amountOutQuoted;
-            const zeroForOne = true;
+
+            const path = poolKeysToPath(currency0Address, [poolKey]);
             const swapCalls = getEOASwapCalls({
                 amountIn,
                 amountOutMinimum,
-                poolKey,
-                zeroForOne,
+                currencyIn: currency0Address,
+                currencyOut: currency1Address,
+                path,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
             });
@@ -421,13 +423,16 @@ describe("index.test.ts", function () {
             const approvePermit2 = permit2Allowance < amountIn;
 
             const amountOutMinimum = amountOutQuoted;
-            const zeroForOne = true;
+
+            const path = poolKeysToPath(currency0Address, [poolKey]);
+
             const batchCalls = getSmartAccountSwapCalls({
                 amountIn,
                 amountOutMinimum,
-                zeroForOne,
+                currencyIn: currency0Address,
+                currencyOut: poolKey.currency1,
+                path,
                 permitTransferFromData,
-                poolKey,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
             });

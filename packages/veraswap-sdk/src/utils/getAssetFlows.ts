@@ -5,6 +5,7 @@ import { Currency } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { PoolKey } from "../types/PoolKey.js";
+import { RouteComponent, RouteComponentBridge, RouteComponentSwap } from "../uniswap/getUniswapV4RouteMultichain.js";
 
 /**
  * Take token pair and return list of token pairs on same chain using their remote tokens
@@ -221,44 +222,46 @@ export function getAssetFlows(
 
 export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
-    swap: AssetFlowSwap;
-    bridge: AssetFlowBridge;
+    swap: RouteComponentSwap;
+    bridge: RouteComponentBridge;
 }
 
 export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
-    bridge: AssetFlowBridge;
-    swap: AssetFlowSwap;
+    bridge: RouteComponentBridge;
+    swap: RouteComponentSwap;
 }
 
-export type TransactionType = AssetFlowSwap | AssetFlowBridge | TransactionTypeSwapBridge | TransactionTypeBridgeSwap;
+export type TransactionType = RouteComponent | TransactionTypeSwapBridge | TransactionTypeBridgeSwap;
 /**
  * Convert list of asset flows to TransactionType (used on frontend)
  * @param flows
  */
-export function assetFlowsToTransactionType(flows: [AssetFlow, ...AssetFlow[]]): TransactionType | null {
-    invariant(flows.length >= 1, "flows.length MUST be >= 1");
-    if (flows.length === 1) {
-        return flows[0];
+export function assetFlowsToTransactionType(
+    routeComponents: [RouteComponent, ...RouteComponent[]],
+): TransactionType | null {
+    invariant(routeComponents.length >= 1, "routeComponents.length MUST be >= 1");
+    if (routeComponents.length === 1) {
+        return routeComponents[0];
     }
 
-    if (flows.length === 2) {
-        if (flows[0].type === "SWAP" && flows[1].type === "BRIDGE") {
+    if (routeComponents.length === 2) {
+        if (routeComponents[0].type === "SWAP" && routeComponents[1].type === "BRIDGE") {
             return {
                 type: "SWAP_BRIDGE",
-                swap: flows[0],
-                bridge: flows[1],
+                swap: routeComponents[0],
+                bridge: routeComponents[1],
             };
-        } else if (flows[0].type === "BRIDGE" && flows[1].type === "SWAP") {
+        } else if (routeComponents[0].type === "BRIDGE" && routeComponents[1].type === "SWAP") {
             return {
                 type: "BRIDGE_SWAP",
-                bridge: flows[0],
-                swap: flows[1],
+                bridge: routeComponents[0],
+                swap: routeComponents[1],
             };
         }
-        throw new Error("flows.length === 2 but not SWAP_BRIDGE / BRIDGE_SWAP");
+        throw new Error("routeComponents.length === 2 but not SWAP_BRIDGE / BRIDGE_SWAP");
     }
 
-    //Longer flows unsupported
+    //Longer routes unsupported
     return null;
 }

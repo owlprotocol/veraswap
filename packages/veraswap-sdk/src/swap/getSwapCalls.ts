@@ -1,5 +1,4 @@
 import { QueryClient } from "@tanstack/react-query";
-import { PoolKey } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
@@ -7,6 +6,7 @@ import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";
 import { getPermit2ApproveCalls } from "../calls/Permit2/getPermit2ApproveCalls.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
+import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
@@ -14,8 +14,9 @@ import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 export interface GetSwapCallsParams extends GetCallsParams {
     amountIn: bigint;
     amountOutMinimum: bigint;
-    zeroForOne: boolean;
-    poolKey: PoolKey;
+    currencyIn: Address;
+    currencyOut: Address;
+    path: PathKey[];
     universalRouter: Address;
     receiver: Address;
     callTargetBefore?: [Address, bigint, Hex];
@@ -35,18 +36,17 @@ export async function getSwapCalls(
         account,
         amountIn,
         amountOutMinimum,
-        poolKey,
+        path,
+        currencyIn,
+        currencyOut,
         universalRouter,
         receiver,
-        zeroForOne,
         callTargetBefore,
         callTargetAfter,
         hookData,
         approveExpiration,
     } = params;
     const routerPayment = params.routerPayment ?? 0n;
-
-    const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
 
     const calls: (CallArgs & { account: Address })[] = [];
 
@@ -70,8 +70,9 @@ export async function getSwapCalls(
         receiver,
         amountIn,
         amountOutMinimum,
-        poolKey,
-        zeroForOne,
+        path,
+        currencyIn,
+        currencyOut,
         hookData,
     });
     routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);

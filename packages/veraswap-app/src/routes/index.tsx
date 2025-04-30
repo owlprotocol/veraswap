@@ -199,8 +199,6 @@ function Index() {
               ? formatUnits(quoterData[0], currencyOut?.decimals ?? 18)
               : "";
 
-    const routeMultichain = useAtomValue(routeMultichainAtom);
-
     useDustAccount(walletAddress);
 
     useWatchHyperlaneMessageProcessed(

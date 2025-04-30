@@ -118,3 +118,16 @@ export function poolKeysToPath(exactCurrency: Address, poolKeys: PoolKey[]): Pat
 
     return path;
 }
+
+/**
+ * Convert a single path key to a pool key
+ */
+export function pathKeyToPoolKey(pathKey: PathKey, currencyIn: Address): PoolKey {
+    return {
+        currency0: currencyIn < pathKey.intermediateCurrency ? currencyIn : pathKey.intermediateCurrency,
+        currency1: currencyIn < pathKey.intermediateCurrency ? pathKey.intermediateCurrency : currencyIn,
+        fee: pathKey.fee,
+        tickSpacing: pathKey.tickSpacing,
+        hooks: pathKey.hooks,
+    };
+}

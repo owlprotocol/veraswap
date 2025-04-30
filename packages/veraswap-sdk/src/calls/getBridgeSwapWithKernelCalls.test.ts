@@ -24,6 +24,7 @@ import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
+import { poolKeysToPath } from "../types/PoolKey.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -182,6 +183,11 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
 
             const amount = parseEther("1");
 
+            const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
+            const currencyOut = zeroForOne ? poolKey.currency1 : poolKey.currency0;
+
+            const path = poolKeysToPath(currencyIn, [poolKey]);
+
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id, //"opChainA" but we use are mocking on L1 for now
@@ -217,10 +223,11 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: amount,
                     amountOutMinimum,
-                    poolKey,
+                    currencyIn,
+                    currencyOut,
+                    path,
                     receiver: recipient,
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-                    zeroForOne,
                 },
             });
             expect(bridgeSwapCalls.calls.length).toBe(1);
