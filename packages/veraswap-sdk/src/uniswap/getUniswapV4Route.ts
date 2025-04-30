@@ -21,6 +21,110 @@ import {
 } from "../types/PoolKey.js";
 
 /**
+ * Get all pool keys for 2 tokens & a list of options
+ */
+export function getPoolKeysForOptions(
+    currencyA: Address,
+    currencyB: Address,
+    poolKeyOptions: PoolKeyOptions[] = Object.values(DEFAULT_POOL_PARAMS),
+): PoolKey[] {
+    return poolKeyOptions.map((option) => createPoolKey({ currency0: currencyA, currency1: currencyB, ...option }));
+}
+
+/**
+ * Return route (list of pool keys) permutations that have [A, ..., B]
+ */
+export function getPoolKeyRoutePermutations(
+    currencyIn: Address,
+    currencyOut: Address,
+    currencyHops: Address[],
+    poolKeyOptions?: PoolKeyOptions[],
+): PoolKey[][] {
+    // Filter out any duplicates
+    const currencyHopsUniq = currencyHops.filter(
+        (currencyHop) => currencyHop != currencyIn && currencyHop != currencyOut,
+    );
+
+    // In/Out Pools
+    const singleHopRoutes: [PoolKey][] = getPoolKeysForOptions(currencyIn, currencyOut, poolKeyOptions).map(
+        (poolKey) => [poolKey],
+    );
+
+    const multiHopRoutes: [PoolKey, PoolKey][] = [];
+
+    currencyHopsUniq.forEach((currencyHop) => {
+        // In/X Pools
+        const poolKeysIn = getPoolKeysForOptions(currencyIn, currencyHop, poolKeyOptions);
+        // Out/X Pools
+        const poolKeysOut = getPoolKeysForOptions(currencyOut, currencyHop, poolKeyOptions);
+        poolKeysIn.forEach((poolKeyIn) => {
+            poolKeysOut.forEach((poolKeyOut) => {
+                multiHopRoutes.push([poolKeyIn, poolKeyOut]);
+            });
+        });
+    });
+
+    return [...singleHopRoutes, ...multiHopRoutes];
+}
+
+/**
+ * Get Uniswap V4 Routes that have active liquidity
+ */
+export interface GetUniswapV4RoutesWithLiquidityParams {
+    chainId: number;
+    currencyIn: Address;
+    currencyOut: Address;
+    currencyHops: Address[];
+    contracts: {
+        v4StateView: Address;
+    };
+    poolKeyOptions?: PoolKeyOptions[];
+}
+
+/**
+ * Get Uniswap V4 Routes that have active liquidity
+ * @param queryClient
+ * @param wagmiConfig
+ * @param params
+ * @returns
+ */
+export async function getUniswapV4RoutesWithLiquidity(
+    queryClient: QueryClient,
+    wagmiConfig: Config,
+    params: GetUniswapV4RoutesWithLiquidityParams,
+) {
+    const { chainId, currencyIn, currencyOut, currencyHops, contracts } = params;
+    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, params.poolKeyOptions);
+
+    // Find pools with liquidity
+    const poolKeys = uniqWith(flatten(routes), poolKeyEqual);
+    const poolKeysLiquidity = await Promise.all(
+        poolKeys.map((poolKey) =>
+            queryClient.fetchQuery(
+                readContractQueryOptions(wagmiConfig, {
+                    chainId,
+                    address: contracts.v4StateView,
+                    abi: IStateView.abi,
+                    functionName: "getLiquidity",
+                    args: [getPoolId(poolKey)],
+                }),
+            ),
+        ),
+    );
+    const poolKeysWithLiquidity = new Set(
+        poolKeys.filter((_, idx) => poolKeysLiquidity[idx] > 0n).map((poolKey) => getPoolKeyEncoding(poolKey)),
+    );
+
+    // Filter out routes with no liquidity
+    const routesWithLiquidity = routes.filter((route) => {
+        // All pool keys must have liquidity
+        return route.reduce((acc, poolKey) => acc && poolKeysWithLiquidity.has(getPoolKeyEncoding(poolKey)), true);
+    });
+
+    return routesWithLiquidity;
+}
+
+/**
  * Get best Uniswap V4 Route
  */
 export interface GetUniswapV4RouteParams extends GetUniswapV4RoutesWithLiquidityParams {
@@ -103,108 +207,4 @@ export async function getUniswapV4Route(
     const bestRoute = maxBy(routesWithQuotes, (r) => r.amountOut)!;
 
     return bestRoute;
-}
-
-/**
- * Get Uniswap V4 Routes that have active liquidity
- */
-export interface GetUniswapV4RoutesWithLiquidityParams {
-    chainId: number;
-    currencyIn: Address;
-    currencyOut: Address;
-    currencyHops: Address[];
-    contracts: {
-        v4StateView: Address;
-    };
-    poolKeyOptions?: PoolKeyOptions[];
-}
-
-/**
- * Get Uniswap V4 Routes that have active liquidity
- * @param queryClient
- * @param wagmiConfig
- * @param params
- * @returns
- */
-export async function getUniswapV4RoutesWithLiquidity(
-    queryClient: QueryClient,
-    wagmiConfig: Config,
-    params: GetUniswapV4RoutesWithLiquidityParams,
-) {
-    const { chainId, currencyIn, currencyOut, currencyHops, contracts } = params;
-    const routes = getPoolKeyRoutePermutations(currencyIn, currencyOut, currencyHops, params.poolKeyOptions);
-
-    // Find pools with liquidity
-    const poolKeys = uniqWith(flatten(routes), poolKeyEqual);
-    const poolKeysLiquidity = await Promise.all(
-        poolKeys.map((poolKey) =>
-            queryClient.fetchQuery(
-                readContractQueryOptions(wagmiConfig, {
-                    chainId,
-                    address: contracts.v4StateView,
-                    abi: IStateView.abi,
-                    functionName: "getLiquidity",
-                    args: [getPoolId(poolKey)],
-                }),
-            ),
-        ),
-    );
-    const poolKeysWithLiquidity = new Set(
-        poolKeys.filter((_, idx) => poolKeysLiquidity[idx] > 0n).map((poolKey) => getPoolKeyEncoding(poolKey)),
-    );
-
-    // Filter out routes with no liquidity
-    const routesWithLiquidity = routes.filter((route) => {
-        // All pool keys must have liquidity
-        return route.reduce((acc, poolKey) => acc && poolKeysWithLiquidity.has(getPoolKeyEncoding(poolKey)), true);
-    });
-
-    return routesWithLiquidity;
-}
-
-/**
- * Return route (list of pool keys) permutations that have [A, ..., B]
- */
-export function getPoolKeyRoutePermutations(
-    currencyIn: Address,
-    currencyOut: Address,
-    currencyHops: Address[],
-    poolKeyOptions?: PoolKeyOptions[],
-): PoolKey[][] {
-    // Filter out any duplicates
-    const currencyHopsUniq = currencyHops.filter(
-        (currencyHop) => currencyHop != currencyIn && currencyHop != currencyOut,
-    );
-
-    // In/Out Pools
-    const singleHopRoutes: [PoolKey][] = getPoolKeysForOptions(currencyIn, currencyOut, poolKeyOptions).map(
-        (poolKey) => [poolKey],
-    );
-
-    const multiHopRoutes: [PoolKey, PoolKey][] = [];
-
-    currencyHopsUniq.forEach((currencyHop) => {
-        // In/X Pools
-        const poolKeysIn = getPoolKeysForOptions(currencyIn, currencyHop, poolKeyOptions);
-        // Out/X Pools
-        const poolKeysOut = getPoolKeysForOptions(currencyOut, currencyHop, poolKeyOptions);
-        poolKeysIn.forEach((poolKeyIn) => {
-            poolKeysOut.forEach((poolKeyOut) => {
-                multiHopRoutes.push([poolKeyIn, poolKeyOut]);
-            });
-        });
-    });
-
-    return [...singleHopRoutes, ...multiHopRoutes];
-}
-
-/**
- * Get all pool keys for 2 tokens & a list of options
- */
-export function getPoolKeysForOptions(
-    currencyA: Address,
-    currencyB: Address,
-    poolKeyOptions: PoolKeyOptions[] = Object.values(DEFAULT_POOL_PARAMS),
-): PoolKey[] {
-    return poolKeyOptions.map((option) => createPoolKey({ currency0: currencyA, currency1: currencyB, ...option }));
 }
