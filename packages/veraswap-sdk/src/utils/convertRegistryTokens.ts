@@ -51,8 +51,7 @@ export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
             return Ether.onChain(chainId);
         }
 
-        const ercToken = token;
-        const { address, hypERC20Collateral, remoteTokens } = ercToken;
+        const { address, hypERC20Collateral, remoteTokens } = token;
 
         const parsedRemoteTokens = remoteTokens?.length
             ? Object.fromEntries(
