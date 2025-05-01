@@ -1,7 +1,49 @@
+import { Address } from "viem";
+
 import { Currency, Ether, MultichainToken, MultichainTokenData, Token, TokenStandard2 } from "../currency/index.js";
-import { RegistryToken } from "../types/index.js";
+import { RegistryErcToken, RegistryToken } from "../types/index.js";
 
 export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
+    const tokenMap = new Map<string, RegistryErcToken>();
+
+    for (const t of tokens) {
+        if ("address" in t) {
+            tokenMap.set(`${t.chainId}:${t.address.toLowerCase()}`, t);
+        }
+    }
+
+    const getRemoteTokenData = (remoteChainId: number, remoteAddress: string): [number, MultichainTokenData] | null => {
+        const key = `${remoteChainId}:${remoteAddress.toLowerCase()}`;
+        const remoteTokenDefinition = tokenMap.get(key);
+
+        if (!remoteTokenDefinition) {
+            console.warn(`Token ${remoteAddress} on chain ${remoteChainId} is missing definition`);
+            return null;
+        }
+
+        const {
+            decimals: remoteDecimals,
+            symbol: remoteSymbol = "",
+            name: remoteName = "",
+            logoURI: remoteLogoURI = "",
+            standard: remoteStandard,
+            hypERC20Collateral: remoteHypCollateral,
+        } = remoteTokenDefinition;
+
+        const tokenData: MultichainTokenData = {
+            chainId: remoteChainId,
+            address: remoteAddress as Address,
+            standard: remoteStandard as TokenStandard2,
+            decimals: remoteDecimals,
+            symbol: remoteSymbol,
+            name: remoteName,
+            logoURI: remoteLogoURI,
+            hypERC20Collateral: remoteHypCollateral ?? null,
+        };
+
+        return [remoteChainId, tokenData];
+    };
+
     return tokens.map((token): Currency => {
         const { standard, chainId, decimals, symbol = "", name = "", logoURI = "" } = token;
 
@@ -9,37 +51,22 @@ export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
             return Ether.onChain(chainId);
         }
 
-        const { address, hypERC20Collateral, remoteTokens } = token;
+        const ercToken = token;
+        const { address, hypERC20Collateral, remoteTokens } = ercToken;
 
-        const parsedRemoteTokens: Record<number, MultichainTokenData> | undefined =
-            remoteTokens && remoteTokens.length > 0
-                ? Object.fromEntries(
-                      remoteTokens.map((remote) => [
-                          remote.chainId,
-                          {
-                              chainId: remote.chainId,
-                              address: remote.address,
-                              standard: remote.standard as TokenStandard2,
-                              decimals,
-                              symbol,
-                              name,
-                              logoURI,
-                              hypERC20Collateral: remote.hypERC20Collateral ?? null,
-                          },
-                      ]),
-                  )
-                : undefined;
+        const parsedRemoteTokens = remoteTokens?.length
+            ? Object.fromEntries(
+                  remoteTokens
+                      .map(({ chainId: remoteChainId, address: remoteAddress }) =>
+                          getRemoteTokenData(remoteChainId, remoteAddress),
+                      )
+                      .filter((entry): entry is [number, MultichainTokenData] => entry !== null),
+              )
+            : undefined;
 
         switch (standard) {
             case "SuperERC20":
-                return MultichainToken.createSuperERC20({
-                    chainId,
-                    address,
-                    name,
-                    logoURI,
-                    symbol,
-                    decimals,
-                });
+                return MultichainToken.createSuperERC20({ chainId, address, name, logoURI, symbol, decimals });
 
             case "HypERC20":
                 return MultichainToken.create({

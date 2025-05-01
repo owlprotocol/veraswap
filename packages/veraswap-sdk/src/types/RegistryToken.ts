@@ -5,8 +5,6 @@ export type RegistryTokenStandard = "ERC20" | "HypERC20" | "SuperERC20" | "Nativ
 export interface RegistryRemoteToken {
     chainId: number;
     address: Address;
-    standard: RegistryTokenStandard;
-    hypERC20Collateral?: Address;
 }
 
 export interface RegistryTokenBase {
