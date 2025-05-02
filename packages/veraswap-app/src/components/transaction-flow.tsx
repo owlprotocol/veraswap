@@ -1,21 +1,16 @@
 import { ArrowRight, ArrowDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
+import { TokenBadge } from "./TokenBadge.js";
 import { chains } from "@/config.js";
-
-function TokenBadge({ currency }: { currency: Currency }) {
+function TokenDisplay({ currency }: { currency: Currency }) {
     const chain = chains.find((chain) => chain.id === currency.chainId);
     const chainName = chain?.name ?? `Chain ${currency.chainId}`;
 
     return (
         <div className="flex flex-col items-center justify-center space-y-1 border-2 rounded-lg px-2 py-2 shadow-sm w-20 md:w-32">
             <div className="flex flex-col items-center space-y-1">
-                <img
-                    src={currency.logoURI ?? "https://etherscan.io/images/main/empty-token.png"}
-                    alt={`${currency.symbol} logo`}
-                    className="h-6 w-6 md:h-7 md:w-7 rounded-full object-contain"
-                    onError={(e) => (e.currentTarget.src = "https://etherscan.io/images/main/empty-token.png")}
-                />
+                <TokenBadge currency={currency} />
                 <span className="font-medium text-xs md:text-sm">{currency.symbol}</span>
             </div>
             {chainName && (
@@ -52,14 +47,14 @@ export function TransactionFlow({ transaction }: { transaction: TransactionType 
                 return (
                     <div className="flex flex-col items-center">
                         <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenBadge currency={transaction.currencyIn} />
+                            <TokenDisplay currency={transaction.currencyIn} />
                             <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenBadge currency={transaction.currencyOut} />
+                            <TokenDisplay currency={transaction.currencyOut} />
                         </div>
                         <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenBadge currency={transaction.currencyIn} />
+                            <TokenDisplay currency={transaction.currencyIn} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenBadge currency={transaction.currencyOut} />
+                            <TokenDisplay currency={transaction.currencyOut} />
                         </div>
                     </div>
                 );
@@ -68,14 +63,14 @@ export function TransactionFlow({ transaction }: { transaction: TransactionType 
                 return (
                     <div className="flex flex-col items-center">
                         <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenBadge currency={transaction.currencyIn} />
+                            <TokenDisplay currency={transaction.currencyIn} />
                             <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenBadge currency={transaction.currencyOut} />
+                            <TokenDisplay currency={transaction.currencyOut} />
                         </div>
                         <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenBadge currency={transaction.currencyIn} />
+                            <TokenDisplay currency={transaction.currencyIn} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenBadge currency={transaction.currencyOut} />
+                            <TokenDisplay currency={transaction.currencyOut} />
                         </div>
                     </div>
                 );
@@ -84,18 +79,18 @@ export function TransactionFlow({ transaction }: { transaction: TransactionType 
                 return (
                     <div className="flex flex-col items-center">
                         <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenBadge currency={transaction.swap.currencyIn} />
+                            <TokenDisplay currency={transaction.swap.currencyIn} />
                             <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenBadge currency={transaction.swap.currencyOut} />
+                            <TokenDisplay currency={transaction.swap.currencyOut} />
                             <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenBadge currency={transaction.bridge.currencyOut} />
+                            <TokenDisplay currency={transaction.bridge.currencyOut} />
                         </div>
                         <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenBadge currency={transaction.swap.currencyIn} />
+                            <TokenDisplay currency={transaction.swap.currencyIn} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenBadge currency={transaction.swap.currencyOut} />
+                            <TokenDisplay currency={transaction.swap.currencyOut} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenBadge currency={transaction.bridge.currencyOut} />
+                            <TokenDisplay currency={transaction.bridge.currencyOut} />
                         </div>
                     </div>
                 );
@@ -104,18 +99,18 @@ export function TransactionFlow({ transaction }: { transaction: TransactionType 
                 return (
                     <div className="flex flex-col items-center">
                         <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenBadge currency={transaction.bridge.currencyIn} />
+                            <TokenDisplay currency={transaction.bridge.currencyIn} />
                             <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenBadge currency={transaction.swap.currencyIn} />
+                            <TokenDisplay currency={transaction.swap.currencyIn} />
                             <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenBadge currency={transaction.swap.currencyOut} />
+                            <TokenDisplay currency={transaction.swap.currencyOut} />
                         </div>
                         <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenBadge currency={transaction.bridge.currencyIn} />
+                            <TokenDisplay currency={transaction.bridge.currencyIn} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenBadge currency={transaction.swap.currencyIn} />
+                            <TokenDisplay currency={transaction.swap.currencyIn} />
                             <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenBadge currency={transaction.swap.currencyOut} />
+                            <TokenDisplay currency={transaction.swap.currencyOut} />
                         </div>
                     </div>
                 );
