@@ -2,13 +2,14 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { flatten, maxBy, uniqWith, zip } from "lodash-es";
-import { Address, numberToHex } from "viem";
+import { Address, ContractFunctionExecutionError, numberToHex } from "viem";
 
 import { IStateView } from "../artifacts/IStateView.js";
 import {
     quoteExactInput as quoteExactInputAbi,
     quoteExactInputSingle as quoteExactInputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
+import { UnexpectedRevertBytes } from "../artifacts/V4Quoter.js";
 import {
     createPoolKey,
     DEFAULT_POOL_PARAMS,
@@ -114,6 +115,7 @@ export async function getUniswapV4RoutesWithLiquidity(
     );
 
     const poolKeysWithLiquidity = poolKeys.filter((_, idx) => poolKeysLiquidity[idx] > 0n);
+
     const poolKeysWithLiquidityEncoded = new Set(poolKeysWithLiquidity.map((poolKey) => getPoolKeyEncoding(poolKey)));
 
     // Filter out routes with no liquidity
@@ -154,48 +156,64 @@ export async function getUniswapV4Route(
     const routesWithLiquidity = await getUniswapV4RoutesWithLiquidity(queryClient, wagmiConfig, params);
     if (routesWithLiquidity.length === 0) return null; // No active liquidity
 
-    const routeQuotes = (await Promise.all(
-        routesWithLiquidity.map((route) => {
+    const routeQuotes = await Promise.all(
+        routesWithLiquidity.map(async (route) => {
             if (route.length == 1) {
                 // Single-hop
                 const poolKey = route[0];
-                return queryClient.fetchQuery(
-                    readContractQueryOptions(wagmiConfig, {
-                        chainId,
-                        address: contracts.v4Quoter,
-                        abi: [quoteExactInputSingleAbi],
-                        functionName: "quoteExactInputSingle",
-                        args: [
-                            {
-                                poolKey,
-                                zeroForOne,
-                                exactAmount: numberToHex(exactAmount),
-                                hookData: "0x",
-                            },
-                        ],
-                    }),
-                );
+                return queryClient
+                    .fetchQuery(
+                        readContractQueryOptions(wagmiConfig, {
+                            chainId,
+                            address: contracts.v4Quoter,
+                            abi: [quoteExactInputSingleAbi, UnexpectedRevertBytes],
+                            functionName: "quoteExactInputSingle",
+                            args: [
+                                {
+                                    poolKey,
+                                    zeroForOne,
+                                    exactAmount: numberToHex(exactAmount),
+                                    hookData: "0x",
+                                },
+                            ],
+                        }),
+                    )
+                    .catch((e) => {
+                        if (e instanceof ContractFunctionExecutionError) {
+                            // TODO: Consider looking specifcially for UnexpectedRevertBytes
+                            return [0n, 0n]; // No liquidity
+                        }
+                        throw e;
+                    });
             } else {
                 // Multi-hop
                 const path = poolKeysToPath(currencyIn, route);
-                return queryClient.fetchQuery(
-                    readContractQueryOptions(wagmiConfig, {
-                        chainId,
-                        address: contracts.v4Quoter,
-                        abi: [quoteExactInputAbi],
-                        functionName: "quoteExactInput",
-                        args: [
-                            {
-                                exactCurrency: currencyIn,
-                                path,
-                                exactAmount: numberToHex(exactAmount),
-                            },
-                        ],
-                    }),
-                );
+                return queryClient
+                    .fetchQuery(
+                        readContractQueryOptions(wagmiConfig, {
+                            chainId,
+                            address: contracts.v4Quoter,
+                            abi: [quoteExactInputAbi, UnexpectedRevertBytes],
+                            functionName: "quoteExactInput",
+                            args: [
+                                {
+                                    exactCurrency: currencyIn,
+                                    path,
+                                    exactAmount: numberToHex(exactAmount),
+                                },
+                            ],
+                        }),
+                    )
+                    .catch((e) => {
+                        if (e instanceof ContractFunctionExecutionError) {
+                            // TODO: Consider looking specifcially for UnexpectedRevertBytes
+                            return [0n, 0n]; // No liquidity
+                        }
+                        throw e;
+                    });
             }
         }),
-    )) as [amountOut: bigint, gasEstimate: bigint][];
+    );
 
     const routesWithQuotes = zip(routesWithLiquidity, routeQuotes).map(([route, quote]) => {
         // TODO: Update amountOut to account for gas?
@@ -206,6 +224,8 @@ export async function getUniswapV4Route(
         };
     });
     const bestRoute = maxBy(routesWithQuotes, (r) => r.amountOut)!;
+
+    if (bestRoute.amountOut === 0n) return null;
 
     return bestRoute;
 }

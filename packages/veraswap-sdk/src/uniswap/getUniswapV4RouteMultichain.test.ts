@@ -14,7 +14,7 @@ import {
     RouteComponentSwap,
 } from "./getUniswapV4RouteMultichain.js";
 
-describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
+describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {
@@ -45,7 +45,6 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
     describe("getUniswapV4RouteMultichain", () => {
         test("same chain, with liquidity", async () => {
             // Tokens are on the same chain (900)
-            // Liquidity is on different chain (900)
             const result = await getUniswapV4RouteMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
@@ -58,6 +57,34 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
+        });
+
+        test("same chain, with liquidity, amount higher than eth intermeidate swap", async () => {
+            // Tokens are on the same chain (900)
+            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+                currencyIn: tokenA_900,
+                currencyOut: tokenB_900,
+                exactAmount: parseUnits("50", tokenA_900.decimals),
+                contractsByChain,
+                currencyHopsByChain,
+            });
+            expect(result).not.toBe(null);
+            expect(result!.route.length).toBe(1);
+            expect(result!.amountOut).toBeGreaterThan(0n);
+            expect(result!.currencyIn.equals(tokenA_900));
+            expect(result!.currencyOut.equals(tokenB_900));
+        });
+
+        test("same chain, with liquidity, amount too high", async () => {
+            // Tokens are on the same chain (900)
+            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+                currencyIn: tokenA_900,
+                currencyOut: tokenB_900,
+                exactAmount: parseUnits("10000", tokenA_900.decimals),
+                contractsByChain,
+                currencyHopsByChain,
+            });
+            expect(result).toBe(null);
         });
 
         test("same chain, no liquidity", async () => {
