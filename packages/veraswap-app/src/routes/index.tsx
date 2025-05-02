@@ -32,7 +32,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
-    quoteInAtom,
     sendTransactionMutationAtom,
     swapInvertAtom,
     SwapStep,
@@ -126,7 +125,7 @@ function Index() {
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelInitDataAtom);
-    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(quoteInAtom);
+    const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(routeMultichainAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
     const [, swapInvert] = useAtom(swapInvertAtom);
@@ -196,7 +195,7 @@ function Index() {
                 ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
                 : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
             : quoterData
-              ? formatUnits(quoterData[0], currencyOut?.decimals ?? 18)
+              ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
               : "";
 
     useDustAccount(walletAddress);
@@ -305,8 +304,8 @@ function Index() {
             // NOTE: should be inferred from the top level check of handleSwapSteps
             if (!transactionType) return;
 
-            // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData![0];
-            const amountOutMinimum = quoterData?.[0] ?? null;
+            // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData?.amountOut;
+            const amountOutMinimum = quoterData?.amountOut ?? null;
             if (transactionType.type !== "BRIDGE" && !amountOutMinimum) {
                 throw new Error("amountOutMinimum is required for this transaction type");
             }

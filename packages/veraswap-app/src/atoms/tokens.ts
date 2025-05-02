@@ -71,7 +71,7 @@ export const transactionTypeAtom = atom<TransactionType | null>((get) => {
     if (!currencyIn || !currencyOut || !routeMultichain) return null;
 
     //TODO: Add better constants
-    return getTransactionType({ currencyIn, currencyOut, routeComponents: routeMultichain });
+    return getTransactionType({ currencyIn, currencyOut, routeComponents: routeMultichain.flows });
 });
 
 /***** Invert *****/

@@ -151,6 +151,11 @@ export interface RouteComponentBridge {
 
 export type RouteComponent = RouteComponentSwap | RouteComponentBridge;
 
+export type GetRouteMultichainReturnType = {
+    flows: [RouteComponent, ...RouteComponent[]];
+    amountOut: bigint;
+} | null;
+
 /**
  * Get list of asset flows to get from currencyIn to currencyOut
  * @param queryClient
@@ -164,21 +169,22 @@ export async function getRouteMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetUniswapV4RouteMultichainParams,
-): Promise<[RouteComponent, ...RouteComponent[]] | null> {
-    const { currencyIn, currencyOut } = params;
+): Promise<GetRouteMultichainReturnType> {
+    const { currencyIn, currencyOut, exactAmount } = params;
 
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap or bridge same token");
 
     // BRIDGE ONLY
     // BRIDGE: Native token bridge
+    // TODO: account for bridge and gas fees
     if (currencyIn.isNative && currencyOut.isNative) {
-        return [{ type: "BRIDGE", currencyIn, currencyOut }];
+        return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
     }
 
     if (currencyIn instanceof MultichainToken) {
         // BRIDGE
         if (currencyIn.getRemoteToken(currencyOut.chainId)?.equals(currencyOut)) {
-            return [{ type: "BRIDGE", currencyIn, currencyOut }];
+            return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
         }
     }
 
@@ -219,5 +225,5 @@ export async function getRouteMultichain(
         });
     }
 
-    return flows as [RouteComponent, ...RouteComponent[]];
+    return { flows: flows as [RouteComponent, ...RouteComponent[]], amountOut: route.amountOut };
 }
