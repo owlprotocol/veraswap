@@ -8,7 +8,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
 import { formatUnits } from "viem";
 import { atom } from "jotai";
-import { Separator } from "./ui/separator.js";
+import { TokenBadge } from "./TokenBadge";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
@@ -119,12 +119,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                 >
                     {currentToken ? (
                         <>
-                            <img
-                                src={currentToken.logoURI || "https://etherscan.io/images/main/empty-token.png"}
-                                alt={currentToken.symbol}
-                                className="h-6 w-6"
-                                onError={(e) => (e.currentTarget.src = "/placeholder.jpg")}
-                            />
+                            <TokenBadge currency={currentToken} />
                             <div>
                                 <div className="font-semibold">{currentToken.symbol}</div>
                                 <div className="text-xs text-muted-foreground">
