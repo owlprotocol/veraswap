@@ -400,7 +400,10 @@ function Index() {
                 return;
             }
 
-            setSubmittedTransactionType(transactionType);
+            // Make a copy the next to awaitable function call from racing
+            const submittedTransactionType = { ...transactionType };
+
+            setSubmittedTransactionType(submittedTransactionType);
 
             sendTransaction(
                 { chainId: currencyIn.chainId, ...transaction },

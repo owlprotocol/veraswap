@@ -33,7 +33,7 @@ export function getV4SwapCommandParams({
             { poolKey, zeroForOne, amountIn, amountOutMinimum, hookData },
         ]);
     } else {
-        tradePlan.addAction(Actions.SWAP_EXACT_IN, [currencyIn, path, amountIn, amountOutMinimum]);
+        tradePlan.addAction(Actions.SWAP_EXACT_IN, [{ currencyIn, path, amountIn, amountOutMinimum }]);
     }
 
     tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, amountIn]);
