@@ -107,9 +107,11 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.length).toBe(1);
 
-            const bridge = result![0] as RouteComponentBridge;
+            const { flows } = result!;
+            expect(flows.length).toBe(1);
+
+            const bridge = flows[0] as RouteComponentBridge;
             expect(bridge.currencyIn.equals(tokenA_900));
             expect(bridge.currencyOut.equals(tokenA_901));
         });
@@ -125,9 +127,11 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.length).toBe(1);
 
-            const swap = result![0] as RouteComponentSwap;
+            const { flows } = result!;
+            expect(flows.length).toBe(1);
+
+            const swap = flows[0] as RouteComponentSwap;
             expect(swap.route.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
@@ -145,15 +149,17 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.length).toBe(2);
 
-            const swap = result![0] as RouteComponentSwap;
+            const { flows } = result!;
+            expect(flows.length).toBe(2);
+
+            const swap = flows[0] as RouteComponentSwap;
             expect(swap.route.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
 
-            const bridge = result![1] as RouteComponentBridge;
+            const bridge = flows[1] as RouteComponentBridge;
             expect(bridge.currencyIn.equals(tokenB_900));
             expect(bridge.currencyOut.equals(tokenA_901));
         });
@@ -169,13 +175,15 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.length).toBe(2);
 
-            const bridge = result![0] as RouteComponentBridge;
+            const { flows } = result!;
+            expect(flows.length).toBe(2);
+
+            const bridge = flows[0] as RouteComponentBridge;
             expect(bridge.currencyIn.equals(tokenA_901));
             expect(bridge.currencyOut.equals(tokenA_900));
 
-            const swap = result![1] as RouteComponentSwap;
+            const swap = flows[1] as RouteComponentSwap;
             expect(swap.route.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
@@ -193,19 +201,21 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.length).toBe(3);
 
-            const bridgeIn = result![0] as RouteComponentBridge;
+            const { flows } = result!;
+            expect(flows.length).toBe(3);
+
+            const bridgeIn = flows[0] as RouteComponentBridge;
             expect(bridgeIn.currencyIn.equals(tokenA_901));
             expect(bridgeIn.currencyOut.equals(tokenA_900));
 
-            const swap = result![1] as RouteComponentSwap;
+            const swap = flows[1] as RouteComponentSwap;
             expect(swap.route.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
 
-            const bridgeOut = result![2] as RouteComponentBridge;
+            const bridgeOut = flows[2] as RouteComponentBridge;
             expect(bridgeOut.currencyIn.equals(tokenB_900));
             expect(bridgeOut.currencyOut.equals(tokenB_902));
         });
