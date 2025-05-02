@@ -1,3 +1,6 @@
+import { describe } from "vitest";
+
+describe.skip("getTransactionType.test.ts");
 // TODO: enable again. but this depends on the using our new quoter, which we already test
 // import { describe, expect, test } from "vitest";
 //

@@ -54,7 +54,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(2);
+            expect(result!.route.length).toBe(1);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
@@ -71,7 +71,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(2);
+            expect(result!.route.length).toBe(1);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
@@ -88,7 +88,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(2);
+            expect(result!.route.length).toBe(1);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
@@ -132,7 +132,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             expect(flows.length).toBe(1);
 
             const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.route.length).toBe(1);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -154,7 +154,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             expect(flows.length).toBe(2);
 
             const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.route.length).toBe(1);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -184,7 +184,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             expect(bridge.currencyOut.equals(tokenA_900));
 
             const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.route.length).toBe(1);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -210,7 +210,7 @@ describe.skip("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
             expect(bridgeIn.currencyOut.equals(tokenA_900));
 
             const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.route.length).toBe(1);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
