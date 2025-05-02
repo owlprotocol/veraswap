@@ -3,9 +3,10 @@ import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
 import { isMultichainToken, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
-import { tokenInAmountAtom, currencyInAtom, transactionTypeAtom, currencyOutAtom } from "./tokens.js";
+import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
 import { tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
+import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
 import { config } from "@/config.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
@@ -203,4 +204,5 @@ export const resetTransactionStateAtom = atom(null, (_, set) => {
     set(superchainBridgeMessageIdAtom, null);
     set(bridgeMessageIdAtom, null);
     set(swapMessageIdAtom, null);
+    set(submittedTransactionTypeAtom, null);
 });

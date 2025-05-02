@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { cn } from "@/lib/utils.js";
 import { TransactionStepId } from "@/atoms/atoms.js";
-import { transactionTypeAtom } from "@/atoms/tokens.js";
+import { transactionTypeAtom } from "@/atoms/uniswap.js";
 
 export type TransactionStep = {
     id: TransactionStepId;

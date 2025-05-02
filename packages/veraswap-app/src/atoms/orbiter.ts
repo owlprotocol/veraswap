@@ -2,14 +2,8 @@ import { atom } from "jotai";
 import { chainIdToOrbiterChainId, OrbiterParams, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
-import {
-    chainInAtom,
-    chainOutAtom,
-    tokenInAmountAtom,
-    currencyInAtom,
-    currencyOutAtom,
-    transactionTypeAtom,
-} from "./tokens.js";
+import { chainInAtom, chainOutAtom, tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
+import { transactionTypeAtom } from "./uniswap.js";
 
 const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
 const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));

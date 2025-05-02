@@ -1,6 +1,11 @@
 import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
-import { getRouteMultichain, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
-import { Atom } from "jotai";
+import {
+    getRouteMultichain,
+    getUniswapV4Address,
+    getTransactionType,
+    TransactionType,
+} from "@owlprotocol/veraswap-sdk";
+import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
 import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
@@ -47,3 +52,17 @@ export const routeMultichainAtom = atomWithQuery((get) => {
         ],
     });
 }) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;
+
+/** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
+export const transactionTypeAtom = atom<TransactionType | null>((get) => {
+    const currencyIn = get(currencyInAtom);
+    const currencyOut = get(currencyOutAtom);
+
+    const routeMultichain = get(routeMultichainAtom).data;
+    if (!currencyIn || !currencyOut || !routeMultichain) return null;
+
+    //TODO: Add better constants
+    return getTransactionType({ currencyIn, currencyOut, routeComponents: routeMultichain.flows });
+});
+
+export const submittedTransactionTypeAtom = atom<TransactionType | null>(null);
