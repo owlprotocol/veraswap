@@ -3,7 +3,8 @@ import { Address, createPublicClient, encodeFunctionData, http } from "viem";
 import { arbitrum } from "viem/chains";
 
 import { IERC20 } from "../../artifacts/IERC20.js";
-import { MAX_UINT_256, PERMIT2_ADDRESS } from "../../constants/index.js";
+import { MAX_UINT_256 } from "../../constants/uint256.js";
+import { PERMIT2_ADDRESS } from "../../constants/uniswap.js";
 import { getChainById } from "../../query/tokenData.js";
 import { ApproveInfo } from "../../types/uniswapRouting.js";
 
