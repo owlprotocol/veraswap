@@ -1,13 +1,14 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
-import { base, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
+import { arbitrum, base, bsc, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
 import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
+import { Token } from "../currency/token.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
@@ -384,6 +385,29 @@ const usdcData = {
     logoURI: "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
 };
 
+const usdtOptimismAddress = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58";
+
+const usdtData = {
+    name: "Tether USD",
+    symbol: "USDT",
+    decimals: 6,
+    logoURI: "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
+};
+
+const arbitrumHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
+const baseHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
+const bscHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
+const ethereumHyperAddress = "0x93A2Db22B7c736B341C32Ff666307F4a9ED910F5";
+const optimismHyperAddress = "0x9923DB8d7FBAcC2E69E87fAd19b886C81cd74979";
+
+const hyperData = {
+    name: "Hyperlane",
+    symbol: "HYPER",
+    decimals: 18,
+    logoURI:
+        "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/refs/heads/main/deployments/warp_routes/HYPER/logo.svg",
+};
+
 export const MAINNET_CURRENCIES = [
     ...(() => {
         const tokenBase = MultichainToken.create({
@@ -414,6 +438,42 @@ export const MAINNET_CURRENCIES = [
         MultichainToken.connect([tokenBase, tokenSuperseed]);
         MultichainToken.connect([tokenMainnet, tokenSuperseed]);
         return [tokenBase, tokenMainnet, tokenSuperseed];
+    })(),
+    ...(() => {
+        const tokenArbitrum = MultichainToken.createHypERC20({
+            ...hyperData,
+            chainId: arbitrum.id,
+            address: arbitrumHyperAddress,
+        });
+
+        const tokenBase = MultichainToken.createHypERC20({
+            ...hyperData,
+            chainId: base.id,
+            address: baseHyperAddress,
+        });
+
+        const tokenBSC = MultichainToken.createHypERC20({
+            ...hyperData,
+            chainId: bsc.id,
+            address: bscHyperAddress,
+        });
+
+        const tokenEthereum = MultichainToken.createHypERC20({
+            ...hyperData,
+            chainId: mainnet.id,
+            address: ethereumHyperAddress,
+        });
+
+        const tokenOptimism = MultichainToken.createHypERC20({
+            ...hyperData,
+            chainId: optimism.id,
+            address: optimismHyperAddress,
+        });
+
+        const tokens = [tokenArbitrum, tokenBase, tokenBSC, tokenEthereum, tokenOptimism];
+
+        MultichainToken.connect(tokens);
+        return tokens;
     })(),
     ...(() => {
         const tokenSuperseed = MultichainToken.create({
@@ -448,6 +508,7 @@ export const MAINNET_CURRENCIES = [
     Ether.onChain(optimism.id),
     Ether.onChain(base.id),
     Ether.onChain(superseed.id),
+    new Token({ address: usdtOptimismAddress, chainId: optimism.id, ...usdtData }),
 ];
 
 export const LOCAL_POOLS = {
