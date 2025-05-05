@@ -9,9 +9,11 @@ import {
     opChainB,
     opChainL1,
     unichainSepolia,
+    arbitrum,
     arbitrumSepolia,
     base,
     baseSepolia,
+    bsc,
     optimismSepolia,
     sepolia,
     optimism,
@@ -26,7 +28,7 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [base, optimism, superseed];
+export const mainnetChains = [arbitrum, bsc, base, optimism, superseed];
 
 export const testnetChains = [
     sepolia,

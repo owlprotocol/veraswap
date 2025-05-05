@@ -22,7 +22,7 @@ library DeployBSC {
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: 0x2971b9Aec44bE4eb673DF1B88cDB57b96eefe8a4});
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

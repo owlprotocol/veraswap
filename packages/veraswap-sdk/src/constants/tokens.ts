@@ -8,8 +8,20 @@ import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../ch
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { Token } from "../currency/token.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
+import {
+    BTC_BSC,
+    nativeOnChain,
+    opData,
+    optimismOPAddress,
+    UNI,
+    USDC_BSC,
+    usdcData,
+    USDT_ARBITRUM_ONE,
+    USDT_BSC,
+    USDT_OPTIMISM,
+    WBTC_ARBITRUM_ONE,
+} from "../uniswap/index.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -378,23 +390,6 @@ const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
 
-const usdcData = {
-    name: "USD Coin",
-    symbol: "USDC",
-    decimals: 6,
-    logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
-};
-
-const usdtOptimismAddress = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58";
-
-const usdtData = {
-    name: "Tether USD",
-    symbol: "USDT",
-    decimals: 6,
-    logoURI:
-        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
-};
-
 const suprBaseAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
 const suprBaseHypERC20Collateral = "0x458BDDd0793fe4f70912535f172466a5473f2e77";
 const suprEthereumAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
@@ -452,18 +447,8 @@ const hyperData = {
         "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/refs/heads/main/deployments/warp_routes/HYPER/logo.svg",
 };
 
-const optimismOPAddress = "0x4200000000000000000000000000000000000042";
 const optimismOPHypERC20Collateral = "0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1";
 const superseedOPAddress = "0x4e128A1b613A9C9Ecf650FeE461c353612559fcf";
-
-const opData = {
-    name: "Optimism",
-    symbol: "OP",
-    decimals: 18,
-    // logoURI: "https://assets.coingecko.com/coins/images/25244/standard/Optimism.png",
-    logoURI:
-        "https://asset-metadata-service-production.s3.amazonaws.com/asset_icons/87130ebdc82a5b176da5c37544472b327ae498cae6565d4cf1c5912c1f26b603.png",
-};
 
 export const MAINNET_CURRENCIES = [
     ...(() => {
@@ -695,12 +680,19 @@ export const MAINNET_CURRENCIES = [
         return tokens;
     })(),
     Ether.onChain(arbitrum.id),
-    Ether.onChain(bsc.id),
     Ether.onChain(base.id),
     Ether.onChain(linea.id),
     Ether.onChain(optimism.id),
     Ether.onChain(superseed.id),
-    new Token({ address: usdtOptimismAddress, chainId: optimism.id, ...usdtData }),
+    nativeOnChain(bsc.id),
+    BTC_BSC,
+    USDC_BSC,
+    USDT_BSC,
+    USDT_OPTIMISM,
+    WBTC_ARBITRUM_ONE,
+    USDT_ARBITRUM_ONE,
+    UNI[mainnet.id],
+    UNI[optimism.id],
 ];
 
 export const LOCAL_POOLS = {
