@@ -8,7 +8,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
 import { formatUnits } from "viem";
 import { atom } from "jotai";
-import { TokenBadge } from "./TokenBadge";
+import { TokenBadge } from "./TokenBadge.js";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
