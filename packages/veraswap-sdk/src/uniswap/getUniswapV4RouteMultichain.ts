@@ -6,7 +6,7 @@ import { Address, zeroAddress } from "viem";
 
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
+import { PathKey, PoolKey, PoolKeyOptions, poolKeysToPath } from "../types/PoolKey.js";
 
 import { getUniswapV4Route, getUniswapV4RoutesWithLiquidity } from "./getUniswapV4Route.js";
 
@@ -139,6 +139,7 @@ export interface RouteComponentSwap {
     currencyIn: Currency;
     currencyOut: Currency;
     route: PoolKey[];
+    path: PathKey[];
     amountOut: bigint;
     gasEstimate: bigint;
 }
@@ -196,12 +197,15 @@ export async function getRouteMultichain(
     // Mixed Bridge/Swap/Bridge
     const flows: RouteComponent[] = [];
 
+    const path = poolKeysToPath(getUniswapV4Address(route.currencyIn), route.route);
+
     const swap: RouteComponentSwap = {
         type: "SWAP",
         chainId: route.currencyIn.chainId,
         currencyIn: route.currencyIn,
         currencyOut: route.currencyOut,
         route: route.route,
+        path,
         amountOut: route.amountOut,
         gasEstimate: route.gasEstimate,
     };

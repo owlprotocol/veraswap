@@ -1,5 +1,5 @@
 import { Currency } from "../currency/currency.js";
-import { PoolKey } from "../types/PoolKey.js";
+import { PathKey, PoolKey } from "../types/PoolKey.js";
 import { RouteComponent } from "../uniswap/getUniswapV4RouteMultichain.js";
 
 import { assetFlowsToTransactionType } from "./getAssetFlows.js";
@@ -10,6 +10,7 @@ export interface TransactionTypeSwap {
     currencyIn: Currency;
     currencyOut: Currency;
     route: PoolKey[];
+    path: PathKey[];
     // Not needed here but used for consistency
     withSuperchain?: boolean;
 }
@@ -58,6 +59,6 @@ export function getTransactionType({
     if (currencyIn.equals(currencyOut)) return null;
 
     if (!routeComponents) return null;
-    // TODO: refactor this to take route components
+
     return assetFlowsToTransactionType(routeComponents);
 }

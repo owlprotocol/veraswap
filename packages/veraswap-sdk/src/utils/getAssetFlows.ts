@@ -150,8 +150,6 @@ export interface AssetFlowBridge {
 
 export type AssetFlow = AssetFlowSwap | AssetFlowBridge;
 
-// TODO: Update quoting logic to use actual API and use an amount/minLiquidity parameter (current logic just checks hard-coded poolKeys)
-
 /**
  * Get list of asset flows to get from currencyIn to currencyOut
  * @param currencyIn
@@ -186,7 +184,6 @@ export function getAssetFlows(
     if (poolKeyOptions.length == 0) return null;
 
     // Mixed Bridge/Swap/Bridge
-    // TODO: Find optimal pool key using quoting & gas estimations
     const pool = poolKeyOptions[0];
     const flows: AssetFlow[] = [];
     const swap: AssetFlowSwap = {

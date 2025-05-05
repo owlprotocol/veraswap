@@ -17,7 +17,6 @@ import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransf
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
-import { poolKeysToPath } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
 import {
     TransactionTypeBridge,
@@ -132,7 +131,7 @@ export async function getTransaction(
             const {
                 currencyIn,
                 currencyOut,
-                route,
+                path,
                 amountIn,
                 walletAddress,
                 amountOutMinimum,
@@ -160,9 +159,6 @@ export async function getTransaction(
                 );
                 permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
             }
-
-            // TODO: do the conversion inside of getTransactionType
-            const path = poolKeysToPath(getUniswapV4Address(currencyIn), route);
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
@@ -257,11 +253,8 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { currencyIn: swapCurrencyIn, route, currencyOut: swapCurrencyOut } = swap;
+            const { currencyIn: swapCurrencyIn, path, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
-
-            // TODO: do the conversion inside of getTransactionType
-            const path = poolKeysToPath(getUniswapV4Address(swapCurrencyIn), route);
 
             const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
                 ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
@@ -297,7 +290,6 @@ export async function getTransaction(
                 permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
             }
 
-            // TODO: figure out why we have MockSuperchainERC20 here
             if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
@@ -344,14 +336,11 @@ export async function getTransaction(
             } = params;
             // TODO: check if withSuperchain is needed
             const { currencyIn, currencyOut } = bridge;
-            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, route } = swap;
+            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
 
             if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
-
-            // TODO: do the conversion inside of getTransactionType
-            const path = poolKeysToPath(getUniswapV4Address(swapCurrencyIn), route);
 
             // TODO: fix this for non local env
             const originERC7579ExecutorRouter = contracts[currencyIn.chainId].erc7579Router;
