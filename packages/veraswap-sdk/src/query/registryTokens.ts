@@ -20,13 +20,14 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
 
     if (chainsType === "local") {
         return {
-            queryKey: ["registryTokens", "local"],
+            queryKey: registryTokenQueryKey("local"),
             queryFn: () => localCurrencies,
+            staleTime: 5 * 60 * 1000,
         };
     }
 
     return {
-        queryKey: ["registryTokens", chainsType],
+        queryKey: registryTokenQueryKey(chainsType),
         queryFn: async () => {
             const url = registryTokenUrls[chainsType];
 
@@ -35,8 +36,8 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
 
             const tokens = (await res.json()) as RegistryToken[];
             const converted = convertRegistryTokens(tokens);
-
             return [...converted, ...localCurrencies];
         },
+        staleTime: 5 * 60 * 1000,
     };
 }
