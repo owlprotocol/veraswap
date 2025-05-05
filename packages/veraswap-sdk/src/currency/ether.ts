@@ -15,7 +15,7 @@ export class Ether extends NativeCurrency {
             decimals: 18,
             symbol: "ETH",
             name: "Ether",
-            logoURI: "https://assets.coingecko.com/coins/images/279/standard/ethereum.png",
+            logoURI: "https://token-icons.s3.amazonaws.com/eth.png",
         });
     }
 
