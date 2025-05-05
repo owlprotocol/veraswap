@@ -33,7 +33,6 @@ const enabledSteps = [
     SwapStep.APPROVE_PERMIT2,
     SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
     SwapStep.EXECUTE_SWAP,
-    SwapStep.NOT_SUPPORTED,
 ];
 
 export const isDisabledStep = (swapStep: SwapStep) => !enabledSteps.includes(swapStep);
@@ -80,10 +79,10 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.PENDING_TRANSACTION;
     } else if (currencyIn === null || currencyOut === null) {
         return SwapStep.SELECT_TOKEN;
-    } else if (!transactionType) {
-        return SwapStep.NOT_SUPPORTED;
     } else if (tokenInAmount === null) {
         return SwapStep.SELECT_TOKEN_AMOUNT;
+    } else if (!transactionType) {
+        return SwapStep.NOT_SUPPORTED;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (
