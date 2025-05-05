@@ -1,5 +1,4 @@
 import { QueryClient } from "@tanstack/react-query";
-import { PoolKey } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { getExecMode } from "@zerodev/sdk";
@@ -14,6 +13,7 @@ import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransf
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
+import { PathKey } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
 
 import { GetCallsReturnType } from "./getCalls.js";
@@ -55,8 +55,9 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     remoteSwapParams: {
         amountIn: bigint;
         amountOutMinimum: bigint;
-        zeroForOne: boolean;
-        poolKey: PoolKey;
+        path: PathKey[];
+        currencyIn: Address;
+        currencyOut: Address;
         universalRouter: Address;
         receiver: Address;
         callTargetAfter?: [Address, bigint, Hex];

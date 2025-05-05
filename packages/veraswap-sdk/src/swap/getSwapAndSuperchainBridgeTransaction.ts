@@ -3,7 +3,7 @@ import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PoolKey } from "../types/PoolKey.js";
+import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
@@ -18,8 +18,9 @@ export function getSwapAndSuperchainBridgeTransaction({
     receiver,
     amountIn,
     amountOutMinimum,
-    poolKey,
-    zeroForOne,
+    currencyIn,
+    currencyOut,
+    path,
     permit2PermitParams,
     hookData = "0x",
 }: {
@@ -28,14 +29,12 @@ export function getSwapAndSuperchainBridgeTransaction({
     receiver: Address;
     amountIn: bigint;
     amountOutMinimum: bigint;
-    poolKey: PoolKey;
-    zeroForOne: boolean;
+    currencyIn: Address;
+    currencyOut: Address;
+    path: PathKey[];
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
-    const inputToken = zeroForOne ? poolKey.currency0 : poolKey.currency1;
-    const outputToken = zeroForOne ? poolKey.currency1 : poolKey.currency0;
-
     const routePlanner = new RoutePlanner();
 
     if (permit2PermitParams) {
@@ -46,8 +45,9 @@ export function getSwapAndSuperchainBridgeTransaction({
         receiver: SUPERCHAIN_SWEEP_ADDRESS,
         amountIn,
         amountOutMinimum,
-        poolKey,
-        zeroForOne,
+        currencyIn,
+        currencyOut,
+        path,
         hookData,
     });
     routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
@@ -57,13 +57,13 @@ export function getSwapAndSuperchainBridgeTransaction({
         getSuperchainBridgeCallTargetParams({
             destinationChain,
             receiver,
-            outputTokenAddress: outputToken,
+            outputTokenAddress: currencyOut,
         }),
     );
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
-    const inputIsNative = inputToken === zeroAddress;
+    const inputIsNative = currencyIn === zeroAddress;
 
     return {
         to: universalRouter,

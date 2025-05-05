@@ -1,7 +1,6 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
-import { getTransactionType, TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
-import { POOLS } from "@owlprotocol/veraswap-sdk/constants";
+import { Currency } from "@owlprotocol/veraswap-sdk";
 import { chains } from "@/config.js";
 
 /***** Tokens Fetch *****/
@@ -59,16 +58,6 @@ export const currencyOutAtom = atom<Currency | null>(null);
 export const chainOutAtom = atom((get) => {
     const currencyOut = get(currencyOutAtom);
     return chains.find((c) => c.id === currencyOut?.chainId) ?? null;
-});
-
-/** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
-export const transactionTypeAtom = atom<TransactionType | null>((get) => {
-    const currencyIn = get(currencyInAtom);
-    const currencyOut = get(currencyOutAtom);
-    if (!currencyIn || !currencyOut) return null;
-
-    //TODO: Add better constants
-    return getTransactionType({ currencyIn, currencyOut, poolKeys: POOLS });
 });
 
 /***** Invert *****/

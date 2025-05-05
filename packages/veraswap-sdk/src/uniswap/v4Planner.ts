@@ -56,7 +56,7 @@ export const POOL_KEY_STRUCT = [
 ] as const;
 
 // const PATH_KEY_STRUCT = '(address intermediateCurrency,uint256 fee,int24 tickSpacing,address hooks,bytes hookData)'
-export const PATH_KEY_STRUCt = [
+export const PATH_KEY_STRUCT = [
     { name: "intermediateCurrency", type: "address" },
     { name: "fee", type: "uint256" },
     { name: "tickSpacing", type: "int24" },
@@ -78,7 +78,7 @@ export const SWAP_EXACT_IN_SINGLE_STRUCT = [
 //   '(address currencyIn,' + PATH_KEY_STRUCT + '[] path,uint128 amountIn,uint128 amountOutMinimum)'
 export const SWAP_EXACT_IN_STRUCT = [
     { name: "currencyIn", type: "address" },
-    { name: "path", type: "tuple[]", internalType: "struct PathKey[]", components: PATH_KEY_STRUCt },
+    { name: "path", type: "tuple[]", internalType: "struct PathKey[]", components: PATH_KEY_STRUCT },
     { name: "amountIn", type: "uint128" },
     { name: "amountOutMinimum", type: "uint128" },
 ] as const;
@@ -97,7 +97,7 @@ export const SWAP_EXACT_OUT_SINGLE_STRUCT = [
 //   '(address currencyOut,' + PATH_KEY_STRUCT + '[] path,uint128 amountOut,uint128 amountInMaximum)'
 export const SWAP_EXACT_OUT_STRUCT = [
     { name: "currencyOut", type: "address" },
-    { name: "path", type: "tuple[]", internalType: "struct PathKey[]", components: PATH_KEY_STRUCt },
+    { name: "path", type: "tuple[]", internalType: "struct PathKey[]", components: PATH_KEY_STRUCT },
     { name: "amountOut", type: "uint128" },
     { name: "amountInMaximum", type: "uint128" },
 ] as const;

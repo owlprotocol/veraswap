@@ -1,30 +1,30 @@
 import { PERMIT2_ADDRESS } from "@uniswap/permit2-sdk";
-import { PoolKey } from "@uniswap/v4-sdk";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/index.js";
+import { PathKey } from "../types/PoolKey.js";
 
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 
 export function getEOASwapCalls({
     amountIn,
     amountOutMinimum,
-    zeroForOne,
-    poolKey,
+    currencyIn,
+    currencyOut,
+    path,
     universalRouter,
     approvePermit2 = true,
 }: {
     amountIn: bigint;
     amountOutMinimum: bigint;
-    zeroForOne: boolean;
-    poolKey: PoolKey;
+    currencyIn: Address;
+    currencyOut: Address;
+    path: PathKey[];
     universalRouter: Address;
     approvePermit2?: boolean;
 }): { to: Address; data: Hex; value: bigint }[] {
-    const currencyIn = (zeroForOne ? poolKey.currency0 : poolKey.currency1) as Address;
-
     /** *** Permit2 Approve universalRouter *****/
     // approve Permit2 to spend Token A
     const approvePermit2Data = {
@@ -50,8 +50,9 @@ export function getEOASwapCalls({
 
     const routerExecuteData = getSwapExactInExecuteData({
         universalRouter,
-        poolKey,
-        zeroForOne,
+        currencyIn,
+        currencyOut,
+        path,
         amountIn,
         amountOutMinimum,
     });

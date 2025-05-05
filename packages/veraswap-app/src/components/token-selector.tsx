@@ -279,24 +279,38 @@ const TokenGroup = ({
     const account = useAtomValue(accountAtom);
     const { balance: totalBalance } = useAtomValue(currencyMultichainBalanceAtomFamily(symbol));
 
-    const balanceAtoms = tokenList.map((token) =>
-        account?.address ? currencyBalanceAtomFamily({ currency: token, account: account.address }) : atom(null),
+    // Inspired from https://github.com/pmndrs/jotai/issues/454#issuecomment-829779749
+    const balanceValues = useAtomValue(
+        useMemo(
+            () =>
+                atom((get) => {
+                    const balanceAtoms = tokenList.map((token) =>
+                        account?.address
+                            ? currencyBalanceAtomFamily({ currency: token, account: account.address })
+                            : atom(null),
+                    );
+
+                    return balanceAtoms.map((atom) => get(atom));
+                }),
+            [account.address, tokenList],
+        ),
     );
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const balanceValues = balanceAtoms.map((atom) => useAtomValue(atom));
+    const [tokensWithBalance, tokensWithoutBalance] = useMemo(() => {
+        const tokensWithBalance: Currency[] = [];
+        const tokensWithoutBalance: Currency[] = [];
 
-    const tokensWithBalance: Currency[] = [];
-    const tokensWithoutBalance: Currency[] = [];
+        tokenList.forEach((token, index) => {
+            const balance = balanceValues[index];
+            if (balance?.data && balance.data > 0n) {
+                tokensWithBalance.push(token);
+            } else {
+                tokensWithoutBalance.push(token);
+            }
+        });
 
-    tokenList.forEach((token, index) => {
-        const balance = balanceValues[index];
-        if (balance?.data && balance.data > 0n) {
-            tokensWithBalance.push(token);
-        } else {
-            tokensWithoutBalance.push(token);
-        }
-    });
+        return [tokensWithBalance, tokensWithoutBalance];
+    }, [balanceValues, tokenList]);
 
     useEffect(() => {
         if (isExpanded && ref.current) {
@@ -389,6 +403,7 @@ const TokenGroup = ({
     );
 };
 
+// TODO: Fix "Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
 const ChainTokenBalance = ({
     token,
     chain,

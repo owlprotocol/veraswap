@@ -130,8 +130,8 @@ export async function getTransaction(
         case "SWAP": {
             const {
                 currencyIn,
-                poolKey,
-                zeroForOne,
+                currencyOut,
+                path,
                 amountIn,
                 walletAddress,
                 amountOutMinimum,
@@ -162,8 +162,9 @@ export async function getTransaction(
 
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
-                poolKey,
-                zeroForOne,
+                currencyIn: getUniswapV4Address(currencyIn),
+                currencyOut: getUniswapV4Address(currencyOut),
+                path,
                 amountIn,
                 amountOutMinimum,
                 permit2PermitParams,
@@ -252,7 +253,7 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { currencyIn: swapCurrencyIn, poolKey, zeroForOne } = swap;
+            const { currencyIn: swapCurrencyIn, path, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
@@ -289,16 +290,17 @@ export async function getTransaction(
                 permit2PermitParams = permitSingle && signature ? [permitSingle, signature] : undefined;
             }
 
-            // TODO: figure out why we have MockSuperchainERC20 here
             if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
                     amountOutMinimum,
                     destinationChain: bridgeCurrencyOut.chainId,
-                    poolKey,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    path,
                     receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
-                    zeroForOne,
+
                     permit2PermitParams,
                 });
             }
@@ -310,8 +312,9 @@ export async function getTransaction(
                 bridgePayment: bridgePayment ?? 1n,
                 destinationChain: bridgeCurrencyOut.chainId,
                 receiver: walletAddress,
-                poolKey,
-                zeroForOne,
+                currencyIn: getUniswapV4Address(swapCurrencyIn),
+                currencyOut: getUniswapV4Address(swapCurrencyOut),
+                path,
                 permit2PermitParams,
                 amountIn,
                 amountOutMinimum,
@@ -333,7 +336,7 @@ export async function getTransaction(
             } = params;
             // TODO: check if withSuperchain is needed
             const { currencyIn, currencyOut } = bridge;
-            const { poolKey, zeroForOne } = swap;
+            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
 
             if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
@@ -395,10 +398,11 @@ export async function getTransaction(
                     // Adjust amount in if using orbiter to account for fees
                     amountIn: orbiterAmountOut ?? amountIn,
                     amountOutMinimum,
-                    poolKey,
+                    path,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
                     receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
-                    zeroForOne,
                 },
                 orbiterParams,
             };

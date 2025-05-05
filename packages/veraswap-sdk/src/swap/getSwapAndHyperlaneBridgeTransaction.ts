@@ -3,7 +3,7 @@ import { Address, encodeFunctionData, Hex, padHex, zeroAddress } from "viem";
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PoolKey } from "../types/PoolKey.js";
+import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
@@ -19,8 +19,9 @@ export function getSwapAndHyperlaneBridgeTransaction({
     receiver,
     amountIn,
     amountOutMinimum,
-    poolKey,
-    zeroForOne,
+    currencyIn,
+    currencyOut,
+    path,
     permit2PermitParams,
     hookData = "0x",
 }: {
@@ -31,8 +32,9 @@ export function getSwapAndHyperlaneBridgeTransaction({
     receiver: Address;
     amountIn: bigint;
     amountOutMinimum: bigint;
-    poolKey: PoolKey;
-    zeroForOne: boolean;
+    currencyIn: Address;
+    currencyOut: Address;
+    path: PathKey[];
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
@@ -52,8 +54,9 @@ export function getSwapAndHyperlaneBridgeTransaction({
         receiver: bridgeAddress,
         amountIn,
         amountOutMinimum,
-        poolKey,
-        zeroForOne,
+        currencyIn,
+        currencyOut,
+        path,
         hookData,
     });
     routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
@@ -70,7 +73,6 @@ export function getSwapAndHyperlaneBridgeTransaction({
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
-    const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
     const isNative = currencyIn === zeroAddress;
 
     return {
