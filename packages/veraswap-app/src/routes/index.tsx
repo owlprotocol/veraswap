@@ -85,6 +85,7 @@ import { config } from "@/config.js";
 import { Transfer } from "@/abis/events.js";
 import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
+import { TransactionFlow } from "@/components/transaction-flow.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -751,6 +752,7 @@ function Index() {
                     </Button>
                 </CardContent>
             </Card>
+            {transactionType && <TransactionFlow transaction={transactionType} />}
             <TransactionStatusModal
                 isOpen={transactionModalOpen}
                 onOpenChange={setTransactionModalOpen}
