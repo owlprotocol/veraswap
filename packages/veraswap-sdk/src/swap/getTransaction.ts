@@ -193,7 +193,13 @@ export async function getTransaction(
                     destination: currencyOut.chainId,
                 });
             }
-            if (isMultichainToken(currencyIn) && currencyIn.hyperlaneAddress) {
+
+            if (
+                isMultichainToken(currencyIn) &&
+                currencyIn.hyperlaneAddress != null &&
+                currencyIn.hyperlaneAddress != currencyIn.address
+            ) {
+                // HypERC20Collateral
                 const { queryClient, wagmiConfig, initData } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {

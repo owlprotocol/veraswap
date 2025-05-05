@@ -96,17 +96,22 @@ export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
 
     if (!currencyIn) return disabledQueryOptions as any;
 
-    if (!isMultichainToken(currencyIn) || currencyIn.isHypERC20() || !currencyIn.hyperlaneAddress) {
-        return disabledQueryOptions as any;
+    if (
+        isMultichainToken(currencyIn) &&
+        currencyIn.hyperlaneAddress != null &&
+        currencyIn.hyperlaneAddress != currencyIn.address
+    ) {
+        // HypERC20Collateral
+        return readContractQueryOptions(config, {
+            chainId: currencyIn.chainId,
+            address: currencyIn.hyperlaneAddress,
+            abi: HypERC20Collateral.abi,
+            functionName: "wrappedToken",
+            args: [],
+        });
     }
 
-    return readContractQueryOptions(config, {
-        chainId: currencyIn.chainId,
-        address: currencyIn.hyperlaneAddress,
-        abi: HypERC20Collateral.abi,
-        functionName: "wrappedToken",
-        args: [],
-    });
+    return disabledQueryOptions as any;
 }) as Atom<AtomWithQueryResult<Address>>;
 
 export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
@@ -118,6 +123,7 @@ export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
         return disabledQueryOptions as any;
     }
 
+    // Hyperlane Token
     return readContractQueryOptions(config, {
         chainId: currencyIn.chainId,
         address: currencyIn.hyperlaneAddress,
