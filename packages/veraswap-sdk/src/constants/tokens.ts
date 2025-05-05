@@ -369,20 +369,6 @@ const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 // const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
 
-const arbitrumHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const baseHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const bscHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const ethereumHyperAddress = "0x93A2Db22B7c736B341C32Ff666307F4a9ED910F5";
-const optimismHyperAddress = "0x9923DB8d7FBAcC2E69E87fAd19b886C81cd74979";
-
-const hyperData = {
-    name: "Hyperlane",
-    symbol: "HYPER",
-    decimals: 18,
-    logoURI:
-        "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/refs/heads/main/deployments/warp_routes/HYPER/logo.svg",
-};
-
 const baseOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
 const baseOUSDTHypERC20Collateral = "0x4F0654395d621De4d1101c0F98C1Dba73ca0a61f";
 const celoOUSDTAddress = "0x5e5F4d6B03db16E7f00dE7C9AFAA53b92C8d1D42";
@@ -430,102 +416,6 @@ const oUSDTData = {
 };
 
 export const MAINNET_CURRENCIES = [
-    // ...(() => {
-    // const tokenBase = MultichainToken.create({
-    //     ...cbBTCData,
-    //     chainId: base.id,
-    //     address: cbBTCBaseAddress,
-    //     hypERC20Collateral: "0x66477F84bd21697c7781fc3992b3163463e3B224",
-    //     standard: "ERC20",
-    // });
-
-    // const tokenMainnet = MultichainToken.create({
-    //     ...cbBTCData,
-    //     chainId: mainnet.id,
-    //     standard: "ERC20",
-    //     address: "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-    //     hypERC20Collateral: "0x7710d2FC9A2E0452b28a2cBf550429b579347199",
-    // });
-
-    // const tokenSuperseed = MultichainToken.create({
-    //     ...cbBTCData,
-    //     chainId: superseed.id,
-    //     standard: "ERC20",
-    //     address: "0x6f36dbd829de9b7e077db8a35b480d4329ceb331",
-    //     hypERC20Collateral: "0x0a78BC3CBBC79C4C6E5d4e5b2bbD042E58e93484",
-    // });
-
-    // NOTE: base and mainnet are not connected
-    //     MultichainToken.connect([tokenBase, tokenSuperseed]);
-    //     MultichainToken.connect([tokenMainnet, tokenSuperseed]);
-    //     return [tokenBase, tokenMainnet, tokenSuperseed];
-    // })(),
-    ...(() => {
-        const tokenArbitrum = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: arbitrum.id,
-            address: arbitrumHyperAddress,
-        });
-
-        const tokenBase = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: base.id,
-            address: baseHyperAddress,
-        });
-
-        const tokenBSC = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: bsc.id,
-            address: bscHyperAddress,
-        });
-
-        const tokenEthereum = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: mainnet.id,
-            address: ethereumHyperAddress,
-        });
-
-        const tokenOptimism = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: optimism.id,
-            address: optimismHyperAddress,
-        });
-
-        const tokens = [tokenArbitrum, tokenBase, tokenBSC, tokenEthereum, tokenOptimism];
-
-        MultichainToken.connect(tokens);
-        return tokens;
-    })(),
-    // ...(() => {
-    //     const tokenSuperseed = MultichainToken.create({
-    //         ...usdcData,
-    //         chainId: superseed.id,
-    //         standard: "ERC20",
-    //         address: usdcSuperseedAddress,
-    //         hypERC20Collateral: "0xa7D6042eEf06E81168e640b5C41632eE5295227D",
-    //     });
-
-    //     const tokenBase = MultichainToken.create({
-    //         ...usdcData,
-    //         chainId: base.id,
-    //         standard: "ERC20",
-    //         address: usdcBaseAddress,
-    //         hypERC20Collateral: "0x955132016f9B6376B1392aA7BFF50538d21Ababc",
-    //     });
-
-    //     const tokenOptimism = MultichainToken.create({
-    //         ...usdcData,
-    //         chainId: optimism.id,
-    //         standard: "ERC20",
-    //         address: usdcOptimismAddress,
-    //         hypERC20Collateral: "0x741B077c69FA219CEdb11364706a3880A792423e",
-    //     });
-
-    //     MultichainToken.connect([tokenSuperseed, tokenBase]);
-    //     MultichainToken.connect([tokenSuperseed, tokenOptimism]);
-
-    //     return [tokenSuperseed, tokenBase, tokenOptimism];
-    // })(),
     ...(() => {
         const tokenBase = MultichainToken.createERC20({
             ...oUSDTData,
