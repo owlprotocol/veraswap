@@ -286,6 +286,8 @@ export const uniData = {
     name: "Uniswap",
     symbol: "UNI",
     decimals: 18,
+    logoURI:
+        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png",
 };
 
 export const UNI = {
