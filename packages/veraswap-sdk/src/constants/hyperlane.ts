@@ -1,7 +1,7 @@
 import { ChainMap, ChainMetadata } from "@hyperlane-xyz/sdk";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeAbiParameters, encodeDeployData, keccak256, zeroAddress, zeroHash } from "viem";
-import { base, optimism, optimismSepolia, sepolia } from "viem/chains";
+import { arbitrum, base, bsc, optimism, optimismSepolia, sepolia } from "viem/chains";
 
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { HypERC20 } from "../artifacts/HypERC20.js";
@@ -143,8 +143,14 @@ export const HYPERLANE_CONTRACTS: Record<
     [unichainSepolia.id]: {
         erc7579Router: "0x5A354bd2896A69F7f5B24d3D25Cdad94A84a56Fc",
     },
+    [arbitrum.id]: {
+        erc7579Router: "0x65b39c104252b6cfD9186448949cc59974009Cc7",
+    },
     [base.id]: {
         erc7579Router: "0xb9084240Dc695DbbB405440CE986e24DCE51c455",
+    },
+    [bsc.id]: {
+        erc7579Router: "0x94e35bB1bc81Caa38531b7C86d329c08940AD5b6",
     },
     [optimism.id]: {
         erc7579Router: "0xbf22dd2c75a5e1440238e9ea921053dc0547c56a",
