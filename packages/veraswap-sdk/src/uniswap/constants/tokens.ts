@@ -292,7 +292,11 @@ export const uniData = {
 
 export const UNI = {
     [mainnet.id]: new Token({ chainId: mainnet.id, address: UNI_ADDRESSES[mainnet.id] as Address, ...uniData }),
-    [optimism.id]: new Token({ chainId: optimism.id, address: UNI_ADDRESSES[optimism.id] as Address, ...uniData }),
+    [optimism.id]: new Token({
+        chainId: optimism.id,
+        address: "0x6fd9d7AD17242c41f7131d257212c54A0e816691",
+        ...uniData,
+    }),
     [sepolia.id]: new Token({ chainId: sepolia.id, address: UNI_ADDRESSES[sepolia.id] as Address, ...uniData }),
 };
 
