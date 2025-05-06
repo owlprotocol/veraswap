@@ -9,10 +9,12 @@ import { Address, formatUnits } from "viem";
 import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
-import { currencyInAtom, currencyOutAtom } from "./tokens.js";
+import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { currenciesAtom } from "./chains.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
+import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
+import { orbiterAmountOutAtom, orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
 
 /***** Atom Family *****/
@@ -266,4 +268,23 @@ export const currencyBalancesAtom = atom((get) => {
             balance,
         };
     });
+});
+
+export const amountOutAtom = atom((get) => {
+    const transactionType = get(transactionTypeAtom);
+    const orbiterRouter = get(orbiterRouterAtom);
+    const orbiterAmountOut = get(orbiterAmountOutAtom);
+    const currencyOut = get(currencyOutAtom);
+    const tokenInAmount = get(tokenInAmountAtom);
+    const quoterData = get(routeMultichainAtom).data;
+
+    if (!transactionType || !currencyOut || !tokenInAmount) return "";
+
+    return transactionType?.type === "BRIDGE"
+        ? orbiterRouter
+            ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
+            : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
+        : quoterData
+          ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
+          : "";
 });

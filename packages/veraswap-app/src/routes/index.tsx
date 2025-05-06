@@ -72,6 +72,7 @@ import {
     resetTransactionStateAtom,
     routeMultichainAtom,
     submittedTransactionTypeAtom,
+    amountOutAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -119,6 +120,7 @@ function Index() {
     const { data: tokenInBalance } = useAtomValue(tokenInAccountBalanceQueryAtom);
 
     const { data: tokenOutBalance } = useAtomValue(tokenOutAccountBalanceQueryAtom);
+    const amountOut = useAtomValue(amountOutAtom);
 
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
@@ -191,15 +193,6 @@ function Index() {
     */
 
     const { switchChainAsync } = useSwitchChain();
-
-    const amountOut =
-        transactionType?.type === "BRIDGE"
-            ? orbiterRouter
-                ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
-                : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
-            : quoterData
-              ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
-              : "";
 
     useDustAccount(walletAddress);
 

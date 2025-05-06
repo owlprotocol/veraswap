@@ -5,7 +5,7 @@ import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
-import { tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
+import { amountOutAtom, tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
 import { config } from "@/config.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
@@ -18,6 +18,7 @@ export enum SwapStep {
     SELECT_TOKEN_AMOUNT = "Enter an amount",
     INSUFFICIENT_BALANCE = "Insufficient Balance",
     INSUFFICIENT_LIQUIDITY = "Insufficient Liquidity",
+    AMOUNT_TOO_LOW = "Amount too low",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
     EXECUTE_SWAP = "Execute Swap",
@@ -64,6 +65,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInAccountBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
+    const amountOut = get(amountOutAtom);
 
     const transactionType = get(transactionTypeAtom);
 
@@ -85,6 +87,8 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.NOT_SUPPORTED;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
+    } else if (amountOut === "" || Number(amountOut) <= 0) {
+        return SwapStep.AMOUNT_TOO_LOW;
     } else if (
         // tokenIn is not native, and we don't have enough allowance
         !currencyIn.isNative &&
