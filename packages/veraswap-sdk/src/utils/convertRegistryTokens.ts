@@ -55,12 +55,12 @@ export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
 
         const parsedRemoteTokens = remoteTokens?.length
             ? Object.fromEntries(
-                  remoteTokens
-                      .map(({ chainId: remoteChainId, address: remoteAddress }) =>
-                          getRemoteTokenData(remoteChainId, remoteAddress),
-                      )
-                      .filter((entry): entry is [number, MultichainTokenData] => entry !== null),
-              )
+                remoteTokens
+                    .map(({ chainId: remoteChainId, address: remoteAddress }) =>
+                        getRemoteTokenData(remoteChainId, remoteAddress),
+                    )
+                    .filter((entry): entry is [number, MultichainTokenData] => entry !== null),
+            )
             : undefined;
 
         switch (standard) {
@@ -94,7 +94,7 @@ export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
                         remoteTokens: parsedRemoteTokens,
                     });
                 } else {
-                    return new Token({ chainId, address, name, symbol, decimals });
+                    return new Token({ chainId, address, name, logoURI, symbol, decimals });
                 }
 
             default:
