@@ -2,7 +2,6 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import {
-    arbitrum,
     base,
     bitlayer,
     bsc,
@@ -27,20 +26,7 @@ import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
-import {
-    CELO_CELO,
-    nativeOnChain,
-    USDC_AVALANCHE,
-    USDC_BSC,
-    USDC_CELO,
-    USDC_POLYGON,
-    USDC_ZORA,
-    USDT_AVALANCHE,
-    USDT_OPTIMISM,
-    USDT_POLYGON,
-    WBTC_ARBITRUM_ONE,
-    WBTC_POLYGON,
-} from "../uniswap/index.js";
+import { nativeOnChain } from "../uniswap/index.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -575,20 +561,7 @@ export const MAINNET_CURRENCIES = [
         MultichainToken.connect(tokens);
         return tokens;
     })(),
-    Ether.onChain(arbitrum.id),
-    Ether.onChain(linea.id),
     nativeOnChain(bsc.id),
-    USDC_BSC,
-    USDC_POLYGON,
-    USDC_CELO,
-    USDC_AVALANCHE,
-    USDC_ZORA,
-    USDT_OPTIMISM,
-    USDT_POLYGON,
-    USDT_AVALANCHE,
-    WBTC_ARBITRUM_ONE,
-    WBTC_POLYGON,
-    CELO_CELO,
 ];
 
 export const LOCAL_POOLS = {
