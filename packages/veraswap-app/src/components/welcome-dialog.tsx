@@ -3,9 +3,6 @@ import { Info } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 
-// const SUPPORT_URL = "https://owlprotocol.xyz/";
-const TERMS_URL = "https://owlprotocol.xyz/";
-
 export function WelcomeDialog() {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -27,43 +24,12 @@ export function WelcomeDialog() {
                     <h1 className="text-center text-4xl font-bold tracking-tight">Welcome to Veraswap</h1>
 
                     <div className="space-y-6">
-                        {/* <div className="flex items-start gap-4">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                                <HelpCircle className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-base">
-                                    For swapping help please head over to{" "}
-                                    <a
-                                        href={SUPPORT_URL}
-                                        className="font-medium underline underline-offset-4"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        support & FAQs
-                                    </a>
-                                    .
-                                </p>
-                            </div>
-                        </div> */}
-
                         <div className="flex items-start gap-4">
                             <div className="flex items-center justify-center w-10 h-10 rounded-full">
                                 <Info className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-base">
-                                    By using this interface you agree to our{" "}
-                                    <a
-                                        href={TERMS_URL}
-                                        className="font-medium underline underline-offset-4"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        Terms and Privacy Policy
-                                    </a>
-                                    .
-                                </p>
+                                <p className="text-base">Veraswap is currently in beta. Please use at your own risk.</p>
                             </div>
                         </div>
                     </div>
