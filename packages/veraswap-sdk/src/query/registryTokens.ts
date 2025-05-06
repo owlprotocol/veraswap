@@ -35,7 +35,8 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
             if (!res.ok) throw new Error(`Failed to fetch registry tokens for ${chainsType}`);
 
             const tokens = (await res.json()) as RegistryToken[];
-            const converted = convertRegistryTokens(tokens);
+            const filteredTokens = tokens.filter((token) => chainIds.includes(token.chainId));
+            const converted = convertRegistryTokens(filteredTokens);
             return [...converted, ...localCurrencies];
         },
         staleTime: 5 * 60 * 1000,
