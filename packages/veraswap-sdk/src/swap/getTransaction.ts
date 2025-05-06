@@ -13,7 +13,7 @@ import {
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
-import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { OrbiterParams } from "../types/OrbiterParams.js";
@@ -43,7 +43,7 @@ export interface TransactionBridgeOptions {
     amountIn: bigint;
     walletAddress: Address;
     bridgePayment: bigint;
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
     initData?: Hex;
     queryClient?: QueryClient;
     wagmiConfig?: Config;
@@ -53,7 +53,7 @@ export interface TransactionBridgeHyperlaneCollateralOptions {
     amountIn: bigint;
     walletAddress: Address;
     bridgePayment?: bigint;
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
     initData: Hex;
     queryClient: QueryClient;
     wagmiConfig: Config;
@@ -62,7 +62,7 @@ export interface TransactionBridgeHyperlaneCollateralOptions {
 export interface TransactionBridgeOrbiterOptions {
     amountIn: bigint;
     walletAddress: Address;
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -173,17 +173,16 @@ export async function getTransaction(
         }
 
         case "BRIDGE": {
-            const { currencyIn, currencyOut, amountIn, walletAddress, orbiterParams } = params;
+            const { currencyIn, currencyOut, amountIn, walletAddress, orbiterQuote } = params;
 
             if (currencyIn.isNative && currencyOut.isNative) {
-                if (!orbiterParams) {
+                if (!orbiterQuote) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
 
-                return getOrbiterETHTransferTransaction({
-                    ...orbiterParams,
-                    amount: amountIn,
-                });
+                const { to, value, data } = orbiterQuote.steps[0].tx;
+
+                return { to, value: BigInt(value), data };
             }
 
             if (isSuperOrLinkedToSuper(currencyIn) && isSuperOrLinkedToSuper(currencyOut)) {

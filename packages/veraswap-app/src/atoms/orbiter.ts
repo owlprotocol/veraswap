@@ -3,15 +3,13 @@ import {
     chainIdToOrbiterChainId,
     getUniswapV4Address,
     OrbiterParams,
+    OrbiterQuote,
     OrbiterQuoteParams,
-    orbiterQuoteQueryKey,
     orbiterQuoteQueryOptions,
-    OrbiterQuoteResponse,
     orbiterRoutersQueryOptions,
 } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
-import { queryOptions } from "@tanstack/react-query";
 import { chainInAtom, chainOutAtom, tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
 import { accountAtom } from "./account.js";
@@ -25,6 +23,7 @@ export const orbiterRoutersAllAtom = atom((get) => {
     return [...(get(orbiterRoutersMainnet).data ?? []), ...(get(orbiterRoutersTestnet).data ?? [])];
 });
 
+// NOTE: This is still needed for the new quoting
 export const orbiterRoutersEndpointContractsAtom = atom((get) => {
     const orbiterRoutersAll = get(orbiterRoutersAllAtom);
 
@@ -33,6 +32,19 @@ export const orbiterRoutersEndpointContractsAtom = atom((get) => {
         .reduce(
             (acc, curr) => {
                 return { ...acc, [Number(curr.srcChain)]: curr.endpointContract as Address };
+            },
+            {} as Record<number, Address>,
+        );
+});
+
+export const orbiterRoutersEndpointsAtom = atom((get) => {
+    const orbiterRoutersAll = get(orbiterRoutersAllAtom);
+
+    return orbiterRoutersAll
+        .filter((router) => router.srcToken === zeroAddress)
+        .reduce(
+            (acc, curr) => {
+                return { ...acc, [Number(curr.srcChain)]: curr.endpoint as Address };
             },
             {} as Record<number, Address>,
         );
@@ -158,7 +170,7 @@ export const orbiterQuoteAtom = atomWithQuery((get) => {
     const isMainnet = true;
 
     return orbiterQuoteQueryOptions(params, isMainnet);
-}) as unknown as Atom<AtomWithQueryResult<OrbiterQuoteResponse | null>>;
+}) as unknown as Atom<AtomWithQueryResult<OrbiterQuote>>;
 
 export const orbiterParamsAtom = atom((get) => {
     const orbiterChainId = get(orbiterChainIdOutAtom);

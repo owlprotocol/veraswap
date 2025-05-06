@@ -58,7 +58,6 @@ import {
     getSwapStepMessage,
     orbiterParamsAtom,
     orbiterAmountOutAtom,
-    orbiterRouterAtom,
     orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
     isDisabledStep,
@@ -73,6 +72,8 @@ import {
     routeMultichainAtom,
     submittedTransactionTypeAtom,
     amountOutAtom,
+    orbiterQuoteAtom,
+    orbiterRoutersEndpointsAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -115,6 +116,7 @@ function Index() {
     const chainOut = useAtomValue(chainOutAtom);
 
     const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
+    const orbiterRoutersEndpoints = useAtomValue(orbiterRoutersEndpointsAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInAccountBalanceQueryAtom);
@@ -177,7 +179,8 @@ function Index() {
     const { switchChain } = useSwitchChain();
 
     const orbiterParams = useAtomValue(orbiterParamsAtom);
-    const orbiterRouter = useAtomValue(orbiterRouterAtom);
+    const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
+
     const orbiterAmountOut = useAtomValue(orbiterAmountOutAtom);
 
     /*
@@ -226,7 +229,7 @@ function Index() {
         args: { to: walletAddress ?? zeroAddress },
         enabled:
             !!chainOut &&
-            !!orbiterParams &&
+            !!orbiterQuote &&
             !!orbiterRoutersEndpointContracts[chainOut?.id ?? 0] &&
             !!hash &&
             !submittedTransactionType?.withSuperchain,
@@ -238,9 +241,14 @@ function Index() {
 
     useWatchBlocks({
         chainId: chainOut?.id ?? 0,
-        enabled: !!chainOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
+        enabled:
+            !!chainOut &&
+            !!orbiterQuote &&
+            !!hash &&
+            !bridgeRemoteTransactionHash &&
+            !!orbiterRoutersEndpoints[chainOut?.id ?? 0],
         onBlock(block) {
-            const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
+            const from = orbiterRoutersEndpoints[chainOut?.id ?? 0] ?? zeroAddress;
             // Assume bridging only to same address
             const to = walletAddress?.toLowerCase() ?? zeroAddress;
 
@@ -315,9 +323,9 @@ function Index() {
                           ...transactionType,
                           amountIn: tokenInAmount!,
                           walletAddress,
-                          bridgePayment: bridgePayment,
-                          orbiterParams,
-                          queryClient: queryClient,
+                          bridgePayment,
+                          orbiterQuote,
+                          queryClient,
                           wagmiConfig: config,
                           initData: kernelSmartAccountInitData,
                       } as TransactionParams & TransactionTypeBridge)
@@ -329,7 +337,7 @@ function Index() {
                             walletAddress,
                             orbiterAmountOut,
                             orbiterParams,
-                            queryClient: queryClient,
+                            queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
@@ -339,8 +347,8 @@ function Index() {
                             amountOutMinimum: amountOutMinimum!,
                             orbiterParams,
                             walletAddress,
-                            bridgePayment: bridgePayment,
-                            queryClient: queryClient,
+                            bridgePayment,
+                            queryClient,
                             wagmiConfig: config,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 

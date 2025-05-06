@@ -8,28 +8,30 @@ BigInt.prototype.toJSON = function () {
 
 const orbiterQuoteMainnetUrl = "https://api.orbiter.finance/sdk/quote";
 
+export interface OrbiterQuote {
+    steps: {
+        action: "bridge" | "swap";
+        tx: {
+            data: Hex;
+            to: Address;
+            value: string;
+            gasLimit: string;
+        };
+    }[];
+    details: {
+        sourceTokenAmount: string;
+        destTokenAmount: string;
+        rate: number;
+        slippageTolerance: number;
+        midTokenSymbol: string;
+        minDestTokenAmount: string;
+    };
+}
+
 export interface OrbiterQuoteResponse {
     status: string;
     message: string;
-    result: {
-        steps: {
-            action: "bridge" | "swap";
-            tx: {
-                data: Hex;
-                to: Address;
-                value: string;
-                gasLimit: string;
-            };
-        }[];
-        details: {
-            sourceTokenAmount: string;
-            destTokenAmount: string;
-            rate: number;
-            slippageTolerance: number;
-            midTokenSymbol: string;
-            minDestTokenAmount: string;
-        };
-    };
+    result: OrbiterQuote;
 }
 
 export interface OrbiterQuoteParams {
