@@ -1,7 +1,25 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
-import { arbitrum, base, bsc, linea, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
+import {
+    arbitrum,
+    base,
+    bitlayer,
+    bsc,
+    celo,
+    fraxtal,
+    linea,
+    lisk,
+    mainnet,
+    mantle,
+    metis,
+    mode,
+    optimism,
+    optimismSepolia,
+    ronin,
+    sepolia,
+    worldchain,
+} from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
 import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
@@ -450,6 +468,52 @@ const hyperData = {
 const optimismOPHypERC20Collateral = "0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1";
 const superseedOPAddress = "0x4e128A1b613A9C9Ecf650FeE461c353612559fcf";
 
+const baseOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const baseOUSDTHypERC20Collateral = "0x4F0654395d621De4d1101c0F98C1Dba73ca0a61f";
+const celoOUSDTAddress = "0x5e5F4d6B03db16E7f00dE7C9AFAA53b92C8d1D42";
+const celoOUSDTHypERC20Collateral = "0xbBa1938ff861c77eA1687225B9C33554379Ef327";
+const fraxtalOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const fraxtalOUSDTHypERC20Collateral = "0xa0bD9e96556E27e6FfF0cC0F77496390d9844E1e";
+// const inkOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+// const inkOUSDTHypERC20Collateral = "0x69158d1A7325Ca547aF66C3bA599F8111f7AB519";
+const liskOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const liskOUSDTHypERC20Collateral = "0x910FF91a92c9141b8352Ad3e50cF13ef9F3169A1";
+const modeOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const modeOUSDTHypERC20Collateral = "0x324d0b921C03b1e42eeFD198086A64beC3d736c2";
+const optimismOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const optimismOUSDTHypERC20Collateral = "0x7bD2676c85cca9Fa2203ebA324fb8792fbd520b8";
+// const soneiumOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+// const soneiumOUSDTHypERC20Collateral = "0x2dC335bDF489f8e978477Ae53924324697e0f7BB";
+const superseedOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const superseedOUSDTHypERC20Collateral = "0x5beADE696E12aBE2839FEfB41c7EE6DA1f074C55";
+// const unichainOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+// const unichainOUSDTHypERC20Collateral = "0x4A8149B1b9e0122941A69D01D23EaE6bD1441b4f";
+const worldchainOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const worldchainOUSDTHypERC20Collateral = "0xAf6bEdBA6ab73f0a5941d429807C8B9c24Ea95F3";
+const roninOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const roninOUSDTHypERC20Collateral = "0xffa403dD3ff592e42475f0B3f6F57fB0F02Be52d";
+// const metalOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+// const metalOUSDTHypERC20Collateral = "0x4FC916e83F59706Ba1Ccdd607be8cB64753Fe4f0";
+const bitlayerOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const bitlayerOUSDTHypERC20Collateral = "0xC58eeC72352b04358b0b6979ba10462190f0d54C";
+const metisOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const metisOUSDTHypERC20Collateral = "0x6267Dbfc38f7Af897536563c15f07B89634cb656";
+const lineaOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const lineaOUSDTHypERC20Collateral = "0x9909F6C638f61CFcEc4464e5b746402F56ced8F0";
+const mantleOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+const mantleOUSDTHypERC20Collateral = "0x6E77A2991Ea996Af182b9a6Dc8C942fC6A106683";
+// const sonicOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
+// const sonicOUSDTHypERC20Collateral = "0x3adf8f4219BdCcd4B727B9dD67E277C58799b57C";
+const ethereumOUSDTAddress = "0x6D265C7dD8d76F25155F1a7687C693FDC1220D12";
+const ethereumOUSDTHypERC20Collateral = "0x88AC0fC430130983c0DDEB4C22574056D8340Ca8";
+
+const oUSDTData = {
+    name: "OpenUSDT",
+    symbol: "oUSDT",
+    decimals: 6,
+    logoURI: "https://assets.coingecko.com/coins/images/54815/large/ousdt.jpg",
+};
+
 export const MAINNET_CURRENCIES = [
     ...(() => {
         const tokenBase = MultichainToken.create({
@@ -677,6 +741,165 @@ export const MAINNET_CURRENCIES = [
         const tokens = [tokenOptimism, tokenSuperseed];
         MultichainToken.connect(tokens);
 
+        return tokens;
+    })(),
+    ...(() => {
+        const tokenBase = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: base.id,
+            address: baseOUSDTAddress,
+            hypERC20Collateral: baseOUSDTHypERC20Collateral,
+        });
+
+        const tokenCelo = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: celo.id,
+            address: celoOUSDTAddress,
+            hypERC20Collateral: celoOUSDTHypERC20Collateral,
+        });
+
+        const tokenFraxtal = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: fraxtal.id,
+            address: fraxtalOUSDTAddress,
+            hypERC20Collateral: fraxtalOUSDTHypERC20Collateral,
+        });
+
+        // const tokenInk = MultichainToken.createERC20({
+        //     ...oUSDTData,
+        //     chainId: ink.id,
+        //     address: inkOUSDTAddress,
+        //     hypERC20Collateral: inkOUSDTHypERC20Collateral,
+        // });
+
+        const tokenLisk = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: lisk.id,
+            address: liskOUSDTAddress,
+            hypERC20Collateral: liskOUSDTHypERC20Collateral,
+        });
+
+        const tokenMode = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: mode.id,
+            address: modeOUSDTAddress,
+            hypERC20Collateral: modeOUSDTHypERC20Collateral,
+        });
+
+        const tokenOptimism = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: optimism.id,
+            address: optimismOUSDTAddress,
+            hypERC20Collateral: optimismOUSDTHypERC20Collateral,
+        });
+
+        // const tokenSoneium = MultichainToken.createERC20({
+        //     ...oUSDTData,
+        //     chainId: soneium.id,
+        //     address: soneiumOUSDTAddress,
+        //     hypERC20Collateral: soneiumOUSDTHypERC20Collateral,
+        // });
+
+        const tokenSuperseed = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: superseed.id,
+            address: superseedOUSDTAddress,
+            hypERC20Collateral: superseedOUSDTHypERC20Collateral,
+        });
+
+        // const tokenUnichain = MultichainToken.createERC20({
+        //     ...oUSDTData,
+        //     chainId: unichain.id,
+        //     address: unichainOUSDTAddress,
+        //     hypERC20Collateral: unichainOUSDTHypERC20Collateral,
+        // });
+
+        const tokenWorldchain = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: worldchain.id,
+            address: worldchainOUSDTAddress,
+            hypERC20Collateral: worldchainOUSDTHypERC20Collateral,
+        });
+
+        const tokenRonin = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: ronin.id,
+            address: roninOUSDTAddress,
+            hypERC20Collateral: roninOUSDTHypERC20Collateral,
+        });
+
+        // const tokenMetal = MultichainToken.createERC20({
+        //     ...oUSDTData,
+        //     chainId: metal.id,
+        //     address: metalOUSDTAddress,
+        //     hypERC20Collateral: metalOUSDTHypERC20Collateral,
+        // });
+
+        const tokenBitlayer = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: bitlayer.id,
+            address: bitlayerOUSDTAddress,
+            hypERC20Collateral: bitlayerOUSDTHypERC20Collateral,
+        });
+
+        const tokenMetis = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: metis.id,
+            address: metisOUSDTAddress,
+            hypERC20Collateral: metisOUSDTHypERC20Collateral,
+        });
+
+        const tokenLinea = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: linea.id,
+            address: lineaOUSDTAddress,
+            hypERC20Collateral: lineaOUSDTHypERC20Collateral,
+        });
+
+        const tokenMantle = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: mantle.id,
+            address: mantleOUSDTAddress,
+            hypERC20Collateral: mantleOUSDTHypERC20Collateral,
+        });
+
+        // const tokenSonic = MultichainToken.createERC20({
+        //     ...oUSDTData,
+        //     chainId: sonic.id,
+        //     address: sonicOUSDTAddress,
+        //     hypERC20Collateral: sonicOUSDTHypERC20Collateral,
+        // });
+
+        const tokenEthereum = MultichainToken.createERC20({
+            ...oUSDTData,
+            chainId: mainnet.id,
+            address: ethereumOUSDTAddress,
+            hypERC20Collateral: ethereumOUSDTHypERC20Collateral,
+        });
+
+        const tokens = [
+            tokenBase,
+            tokenCelo,
+            tokenFraxtal,
+            // tokenInk,
+            tokenLisk,
+            tokenMode,
+            tokenOptimism,
+            // tokenSoneium,
+            tokenSuperseed,
+            // tokenUnichain,
+            tokenWorldchain,
+            tokenRonin,
+            // tokenMetal,
+            tokenBitlayer,
+            tokenMetis,
+            tokenLinea,
+            tokenMantle,
+            // tokenSonic,
+            tokenEthereum,
+        ];
+
+        MultichainToken.connect(tokens);
         return tokens;
     })(),
     Ether.onChain(arbitrum.id),
