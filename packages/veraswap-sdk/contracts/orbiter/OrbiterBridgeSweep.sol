@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-/// @notice Middleware designed to call an Orbiter contract and bridge tokens using any balanace on this countract instead of a fixed amount
+/// @notice Middleware designed to call an Orbiter contract and bridge tokens using any balance on this contract instead of a fixed amount
 contract OrbiterBridgeSweep {
     error BalanceZero();
     error TransferFailed();
