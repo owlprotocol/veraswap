@@ -514,12 +514,13 @@ function Index() {
                 if (hyperlaneBridgeMessageId) {
                     setBridgeMessageId(hyperlaneBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
-                    updateTransactionStep({ id: "bridge", status: "processing" });
                 } else if (superchainBridgeMessageId) {
                     setSuperchainBridgeMessageId(superchainBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
-                    updateTransactionStep({ id: "bridge", status: "processing" });
+                } else if (orbiterQuote) {
+                    setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 }
+                updateTransactionStep({ id: "bridge", status: "processing" });
             } else if (submittedTransactionType.type === "SWAP") {
                 toast({
                     title: "Swap Complete",
