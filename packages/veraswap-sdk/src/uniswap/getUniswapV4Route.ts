@@ -1,13 +1,15 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { flatten, maxBy, uniqWith, zip } from "lodash-es";
-import { Address, ContractFunctionExecutionError, numberToHex } from "viem";
+import { flatten, maxBy, minBy, uniqWith, zip } from "lodash-es";
+import { Address, numberToHex } from "viem";
 
 import { IStateView } from "../artifacts/IStateView.js";
 import {
     quoteExactInput as quoteExactInputAbi,
     quoteExactInputSingle as quoteExactInputSingleAbi,
+    quoteExactOutput as quoteExactOutputAbi,
+    quoteExactOutputSingle as quoteExactOutputSingleAbi,
 } from "../artifacts/IV4Quoter.js";
 import { UnexpectedRevertBytes } from "../artifacts/V4Quoter.js";
 import {
@@ -18,7 +20,8 @@ import {
     PoolKey,
     poolKeyEqual,
     PoolKeyOptions,
-    poolKeysToPath,
+    poolKeysToPathExactIn,
+    poolKeysToPathExactOut,
 } from "../types/PoolKey.js";
 
 /**
@@ -127,6 +130,9 @@ export async function getUniswapV4RoutesWithLiquidity(
     return routesWithLiquidity;
 }
 
+// TODO: Temporary alias for getUniswapV4RouteExactIn
+export const getUniswapV4Route = getUniswapV4RouteExactIn;
+
 /**
  * Get best Uniswap V4 Route
  */
@@ -139,13 +145,13 @@ export interface GetUniswapV4RouteParams extends GetUniswapV4RoutesWithLiquidity
 }
 
 /**
- * GetUniswap V4 Route with best amount out quoted
+ * Get Uniswap V4 Route with `quoteExactIn` with highest `amountOut`
  * @param queryClient
  * @param wagmiConfig
  * @param params
  * @returns
  */
-export async function getUniswapV4Route(
+export async function getUniswapV4RouteExactIn(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetUniswapV4RouteParams,
@@ -179,7 +185,7 @@ export async function getUniswapV4Route(
                 ) as unknown as Promise<[amountOut: bigint, gasEstimate: bigint]>;
             } else {
                 // Multi-hop
-                const path = poolKeysToPath(currencyIn, route);
+                const path = poolKeysToPathExactIn(currencyIn, route);
                 return queryClient.fetchQuery(
                     readContractQueryOptions(wagmiConfig, {
                         chainId,
@@ -210,9 +216,92 @@ export async function getUniswapV4Route(
                 gasEstimate: quote[1],
             };
         });
-    const bestRoute = maxBy(routesWithQuotes, (r) => r.amountOut)!;
 
+    if (routesWithQuotes.length === 0) return null;
+
+    const bestRoute = maxBy(routesWithQuotes, (r) => r.amountOut)!;
     if (bestRoute.amountOut === 0n) return null;
+
+    return bestRoute;
+}
+
+/**
+ * Get Uniswap V4 Route with `quoteExactOut` with lowest `amountIn`
+ * @param queryClient
+ * @param wagmiConfig
+ * @param params
+ * @returns
+ */
+export async function getUniswapV4RouteExactOut(
+    queryClient: QueryClient,
+    wagmiConfig: Config,
+    params: GetUniswapV4RouteParams,
+): Promise<{ route: PoolKey[]; amountIn: bigint; gasEstimate: bigint } | null> {
+    const { chainId, exactAmount, currencyIn, currencyOut, contracts } = params;
+    const zeroForOne = currencyIn < currencyOut;
+
+    const routesWithLiquidity = await getUniswapV4RoutesWithLiquidity(queryClient, wagmiConfig, params);
+    if (routesWithLiquidity.length === 0) return null; // No active liquidity
+
+    const routeQuotes = await Promise.allSettled(
+        routesWithLiquidity.map((route) => {
+            if (route.length == 1) {
+                // Single-hop
+                const poolKey = route[0];
+                return queryClient.fetchQuery(
+                    readContractQueryOptions(wagmiConfig, {
+                        chainId,
+                        address: contracts.v4Quoter,
+                        abi: [quoteExactOutputSingleAbi, UnexpectedRevertBytes],
+                        functionName: "quoteExactOutputSingle",
+                        args: [
+                            {
+                                poolKey,
+                                zeroForOne,
+                                exactAmount: numberToHex(exactAmount),
+                                hookData: "0x",
+                            },
+                        ],
+                    }),
+                ) as unknown as Promise<[amountIn: bigint, gasEstimate: bigint]>;
+            } else {
+                // Multi-hop
+                const path = poolKeysToPathExactOut(currencyOut, route);
+                return queryClient.fetchQuery(
+                    readContractQueryOptions(wagmiConfig, {
+                        chainId,
+                        address: contracts.v4Quoter,
+                        abi: [quoteExactOutputAbi, UnexpectedRevertBytes],
+                        functionName: "quoteExactOutput",
+                        args: [
+                            {
+                                exactCurrency: currencyOut,
+                                path,
+                                exactAmount: numberToHex(exactAmount),
+                            },
+                        ],
+                    }),
+                ) as unknown as Promise<[amountIn: bigint, gasEstimate: bigint]>;
+            }
+        }),
+    );
+
+    const routesWithQuotes = zip(routesWithLiquidity, routeQuotes)
+        .filter(([, quoteResult]) => quoteResult?.status === "fulfilled")
+        .map(([route, quoteResult]) => {
+            // TODO: Update amountIn to account for gas?
+            const quote = (quoteResult as PromiseFulfilledResult<[amountIn: bigint, gasEstimate: bigint]>).value;
+            return {
+                route: route!,
+                amountIn: quote[0],
+                gasEstimate: quote[1],
+            };
+        });
+
+    if (routesWithQuotes.length === 0) return null;
+
+    const bestRoute = minBy(routesWithQuotes, (r) => r.amountIn)!;
+    if (bestRoute.amountIn === 0n) return null;
 
     return bestRoute;
 }
