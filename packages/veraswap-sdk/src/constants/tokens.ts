@@ -339,10 +339,10 @@ export const TESTNET_CURRENCIES = [
     ),
 ];
 
-const tokenCBaseAddress = "0x6b821901f606F2216436CACA965c3B89cB4f1240";
-const tokenDBaseAddress = "0x37c6E14d5BB318f211f71e92857794fD9Dd97Ee9";
+// const tokenCBaseAddress = "0x6b821901f606F2216436CACA965c3B89cB4f1240";
+// const tokenDBaseAddress = "0x37c6E14d5BB318f211f71e92857794fD9Dd97Ee9";
 
-const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
+// const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
 
 // const cbBTCData = {
 //     decimals: 8,
@@ -351,8 +351,8 @@ const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
 //     logoURI: "https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp",
 // };
 
-const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+// const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+// const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
 // const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
 
 const baseOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
@@ -599,55 +599,4 @@ export const LOCAL_POOLS = {
     */
 };
 
-const TESTNET_POOLS = {
-    [sepolia.id]: [
-        createPoolKey({
-            currency0: tokenCBaseAddress,
-            currency1: tokenDBaseAddress,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        }),
-    ],
-    /*
-    [interopDevnet0.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(TESTNET_CURRENCIES[6]),
-            currency1: getUniswapV4Address(TESTNET_CURRENCIES[9]),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        }),
-    ],
-    */
-};
-
-const MAINNET_POOLS = {
-    [base.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(base.id)),
-            currency1: cbBTCBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
-        }),
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(base.id)),
-            currency1: usdcBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
-        }),
-        createPoolKey({
-            currency0: usdcBaseAddress,
-            currency1: cbBTCBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
-        }),
-    ],
-    [optimism.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(optimism.id)),
-            currency1: usdcOptimismAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
-        }),
-    ],
-};
-
-export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS, ...MAINNET_POOLS };
 export const CURRENCIES = [...LOCAL_CURRENCIES, ...MAINNET_CURRENCIES];
