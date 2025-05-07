@@ -209,3 +209,11 @@ export const resetTransactionStateAtom = atom(null, (_, set) => {
     set(swapMessageIdAtom, null);
     set(submittedTransactionTypeAtom, null);
 });
+
+export const slippageAtom = atom<"auto" | number>("auto");
+
+export const slippageToleranceAtom = atom((get) => {
+    const slippage = get(slippageAtom);
+    if (slippage === "auto") return 0.5;
+    return slippage;
+});
