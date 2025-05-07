@@ -156,73 +156,60 @@ export async function getUniswapV4Route(
     const routesWithLiquidity = await getUniswapV4RoutesWithLiquidity(queryClient, wagmiConfig, params);
     if (routesWithLiquidity.length === 0) return null; // No active liquidity
 
-    const routeQuotes = await Promise.all(
-        routesWithLiquidity.map(async (route) => {
+    const routeQuotes = await Promise.allSettled(
+        routesWithLiquidity.map((route) => {
             if (route.length == 1) {
                 // Single-hop
                 const poolKey = route[0];
-                return queryClient
-                    .fetchQuery(
-                        readContractQueryOptions(wagmiConfig, {
-                            chainId,
-                            address: contracts.v4Quoter,
-                            abi: [quoteExactInputSingleAbi, UnexpectedRevertBytes],
-                            functionName: "quoteExactInputSingle",
-                            args: [
-                                {
-                                    poolKey,
-                                    zeroForOne,
-                                    exactAmount: numberToHex(exactAmount),
-                                    hookData: "0x",
-                                },
-                            ],
-                        }),
-                    )
-                    .catch((e) => {
-                        if (e instanceof ContractFunctionExecutionError) {
-                            // TODO: Consider looking specifcially for UnexpectedRevertBytes
-                            return [0n, 0n]; // No liquidity
-                        }
-                        throw e;
-                    });
+                return queryClient.fetchQuery(
+                    readContractQueryOptions(wagmiConfig, {
+                        chainId,
+                        address: contracts.v4Quoter,
+                        abi: [quoteExactInputSingleAbi, UnexpectedRevertBytes],
+                        functionName: "quoteExactInputSingle",
+                        args: [
+                            {
+                                poolKey,
+                                zeroForOne,
+                                exactAmount: numberToHex(exactAmount),
+                                hookData: "0x",
+                            },
+                        ],
+                    }),
+                ) as unknown as Promise<[amountOut: bigint, gasEstimate: bigint]>;
             } else {
                 // Multi-hop
                 const path = poolKeysToPath(currencyIn, route);
-                return queryClient
-                    .fetchQuery(
-                        readContractQueryOptions(wagmiConfig, {
-                            chainId,
-                            address: contracts.v4Quoter,
-                            abi: [quoteExactInputAbi, UnexpectedRevertBytes],
-                            functionName: "quoteExactInput",
-                            args: [
-                                {
-                                    exactCurrency: currencyIn,
-                                    path,
-                                    exactAmount: numberToHex(exactAmount),
-                                },
-                            ],
-                        }),
-                    )
-                    .catch((e) => {
-                        if (e instanceof ContractFunctionExecutionError) {
-                            // TODO: Consider looking specifcially for UnexpectedRevertBytes
-                            return [0n, 0n]; // No liquidity
-                        }
-                        throw e;
-                    });
+                return queryClient.fetchQuery(
+                    readContractQueryOptions(wagmiConfig, {
+                        chainId,
+                        address: contracts.v4Quoter,
+                        abi: [quoteExactInputAbi, UnexpectedRevertBytes],
+                        functionName: "quoteExactInput",
+                        args: [
+                            {
+                                exactCurrency: currencyIn,
+                                path,
+                                exactAmount: numberToHex(exactAmount),
+                            },
+                        ],
+                    }),
+                ) as unknown as Promise<[amountOut: bigint, gasEstimate: bigint]>;
             }
         }),
     );
 
-    const routesWithQuotes = zip(routesWithLiquidity, routeQuotes).map(([route, quote]) => {
-        // TODO: Update amountOut to account for gas?
-        return {
-            route: route!,
-            amountOut: quote![0],
-            gasEstimate: quote![1],
-        };
-    });
+    const routesWithQuotes = zip(routesWithLiquidity, routeQuotes)
+        .filter(([, quoteResult]) => quoteResult?.status === "fulfilled")
+        .map(([route, quoteResult]) => {
+            // TODO: Update amountOut to account for gas?
+            const quote = (quoteResult as PromiseFulfilledResult<[amountOut: bigint, gasEstimate: bigint]>).value;
+            return {
+                route: route!,
+                amountOut: quote[0],
+                gasEstimate: quote[1],
+            };
+        });
     const bestRoute = maxBy(routesWithQuotes, (r) => r.amountOut)!;
 
     if (bestRoute.amountOut === 0n) return null;
