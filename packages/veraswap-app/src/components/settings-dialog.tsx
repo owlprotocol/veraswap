@@ -19,16 +19,16 @@ const SLIPPAGE_OPTIONS = ["auto", 0.1, 0.5, 1] as const;
 
 function SlippageSettings() {
     const [slippage, setSlippage] = useAtom(slippageAtom);
-    const [customValue, setCustomValue] = useState("");
+    const [customValue, setCustomValue] = useState<number | null>(null);
 
     useEffect(() => {
         if (typeof slippage === "number" && !SLIPPAGE_OPTIONS.includes(slippage as any)) {
-            setCustomValue(slippage.toString());
+            setCustomValue(slippage);
         }
     }, [slippage]);
 
     const handleSlippageChange = (value: (typeof SLIPPAGE_OPTIONS)[number]) => {
-        setCustomValue("");
+        setCustomValue(null);
         if (value === "auto") {
             setSlippage("auto");
             return;
@@ -38,14 +38,13 @@ function SlippageSettings() {
 
     const handleCustomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setCustomValue(value);
-        if (value) {
-            setSlippage(Number(value));
-        }
+        const numValue = Math.min(Number(value), 100);
+        setCustomValue(numValue);
+        setSlippage(numValue);
     };
 
     const isCustomSelected = typeof slippage === "number" && !SLIPPAGE_OPTIONS.includes(slippage as any);
-    const hasHighSlippage = Number(customValue) > 5;
+    const hasHighSlippage = customValue !== null && customValue > 5;
 
     return (
         <div className="space-y-6">
@@ -97,13 +96,8 @@ function SlippageSettings() {
                             <Input
                                 id="custom-slippage"
                                 type="number"
-                                value={customValue}
+                                value={customValue ?? ""}
                                 onChange={handleCustomChange}
-                                onFocus={() => {
-                                    if (!isCustomSelected && customValue === "") {
-                                        setCustomValue(typeof slippage === "number" ? slippage.toString() : "");
-                                    }
-                                }}
                                 className={cn("pr-8")}
                                 placeholder="0.0"
                                 min={0}
