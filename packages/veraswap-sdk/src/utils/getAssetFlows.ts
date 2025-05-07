@@ -5,7 +5,7 @@ import { Currency } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { PoolKey } from "../types/PoolKey.js";
-import { RouteComponent, RouteComponentBridge, RouteComponentSwap } from "../uniswap/getUniswapV4RouteMultichain.js";
+import { RouteComponent, RouteComponentBridge, RouteComponentSwap } from "../uniswap/getRouteMultichain.js";
 
 /**
  * Take token pair and return list of token pairs on same chain using their remote tokens
