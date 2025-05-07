@@ -130,9 +130,6 @@ export async function getUniswapV4RoutesWithLiquidity(
     return routesWithLiquidity;
 }
 
-// TODO: Temporary alias for getUniswapV4RouteExactIn
-export const getUniswapV4Route = getUniswapV4RouteExactIn;
-
 /**
  * Get best Uniswap V4 Route
  */

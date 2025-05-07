@@ -22,9 +22,6 @@ export interface GetUniswapV4RouteMultichainParams {
     poolKeyOptions?: PoolKeyOptions[];
 }
 
-//TODO: Temporary alias for getUniswapV4RouteExactInMultichain
-export const getUniswapV4RouteMultichain = getUniswapV4RouteExactInMultichain;
-
 /**
  * Get best Uniswap V4 Route for chains where token share a deployment
  * @param queryClient

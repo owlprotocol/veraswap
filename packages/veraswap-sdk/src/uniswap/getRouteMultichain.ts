@@ -4,9 +4,12 @@ import invariant from "tiny-invariant";
 
 import { Currency, getUniswapV4Address } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { PathKey, PoolKey, poolKeysToPath } from "../types/PoolKey.js";
+import { PathKey, PoolKey, poolKeysToPathExactIn } from "../types/PoolKey.js";
 
-import { getUniswapV4RouteMultichain, GetUniswapV4RouteMultichainParams } from "./getUniswapV4RouteMultichain.js";
+import {
+    getUniswapV4RouteExactInMultichain,
+    GetUniswapV4RouteMultichainParams,
+} from "./getUniswapV4RouteMultichain.js";
 
 export interface RouteComponentSwap {
     type: "SWAP";
@@ -66,13 +69,13 @@ export async function getRouteMultichain(
 
     // SWAP with pre-swap, post-swap bridging
     // Find crosschain pools
-    const route = await getUniswapV4RouteMultichain(queryClient, wagmiConfig, params);
+    const route = await getUniswapV4RouteExactInMultichain(queryClient, wagmiConfig, params);
     if (!route) return null;
 
     // Mixed Bridge/Swap/Bridge
     const flows: RouteComponent[] = [];
 
-    const path = poolKeysToPath(getUniswapV4Address(route.currencyIn), route.route);
+    const path = poolKeysToPathExactIn(getUniswapV4Address(route.currencyIn), route.route);
 
     const swap: RouteComponentSwap = {
         type: "SWAP",

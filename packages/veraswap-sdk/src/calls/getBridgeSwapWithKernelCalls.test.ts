@@ -24,7 +24,7 @@ import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
-import { poolKeysToPath } from "../types/PoolKey.js";
+import { poolKeysToPathExactIn } from "../types/PoolKey.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -186,7 +186,7 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
             const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
             const currencyOut = zeroForOne ? poolKey.currency1 : poolKey.currency0;
 
-            const path = poolKeysToPath(currencyIn, [poolKey]);
+            const path = poolKeysToPathExactIn(currencyIn, [poolKey]);
 
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {

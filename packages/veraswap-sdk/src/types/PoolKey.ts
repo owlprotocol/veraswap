@@ -92,8 +92,6 @@ export interface PathKey {
     hookData: Hex;
 }
 
-// TODO: Temporary alias for poolKeysToPathExactIn
-export const poolKeysToPath = poolKeysToPathExactIn;
 /**
  * Convert list of pool keys to a path for multihop quoting
  * @param exactCurrency
