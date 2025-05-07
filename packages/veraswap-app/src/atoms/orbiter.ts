@@ -2,6 +2,7 @@ import { Atom, atom } from "jotai";
 import {
     chainIdToOrbiterChainId,
     getUniswapV4Address,
+    ORBITER_BRIDGE_SWEEP_ADDRESS,
     OrbiterParams,
     OrbiterQuote,
     OrbiterQuoteParams,
@@ -163,7 +164,7 @@ export const orbiterQuoteAtom = atomWithQuery((get) => {
         sourceToken,
         destToken,
         amount,
-        userAddress: account.address,
+        userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
         targetRecipient,
     };
 
