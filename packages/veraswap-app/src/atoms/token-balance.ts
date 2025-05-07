@@ -286,6 +286,6 @@ export const amountOutAtom = atom((get) => {
             ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
             : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
         : quoterData
-            ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
-            : "";
+          ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
+          : "";
 });
