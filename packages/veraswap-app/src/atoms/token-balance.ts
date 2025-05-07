@@ -10,11 +10,12 @@ import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } fro
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
-import { currenciesAtom } from "./chains.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
 import { orbiterAmountOutAtom, orbiterRouterAtom } from "./orbiter.js";
+import { currenciesAtom } from "./chains.js";
+
 import { config } from "@/config.js";
 
 /***** Atom Family *****/

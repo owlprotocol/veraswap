@@ -1,9 +1,10 @@
 import { atom } from "jotai";
-import { CURRENCIES } from "@owlprotocol/veraswap-sdk/constants";
-import { Currency } from "@owlprotocol/veraswap-sdk";
 import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
+import { localChains, mainnetChains, testnetChains } from "@owlprotocol/veraswap-sdk/chains";
+import { Currency } from "@owlprotocol/veraswap-sdk";
+import { atomWithQuery } from "jotai-tanstack-query";
+import { registryTokensQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { currencyInAtom, currencyOutAtom } from "./tokens.js";
-import { localChains, mainnetChains, testnetChains } from "@/config.js";
 
 export type ChainsType = "local" | "testnet" | "mainnet";
 
@@ -31,8 +32,12 @@ export const chainsAtom = atom<ChainWithMetadata[]>((get) => {
     return [];
 });
 
+export const currenciesQueryAtom = atomWithQuery((get) => {
+    const chainsType = get(chainsTypeAtom);
+    return registryTokensQueryOptions(chainsType);
+});
+
 export const currenciesAtom = atom<Currency[]>((get) => {
-    const chains = get(chainsAtom);
-    const chainIds = chains.map((c) => c.id);
-    return CURRENCIES.filter((t) => chainIds.includes(t.chainId));
+    const queryResult = get(currenciesQueryAtom);
+    return queryResult.data ?? [];
 });
