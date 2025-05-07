@@ -16,7 +16,6 @@ import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSupe
 import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { OrbiterParams } from "../types/OrbiterParams.js";
 import { TokenStandard } from "../types/Token.js";
 import {
     TransactionTypeBridge,
@@ -78,7 +77,7 @@ export interface TransactionSwapBridgeOptions {
     amountOutMinimum: bigint;
     bridgePayment: bigint;
     walletAddress: Address;
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
@@ -87,7 +86,7 @@ export interface TransactionSwapBridgeOrbiterOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
     walletAddress: Address;
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -100,8 +99,7 @@ export interface TransactionBridgeSwapOptions {
     amountIn: bigint;
     amountOutMinimum: bigint;
     initData: Hex;
-    orbiterParams?: OrbiterParams;
-    orbiterAmountOut?: bigint;
+    orbiterQuote?: OrbiterQuote;
 }
 
 export type TransactionParams =
@@ -255,25 +253,12 @@ export async function getTransaction(
                 amountIn,
                 amountOutMinimum,
                 walletAddress,
-                orbiterParams,
+                orbiterQuote,
                 queryClient,
                 wagmiConfig,
             } = params;
             const { currencyIn: swapCurrencyIn, path, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
-
-            const bridgeAddress = isMultichainToken(bridgeCurrencyIn)
-                ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
-                : getUniswapV4Address(bridgeCurrencyIn);
-
-            // TODO: add orbiter bridging
-            if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
-                if (!orbiterParams) {
-                    throw new Error("Orbiter params are required for Orbiter bridging");
-                }
-
-                throw new Error("Must implement getSwapAndOrbiterBridgeTransaction");
-            }
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
@@ -312,7 +297,7 @@ export async function getTransaction(
             }
 
             if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
-                if (!orbiterParams) {
+                if (!orbiterQuote) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
 
@@ -322,16 +307,19 @@ export async function getTransaction(
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     path,
-                    receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
-                    orbiterParams,
+                    orbiterQuote,
                     permit2PermitParams,
                 });
             }
 
+            const hyperlaneBridgeAddress = isMultichainToken(bridgeCurrencyIn)
+                ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
+                : getUniswapV4Address(bridgeCurrencyIn);
+
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
-                bridgeAddress,
+                bridgeAddress: hyperlaneBridgeAddress,
                 // Default for local env
                 bridgePayment: bridgePayment ?? 1n,
                 destinationChain: bridgeCurrencyOut.chainId,
@@ -355,14 +343,13 @@ export async function getTransaction(
                 amountIn,
                 amountOutMinimum,
                 initData,
-                orbiterParams,
-                orbiterAmountOut,
+                orbiterQuote,
             } = params;
             // TODO: check if withSuperchain is needed
             const { currencyIn, currencyOut } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
 
-            if (currencyIn.isNative && (!orbiterParams || !orbiterAmountOut)) {
+            if (currencyIn.isNative && !orbiterQuote) {
                 throw new Error("Orbiter params and amount out are required for Orbiter bridging");
             }
 
@@ -377,6 +364,8 @@ export async function getTransaction(
             if (!remoteERC7579ExecutorRouter) {
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${currencyOut.chainId}`);
             }
+
+            const remoteSwapAmountIn = orbiterQuote ? BigInt(orbiterQuote.details.minDestTokenAmount) : amountIn;
 
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: currencyIn.chainId,
@@ -420,7 +409,7 @@ export async function getTransaction(
                 // erc7579RouterOwnersRemote: [],
                 remoteSwapParams: {
                     // Adjust amount in if using orbiter to account for fees
-                    amountIn: orbiterAmountOut ?? amountIn,
+                    amountIn: remoteSwapAmountIn,
                     amountOutMinimum,
                     path,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
@@ -428,7 +417,7 @@ export async function getTransaction(
                     receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
                 },
-                orbiterParams,
+                orbiterQuote,
             };
 
             const result = await getBridgeSwapWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParams);

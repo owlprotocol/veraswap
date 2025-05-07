@@ -56,8 +56,6 @@ import {
     hyperlaneRegistryAtom,
     chainsTypeAtom,
     getSwapStepMessage,
-    orbiterParamsAtom,
-    orbiterAmountOutAtom,
     orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
     isDisabledStep,
@@ -178,10 +176,7 @@ function Index() {
 
     const { switchChain } = useSwitchChain();
 
-    const orbiterParams = useAtomValue(orbiterParamsAtom);
     const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
-
-    const orbiterAmountOut = useAtomValue(orbiterAmountOutAtom);
 
     /*
     //DISABLE DIVVY
@@ -335,8 +330,7 @@ function Index() {
                             amountIn: tokenInAmount!,
                             amountOutMinimum,
                             walletAddress,
-                            orbiterAmountOut,
-                            orbiterParams,
+                            orbiterQuote,
                             queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
@@ -345,7 +339,7 @@ function Index() {
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: amountOutMinimum!,
-                            orbiterParams,
+                            orbiterQuote,
                             walletAddress,
                             bridgePayment,
                             queryClient,
@@ -502,7 +496,7 @@ function Index() {
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId || orbiterParams) {
+            if (hyperlaneBridgeMessageId || orbiterQuote) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });

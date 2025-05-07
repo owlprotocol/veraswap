@@ -14,7 +14,7 @@ import { currenciesAtom } from "./chains.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
-import { orbiterAmountOutAtom, orbiterRouterAtom } from "./orbiter.js";
+import { orbiterQuoteAtom, orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
 
 /***** Atom Family *****/
@@ -273,18 +273,34 @@ export const currencyBalancesAtom = atom((get) => {
 export const amountOutAtom = atom((get) => {
     const transactionType = get(transactionTypeAtom);
     const orbiterRouter = get(orbiterRouterAtom);
-    const orbiterAmountOut = get(orbiterAmountOutAtom);
     const currencyOut = get(currencyOutAtom);
     const tokenInAmount = get(tokenInAmountAtom);
     const quoterData = get(routeMultichainAtom).data;
 
+    const {
+        data: orbiterQuote,
+        fetchStatus: orbiterQuoteFetchStatus,
+        status: orbiterQuoteStatus,
+    } = get(orbiterQuoteAtom);
+
     if (!transactionType || !currencyOut || !tokenInAmount) return "";
 
-    return transactionType?.type === "BRIDGE"
-        ? orbiterRouter
-            ? formatUnits(orbiterAmountOut ?? 0n, currencyOut?.decimals ?? 18)
-            : formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18)
-        : quoterData
-          ? formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18)
-          : "";
+    let amountOut = "";
+
+    // TODO: improve how we show amount out
+    if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
+        if (!orbiterQuote && (orbiterQuoteFetchStatus === "fetching" || orbiterQuoteStatus === "error")) {
+            amountOut = "";
+        } else if (orbiterRouter && orbiterQuote && currencyOut) {
+            const amountOutDecimalsStripped = orbiterQuote.details.minDestTokenAmount.split(".")[0];
+            amountOut = formatUnits(BigInt(amountOutDecimalsStripped), currencyOut.decimals);
+            // Only shouw
+        } else if (!orbiterRouter && orbiterQuoteFetchStatus === "idle" && orbiterQuoteStatus !== "error") {
+            amountOut = formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18);
+        }
+    } else if (quoterData) {
+        amountOut = formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18);
+    }
+
+    return amountOut;
 });

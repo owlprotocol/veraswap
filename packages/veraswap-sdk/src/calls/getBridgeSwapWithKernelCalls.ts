@@ -9,7 +9,6 @@ import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddres
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
 import { InterchainGasPaymaster } from "../artifacts/InterchainGasPaymaster.js";
-import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
@@ -182,12 +181,10 @@ export async function getBridgeSwapWithKernelCalls(
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
         // Assume that if the token is native, we are using the Orbiter bridge
-        const orbiterCall = getOrbiterETHTransferTransaction({
-            recipient: kernelAddress,
-            amount,
-            ...params.orbiterParams!,
-        });
-        bridgeCalls = [{ ...orbiterCall, account: kernelAddress }];
+        // TODO: if using USDC, find the step with bridge, since there could be an approve step
+        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
+        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
+        bridgeCalls = [orbiterCall];
     } else if (
         // TODO: use the withSuperchain flag, and fix the GetBridgeSwapWithKernelCallsParams type accordingly
         tokenStandard === "SuperchainERC20" ||

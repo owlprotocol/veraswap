@@ -2,11 +2,34 @@
 pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {IOrbiterXRouter} from "./IOrbiterXRouter.sol";
 
-/// @notice Middleware designed to call an orbiter endpoint contract and bridge tokens
+/// @notice Middleware designed to call an Orbiter contract and bridge tokens using any balanace on this countract instead of a fixed amount
 contract OrbiterBridgeSweep {
     error BalanceZero();
+    error TransferFailed();
+
+    struct ExecuteBridgeData {
+        address recipient;
+        address inputToken;
+        uint256 inputAmount;
+        bytes extData;
+        bool unwrapped;
+        address feeRecipient;
+        uint256 feeAmount;
+    }
+
+    struct BridgeParams {
+        address recipient;
+        address inputToken;
+        uint256 inputAmount;
+        bytes extData;
+        bool unwrapped;
+        address feeRecipient;
+        uint256 feeAmount;
+    }
+
+    // recipient, inputToken, inputAmount, extData, unwrapped, feeRecipient, feeAmount
+    string executeBridgeSignature = "executeBridge((address,address,uint256,bytes,bool,address,uint256))";
 
     uint256 constant MAX_INT = 2 ** 256 - 1;
 
@@ -31,54 +54,56 @@ contract OrbiterBridgeSweep {
         return balanceAdjusted;
     }
 
-    /// @notice Call Orbiter endpoint contract with `transfer` using as much of this contract's balance as possible. Leftover balance will be sent to the recipient.
-    /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
-    /// @param recipient The recipient of the transfer
-    /// @param endpointContract The Orbiter endpoint contract
-    /// @param orbiterChainId The Orbiter destination chain id
-    /// @param endpoint The address of the orbiter endpoint on the destination chain.
-    /// @param transferData The data to be passed to the endpoint contract, an encoded string
+    /// @notice Call Orbiter contract using quote `to` and `data`, but set amount to the entire balance of this contract
+    /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as it can be taken by anyone
+    /// @param to The Orbiter contract to call. Derived from the Orbiter quoter
+    /// @param bridgeParams The parameters from decoding the quote bridge step `data` field
     function bridgeAllETH(
-        address payable recipient,
-        address endpointContract,
-        uint32 orbiterChainId,
-        address endpoint,
-        bytes calldata transferData
-    ) external payable {
+        address payable to,
+        BridgeParams calldata bridgeParams
+    ) external {
         uint256 balance = address(this).balance;
         if (balance == 0) revert BalanceZero();
 
-        uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
+        (bool success, ) = to.call{value: balance}(abi.encodeWithSignature(executeBridgeSignature, ExecuteBridgeData({
+            recipient: bridgeParams.recipient,
+            inputToken: bridgeParams.inputToken,
+            inputAmount: balance,
+            extData: bridgeParams.extData,
+            unwrapped: bridgeParams.unwrapped,
+            feeRecipient: bridgeParams.feeRecipient,
+            feeAmount: bridgeParams.feeAmount
+        })));
 
-        IOrbiterXRouter(endpointContract).transfer{value: balanceAdjusted}(endpoint, transferData);
-
-        recipient.transfer(balance - balanceAdjusted);
+        if (!success) {
+            revert TransferFailed();
+        }
     }
 
-    /// @notice Call Orbiter endpoint contract with `transferToken` using as much of this contract's balance as possible. (msg.value is forwarded for relay payment)
-    /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
-    /// @param recipient The recipient of the transfer
-    /// @param token the token to bridge
-    /// @param endpointContract The Orbiter endpoint contract
-    /// @param orbiterChainId The Orbiter destination chain id
-    /// @param endpoint The address of the orbiter endpoint on the destination chain.
-    /// @param transferData The data to be passed to the endpoint contract, an encoded string
+    /// @notice Call Orbiter contract using quote `to` and `data`, but set amount to the entire balance of this contract
+    /// @dev Contract `inputToken` balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as it can be taken by anyone
+    /// @param to The Orbiter contract to call. Derived from the Orbiter quoter
+    /// @param bridgeParams The parameters from decoding the quote bridge step `data` field
     function bridgeAllToken(
-        address recipient,
-        address token,
-        address endpointContract,
-        uint32 orbiterChainId,
-        address endpoint,
-        bytes calldata transferData
+        address payable to,
+        BridgeParams calldata bridgeParams
     ) external payable {
-        uint256 balance = IERC20(token).balanceOf(address(this));
+        uint256 balance = IERC20(bridgeParams.inputToken).balanceOf(address(this));
         if (balance == 0) revert BalanceZero();
 
-        uint256 balanceAdjusted = getBalanceAdjusted(balance, orbiterChainId);
+        (bool success, ) = to.call(abi.encodeWithSignature(executeBridgeSignature, ExecuteBridgeData({
+            recipient: bridgeParams.recipient,
+            inputToken: bridgeParams.inputToken,
+            inputAmount: balance,
+            extData: bridgeParams.extData,
+            unwrapped: bridgeParams.unwrapped,
+            feeRecipient: bridgeParams.feeRecipient,
+            feeAmount: bridgeParams.feeAmount
 
-        IOrbiterXRouter(endpointContract).transferToken(IERC20(token), endpoint, balanceAdjusted, transferData);
-
-        IERC20(token).transfer(recipient, balance - balanceAdjusted);
+        })));
+        if (!success) {
+            revert TransferFailed();
+        }
     }
 
     receive() external payable {}

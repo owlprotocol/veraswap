@@ -1,11 +1,10 @@
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { OrbiterBridgeSweep } from "../artifacts/OrbiterBridgeSweep.js";
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
-import { getOrbiterTransferData } from "../orbiter/getOrbiterTransferData.js";
+import { getOrbiterBridgeAllETHCallData } from "../orbiter/getOrbiterBridgeAllETHCallData.js";
+import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { OrbiterParams } from "../types/OrbiterParams.js";
 import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
@@ -16,7 +15,6 @@ import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
  */
 export function getSwapAndOrbiterETHBridgeTransaction({
     universalRouter,
-    receiver,
     amountIn,
     amountOutMinimum,
     currencyIn,
@@ -24,10 +22,9 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     path,
     permit2PermitParams,
     hookData = "0x",
-    orbiterParams,
+    orbiterQuote,
 }: {
     universalRouter: Address;
-    receiver: Address;
     amountIn: bigint;
     amountOutMinimum: bigint;
     currencyIn: Address;
@@ -35,9 +32,8 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     path: PathKey[];
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
-    orbiterParams: OrbiterParams;
+    orbiterQuote: OrbiterQuote;
 }) {
-    const { endpoint, endpointContract, orbiterChainId } = orbiterParams;
     const routePlanner = new RoutePlanner();
 
     if (permit2PermitParams) {
@@ -55,13 +51,7 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     });
     routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
 
-    const orbiterTransferData = getOrbiterTransferData({ orbiterChainId, recipient: receiver });
-
-    const orbiterCallData = encodeFunctionData({
-        abi: OrbiterBridgeSweep.abi,
-        functionName: "bridgeAllETH",
-        args: [receiver, endpointContract, orbiterChainId, endpoint, orbiterTransferData],
-    });
+    const orbiterCallData = getOrbiterBridgeAllETHCallData(orbiterQuote);
     routePlanner.addCommand(CommandType.CALL_TARGET, [ORBITER_BRIDGE_SWEEP_ADDRESS, 0n, orbiterCallData]);
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);

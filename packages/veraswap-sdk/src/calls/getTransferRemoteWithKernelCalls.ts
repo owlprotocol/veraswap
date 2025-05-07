@@ -6,9 +6,8 @@ import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { Execute } from "../artifacts/Execute.js";
-import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
+import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
-import { OrbiterParams } from "../types/OrbiterParams.js";
 import { TokenStandard } from "../types/Token.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
@@ -44,7 +43,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         erc7579Router: Address;
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
-    orbiterParams?: OrbiterParams;
+    orbiterQuote?: OrbiterQuote;
 }
 
 /**
@@ -113,12 +112,10 @@ export async function getTransferRemoteWithKernelCalls(
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
         // Assume that if the token is native, we are using the Orbiter bridge
-        const orbiterCall = getOrbiterETHTransferTransaction({
-            recipient,
-            amount,
-            ...params.orbiterParams!,
-        });
-        bridgeCalls = [{ ...orbiterCall, account: kernelAddress }];
+        // TODO: if using USDC, find the step with bridge, since there could be an approve step
+        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
+        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
+        bridgeCalls = [orbiterCall];
     } else {
         // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed
