@@ -491,21 +491,25 @@ function Index() {
             }
         }
 
-        const [hyperlaneBridgeMessageId, hyperlaneSwapMessageId] = hyperlaneMessageIds;
+        const hyperlaneBridgeMessageId = hyperlaneMessageIds[0];
+        const hyperlaneSwapMessageId = !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
 
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId || orbiterQuote) {
+            if (hyperlaneBridgeMessageId && !orbiterQuote) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
+            } else if (orbiterQuote) {
+                setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
+            }
 
-                if (submittedTransactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
-                    setSwapMessageId(hyperlaneSwapMessageId);
-                    setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
-                    updateTransactionStep({ id: "swap", status: "processing" });
-                }
+            if (submittedTransactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
+                setSwapMessageId(hyperlaneSwapMessageId);
+                setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
+                updateTransactionStep({ id: "swap", status: "processing" });
             }
         } else {
             updateTransactionStep({ id: "swap", status: "success" });
