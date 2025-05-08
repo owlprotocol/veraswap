@@ -9,7 +9,6 @@ import { Address, encodeFunctionData, encodePacked, Hex, numberToHex, zeroAddres
 import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
 import { InterchainGasPaymaster } from "../artifacts/InterchainGasPaymaster.js";
-import { getOrbiterETHTransferTransaction } from "../orbiter/getOrbiterETHTransferTransaction.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
@@ -95,10 +94,10 @@ export async function getBridgeSwapWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-            tokenStandard === "HypERC20Collateral" ||
-            tokenStandard === "HypSuperchainERC20Collateral" ||
-            tokenStandard === "SuperchainERC20" ||
-            tokenStandard === "NativeToken",
+        tokenStandard === "HypERC20Collateral" ||
+        tokenStandard === "HypSuperchainERC20Collateral" ||
+        tokenStandard === "SuperchainERC20" ||
+        tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
@@ -182,12 +181,10 @@ export async function getBridgeSwapWithKernelCalls(
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
         // Assume that if the token is native, we are using the Orbiter bridge
-        const orbiterCall = getOrbiterETHTransferTransaction({
-            recipient: kernelAddress,
-            amount,
-            ...params.orbiterParams!,
-        });
-        bridgeCalls = [{ ...orbiterCall, account: kernelAddress }];
+        // TODO: if using USDC, find the step with bridge, since there could be an approve step
+        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
+        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
+        bridgeCalls = [orbiterCall];
     } else if (
         // TODO: use the withSuperchain flag, and fix the GetBridgeSwapWithKernelCallsParams type accordingly
         tokenStandard === "SuperchainERC20" ||
@@ -269,6 +266,7 @@ export async function getBridgeSwapWithKernelCalls(
         executor: contractsRemote.ownableSignatureExecutor,
         owner: remoteExecutorDirect ? contractsRemote.erc7579Router : account,
         kernelAddress: kernelAddressRemote,
+        value: 0n, //No value can be passed by Hyperlane, if ETH is needed on the smart account, it must be received by some other mechanism (eg. Orbiter, Across)
     });
 
     let executionMode: ERC7579ExecutionMode;
@@ -366,6 +364,7 @@ export async function getBridgeSwapWithKernelCalls(
         ...bridgeCalls,
         callRemote,
     ];
+    const kernelCallsValue = kernelCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
@@ -376,6 +375,8 @@ export async function getBridgeSwapWithKernelCalls(
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
+            //TODO: Only send value if needed
+            value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
         });
 
         return { calls: executeOnOwnedAccount.calls };
@@ -389,6 +390,8 @@ export async function getBridgeSwapWithKernelCalls(
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,
+        //TODO: Only send value if needed
+        value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
     });
 
     //TODO: Additional util for Execute.sol contract

@@ -1,9 +1,7 @@
-import { Address, encodeFunctionData, Hex, stringToHex } from "viem";
+import { Address, encodeFunctionData, Hex } from "viem";
 
 import { crossAddressAbi } from "./crossAddressAbi.js";
-
-// Should be all lowercase
-const PUBLIC_ADDRESS_UTILITY = "0xa2e8b0ae8b5a51d494ecf7e35f3734a6ced7eecf";
+import { getOrbiterTransferData } from "./getOrbiterTransferData.js";
 
 /**
  * getOrbiterETHTransferTransaction encodes a transaction to bridge ETH to another chain.
@@ -25,13 +23,13 @@ export function getOrbiterETHTransferTransaction({
     endpoint: Address;
     endpointContract: Address;
 }): { to: Address; value: bigint; data: Hex } {
-    // TODO: strip last 4 digits to make sure they don't conflict with identificationCode
-    const identificationCode = 9000 + orbiterChainId;
-    const totalAmount = amount + BigInt(identificationCode);
+    // NOTE: We remove the last for digits to avoid conflicting with the identification code
+    const amountStripped = (amount / 10000n) * 10000n;
 
-    const chainAndApp = `c=${identificationCode}&app=${PUBLIC_ADDRESS_UTILITY}`;
-    const transferDataString = recipient ? `${chainAndApp}&t=${recipient}` : chainAndApp;
-    const transferData = stringToHex(transferDataString);
+    const identificationCode = 9000 + orbiterChainId;
+    const totalAmount = amountStripped + BigInt(identificationCode);
+
+    const transferData = getOrbiterTransferData({ orbiterChainId, recipient });
 
     const data = encodeFunctionData({
         abi: crossAddressAbi,

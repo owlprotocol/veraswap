@@ -1,6 +1,6 @@
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { getClient } from "@wagmi/core";
-import { Address, Chain, Client, Hash, Hex, LocalAccount, numberToHex, Transport, zeroHash } from "viem";
+import { Address, Chain, Client, Hash, Hex, Transport, zeroHash } from "viem";
 import { kernelInitDataQueryOptions, LOCAL_KERNEL_CONTRACTS } from "@owlprotocol/veraswap-sdk";
 import { atom, Atom } from "jotai";
 import { getBytecodeQueryOptions, readContractQueryOptions } from "@wagmi/core/query";

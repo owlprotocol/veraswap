@@ -2460,6 +2460,52 @@ export const functions = [
     },
     {
         type: "function",
+        name: "bridgeAllETH",
+        inputs: [
+            { name: "to", type: "address", internalType: "address payable" },
+            {
+                name: "bridgeParams",
+                type: "tuple",
+                internalType: "struct OrbiterBridgeSweep.BridgeParams",
+                components: [
+                    { name: "recipient", type: "address", internalType: "address" },
+                    { name: "inputToken", type: "address", internalType: "address" },
+                    { name: "inputAmount", type: "uint256", internalType: "uint256" },
+                    { name: "extData", type: "bytes", internalType: "bytes" },
+                    { name: "unwrapped", type: "bool", internalType: "bool" },
+                    { name: "feeRecipient", type: "address", internalType: "address" },
+                    { name: "feeAmount", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "bridgeAllToken",
+        inputs: [
+            { name: "to", type: "address", internalType: "address payable" },
+            {
+                name: "bridgeParams",
+                type: "tuple",
+                internalType: "struct OrbiterBridgeSweep.BridgeParams",
+                components: [
+                    { name: "recipient", type: "address", internalType: "address" },
+                    { name: "inputToken", type: "address", internalType: "address" },
+                    { name: "inputAmount", type: "uint256", internalType: "uint256" },
+                    { name: "extData", type: "bytes", internalType: "bytes" },
+                    { name: "unwrapped", type: "bool", internalType: "bool" },
+                    { name: "feeRecipient", type: "address", internalType: "address" },
+                    { name: "feeAmount", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
         name: "accountId",
         inputs: [],
         outputs: [{ name: "accountImplementationId", type: "string", internalType: "string" }],

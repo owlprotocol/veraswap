@@ -21,6 +21,8 @@ import {HyperlaneNoopIsmUtils} from "./utils/HyperlaneNoopIsmUtils.sol";
 import {HyperlaneMailboxUtils} from "./utils/HyperlaneMailboxUtils.sol";
 import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
 import {HyperlaneTestRecipientUtils} from "./utils/HyperlaneTestRecipientUtils.sol";
+// Orbiter
+import {OrbiterBridgeSweepUtils} from "./utils/OrbiterBridgeSweepUtils.sol";
 // Kernel Account
 import {ECDSAValidatorUtils} from "./utils/ECDSAValidatorUtils.sol";
 import {KernelUtils} from "./utils/KernelUtils.sol";
@@ -53,6 +55,7 @@ contract DeployCoreContracts is DeployParameters {
         console2.log("ecdsaValidator:", contracts.ecdsaValidator);
         console2.log("ownableSignatureExecutor:", contracts.ownableSignatureExecutor);
         console2.log("erc7579ExecutorRouter:", contracts.erc7579ExecutorRouter);
+        console2.log("orbiterBridgeSweep:", contracts.orbiterBridgeSweep);
 
         vm.stopBroadcast();
     }
@@ -200,11 +203,14 @@ contract DeployCoreContracts is DeployParameters {
         );
         (address execute, ) = ExecuteUtils.getOrCreate2();
 
+        (address orbiterBridgeSweep, ) = OrbiterBridgeSweepUtils.getOrCreate2();
+
         contracts.kernel = kernel;
         contracts.kernelFactory = kernelFactory;
         contracts.ecdsaValidator = ecdsaValidator;
         contracts.ownableSignatureExecutor = ownableSignatureExecutor;
         contracts.erc7579ExecutorRouter = erc7579ExecutorRouter;
         contracts.execute = execute;
+        contracts.orbiterBridgeSweep = orbiterBridgeSweep;
     }
 }

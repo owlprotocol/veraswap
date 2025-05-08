@@ -50,15 +50,18 @@ export async function getSwapCalls(
 
     const calls: (CallArgs & { account: Address })[] = [];
 
-    const permit2Calls = await getPermit2ApproveCalls(queryClient, wagmiConfig, {
-        chainId,
-        token: currencyIn,
-        account,
-        spender: universalRouter,
-        minAmount: amountIn,
-        approveExpiration: approveExpiration ?? "MAX_UINT_48",
-    });
-    calls.push(...permit2Calls.calls.map((call) => ({ ...call, account }))); //override account of Permit2.permit call (anyone can submit this)
+    // Only need approval for ERC20 tokens
+    if (currencyIn !== zeroAddress) {
+        const permit2Calls = await getPermit2ApproveCalls(queryClient, wagmiConfig, {
+            chainId,
+            token: currencyIn,
+            account,
+            spender: universalRouter,
+            minAmount: amountIn,
+            approveExpiration: approveExpiration ?? "MAX_UINT_48",
+        });
+        calls.push(...permit2Calls.calls.map((call) => ({ ...call, account }))); //override account of Permit2.permit call (anyone can submit this)
+    }
 
     const routePlanner = new RoutePlanner();
 
