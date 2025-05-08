@@ -94,10 +94,10 @@ export async function getBridgeSwapWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-            tokenStandard === "HypERC20Collateral" ||
-            tokenStandard === "HypSuperchainERC20Collateral" ||
-            tokenStandard === "SuperchainERC20" ||
-            tokenStandard === "NativeToken",
+        tokenStandard === "HypERC20Collateral" ||
+        tokenStandard === "HypSuperchainERC20Collateral" ||
+        tokenStandard === "SuperchainERC20" ||
+        tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
@@ -266,6 +266,7 @@ export async function getBridgeSwapWithKernelCalls(
         executor: contractsRemote.ownableSignatureExecutor,
         owner: remoteExecutorDirect ? contractsRemote.erc7579Router : account,
         kernelAddress: kernelAddressRemote,
+        value: 0n, //No value can be passed by Hyperlane, if ETH is needed on the smart account, it must be received by some other mechanism (eg. Orbiter, Across)
     });
 
     let executionMode: ERC7579ExecutionMode;
@@ -363,6 +364,7 @@ export async function getBridgeSwapWithKernelCalls(
         ...bridgeCalls,
         callRemote,
     ];
+    const kernelCallsValue = kernelCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
@@ -373,6 +375,8 @@ export async function getBridgeSwapWithKernelCalls(
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
+            //TODO: Only send value if needed
+            value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
         });
 
         return { calls: executeOnOwnedAccount.calls };
@@ -386,6 +390,8 @@ export async function getBridgeSwapWithKernelCalls(
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,
+        //TODO: Only send value if needed
+        value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
     });
 
     //TODO: Additional util for Execute.sol contract

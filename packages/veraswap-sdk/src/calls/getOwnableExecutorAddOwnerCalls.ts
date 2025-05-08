@@ -41,6 +41,8 @@ export async function getOwnableExecutorAddOwnerCalls(
         }),
     );
 
+    console.debug({ isInitialized });
+
     if (!isInitialized) {
         // Skip `getOwners` call as it will revert
         const call = {
@@ -65,6 +67,8 @@ export async function getOwnableExecutorAddOwnerCalls(
             args: [account],
         }),
     );
+
+    console.debug({ owners, owner });
 
     if (owners.includes(owner)) {
         return { isInitialized, isOwner: true, owners, calls: [] };

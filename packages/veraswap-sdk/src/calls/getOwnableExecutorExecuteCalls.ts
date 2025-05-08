@@ -16,10 +16,11 @@ export interface GetOwnableExecutorExecuteCallsParams extends GetCallsParams {
     executor: Address;
     owner: Address;
     kernelAddress: Address;
+    value: bigint;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType {}
+export interface GetOwnableExecutorExecuteCallsReturnType extends GetCallsReturnType { }
 
 /**
  * Call `OwnableExecutor.execute`, use batch mode if `calls.length > 0`, use signature if `account != owner`
@@ -87,15 +88,15 @@ export async function getOwnableExecutorExecuteCalls(
 
 export type OwnableExecutorExecuteData =
     | {
-          account: Address;
-          nonce?: undefined;
-          validAfter: number;
-          validUntil: number;
-          value: bigint;
-          callData: Hex;
-          callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE;
-          signature?: undefined;
-      }
+        account: Address;
+        nonce?: undefined;
+        validAfter: number;
+        validUntil: number;
+        value: bigint;
+        callData: Hex;
+        callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE;
+        signature?: undefined;
+    }
     | (SignatureExecution & { callType: CALL_TYPE.BATCH | CALL_TYPE.SINGLE; signature: Hex });
 /**
  * Call `OwnableExecutor`, exection data, use batch mode if `calls.length > 0`, use signature if `account != owner`
@@ -108,14 +109,12 @@ export async function getOwnableExecutorExecuteData(
     wagmiConfig: Config,
     params: GetOwnableExecutorExecuteCallsParams,
 ): Promise<OwnableExecutorExecuteData> {
-    const { chainId, calls, account, executor, owner, kernelAddress } = params;
+    const { chainId, calls, account, executor, owner, kernelAddress, value } = params;
 
     invariant(calls.length >= 1, "calls.length must be >= 1");
     //TODO: Add invariant check for calls (calls.account === kernelAddress)
 
     const smartAccountCallData = calls.length > 1 ? encodeCallArgsBatch(calls) : encodeCallArgsSingle(calls[0]);
-    // Sum value of all calls
-    const value = calls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
     // Executor function batch / single
     const callType = calls.length > 1 ? CALL_TYPE.BATCH : CALL_TYPE.SINGLE;
 

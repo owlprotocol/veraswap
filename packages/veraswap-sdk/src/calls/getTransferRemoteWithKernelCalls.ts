@@ -74,9 +74,9 @@ export async function getTransferRemoteWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-            tokenStandard === "HypERC20Collateral" ||
-            tokenStandard === "HypSuperchainERC20Collateral" ||
-            tokenStandard === "NativeToken",
+        tokenStandard === "HypERC20Collateral" ||
+        tokenStandard === "HypSuperchainERC20Collateral" ||
+        tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral or NativeToken`,
     );
 
@@ -141,6 +141,7 @@ export async function getTransferRemoteWithKernelCalls(
         erc7579RouterSetOwnerCallsPromise,
     ]);
     const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
+    const kernelCallsValue = kernelCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     if (createAccountCalls.exists) {
         // Account already exists, execute directly
@@ -151,6 +152,8 @@ export async function getTransferRemoteWithKernelCalls(
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
+            //TODO: Only send value if needed
+            value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
         });
 
         return { calls: executeOnOwnedAccount.calls };
@@ -164,6 +167,8 @@ export async function getTransferRemoteWithKernelCalls(
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,
+        //TODO: Only send value if needed
+        value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
     });
 
     //TODO: Additional util for Execute.sol contract
