@@ -6,7 +6,7 @@ BigInt.prototype.toJSON = function () {
     return this.toString();
 };
 
-const orbiterQuoteMainnetUrl = "https://api.orbiter.finance/sdk/quote";
+const orbiterQuoteMainnetUrl = "https://api.orbiter.finance/sdk/v2/quote";
 
 export interface OrbiterQuote {
     steps: {
