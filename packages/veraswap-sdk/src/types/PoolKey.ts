@@ -97,12 +97,18 @@ export interface PathKey {
  * @param exactCurrency
  * @param poolKeys
  */
-export function poolKeysToPath(exactCurrency: Address, poolKeys: PoolKey[]): PathKey[] {
+export function poolKeysToPathExactIn(exactCurrency: Address, poolKeys: PoolKey[]): PathKey[] {
     const path: PathKey[] = [];
 
     let currentCurrency = exactCurrency;
 
-    poolKeys.forEach((poolKey) => {
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    for (let i = 0; i < poolKeys.length; i++) {
+        const poolKey = poolKeys[i];
+        invariant(
+            poolKey.currency0 === currentCurrency || poolKey.currency1 === currentCurrency,
+            "Invalid Pool Key for Path",
+        );
         // Intermediate currency is whichever isn't current
         const intermediateCurrency = poolKey.currency0 != currentCurrency ? poolKey.currency0 : poolKey.currency1;
         path.push({
@@ -114,7 +120,39 @@ export function poolKeysToPath(exactCurrency: Address, poolKeys: PoolKey[]): Pat
         });
         // Update currentCurrency
         currentCurrency = intermediateCurrency;
-    });
+    }
+
+    return path;
+}
+
+/**
+ * Convert list of pool keys to a path for multihop quoting
+ * @param exactCurrency
+ * @param poolKeys
+ */
+export function poolKeysToPathExactOut(exactCurrency: Address, poolKeys: PoolKey[]): PathKey[] {
+    const path: PathKey[] = [];
+
+    let currentCurrency = exactCurrency;
+
+    for (let i = poolKeys.length; i > 0; i--) {
+        const poolKey = poolKeys[i - 1];
+        invariant(
+            poolKey.currency0 === currentCurrency || poolKey.currency1 === currentCurrency,
+            "Invalid Pool Key for Path",
+        );
+        // Intermediate currency is whichever isn't current
+        const intermediateCurrency = poolKey.currency0 != currentCurrency ? poolKey.currency0 : poolKey.currency1;
+        path.splice(0, 0, {
+            intermediateCurrency,
+            fee: poolKey.fee,
+            tickSpacing: poolKey.tickSpacing,
+            hooks: poolKey.hooks,
+            hookData: "0x",
+        });
+        // Update currentCurrency
+        currentCurrency = intermediateCurrency;
+    }
 
     return path;
 }
@@ -130,4 +168,27 @@ export function pathKeyToPoolKey(pathKey: PathKey, currencyIn: Address): PoolKey
         tickSpacing: pathKey.tickSpacing,
         hooks: pathKey.hooks,
     };
+}
+
+//Not really used rn but nice to have a 1:1 implementation of Solidity logic used in Uniswap
+/**
+ * Typescript implementation of `PathKeyLibrary.getPoolAndSwapDirection`
+ */
+export function getPoolAndSwapDirection(
+    pathKey: PathKey,
+    currencyIn: Address,
+): [poolKey: PoolKey, zeroForOne: boolean] {
+    const currencyOut = pathKey.intermediateCurrency;
+    const [currency0, currency1] = currencyIn < currencyOut ? [currencyIn, currencyOut] : [currencyOut, currencyIn];
+
+    const zeroForOne = currencyIn == currency0;
+    const poolKey = {
+        currency0,
+        currency1,
+        fee: pathKey.fee,
+        tickSpacing: pathKey.tickSpacing,
+        hooks: pathKey.hooks,
+    };
+
+    return [poolKey, zeroForOne];
 }

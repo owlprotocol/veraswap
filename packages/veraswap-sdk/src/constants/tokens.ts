@@ -2,7 +2,6 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import invariant from "tiny-invariant";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import {
-    arbitrum,
     base,
     bitlayer,
     bsc,
@@ -27,27 +26,7 @@ import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
-import {
-    BTC_BSC,
-    CELO_CELO,
-    nativeOnChain,
-    opData,
-    optimismOPAddress,
-    UNI,
-    USDC_AVALANCHE,
-    USDC_BSC,
-    USDC_CELO,
-    USDC_POLYGON,
-    USDC_ZORA,
-    usdcData,
-    USDT_ARBITRUM_ONE,
-    USDT_AVALANCHE,
-    USDT_BSC,
-    USDT_OPTIMISM,
-    USDT_POLYGON,
-    WBTC_ARBITRUM_ONE,
-    WBTC_POLYGON,
-} from "../uniswap/index.js";
+import { nativeOnChain } from "../uniswap/index.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
 
@@ -358,123 +337,23 @@ export const TESTNET_CURRENCIES = [
         },
         testnetMailboxByChain,
     ),
-    /*
-    ...(() => {
-        const tokenC0 = MultichainToken.createSuperERC20({
-            chainId: interopDevnet0.id,
-            address: "0x2Eb2838feBfB326803fF33C4F54cd2d3561ce6Ed",
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-        });
-        const tokenC1 = MultichainToken.createHypERC20({
-            chainId: interopDevnet1.id,
-            address: "0x2Eb2838feBfB326803fF33C4F54cd2d3561ce6Ed",
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-        });
-        MultichainToken.connect([tokenC0, tokenC1]);
-        return [tokenC0, tokenC1];
-    })(),
-    ...(() => {
-        const tokenD0 = MultichainToken.createHypERC20({
-            chainId: interopDevnet0.id,
-            address: "0x432EE6707eA6A11dBF889fABc12F2d51c6fA79A6",
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-        });
-        const tokenD1 = MultichainToken.createSuperERC20({
-            chainId: interopDevnet1.id,
-            address: "0x432EE6707eA6A11dBF889fABc12F2d51c6fA79A6",
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-        });
-        MultichainToken.connect([tokenD0, tokenD1]);
-        return [tokenD0, tokenD1];
-    })(),
-    */
-    Ether.onChain(sepolia.id),
-    Ether.onChain(optimismSepolia.id),
-    Ether.onChain(unichainSepolia.id),
-    // Ether.onChain(interopDevnet0.id),
-    // Ether.onChain(interopDevnet1.id),
 ];
 
-const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
+// const tokenCBaseAddress = "0x6b821901f606F2216436CACA965c3B89cB4f1240";
+// const tokenDBaseAddress = "0x37c6E14d5BB318f211f71e92857794fD9Dd97Ee9";
 
-const cbBTCData = {
-    decimals: 8,
-    name: "Coinbase Wrapped BTC",
-    symbol: "cbBTC",
-    logoURI: "https://assets.coingecko.com/coins/images/40143/large/cbbtc.webp",
-};
+// const cbBTCBaseAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
 
-const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
-const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
+// const cbBTCData = {
+//     decimals: 8,
+//     name: "Coinbase Wrapped BTC",
+//     symbol: "cbBTC",
+//     logoURI: "https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp",
+// };
 
-const suprBaseAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
-const suprBaseHypERC20Collateral = "0x458BDDd0793fe4f70912535f172466a5473f2e77";
-const suprEthereumAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
-const suprEthereumHypERC20Collateral = "0xbc808c98beA0a097346273A9Fd7a5B231fc2d889";
-// TODO: add ink chain
-// const suprInkAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
-// const suprInkHypERC20Collateral = "0x6cfDDfa3e0867A873675B80FDEBeB94e9262b5F0";
-const suprOptimismAddress = "0x17906b1Cd88aA8EfaEfC5e82891B52a22219BD45";
-const suprOptimismHypERC20Collateral = "0xae1E04F18D1323d8EaC7Ba5b2c683c95DC3baC97";
-const suprSuperseedAddress = "0xEe64bC3f4A58D638D0845b24e2f51534d01b6549";
-const suprSuperseedHypERC20Collateral = "0xA1863B4b02b7DCd7429F62C775816328D63020F4";
-
-const suprData = {
-    name: "Superseed",
-    symbol: "SUPR",
-    decimals: 18,
-    logoURI:
-        "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/refs/heads/main/deployments/warp_routes/SUPR/logo.svg",
-};
-
-const ezETHArbitrumAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-const ezETHArbitrumHypERC20Collateral = "0xB26bBfC6d1F469C821Ea25099017862e7368F4E8";
-const ezETHBaseAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-const ezETHBaseHypERC20Collateral = "0x2552516453368e42705D791F674b312b8b87CD9e";
-const ezETHBscAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-const ezETHBscHypERC20Collateral = "0xE00C6185a5c19219F1FFeD213b4406a254968c26";
-const ezETHEthereumAddress = "0xC8140dA31E6bCa19b287cC35531c2212763C2059";
-const ezETHEthereumHypERC20Collateral = "0xC59336D8edDa9722B4f1Ec104007191Ec16f7087";
-const ezETHLineaAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-const ezETHLineaHypERC20Collateral = "0xC59336D8edDa9722B4f1Ec104007191Ec16f7087";
-const ezETHOptimismAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-const ezETHOptimismHypERC20Collateral = "0xacEB607CdF59EB8022Cc0699eEF3eCF246d149e2";
-// TODO: add unichain
-// const ezETHUnichainAddress = "0x2416092f143378750bb29b79eD961ab195CcEea5";
-// const ezETHUnichainHypERC20Collateral = "0xFf0247f72b0d7ceD319D8457dD30622a2bed78B5";
-
-const ezETHData = {
-    name: "Renzo Restaked ETH",
-    symbol: "ezETH",
-    decimals: 18,
-    logoURI: "https://assets.coingecko.com/coins/images/34753/large/Ezeth_logo_circle.png",
-};
-
-const arbitrumHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const baseHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const bscHyperAddress = "0xC9d23ED2ADB0f551369946BD377f8644cE1ca5c4";
-const ethereumHyperAddress = "0x93A2Db22B7c736B341C32Ff666307F4a9ED910F5";
-const optimismHyperAddress = "0x9923DB8d7FBAcC2E69E87fAd19b886C81cd74979";
-
-const hyperData = {
-    name: "Hyperlane",
-    symbol: "HYPER",
-    decimals: 18,
-    logoURI:
-        "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/refs/heads/main/deployments/warp_routes/HYPER/logo.svg",
-};
-
-const optimismOPHypERC20Collateral = "0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1";
-const superseedOPAddress = "0x4e128A1b613A9C9Ecf650FeE461c353612559fcf";
+// const usdcBaseAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+// const usdcOptimismAddress = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85";
+// const usdcSuperseedAddress = "0xc316c8252b5f2176d0135ebb0999e99296998f2e";
 
 const baseOUSDTAddress = "0x1217BfE6c773EEC6cc4A38b5Dc45B92292B6E189";
 const baseOUSDTHypERC20Collateral = "0x4F0654395d621De4d1101c0F98C1Dba73ca0a61f";
@@ -523,234 +402,6 @@ const oUSDTData = {
 };
 
 export const MAINNET_CURRENCIES = [
-    ...(() => {
-        const tokenBase = MultichainToken.create({
-            ...cbBTCData,
-            chainId: base.id,
-            address: cbBTCBaseAddress,
-            hypERC20Collateral: "0x66477F84bd21697c7781fc3992b3163463e3B224",
-            standard: "ERC20",
-        });
-
-        const tokenMainnet = MultichainToken.create({
-            ...cbBTCData,
-            chainId: mainnet.id,
-            standard: "ERC20",
-            address: "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            hypERC20Collateral: "0x7710d2FC9A2E0452b28a2cBf550429b579347199",
-        });
-
-        const tokenSuperseed = MultichainToken.create({
-            ...cbBTCData,
-            chainId: superseed.id,
-            standard: "ERC20",
-            address: "0x6f36dbd829de9b7e077db8a35b480d4329ceb331",
-            hypERC20Collateral: "0x0a78BC3CBBC79C4C6E5d4e5b2bbD042E58e93484",
-        });
-
-        // NOTE: base and mainnet are not connected
-        MultichainToken.connect([tokenBase, tokenSuperseed]);
-        MultichainToken.connect([tokenMainnet, tokenSuperseed]);
-        return [tokenBase, tokenMainnet, tokenSuperseed];
-    })(),
-    ...(() => {
-        const tokenArbitrum = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: arbitrum.id,
-            address: arbitrumHyperAddress,
-        });
-
-        const tokenBase = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: base.id,
-            address: baseHyperAddress,
-        });
-
-        const tokenBSC = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: bsc.id,
-            address: bscHyperAddress,
-        });
-
-        const tokenEthereum = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: mainnet.id,
-            address: ethereumHyperAddress,
-        });
-
-        const tokenOptimism = MultichainToken.createHypERC20({
-            ...hyperData,
-            chainId: optimism.id,
-            address: optimismHyperAddress,
-        });
-
-        const tokens = [tokenArbitrum, tokenBase, tokenBSC, tokenEthereum, tokenOptimism];
-
-        MultichainToken.connect(tokens);
-        return tokens;
-    })(),
-    ...(() => {
-        const tokenSuperseed = MultichainToken.create({
-            ...usdcData,
-            chainId: superseed.id,
-            standard: "ERC20",
-            address: usdcSuperseedAddress,
-            hypERC20Collateral: "0xa7D6042eEf06E81168e640b5C41632eE5295227D",
-        });
-
-        const tokenBase = MultichainToken.create({
-            ...usdcData,
-            chainId: base.id,
-            standard: "ERC20",
-            address: usdcBaseAddress,
-            hypERC20Collateral: "0x955132016f9B6376B1392aA7BFF50538d21Ababc",
-        });
-
-        const tokenOptimism = MultichainToken.create({
-            ...usdcData,
-            chainId: optimism.id,
-            standard: "ERC20",
-            address: usdcOptimismAddress,
-            hypERC20Collateral: "0x741B077c69FA219CEdb11364706a3880A792423e",
-        });
-
-        MultichainToken.connect([tokenSuperseed, tokenBase]);
-        MultichainToken.connect([tokenSuperseed, tokenOptimism]);
-
-        return [tokenSuperseed, tokenBase, tokenOptimism];
-    })(),
-    ...(() => {
-        const tokenBase = MultichainToken.create({
-            ...suprData,
-            chainId: base.id,
-            standard: "ERC20",
-            address: suprBaseAddress,
-            hypERC20Collateral: suprBaseHypERC20Collateral,
-        });
-
-        const tokenEthereum = MultichainToken.create({
-            ...suprData,
-            chainId: mainnet.id,
-            standard: "ERC20",
-            address: suprEthereumAddress,
-            hypERC20Collateral: suprEthereumHypERC20Collateral,
-        });
-
-        // TODO: add ink chain
-        // const tokenInk = MultichainToken.create({
-        //     ...suprData,
-        //     chainId: ink.id,
-        //     standard: "ERC20",
-        //     address: suprInkAddress,
-        //     hypERC20Collateral: suprInkHypERC20Collateral,
-        // });
-
-        const tokenOptimism = MultichainToken.create({
-            ...suprData,
-            chainId: optimism.id,
-            standard: "ERC20",
-            address: suprOptimismAddress,
-            hypERC20Collateral: suprOptimismHypERC20Collateral,
-        });
-
-        const tokenSuperseed = MultichainToken.create({
-            ...suprData,
-            chainId: superseed.id,
-            standard: "ERC20",
-            address: suprSuperseedAddress,
-            hypERC20Collateral: suprSuperseedHypERC20Collateral,
-        });
-
-        // const tokens = [tokenBase, tokenEthereum, tokenInk, tokenOptimism, tokenSuperseed];
-        const tokens = [tokenBase, tokenEthereum, tokenOptimism, tokenSuperseed];
-        MultichainToken.connect(tokens);
-
-        return tokens;
-    })(),
-    ...(() => {
-        const tokenArbitrum = MultichainToken.create({
-            ...ezETHData,
-            chainId: arbitrum.id,
-            standard: "ERC20",
-            address: ezETHArbitrumAddress,
-            hypERC20Collateral: ezETHArbitrumHypERC20Collateral,
-        });
-
-        const tokenBase = MultichainToken.create({
-            ...ezETHData,
-            chainId: base.id,
-            standard: "ERC20",
-            address: ezETHBaseAddress,
-            hypERC20Collateral: ezETHBaseHypERC20Collateral,
-        });
-
-        const tokenBsc = MultichainToken.create({
-            ...ezETHData,
-            chainId: bsc.id,
-            standard: "ERC20",
-            address: ezETHBscAddress,
-            hypERC20Collateral: ezETHBscHypERC20Collateral,
-        });
-
-        const tokenEthereum = MultichainToken.create({
-            ...ezETHData,
-            chainId: mainnet.id,
-            standard: "ERC20",
-            address: ezETHEthereumAddress,
-            hypERC20Collateral: ezETHEthereumHypERC20Collateral,
-        });
-
-        const tokenLinea = MultichainToken.create({
-            ...ezETHData,
-            chainId: linea.id,
-            standard: "ERC20",
-            address: ezETHLineaAddress,
-            hypERC20Collateral: ezETHLineaHypERC20Collateral,
-        });
-
-        const tokenOptimism = MultichainToken.create({
-            ...ezETHData,
-            chainId: optimism.id,
-            standard: "ERC20",
-            address: ezETHOptimismAddress,
-            hypERC20Collateral: ezETHOptimismHypERC20Collateral,
-        });
-
-        // TODO: add unichain
-        // const tokenUnichain = MultichainToken.create({
-        //     ...ezETHData,
-        //     chainId: unichain.id,
-        //     standard: "ERC20",
-        //     address: ezETHUnichainAddress,
-        //     hypERC20Collateral: ezETHUnichainHypERC20Collateral,
-        // });
-
-        // const tokens = [tokenArbitrum, tokenBase, tokenBsc, tokenEthereum, tokenLinea, tokenOptimism, tokenUnichain];
-        const tokens = [tokenArbitrum, tokenBase, tokenBsc, tokenEthereum, tokenLinea, tokenOptimism];
-        MultichainToken.connect(tokens);
-
-        return tokens;
-    })(),
-    ...(() => {
-        const tokenOptimism = MultichainToken.create({
-            ...opData,
-            chainId: optimism.id,
-            standard: "ERC20",
-            address: optimismOPAddress,
-            hypERC20Collateral: optimismOPHypERC20Collateral,
-        });
-
-        const tokenSuperseed = MultichainToken.createHypERC20({
-            ...opData,
-            chainId: superseed.id,
-            address: superseedOPAddress,
-        });
-
-        const tokens = [tokenOptimism, tokenSuperseed];
-        MultichainToken.connect(tokens);
-
-        return tokens;
-    })(),
     ...(() => {
         const tokenBase = MultichainToken.createERC20({
             ...oUSDTData,
@@ -910,29 +561,7 @@ export const MAINNET_CURRENCIES = [
         MultichainToken.connect(tokens);
         return tokens;
     })(),
-    Ether.onChain(arbitrum.id),
-    Ether.onChain(base.id),
-    Ether.onChain(linea.id),
-    Ether.onChain(optimism.id),
-    Ether.onChain(superseed.id),
-    Ether.onChain(mainnet.id),
     nativeOnChain(bsc.id),
-    BTC_BSC,
-    USDC_BSC,
-    USDC_POLYGON,
-    USDC_CELO,
-    USDC_AVALANCHE,
-    USDC_ZORA,
-    USDT_BSC,
-    USDT_OPTIMISM,
-    USDT_POLYGON,
-    USDT_ARBITRUM_ONE,
-    USDT_AVALANCHE,
-    WBTC_ARBITRUM_ONE,
-    WBTC_POLYGON,
-    CELO_CELO,
-    UNI[mainnet.id],
-    UNI[optimism.id],
 ];
 
 export const LOCAL_POOLS = {
@@ -970,60 +599,4 @@ export const LOCAL_POOLS = {
     */
 };
 
-const TESTNET_POOLS = {
-    [sepolia.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(TESTNET_CURRENCIES[0]),
-            currency1: getUniswapV4Address(TESTNET_CURRENCIES[3]),
-            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
-        }),
-    ],
-    /*
-    [interopDevnet0.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(TESTNET_CURRENCIES[6]),
-            currency1: getUniswapV4Address(TESTNET_CURRENCIES[9]),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        }),
-        createPoolKey({
-            currency0: zeroAddress,
-            currency1: testnetMockTokens[0].address,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: zeroAddress,
-        }),
-    ],
-    */
-};
-
-const MAINNET_POOLS = {
-    [base.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(base.id)),
-            currency1: cbBTCBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
-        }),
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(base.id)),
-            currency1: usdcBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
-        }),
-        createPoolKey({
-            currency0: usdcBaseAddress,
-            currency1: cbBTCBaseAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
-        }),
-    ],
-    [optimism.id]: [
-        createPoolKey({
-            currency0: getUniswapV4Address(Ether.onChain(optimism.id)),
-            currency1: usdcOptimismAddress,
-            ...DEFAULT_POOL_PARAMS.FEE_500_TICK_10,
-        }),
-    ],
-};
-
-export const POOLS = { ...LOCAL_POOLS, ...TESTNET_POOLS, ...MAINNET_POOLS };
-export const CURRENCIES = [...LOCAL_CURRENCIES, ...TESTNET_CURRENCIES, ...MAINNET_CURRENCIES];
+export const CURRENCIES = [...LOCAL_CURRENCIES, ...MAINNET_CURRENCIES];

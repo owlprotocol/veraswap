@@ -8,7 +8,7 @@ import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
 import { omit } from "lodash-es";
-import { Address, bytesToHex, createWalletClient, Hex, LocalAccount, padHex, parseEther } from "viem";
+import { Address, bytesToHex, createWalletClient, Hex, LocalAccount, padHex, parseEther, zeroAddress } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
@@ -18,13 +18,12 @@ import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
 import { LOCAL_HYPERLANE_CONTRACTS } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
-import { LOCAL_POOLS } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
-import { poolKeysToPath } from "../types/PoolKey.js";
+import { createPoolKey, DEFAULT_POOL_PARAMS, poolKeysToPathExactIn } from "../types/PoolKey.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -177,16 +176,24 @@ describe("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
         test("bridge and swap", async () => {
             // Bridge Swap => opChainA -> opChainL1
             const amountOutMinimum = 0n;
-            // TODO: fix this
-            const poolKey = LOCAL_POOLS[opChainL1.id][0];
-            const zeroForOne = tokenA === poolKey.currency0;
-
             const amount = parseEther("1");
 
-            const currencyIn = zeroForOne ? poolKey.currency0 : poolKey.currency1;
-            const currencyOut = zeroForOne ? poolKey.currency1 : poolKey.currency0;
+            const currencyIn = tokenA;
+            const currencyOut = tokenB;
 
-            const path = poolKeysToPath(currencyIn, [poolKey]);
+            // A -> ETH -> B
+            const path = poolKeysToPathExactIn(currencyIn, [
+                createPoolKey({
+                    currency0: tokenA,
+                    currency1: zeroAddress,
+                    ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
+                }),
+                createPoolKey({
+                    currency0: zeroAddress,
+                    currency1: tokenB,
+                    ...DEFAULT_POOL_PARAMS.FEE_3000_TICK_60,
+                }),
+            ]);
 
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {

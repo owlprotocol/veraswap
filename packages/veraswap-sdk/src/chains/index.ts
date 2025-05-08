@@ -1,4 +1,6 @@
 export * from "./chainWithMetadata.js";
+export * from "./chainType.js";
+export * from "./ethereum.js";
 export * from "./inkSepolia.js";
 export * from "./interopDevnet.js";
 export * from "./supersim.js";

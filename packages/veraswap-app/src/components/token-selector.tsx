@@ -71,7 +71,7 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
             .filter(Boolean) as [string, Currency[]][];
     }, [uniqueTokens, searchQuery, currencyIn, currencyOut, selectingTokenIn]);
 
-    const popularTokens = ["AAVE", "USDT", "USDC"];
+    const popularTokens = ["ETH", "USDT", "USDC"];
 
     const handleTokenSelect = (currency: Currency) => {
         if (selectingTokenIn) {

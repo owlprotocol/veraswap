@@ -73,6 +73,7 @@ import {
     amountOutAtom,
     orbiterQuoteAtom,
     orbiterRoutersEndpointsAtom,
+    slippageToleranceAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -87,6 +88,7 @@ import { Transfer } from "@/abis/events.js";
 import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
 import { TransactionFlow } from "@/components/transaction-flow.js";
+import { SettingsDialog } from "@/components/settings-dialog.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -179,6 +181,8 @@ function Index() {
     const { switchChain } = useSwitchChain();
 
     const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
+
+    const slippageTolerance = useAtomValue(slippageToleranceAtom);
 
     /*
     //DISABLE DIVVY
@@ -306,42 +310,44 @@ function Index() {
             if (!transactionType) return;
 
             // const amountOutMinimum = transactionType.type === "BRIDGE" ? null : quoterData?.amountOut;
-            const amountOutMinimum = quoterData?.amountOut ?? null;
-            if (transactionType.type !== "BRIDGE" && !amountOutMinimum) {
+            const quoteAmountOut = quoterData?.amountOut ?? null;
+            if (transactionType.type !== "BRIDGE" && !quoteAmountOut) {
                 throw new Error("amountOutMinimum is required for this transaction type");
             }
 
+            const slippageBps = BigInt(slippageTolerance * 100);
+            const adjustedAmountOutMinimum = quoteAmountOut ? (quoteAmountOut * (10000n - slippageBps)) / 10000n : null;
             initializeTransactionSteps(transactionType);
 
             // We split the params into two to keep the types clean
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                          ...transactionType,
-                          amountIn: tokenInAmount!,
-                          walletAddress,
-                          bridgePayment,
-                          orbiterQuote,
-                          queryClient,
-                          wagmiConfig: config,
-                          initData: kernelSmartAccountInitData,
-                      } as TransactionParams & TransactionTypeBridge)
+                        ...transactionType,
+                        amountIn: tokenInAmount!,
+                        walletAddress,
+                        bridgePayment,
+                        orbiterQuote,
+                        queryClient,
+                        wagmiConfig: config,
+                        initData: kernelSmartAccountInitData,
+                    } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                      ? ({
+                        ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
-                            amountOutMinimum,
+                            amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
                             orbiterQuote,
                             queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                      : ({
+                        : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
-                            amountOutMinimum: amountOutMinimum!,
                             orbiterQuote,
+                            amountOutMinimum: adjustedAmountOutMinimum!,
                             walletAddress,
                             bridgePayment,
                             queryClient,
@@ -642,8 +648,11 @@ function Index() {
     return (
         <div className="max-w-xl mx-auto px-4">
             <MainnetTestnetButtons />
+            <div className="flex items-center justify-end">
+                <SettingsDialog />
+            </div>
             <Card className="w-full backdrop-blur-sm shadow-xl">
-                <CardContent className="p-4 space-y-6">
+                <CardContent className="p-2 space-y-2">
                     <div className="space-y-4">
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
                             <div className="mb-2 flex justify-between items-center">
@@ -724,8 +733,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0"
+                                                ? "Fetching quote..."
+                                                : "0"
                                     }
                                     disabled={true}
                                 />

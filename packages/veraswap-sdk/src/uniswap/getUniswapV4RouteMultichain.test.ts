@@ -8,10 +8,8 @@ import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 
 import {
-    getRouteMultichain,
-    getUniswapV4RouteMultichain,
-    RouteComponentBridge,
-    RouteComponentSwap,
+    getUniswapV4RouteExactInMultichain,
+    getUniswapV4RouteExactOutMultichain,
 } from "./getUniswapV4RouteMultichain.js";
 
 describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
@@ -42,34 +40,18 @@ describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
         [opChainL1.id]: [zeroAddress],
     };
 
-    describe("getUniswapV4RouteMultichain", () => {
+    describe("getUniswapV4RouteExactInMultichain", () => {
         test("same chain, with liquidity", async () => {
             // Tokens are on the same chain (900)
-            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactInMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
-                exactAmount: parseUnits("1", tokenA_900.decimals),
+                exactAmount: parseUnits("0.1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(1);
-            expect(result!.amountOut).toBeGreaterThan(0n);
-            expect(result!.currencyIn.equals(tokenA_900));
-            expect(result!.currencyOut.equals(tokenB_900));
-        });
-
-        test("same chain, with liquidity, amount higher than eth intermeidate swap", async () => {
-            // Tokens are on the same chain (900)
-            const result = await getUniswapV4RouteMultichain(queryClient, config, {
-                currencyIn: tokenA_900,
-                currencyOut: tokenB_900,
-                exactAmount: parseUnits("50", tokenA_900.decimals),
-                contractsByChain,
-                currencyHopsByChain,
-            });
-            expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(1);
+            expect(result!.route.length).toBe(2);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
@@ -77,10 +59,10 @@ describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
 
         test("same chain, with liquidity, amount too high", async () => {
             // Tokens are on the same chain (900)
-            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactInMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
-                exactAmount: parseUnits("10000", tokenA_900.decimals),
+                exactAmount: parseUnits("10", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
@@ -90,15 +72,15 @@ describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
         test("same chain, no liquidity", async () => {
             // Tokens are on same chain (901)
             // Liquidity is on different chain (900)
-            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactInMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_901,
-                exactAmount: parseUnits("1", tokenA_901.decimals),
+                exactAmount: parseUnits("0.1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(1);
+            expect(result!.route.length).toBe(2);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
@@ -107,144 +89,82 @@ describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
         test("different chains", async () => {
             // Tokens are on different chains (901, 902)
             // Liquidity is on a third different chain (900)
-            const result = await getUniswapV4RouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactInMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_902,
-                exactAmount: parseUnits("1", tokenA_901.decimals),
+                exactAmount: parseUnits("0.1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-            expect(result!.route.length).toBe(1);
+            expect(result!.route.length).toBe(2);
             expect(result!.amountOut).toBeGreaterThan(0n);
             expect(result!.currencyIn.equals(tokenA_900));
             expect(result!.currencyOut.equals(tokenB_900));
         });
     });
 
-    describe("getRouteMultichain", () => {
-        test("BRIDGE: different chain", async () => {
-            // Tokens are on the different chains (900, 901)
-            // No swap needed
-            const result = await getRouteMultichain(queryClient, config, {
-                currencyIn: tokenA_900,
-                currencyOut: tokenA_901,
-                exactAmount: parseUnits("1", tokenA_900.decimals),
-                contractsByChain,
-                currencyHopsByChain,
-            });
-            expect(result).not.toBe(null);
-
-            const { flows } = result!;
-            expect(flows.length).toBe(1);
-
-            const bridge = flows[0] as RouteComponentBridge;
-            expect(bridge.currencyIn.equals(tokenA_900));
-            expect(bridge.currencyOut.equals(tokenA_901));
-        });
-
-        test("SWAP: same chain, with liquidity", async () => {
+    describe("getUniswapV4RouteExactOutMultichain", () => {
+        test("same chain, with liquidity", async () => {
             // Tokens are on the same chain (900)
-            // Liquidity is on same chain (900)
-            const result = await getRouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactOutMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
                 currencyOut: tokenB_900,
-                exactAmount: parseUnits("1", tokenA_900.decimals),
+                exactAmount: parseUnits("0.1", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-
-            const { flows } = result!;
-            expect(flows.length).toBe(1);
-
-            const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(1);
-            expect(swap.amountOut).toBeGreaterThan(0n);
-            expect(swap.currencyIn.equals(tokenA_900));
-            expect(swap.currencyOut.equals(tokenB_900));
+            expect(result!.route.length).toBe(2);
+            expect(result!.amountIn).toBeGreaterThan(0n);
+            expect(result!.currencyIn.equals(tokenA_900));
+            expect(result!.currencyOut.equals(tokenB_900));
         });
 
-        test("SWAP_BRIDGE: different chain, input liquidity", async () => {
-            // Tokens are on different chains (900, 901)
-            // Liquidity is on input chain (900)
-            const result = await getRouteMultichain(queryClient, config, {
+        test("same chain, with liquidity, amount too high", async () => {
+            // Tokens are on the same chain (900)
+            const result = await getUniswapV4RouteExactOutMultichain(queryClient, config, {
                 currencyIn: tokenA_900,
-                currencyOut: tokenB_901,
-                exactAmount: parseUnits("1", tokenA_900.decimals),
+                currencyOut: tokenB_900,
+                exactAmount: parseUnits("10", tokenA_900.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
-            expect(result).not.toBe(null);
-
-            const { flows } = result!;
-            expect(flows.length).toBe(2);
-
-            const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(1);
-            expect(swap.amountOut).toBeGreaterThan(0n);
-            expect(swap.currencyIn.equals(tokenA_900));
-            expect(swap.currencyOut.equals(tokenB_900));
-
-            const bridge = flows[1] as RouteComponentBridge;
-            expect(bridge.currencyIn.equals(tokenB_900));
-            expect(bridge.currencyOut.equals(tokenA_901));
+            expect(result).toBe(null);
         });
 
-        test("BRIDGE_SWAP: different chain, output liquidity", async () => {
-            // Tokens are on different chains (901, 900)
-            // Liquidity is on output chain (900)
-            const result = await getRouteMultichain(queryClient, config, {
+        test("same chain, no liquidity", async () => {
+            // Tokens are on same chain (901)
+            // Liquidity is on different chain (900)
+            const result = await getUniswapV4RouteExactOutMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
-                currencyOut: tokenB_900,
-                exactAmount: parseUnits("1", tokenA_901.decimals),
+                currencyOut: tokenB_901,
+                exactAmount: parseUnits("0.1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-
-            const { flows } = result!;
-            expect(flows.length).toBe(2);
-
-            const bridge = flows[0] as RouteComponentBridge;
-            expect(bridge.currencyIn.equals(tokenA_901));
-            expect(bridge.currencyOut.equals(tokenA_900));
-
-            const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(1);
-            expect(swap.amountOut).toBeGreaterThan(0n);
-            expect(swap.currencyIn.equals(tokenA_900));
-            expect(swap.currencyOut.equals(tokenB_900));
+            expect(result!.route.length).toBe(2);
+            expect(result!.amountIn).toBeGreaterThan(0n);
+            expect(result!.currencyIn.equals(tokenA_900));
+            expect(result!.currencyOut.equals(tokenB_900));
         });
 
-        test("BRIDGE_SWAP_BRIDGE: different chain, output liquidity", async () => {
+        test("different chains", async () => {
             // Tokens are on different chains (901, 902)
             // Liquidity is on a third different chain (900)
-            const result = await getRouteMultichain(queryClient, config, {
+            const result = await getUniswapV4RouteExactOutMultichain(queryClient, config, {
                 currencyIn: tokenA_901,
                 currencyOut: tokenB_902,
-                exactAmount: parseUnits("1", tokenA_901.decimals),
+                exactAmount: parseUnits("0.1", tokenA_901.decimals),
                 contractsByChain,
                 currencyHopsByChain,
             });
             expect(result).not.toBe(null);
-
-            const { flows } = result!;
-            expect(flows.length).toBe(3);
-
-            const bridgeIn = flows[0] as RouteComponentBridge;
-            expect(bridgeIn.currencyIn.equals(tokenA_901));
-            expect(bridgeIn.currencyOut.equals(tokenA_900));
-
-            const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(1);
-            expect(swap.amountOut).toBeGreaterThan(0n);
-            expect(swap.currencyIn.equals(tokenA_900));
-            expect(swap.currencyOut.equals(tokenB_900));
-
-            const bridgeOut = flows[2] as RouteComponentBridge;
-            expect(bridgeOut.currencyIn.equals(tokenB_900));
-            expect(bridgeOut.currencyOut.equals(tokenB_902));
+            expect(result!.route.length).toBe(2);
+            expect(result!.amountIn).toBeGreaterThan(0n);
+            expect(result!.currencyIn.equals(tokenA_900));
+            expect(result!.currencyOut.equals(tokenB_900));
         });
     });
 });

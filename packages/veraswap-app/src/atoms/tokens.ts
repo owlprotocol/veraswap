@@ -3,33 +3,6 @@ import { parseUnits } from "viem";
 import { Currency } from "@owlprotocol/veraswap-sdk";
 import { chains } from "@/config.js";
 
-/***** Tokens Fetch *****/
-//TODO: Hard-coded for now
-/**
- * // TODO: move it all in one file?
-const fetchTokens = async () => {
-    const [tokensResponse, bridgedTokensResponse] = await Promise.all([
-        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens-list.json"),
-        fetch("https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/bridged-tokens.json"),
-    ]);
-
-    if (!tokensResponse.ok || !bridgedTokensResponse.ok) {
-        throw new Error("Failed to fetch tokens");
-    }
-
-    const standardTokens = await tokensResponse.json();
-    const bridgedTokens = await bridgedTokensResponse.json();
-
-    return [...standardTokens, ...bridgedTokens];
-};
-
-export const fetchedTokensAtom = atomWithQuery(() => ({
-    queryKey: ["tokens"],
-    queryFn: fetchTokens,
-}));
-
- */
-
 /***** Token In *****/
 /** Selected tokenIn */
 export const currencyInAtom = atom<Currency | null>(null);
