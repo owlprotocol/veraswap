@@ -58,7 +58,6 @@ import {
     getSwapStepMessage,
     orbiterParamsAtom,
     orbiterAmountOutAtom,
-    orbiterRouterAtom,
     orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
     isDisabledStep,
@@ -634,16 +633,16 @@ function Index() {
     };
 
     return (
-        <div className="max-w-xl mx-auto px-4">
+        <div className="max-w-md mx-auto px-2">
             <MainnetTestnetButtons />
             <div className="flex items-center justify-end">
                 <SettingsDialog />
             </div>
             <Card className="w-full backdrop-blur-sm shadow-xl">
                 <CardContent className="p-2 space-y-2">
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
-                            <div className="mb-2 flex justify-between items-center">
+                            <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -657,7 +656,7 @@ function Index() {
                                     }}
                                     type="number"
                                     className={cn(
-                                        "border-0 bg-transparent text-3xl font-semibold p-0",
+                                        "border-0 bg-transparent text-3xl font-semibold",
                                         "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
                                         "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
                                     )}
@@ -675,12 +674,12 @@ function Index() {
                                 )}
                                 <TokenSelector selectingTokenIn={true} />
                             </div>
-                            <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex justify-end text-xs text-gray-500 dark:text-gray-400">
                                 <div className="space-x-2">
                                     <span>Balance: {tokenInBalanceFormatted}</span>
                                     <Button
                                         variant="link"
-                                        className="h-auto p-0 text-sm"
+                                        className="h-auto p-0 text-xs"
                                         disabled={!tokenInBalance}
                                         onClick={() =>
                                             setMaxToken(currencyIn!, tokenInBalance!, transactionType?.type ?? null)
@@ -692,20 +691,20 @@ function Index() {
                             </div>
                         </div>
 
-                        <div className="flex justify-center -my-2 relative z-10">
+                        <div className="flex justify-center relative z-10">
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 shadow-lg hover:scale-105 transform transition-all"
+                                className="rounded-full h-8 w-8 border-2 shadow-lg hover:scale-105"
                                 onClick={swapInvert}
                                 disabled={!currencyIn || !currencyOut}
                             >
-                                <ArrowUpDown className="h-6 w-6" />
+                                <ArrowUpDown className="h-4 w-4" />
                             </Button>
                         </div>
 
                         <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
-                            <div className="mb-2 flex justify-between items-center">
+                            <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">To</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -729,7 +728,7 @@ function Index() {
                                 {currencyOut && chainId && !currencyOut.isNative && (
                                     <button
                                         onClick={() => importToken(currencyOut)}
-                                        className="flex items-center gap-1 text-sm"
+                                        className="flex items-center gap-1 text-xs"
                                         type="button"
                                     >
                                         <Wallet size={20} /> +
@@ -737,8 +736,8 @@ function Index() {
                                 )}
                                 <TokenSelector />
                             </div>
-                            <div className="mt-2 flex justify-end text-sm text-gray-500 dark:text-gray-400">
-                                <div className="space-x-2 align-right">
+                            <div className="mt-1 flex justify-end text-xs text-gray-500 dark:text-gray-400">
+                                <div className="space-x-1 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>
                             </div>
@@ -746,7 +745,7 @@ function Index() {
                     </div>
                     <Button
                         disabled={isDisabledStep(swapStep)}
-                        className="w-full h-14 text-lg rounded-xl shadow-lg transition-all"
+                        className="w-full h-10 text-base rounded-lg shadow-lg transition-all"
                         onClick={() => handleSwapSteps()}
                     >
                         {getSwapStepMessage(swapStep, transactionType)}
