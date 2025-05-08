@@ -58,6 +58,7 @@ import {
     getSwapStepMessage,
     orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
+    kernelAddressChainOutQueryAtom,
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
@@ -129,6 +130,7 @@ function Index() {
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelInitDataAtom);
+    const { data: kernelAddressChainOut } = useAtomValue(kernelAddressChainOutQueryAtom);
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(routeMultichainAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
@@ -221,7 +223,7 @@ function Index() {
         eventName: "Transfer",
         chainId: chainOut?.id ?? 0,
         address: orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] ?? zeroAddress,
-        args: { to: walletAddress ?? zeroAddress },
+        args: { to: (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress },
         enabled:
             !!chainOut &&
             !!orbiterQuote &&

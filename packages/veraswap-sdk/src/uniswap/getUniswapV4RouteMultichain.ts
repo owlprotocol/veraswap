@@ -4,10 +4,13 @@ import { maxBy, zip } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
+import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
+import { orbiterQuote } from "../query/orbiterQuote.js";
 import { PathKey, PoolKey, PoolKeyOptions, poolKeysToPath } from "../types/PoolKey.js";
 
+import { nativeOnChain } from "./constants/tokens.js";
 import { getUniswapV4Route, getUniswapV4RoutesWithLiquidity } from "./getUniswapV4Route.js";
 
 export interface GetUniswapV4RouteMultichainParams {
@@ -37,7 +40,7 @@ export async function getUniswapV4RouteMultichain(
     amountOut: bigint;
     gasEstimate: bigint;
 } | null> {
-    const { currencyIn, currencyOut, currencyHopsByChain, exactAmount, contractsByChain, poolKeyOptions } = params;
+    const { currencyIn, currencyOut, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");
 
     const tokenPairs = getSharedChainTokenPairs(currencyIn, currencyOut);
@@ -47,9 +50,31 @@ export async function getUniswapV4RouteMultichain(
             tokenPairs.map(async (pair) => {
                 const [currIn, currOut] = pair;
                 const chainId = currIn.chainId;
+
                 const currencyHops = currencyHopsByChain[chainId] ?? [zeroAddress];
                 const contracts = contractsByChain[chainId];
                 if (!contracts) return null; // No uniswap deployment on this chain
+
+                let exactAmount = params.exactAmount;
+                if (currencyIn.chainId !== currIn.chainId && currencyIn.isNative && currencyIn.symbol === "ETH") {
+                    if (nativeOnChain(currIn.chainId).symbol !== "ETH") {
+                        // Can only bridge native ETH
+                        return null;
+                    }
+
+                    const orbiterQuoteResult = await orbiterQuote({
+                        amount: exactAmount,
+                        destChainId: currIn.chainId,
+                        destToken: zeroAddress,
+                        sourceChainId: currencyIn.chainId,
+                        sourceToken: zeroAddress,
+                        // User address doesn't matter, but avoid address zero
+                        userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
+                    });
+                    if (!orbiterQuoteResult) return null;
+
+                    exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                }
 
                 const route = await getUniswapV4Route(queryClient, wagmiConfig, {
                     chainId,
