@@ -365,7 +365,9 @@ export async function getTransaction(
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${currencyOut.chainId}`);
             }
 
-            const remoteSwapAmountIn = orbiterQuote ? BigInt(orbiterQuote.details.minDestTokenAmount) : amountIn;
+            const remoteSwapAmountIn = orbiterQuote
+                ? (BigInt(orbiterQuote.details.minDestTokenAmount) * 99n) / 100n //TODO: Orbiter bug min destination amount is not correct
+                : amountIn;
 
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: currencyIn.chainId,
