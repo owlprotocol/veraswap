@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, encodeFunctionData } from "viem";
+import { Address, encodeFunctionData, getAddress } from "viem";
 
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
 
@@ -68,9 +68,7 @@ export async function getOwnableExecutorAddOwnerCalls(
         }),
     );
 
-    console.debug({ owners, owner });
-
-    if (owners.includes(owner)) {
+    if (owners.includes(getAddress(owner))) {
         return { isInitialized, isOwner: true, owners, calls: [] };
     }
 
