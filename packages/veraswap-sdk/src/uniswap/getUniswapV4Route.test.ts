@@ -8,9 +8,9 @@ import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 
-import { getUniswapV4Route } from "./getUniswapV4Route.js";
+import { getUniswapV4RouteExactIn, getUniswapV4RouteExactOut } from "./getUniswapV4Route.js";
 
-describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
+describe("uniswap/getUniswapV4Route.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {
@@ -21,15 +21,16 @@ describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
 
     const tokenA = LOCAL_CURRENCIES[0];
     const tokenAAddress = getUniswapV4Address(tokenA);
-    const tokenBAddress = getUniswapV4Address(LOCAL_CURRENCIES[3]);
+    const tokenB = LOCAL_CURRENCIES[3];
+    const tokenBAddress = getUniswapV4Address(tokenB);
 
-    test("getUniswapV4Route - single hop", async () => {
-        const result = await getUniswapV4Route(queryClient, config, {
+    test("getUniswapV4RouteExactIn - single hop", async () => {
+        const result = await getUniswapV4RouteExactIn(queryClient, config, {
             chainId: opChainL1.id,
             currencyIn: tokenAAddress,
             currencyOut: zeroAddress,
             currencyHops: [],
-            exactAmount: parseUnits("1", tokenA.decimals),
+            exactAmount: parseUnits("0.1", tokenA.decimals),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
@@ -41,13 +42,31 @@ describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
         expect(result!.amountOut).toBeGreaterThan(0n);
     });
 
-    test("getUniswapV4Route - multi hop", async () => {
-        const result = await getUniswapV4Route(queryClient, config, {
+    test("getUniswapV4RouteExactOut - single hop", async () => {
+        const result = await getUniswapV4RouteExactOut(queryClient, config, {
+            chainId: opChainL1.id,
+            currencyIn: tokenAAddress,
+            currencyOut: zeroAddress,
+            currencyHops: [],
+            exactAmount: parseUnits("0.1", 18),
+            contracts: {
+                v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
+                v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
+            },
+        });
+
+        expect(result).not.toBe(null);
+        expect(result!.route.length).toBe(1);
+        expect(result!.amountIn).toBeGreaterThan(0n);
+    });
+
+    test("getUniswapV4RouteExactIn - multi hop", async () => {
+        const result = await getUniswapV4RouteExactIn(queryClient, config, {
             chainId: opChainL1.id,
             currencyIn: tokenAAddress,
             currencyOut: tokenBAddress,
             currencyHops: [zeroAddress],
-            exactAmount: parseUnits("1", tokenA.decimals),
+            exactAmount: parseUnits("0.1", tokenA.decimals),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
@@ -57,5 +76,23 @@ describe.skip("uniswap/getUniswapV4Route.test.ts", function () {
         expect(result).not.toBe(null);
         expect(result!.route.length).toBe(2);
         expect(result!.amountOut).toBeGreaterThan(0n);
+    });
+
+    test("getUniswapV4RouteExactOut - multi hop", async () => {
+        const result = await getUniswapV4RouteExactOut(queryClient, config, {
+            chainId: opChainL1.id,
+            currencyIn: tokenAAddress,
+            currencyOut: tokenBAddress,
+            currencyHops: [zeroAddress],
+            exactAmount: parseUnits("0.1", tokenB.decimals),
+            contracts: {
+                v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
+                v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
+            },
+        });
+
+        expect(result).not.toBe(null);
+        expect(result!.route.length).toBe(2);
+        expect(result!.amountIn).toBeGreaterThan(0n);
     });
 });

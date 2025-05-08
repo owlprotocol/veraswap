@@ -40,7 +40,7 @@ import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { PoolKey, PoolKeyAbi, poolKeysToPath } from "./types/PoolKey.js";
+import { PoolKey, PoolKeyAbi, poolKeysToPathExactIn } from "./types/PoolKey.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;
@@ -320,7 +320,7 @@ describe("index.test.ts", function () {
 
             const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPath(currency0Address, [poolKey]);
+            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
             const swapCalls = getEOASwapCalls({
                 amountIn,
                 amountOutMinimum,
@@ -424,7 +424,7 @@ describe("index.test.ts", function () {
 
             const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPath(currency0Address, [poolKey]);
+            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
 
             const batchCalls = getSmartAccountSwapCalls({
                 amountIn,

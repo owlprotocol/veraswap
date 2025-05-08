@@ -1,6 +1,6 @@
 import { Currency } from "../currency/currency.js";
 import { PathKey, PoolKey } from "../types/PoolKey.js";
-import { RouteComponent } from "../uniswap/getUniswapV4RouteMultichain.js";
+import { RouteComponent } from "../uniswap/getRouteMultichain.js";
 
 import { assetFlowsToTransactionType } from "./getAssetFlows.js";
 
