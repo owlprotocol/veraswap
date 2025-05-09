@@ -10,7 +10,7 @@ import { SimpleAccountFactory } from "./artifacts/SimpleAccountFactory.js";
 import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
 import { SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "./constants/erc4337.js";
 
-describe("alsto.simple.test.ts", function () {
+describe("alto.simple.test.ts", function () {
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
 
     const anvilAccount = getAnvilAccount();
@@ -38,6 +38,7 @@ describe("alsto.simple.test.ts", function () {
             functionName: "getAddress",
             args: [anvilAccount.address, 0n],
         });
+
         smartAccount = await toSimpleSmartAccount({
             owner: anvilAccount,
             address: smartAccountAddress,
@@ -74,10 +75,6 @@ describe("alsto.simple.test.ts", function () {
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
-            // Gas estimation fails
-            preVerificationGas: 500_000n,
-            verificationGasLimit: 500_000n,
-            callGasLimit: 2_000_000n,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,

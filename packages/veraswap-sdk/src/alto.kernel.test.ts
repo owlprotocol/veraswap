@@ -123,10 +123,6 @@ describe("alto.kernel.test.ts", function () {
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
-            // Gas estimation fails
-            preVerificationGas: 500_000n,
-            verificationGasLimit: 500_000n,
-            callGasLimit: 5_000_000n,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
