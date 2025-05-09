@@ -9,3 +9,6 @@ import {IL2ToL2CrossDomainMessenger} from "@interop-lib/interfaces/IL2ToL2CrossD
 // Kernel
 import {Kernel} from "@zerodev/kernel/Kernel.sol";
 import {KernelFactory} from "@zerodev/kernel/factory/KernelFactory.sol";
+// Account Abstraction
+import {IEntryPoint} from "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {EntryPoint} from "@ERC4337/account-abstraction/contracts/core/EntryPoint.sol";

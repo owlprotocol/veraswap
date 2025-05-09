@@ -634,4 +634,116 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "AccountDeployed",
+        inputs: [
+            { name: "userOpHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "factory", type: "address", indexed: false, internalType: "address" },
+            { name: "paymaster", type: "address", indexed: false, internalType: "address" },
+        ],
+        anonymous: false,
+    },
+    { type: "event", name: "BeforeExecution", inputs: [], anonymous: false },
+    {
+        type: "event",
+        name: "Deposited",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "totalDeposit", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "PostOpRevertReason",
+        inputs: [
+            { name: "userOpHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "nonce", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "revertReason", type: "bytes", indexed: false, internalType: "bytes" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "SignatureAggregatorChanged",
+        inputs: [{ name: "aggregator", type: "address", indexed: true, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "StakeLocked",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "totalStaked", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "unstakeDelaySec", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "StakeUnlocked",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "withdrawTime", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "StakeWithdrawn",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "withdrawAddress", type: "address", indexed: false, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "UserOperationEvent",
+        inputs: [
+            { name: "userOpHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "paymaster", type: "address", indexed: true, internalType: "address" },
+            { name: "nonce", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "success", type: "bool", indexed: false, internalType: "bool" },
+            { name: "actualGasCost", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "actualGasUsed", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "UserOperationRevertReason",
+        inputs: [
+            { name: "userOpHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "nonce", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "revertReason", type: "bytes", indexed: false, internalType: "bytes" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Withdrawn",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "withdrawAddress", type: "address", indexed: false, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "UserOperationPrefundTooLow",
+        inputs: [
+            { name: "userOpHash", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "nonce", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
 ] as const;

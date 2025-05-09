@@ -1,5 +1,6 @@
 export { ECDSAValidator } from "./ECDSAValidator.js";
 export { ERC7579ExecutorRouter } from "./ERC7579ExecutorRouter.js";
+export { EntryPoint } from "./EntryPoint.js";
 export { Execute } from "./Execute.js";
 export { GasRouter } from "./GasRouter.js";
 export { HypERC20 } from "./HypERC20.js";
@@ -8,6 +9,7 @@ export { HypERC20FlashCollateral } from "./HypERC20FlashCollateral.js";
 export { HypTokenRouterSweep } from "./HypTokenRouterSweep.js";
 export { IAllowanceTransfer } from "./IAllowanceTransfer.js";
 export { IERC20 } from "./IERC20.js";
+export { IEntryPoint } from "./IEntryPoint.js";
 export { IInterchainGasPaymaster } from "./IInterchainGasPaymaster.js";
 export { IL2ToL2CrossDomainMessenger } from "./IL2ToL2CrossDomainMessenger.js";
 export { IMulticall_v4 } from "./IMulticall_v4.js";

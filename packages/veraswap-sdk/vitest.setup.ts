@@ -5,9 +5,13 @@ import { anvil, alto } from "prool/instances";
 import { promisify } from "node:util";
 import { exec } from "node:child_process";
 import { entryPoint07Address } from "viem/account-abstraction";
+import { getAnvilAccount } from "@veraswap/anvil-account";
+import { ENTRYPOINT_SALT_V07 } from "@owlprotocol/contracts-account-abstraction";
+import { EntryPoint } from "@owlprotocol/contracts-account-abstraction/artifacts/EntryPoint"
+import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic"
 
-import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort } from "./src/chains/index.js";
-import { Hex } from "viem";
+import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort, opChainL1Client, opChainAClient, opChainBClient } from "./src/chains/index.js";
+import { createWalletClient, Hex, http } from "viem";
 
 const execPromise = promisify(exec);
 
@@ -53,6 +57,26 @@ export async function setup() {
     // Forge script
     const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast`;
     const { stdout } = await execPromise(templateCommand);
+
+    // Deploy Original EntryPoint artifact
+    const anvilAccount = getAnvilAccount();
+    for (let client of [opChainL1Client, opChainAClient, opChainBClient]) {
+        const anvilClient = createWalletClient({
+            account: anvilAccount,
+            chain: client.chain,
+            transport: http(),
+        });
+        const entryPointDeploy = await getOrDeployDeterministicContract(anvilClient,
+            //Extracted salt (first 32 bytes) from original tx
+            //https://etherscan.io/tx/0x5c81ea86f6c54481d3e21c78675b4f1d985c1fa62b678dcdfdf7934ddd6e127e
+            {
+                salt: ENTRYPOINT_SALT_V07,
+                bytecode: EntryPoint.bytecode,
+            });
+        if (entryPointDeploy.hash) {
+            await client.waitForTransactionReceipt({ hash: entryPointDeploy.hash });
+        }
+    }
 
     const executorPrivateKeys: Hex[] = [anvil1]
     bundlerL1Instance = alto({

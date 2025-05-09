@@ -13,8 +13,6 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
-import {EntryPoint} from "@ERC4337/account-abstraction/contracts/core/EntryPoint.sol";
-
 import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
 
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
@@ -61,11 +59,6 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
 
-            // Set code for entrypoint contract
-            vm.rpc(
-                "anvil_setCode",
-                string.concat('["', vm.toString(entryPoint), '","', vm.toString(type(EntryPoint).creationCode), '"]')
-            );
             // Deploy SimpleAccountFactory
             SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
 
