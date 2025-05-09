@@ -88,8 +88,8 @@
     "sonner": "^1.4.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
-    "viem": "2.21.19",
-    "wagmi": "^2.14.12",
+    "viem": "^2.29.1",
+    "wagmi": "^2.15.2",
     "zod": "3.22.4"
   },
   "devDependencies": {
