@@ -1,5 +1,4 @@
 import { Address, createPublicClient, defineChain, http } from "viem";
-import { localhost } from "viem/chains";
 
 import { ChainWithMetadata } from "./chainWithMetadata.js";
 // TODO: delete?
@@ -11,12 +10,16 @@ export const SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER = "0x4200000000000000000
 export const opChainL1Port = 8547;
 export const opChainL1BundlerPort = 9900;
 export const opChainL1 = defineChain({
-    ...localhost,
     id: 900,
     name: "OP Chain L1",
     testnet: true,
     rpcUrls: {
         default: { http: [`http://127.0.0.1:${opChainL1Port}`], webSocket: [`ws://127.0.0.1:${opChainL1Port}`] },
+    },
+    nativeCurrency: {
+        decimals: 18,
+        name: "Ether",
+        symbol: "ETH",
     },
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
@@ -28,13 +31,17 @@ export const opChainL1Client = createPublicClient({ chain: opChainL1, transport:
 export const opChainAPort = 9545;
 export const opChainABundlerPort = 9901;
 export const opChainA = defineChain({
-    ...localhost,
     id: 901,
     name: "OP Chain A",
     testnet: true,
     rpcUrls: {
         // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
         default: { http: [`http://127.0.0.1:${opChainAPort}`] },
+    },
+    nativeCurrency: {
+        decimals: 18,
+        name: "Ether",
+        symbol: "ETH",
     },
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
@@ -46,13 +53,17 @@ export const opChainAClient = createPublicClient({ chain: opChainA, transport: h
 export const opChainBPort = 9546;
 export const opChainBBundlerPort = 9902;
 export const opChainB = defineChain({
-    ...localhost,
     id: 902,
     name: "OP Chain B",
     testnet: true,
     rpcUrls: {
         // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
         default: { http: [`http://127.0.0.1:${opChainBPort}`] },
+    },
+    nativeCurrency: {
+        decimals: 18,
+        name: "Ether",
+        symbol: "ETH",
     },
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",

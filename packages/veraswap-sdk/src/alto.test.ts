@@ -1,13 +1,10 @@
 import { getRandomValues } from "crypto";
 
-import { getSimpleAccountAddress, SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "@owlprotocol/contracts-account-abstraction";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { createKernelAccount, createKernelAccountClient, KernelAccountClient } from "@zerodev/sdk";
 import { CreateKernelAccountReturnType, toKernelPluginManager } from "@zerodev/sdk/accounts";
 import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
-import { toSimpleSmartAccount } from "permissionless/accounts";
-import { createSmartAccountClient } from "permissionless/clients";
 import {
     Address,
     bytesToHex,
@@ -23,7 +20,6 @@ import {
     zeroAddress,
 } from "viem";
 import { entryPoint07Address, SmartAccount } from "viem/account-abstraction";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import { opChainL1, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
