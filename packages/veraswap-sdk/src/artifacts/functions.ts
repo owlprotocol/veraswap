@@ -3105,4 +3105,31 @@ export const functions = [
         outputs: [],
         stateMutability: "nonpayable",
     },
+    {
+        type: "function",
+        name: "accountImplementation",
+        inputs: [],
+        outputs: [{ name: "", type: "address", internalType: "contract SimpleAccount" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "createAccount",
+        inputs: [
+            { name: "owner", type: "address", internalType: "address" },
+            { name: "salt", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "ret", type: "address", internalType: "contract SimpleAccount" }],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "getAddress",
+        inputs: [
+            { name: "owner", type: "address", internalType: "address" },
+            { name: "salt", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "", type: "address", internalType: "address" }],
+        stateMutability: "view",
+    },
 ] as const;

@@ -1,4 +1,5 @@
 export * from "./divvi.js";
+export * from "./erc4337.js";
 export * from "./hyperlane.js";
 export * from "./kernel.js";
 export * from "./orbiter.js";
