@@ -56,13 +56,15 @@ export async function setup() {
 
     const executorPrivateKeys: Hex[] = [anvil1]
     bundlerL1Instance = alto({
+        safeMode: false, // avoid opcode checks
         port: opChainL1BundlerPort,
         entrypoints: [entryPoint07Address],
         rpcUrl: opChainL1.rpcUrls.default.http[0],
         executorPrivateKeys,
-        utilityPrivateKey: anvil2
+        utilityPrivateKey: anvil2,
     })
     bundlerAInstance = alto({
+        safeMode: false, // avoid opcode checks
         port: opChainABundlerPort,
         entrypoints: [entryPoint07Address],
         rpcUrl: opChainA.rpcUrls.default.http[0],
@@ -70,6 +72,7 @@ export async function setup() {
         utilityPrivateKey: anvil2
     })
     bundlerBInstance = alto({
+        safeMode: false, // avoid opcode checks
         port: opChainBBundlerPort,
         entrypoints: [entryPoint07Address],
         rpcUrl: opChainB.rpcUrls.default.http[0],

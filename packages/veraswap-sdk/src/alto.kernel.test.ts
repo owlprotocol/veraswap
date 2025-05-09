@@ -19,16 +19,16 @@ import {
     Transport,
     zeroAddress,
 } from "viem";
-import { entryPoint07Address, SmartAccount } from "viem/account-abstraction";
+import { entryPoint07Address, formatUserOperationRequest, SmartAccount, UserOperation } from "viem/account-abstraction";
 import { beforeAll, describe, expect, test } from "vitest";
 
-import { opChainL1, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
+import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
 import { LOCAL_KERNEL_CONTRACTS } from "./constants/kernel.js";
 import { getKernelAddress } from "./smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "./smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "./smartaccount/OwnableExecutor.js";
 
-describe("index.test.ts", function () {
+describe("alto.kernel.test.ts", function () {
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
 
     const anvilAccount = getAnvilAccount();
@@ -120,17 +120,54 @@ describe("index.test.ts", function () {
         ]);
         console.debug({ callData });
         const fees = await opChainL1Client.estimateFeesPerGas();
+        const userOp = await kernelClient.prepareUserOperation({
+            callData,
+            maxFeePerGas: fees.maxFeePerGas,
+            maxPriorityFeePerGas: fees.maxFeePerGas,
+            // Gas estimation fails
+            preVerificationGas: 200_000n,
+            verificationGasLimit: 200_000n,
+            callGasLimit: 5_000_000n,
+        });
+        const signature = await kernelAccount.signUserOperation(userOp as UserOperation);
+        const rpcParameters = formatUserOperationRequest({
+            ...userOp,
+            signature,
+        } as UserOperation);
+
+        console.debug({ rpcParameters });
+
+        //TODO: Bundler not responding?
+        // Ideas: Simplify smart account deploy, run alto locall,
+
+        const rpcResponse = await opChainL1BundlerClient.request(
+            {
+                method: "eth_sendUserOperation",
+                params: [rpcParameters, entryPoint07Address ?? kernelAccount?.entryPoint?.address],
+            },
+            { retryCount: 0 },
+        );
+        console.debug({ rpcResponse });
+        /*
         const userOpHash = await kernelClient.sendUserOperation({
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
+            // Gas estimation fails
+            preVerificationGas: 100_000n,
+            verificationGasLimit: 100_000n,
+            callGasLimit: 1_000_000n,
         });
 
         console.log("UserOp hash:", userOpHash);
         await kernelClient.waitForUserOperationReceipt({
             hash: userOpHash,
             timeout: 1000 * 15,
-        });
+export const opChainABundlerClient = createBundlerClient({
+    chain: opChainL1,
+    transport: http(`http://127.0.0.1:${opChainABundlerPort}`),
+}AAA        });
+        *.
 
         /*
         const target = privateKeyToAccount(generatePrivateKey());

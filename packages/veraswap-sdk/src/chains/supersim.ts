@@ -1,4 +1,5 @@
 import { Address, createPublicClient, defineChain, http } from "viem";
+import { createBundlerClient } from "viem/account-abstraction";
 
 import { ChainWithMetadata } from "./chainWithMetadata.js";
 // TODO: delete?
@@ -27,6 +28,10 @@ export const opChainL1 = defineChain({
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
 export const opChainL1Client = createPublicClient({ chain: opChainL1, transport: http() });
+export const opChainL1BundlerClient = createBundlerClient({
+    chain: opChainL1,
+    transport: http(`http://127.0.0.1:${opChainL1BundlerPort}`),
+});
 
 export const opChainAPort = 9545;
 export const opChainABundlerPort = 9901;
@@ -49,6 +54,10 @@ export const opChainA = defineChain({
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
+export const opChainABundlerClient = createBundlerClient({
+    chain: opChainA,
+    transport: http(`http://127.0.0.1:${opChainABundlerPort}`),
+});
 
 export const opChainBPort = 9546;
 export const opChainBBundlerPort = 9902;
@@ -71,3 +80,7 @@ export const opChainB = defineChain({
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
 export const opChainBClient = createPublicClient({ chain: opChainB, transport: http() });
+export const opChainBBundlerClient = createBundlerClient({
+    chain: opChainB,
+    transport: http(`http://127.0.0.1:${opChainBBundlerPort}`),
+});
