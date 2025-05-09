@@ -1,8 +1,9 @@
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { toSimpleSmartAccount, ToSimpleSmartAccountReturnType } from "permissionless/accounts";
-import { Address, Chain, createWalletClient, http, parseEther, Transport, zeroAddress } from "viem";
-import { entryPoint07Address, formatUserOperationRequest, UserOperation } from "viem/account-abstraction";
+import { Address, Chain, createWalletClient, http, parseEther, Transport } from "viem";
+import { entryPoint07Address } from "viem/account-abstraction";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import { SimpleAccountFactory } from "./artifacts/SimpleAccountFactory.js";
@@ -49,88 +50,42 @@ describe("alsto.simple.test.ts", function () {
             chain: opChainL1,
             bundlerTransport,
         });
-    });
 
-    test("Simple AA", async () => {
         //Pre-fund wallet just to pay tx cost
-        const fundSimpleAccountHash = await anvilClientL1.sendTransaction({
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
             to: smartAccountAddress,
             value: parseEther("5"),
         });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSimpleAccountHash });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+    });
 
+    test("Simple AA", async () => {
         // Simple AA
+        const target = privateKeyToAccount(generatePrivateKey());
         const callData = await smartAccountClient.account.encodeCalls([
             {
-                to: zeroAddress,
-                value: 0n,
-                data: "0x123",
+                to: target.address,
+                value: 1n,
+                data: "0x",
             },
         ]);
-        console.debug({ callData });
         const fees = await opChainL1Client.estimateFeesPerGas();
-        const userOp = await smartAccountClient.prepareUserOperation({
+        const userOpHash = await smartAccountClient.sendUserOperation({
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
             // Gas estimation fails
-            preVerificationGas: 200_000n,
-            verificationGasLimit: 200_000n,
-            callGasLimit: 5_000_000n,
+            preVerificationGas: 500_000n,
+            verificationGasLimit: 500_000n,
+            callGasLimit: 2_000_000n,
         });
-        const signature = await smartAccount.signUserOperation(userOp as UserOperation);
-        const rpcParameters = formatUserOperationRequest({
-            ...userOp,
-            signature,
-        } as UserOperation);
-
-        console.debug({ rpcParameters });
-
-        //TODO: Bundler not responding?
-        // Ideas: Simplify smart account deploy, run alto locall,
-
-        const rpcResponse = await opChainL1BundlerClient.request(
-            {
-                method: "eth_sendUserOperation",
-                params: [rpcParameters, entryPoint07Address ?? smartAccount?.entryPoint?.address],
-            },
-            { retryCount: 0 },
-        );
-        console.debug({ rpcResponse });
-        /*
-        const userOpHash = await kernelClient.sendUserOperation({
-            callData,
-            maxFeePerGas: fees.maxFeePerGas,
-            maxPriorityFeePerGas: fees.maxFeePerGas,
-            // Gas estimation fails
-            preVerificationGas: 100_000n,
-            verificationGasLimit: 100_000n,
-            callGasLimit: 1_000_000n,
-        });
-
-        console.log("UserOp hash:", userOpHash);
-        await kernelClient.waitForUserOperationReceipt({
+        const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
             timeout: 1000 * 15,
-export const opChainABundlerClient = createBundlerClient({
-    chain: opChainL1,
-    transport: http(`http://127.0.0.1:${opChainABundlerPort}`),
-}AAA        });
-        *.
-
-        /*
-        const target = privateKeyToAccount(generatePrivateKey());
-        const fees = await opChainL1Client.estimateFeesPerGas();
-        console.debug(fees);
-        const hash = await smartAccountClient.sendTransaction({
-            to: target.address,
-            data: "0x123",
-            value: 0n,
-            maxFeePerGas: fees.maxFeePerGas,
-            maxPriorityFeePerGas: fees.maxFeePerGas,
         });
-        const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
-        expect(receipt).toBeDefined();
-        */
+        expect(userOpReceipt).toBeDefined();
+
+        const balance = await opChainL1Client.getBalance({ address: target.address });
+        expect(balance).toBe(1n);
     });
 });

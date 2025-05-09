@@ -300,4 +300,41 @@ export const errors = [
     },
     { type: "error", name: "LinkedList_InvalidPage", inputs: [] },
     { type: "error", name: "UnauthorizedAccess", inputs: [] },
+    {
+        type: "error",
+        name: "DelegateAndRevert",
+        inputs: [
+            { name: "success", type: "bool", internalType: "bool" },
+            { name: "ret", type: "bytes", internalType: "bytes" },
+        ],
+    },
+    {
+        type: "error",
+        name: "FailedOp",
+        inputs: [
+            { name: "opIndex", type: "uint256", internalType: "uint256" },
+            { name: "reason", type: "string", internalType: "string" },
+        ],
+    },
+    {
+        type: "error",
+        name: "FailedOpWithRevert",
+        inputs: [
+            { name: "opIndex", type: "uint256", internalType: "uint256" },
+            { name: "reason", type: "string", internalType: "string" },
+            { name: "inner", type: "bytes", internalType: "bytes" },
+        ],
+    },
+    { type: "error", name: "PostOpReverted", inputs: [{ name: "returnData", type: "bytes", internalType: "bytes" }] },
+    {
+        type: "error",
+        name: "SenderAddressResult",
+        inputs: [{ name: "sender", type: "address", internalType: "address" }],
+    },
+    {
+        type: "error",
+        name: "SignatureValidationFailed",
+        inputs: [{ name: "aggregator", type: "address", internalType: "address" }],
+    },
+    { type: "error", name: "ReentrancyGuardReentrantCall", inputs: [] },
 ] as const;
