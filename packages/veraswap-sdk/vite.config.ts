@@ -13,7 +13,7 @@ export default defineConfig({
         hookTimeout: 60000,
         watch: true,
         include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-        exclude: ["src/alto.test.ts"],
+        // exclude: ["src/alto.test.ts"],
         poolOptions: {
             threads: {
                 singleThread: true,

@@ -9,6 +9,7 @@ export const SUPERCHAIN_L2_TO_L2_CROSS_DOMAIN_MESSENGER = "0x4200000000000000000
 
 /*** Local Supersim Chains ***/
 export const opChainL1Port = 8547;
+export const opChainL1BundlerPort = 9900;
 export const opChainL1 = defineChain({
     ...localhost,
     id: 900,
@@ -25,6 +26,7 @@ export const opChainL1 = defineChain({
 export const opChainL1Client = createPublicClient({ chain: opChainL1, transport: http() });
 
 export const opChainAPort = 9545;
+export const opChainABundlerPort = 9901;
 export const opChainA = defineChain({
     ...localhost,
     id: 901,
@@ -42,6 +44,7 @@ export const opChainA = defineChain({
 export const opChainAClient = createPublicClient({ chain: opChainA, transport: http() });
 
 export const opChainBPort = 9546;
+export const opChainBBundlerPort = 9902;
 export const opChainB = defineChain({
     ...localhost,
     id: 902,
