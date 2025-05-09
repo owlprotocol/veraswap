@@ -1,67 +1,144 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-nocheck
-import { getAnvilAccount } from "@owlprotocol/anvil-account";
+import { getRandomValues } from "crypto";
+
 import { getSimpleAccountAddress, SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "@owlprotocol/contracts-account-abstraction";
-import { SimpleSmartAccountImplementation, toSimpleSmartAccount } from "permissionless/accounts";
-import { createSmartAccountClient, SmartAccountClient } from "permissionless/clients";
-import { createPublicClient, createWalletClient, http, nonceManager, parseEther } from "viem";
-import { entryPoint07Address } from "viem/account-abstraction";
+import { getAnvilAccount } from "@veraswap/anvil-account";
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
+import { createKernelAccount, createKernelAccountClient, KernelAccountClient } from "@zerodev/sdk";
+import { CreateKernelAccountReturnType, toKernelPluginManager } from "@zerodev/sdk/accounts";
+import { KERNEL_V3_1 } from "@zerodev/sdk/constants";
+import { toSimpleSmartAccount } from "permissionless/accounts";
+import { createSmartAccountClient } from "permissionless/clients";
+import {
+    Address,
+    bytesToHex,
+    Chain,
+    Client,
+    createWalletClient,
+    Hex,
+    http,
+    LocalAccount,
+    padHex,
+    parseEther,
+    Transport,
+    zeroAddress,
+} from "viem";
+import { entryPoint07Address, SmartAccount } from "viem/account-abstraction";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { localhost } from "viem/chains";
 import { beforeAll, describe, expect, test } from "vitest";
 
-import { altoPort0, anvilPort0 } from "./test/constants.js";
+import { opChainL1, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
+import { LOCAL_KERNEL_CONTRACTS } from "./constants/kernel.js";
+import { getKernelAddress } from "./smartaccount/getKernelAddress.js";
+import { getKernelInitData } from "./smartaccount/getKernelInitData.js";
+import { installOwnableExecutor } from "./smartaccount/OwnableExecutor.js";
 
 describe("index.test.ts", function () {
-    const chain = localhost;
-    const chainId = chain.id;
-    const transport = http(`http://127.0.0.1:${anvilPort0}`);
-    const bundlerTransport = http(`http://127.0.0.1:${altoPort0}`);
-    const publicClient = createPublicClient({
-        chain,
-        transport,
+    const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
+
+    const anvilAccount = getAnvilAccount();
+    const anvilClientL1 = createWalletClient({
+        account: anvilAccount,
+        chain: opChainL1Client.chain,
+        transport: http(),
     });
 
-    const walletClient = createWalletClient({
-        account: getAnvilAccount(0, { nonceManager }),
-        chain,
-        transport,
-    });
+    const entryPoint = { address: entryPoint07Address, version: "0.7" } as const;
+    const kernelVersion = KERNEL_V3_1;
+
+    let kernelAddress: Address;
+    let kernelInitData: Hex;
+    let kernelSalt: Hex;
+    let kernelAccount: CreateKernelAccountReturnType<"0.7">;
+    let kernelClient: KernelAccountClient<Transport, Chain, SmartAccount, Client>;
 
     beforeAll(async () => {
-        const EntryPoint = await publicClient.getCode({ address: entryPoint07Address });
+        const EntryPoint = await opChainL1Client.getCode({ address: entryPoint07Address });
         expect(EntryPoint).toBeDefined();
+
+        // Create smart account
+        const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
+            entryPoint,
+            kernelVersion,
+            signer: { type: "local", address: anvilAccount.address } as LocalAccount,
+            validatorAddress: LOCAL_KERNEL_CONTRACTS.ecdsaValidator,
+        });
+        const kernelPluginManager = await toKernelPluginManager<"0.7">(opChainL1Client, {
+            entryPoint,
+            kernelVersion,
+            sudo: ecdsaValidator,
+            chainId: opChainL1Client.chain.id,
+        });
+        // Kernel `initialize` call
+        kernelInitData = await getKernelInitData({
+            kernelPluginManager,
+            initHook: false,
+            initConfig: [
+                installOwnableExecutor({
+                    owner: anvilAccount.address,
+                    executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                }),
+            ],
+        });
+        // KernelFactory `createAccount` call
+        kernelSalt = padHex(bytesToHex(getRandomValues(new Uint8Array(32))), { size: 32 });
+
+        kernelAddress = getKernelAddress({
+            data: kernelInitData,
+            salt: kernelSalt,
+            implementation: LOCAL_KERNEL_CONTRACTS.kernel,
+            factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+        });
+
+        kernelAccount = await createKernelAccount(opChainL1Client, {
+            address: kernelAddress,
+            plugins: {
+                sudo: ecdsaValidator,
+            },
+            entryPoint,
+            kernelVersion,
+        });
+
+        kernelClient = createKernelAccountClient({
+            account: kernelAccount,
+            chain: opChainL1,
+            bundlerTransport,
+            client: opChainL1Client,
+        });
     });
 
     test("Simple AA", async () => {
-        const owner = privateKeyToAccount(generatePrivateKey());
-        const smartAccountAddress = getSimpleAccountAddress({ owner: owner.address });
-
-        const smartAccount = await toSimpleSmartAccount({
-            address: smartAccountAddress,
-            client: publicClient,
-            owner,
-            factoryAddress: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
-            entryPoint: {
-                address: entryPoint07Address,
-                version: "0.7",
-            },
-        });
-        const smartAccountClient = createSmartAccountClient({
-            account: smartAccount,
-            chain,
-            bundlerTransport,
-        });
-
         //Pre-fund wallet just to pay tx cost
-        const fundSimpleAccountHash = await walletClient.sendTransaction({
-            to: smartAccount.address,
+        const fundSimpleAccountHash = await anvilClientL1.sendTransaction({
+            to: kernelAccount.address,
             value: parseEther("5"),
         });
-        await publicClient.waitForTransactionReceipt({ hash: fundSimpleAccountHash });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSimpleAccountHash });
 
+        // Simple AA
+        const callData = await kernelClient.account.encodeCalls([
+            {
+                to: zeroAddress,
+                value: 0n,
+                data: "0x123",
+            },
+        ]);
+        console.debug({ callData });
+        const fees = await opChainL1Client.estimateFeesPerGas();
+        const userOpHash = await kernelClient.sendUserOperation({
+            callData,
+            maxFeePerGas: fees.maxFeePerGas,
+            maxPriorityFeePerGas: fees.maxFeePerGas,
+        });
+
+        console.log("UserOp hash:", userOpHash);
+        await kernelClient.waitForUserOperationReceipt({
+            hash: userOpHash,
+            timeout: 1000 * 15,
+        });
+
+        /*
         const target = privateKeyToAccount(generatePrivateKey());
-        const fees = await publicClient.estimateFeesPerGas();
+        const fees = await opChainL1Client.estimateFeesPerGas();
         console.debug(fees);
         const hash = await smartAccountClient.sendTransaction({
             to: target.address,
@@ -70,7 +147,8 @@ describe("index.test.ts", function () {
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
         });
-        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
         expect(receipt).toBeDefined();
+        */
     });
 });
