@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "outDir": "lib/types",
     "module": "ES2022",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
