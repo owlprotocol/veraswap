@@ -13,6 +13,9 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
+import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
+import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
+
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {MockSuperchainERC20Utils} from "./utils/MockSuperchainERC20Utils.sol";
@@ -42,6 +45,8 @@ contract DeployLocal is DeployCoreContracts {
     // Tokens with bytes32 identifiers
     mapping(uint256 chainId => mapping(bytes32 id => address)) public tokens;
 
+    address constant entryPoint = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+
     function run() external virtual override {
         string[] memory chains = new string[](3);
         chains[0] = "localhost";
@@ -55,6 +60,10 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
 
+            // Deploy 4337 Contracts
+            SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
+
+            // Deploy core contracts
             console2.log("Deploying contracts on chain: ", chains[i]);
             CoreContracts memory contracts = deployCoreContracts();
 

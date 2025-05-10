@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createConfig, http } from "@wagmi/core";
-import { parseUnits, zeroAddress } from "viem";
+import { Chain, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
@@ -14,7 +14,7 @@ import {
 
 describe("uniswap/getUniswapV4RouteMultichain.test.ts", function () {
     const config = createConfig({
-        chains: [opChainL1],
+        chains: [opChainL1] as readonly [Chain, ...Chain[]],
         transports: {
             [opChainL1.id]: http(),
             [opChainA.id]: http(),
