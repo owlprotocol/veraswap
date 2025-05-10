@@ -1,14 +1,26 @@
+import { getRandomValues } from "crypto";
+
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { toSimpleSmartAccount, ToSimpleSmartAccountReturnType } from "permissionless/accounts";
-import { Address, Chain, createWalletClient, http, parseEther, Transport } from "viem";
+import {
+    Address,
+    bytesToHex,
+    Chain,
+    createWalletClient,
+    Hex,
+    hexToBigInt,
+    http,
+    padHex,
+    parseEther,
+    Transport,
+} from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
-import { SimpleAccountFactory } from "./artifacts/SimpleAccountFactory.js";
 import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
-import { SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "./constants/erc4337.js";
+import { OPEN_PAYMASTER_ADDRESS, SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "./constants/erc4337.js";
 
 describe("alto.simple.test.ts", function () {
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
@@ -22,6 +34,7 @@ describe("alto.simple.test.ts", function () {
 
     const entryPoint = { address: entryPoint07Address, version: "0.7" } as const;
 
+    let smartAccountSalt: Hex;
     let smartAccountAddress: Address;
     let smartAccount: ToSimpleSmartAccountReturnType<"0.7">;
     let smartAccountClient: SmartAccountClient<Transport, Chain, ToSimpleSmartAccountReturnType<"0.7">>;
@@ -31,36 +44,35 @@ describe("alto.simple.test.ts", function () {
         expect(entryPointCode).toBeDefined();
         const simpleAccountFactoryCode = await opChainL1Client.getCode({ address: SIMPLE_ACCOUNT_FACTORY_ADDRESS });
         expect(simpleAccountFactoryCode).toBeDefined();
+        const openPaymasterCode = await opChainL1Client.getCode({ address: OPEN_PAYMASTER_ADDRESS });
+        expect(openPaymasterCode).toBeDefined();
+    });
 
-        smartAccountAddress = await opChainL1Client.readContract({
-            address: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
-            abi: SimpleAccountFactory.abi,
-            functionName: "getAddress",
-            args: [anvilAccount.address, 0n],
-        });
-
+    beforeEach(async () => {
+        smartAccountSalt = padHex(bytesToHex(getRandomValues(new Uint8Array(32))), { size: 32 });
         smartAccount = await toSimpleSmartAccount({
             owner: anvilAccount,
-            address: smartAccountAddress,
             client: opChainL1Client,
             entryPoint,
             factoryAddress: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
+            index: hexToBigInt(smartAccountSalt),
         });
+        smartAccountAddress = smartAccount.address;
         smartAccountClient = createSmartAccountClient({
             account: smartAccount,
             chain: opChainL1,
             bundlerTransport,
         });
-
-        //Pre-fund wallet just to pay tx cost
-        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
-            to: smartAccountAddress,
-            value: parseEther("5"),
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
     });
 
-    test("Simple AA", async () => {
+    test("self pay", async () => {
+        //Pre-fund wallet to pay target + gas cost
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: parseEther("1"),
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
         // Simple AA
         const target = privateKeyToAccount(generatePrivateKey());
         const callData = await smartAccountClient.account.encodeCalls([
@@ -75,6 +87,40 @@ describe("alto.simple.test.ts", function () {
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
+        });
+        const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
+            hash: userOpHash,
+            timeout: 1000 * 15,
+        });
+        expect(userOpReceipt).toBeDefined();
+
+        const balance = await opChainL1Client.getBalance({ address: target.address });
+        expect(balance).toBe(1n);
+    });
+
+    test("paymaster - open", async () => {
+        //Pre-fund wallet to pay target only
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: 1n,
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
+        // Simple AA
+        const target = privateKeyToAccount(generatePrivateKey());
+        const callData = await smartAccountClient.account.encodeCalls([
+            {
+                to: target.address,
+                value: 1n,
+                data: "0x",
+            },
+        ]);
+        const fees = await opChainL1Client.estimateFeesPerGas();
+        const userOpHash = await smartAccountClient.sendUserOperation({
+            callData,
+            maxFeePerGas: fees.maxFeePerGas,
+            maxPriorityFeePerGas: fees.maxFeePerGas,
+            paymaster: OPEN_PAYMASTER_ADDRESS,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
