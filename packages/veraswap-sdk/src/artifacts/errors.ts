@@ -336,4 +336,14 @@ export const errors = [
         inputs: [{ name: "aggregator", type: "address", internalType: "address" }],
     },
     { type: "error", name: "ReentrancyGuardReentrantCall", inputs: [] },
+    {
+        type: "error",
+        name: "OwnableInvalidOwner",
+        inputs: [{ name: "owner", type: "address", internalType: "address" }],
+    },
+    {
+        type: "error",
+        name: "OwnableUnauthorizedAccount",
+        inputs: [{ name: "account", type: "address", internalType: "address" }],
+    },
 ] as const;

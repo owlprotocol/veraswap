@@ -9,9 +9,11 @@ import { getAnvilAccount } from "@veraswap/anvil-account";
 import { ENTRYPOINT_SALT_V07 } from "@owlprotocol/contracts-account-abstraction";
 import { EntryPoint } from "@owlprotocol/contracts-account-abstraction/artifacts/EntryPoint"
 import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic"
+import { OpenPaymaster } from "./src/artifacts/OpenPaymaster.js";
+import { OPEN_PAYMASTER_ADDRESS } from "./src/constants/erc4337.js";
 
 import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort, opChainL1Client, opChainAClient, opChainBClient } from "./src/chains/index.js";
-import { createWalletClient, Hex, http } from "viem";
+import { createWalletClient, encodeDeployData, Hex, http, parseEther, zeroHash } from "viem";
 
 const execPromise = promisify(exec);
 
@@ -76,6 +78,29 @@ export async function setup() {
         if (entryPointDeploy.hash) {
             await client.waitForTransactionReceipt({ hash: entryPointDeploy.hash });
         }
+
+        const openPaymasterDeploy = await getOrDeployDeterministicContract(anvilClient,
+            {
+                salt: zeroHash,
+                bytecode: encodeDeployData({
+                    bytecode: OpenPaymaster.bytecode,
+                    abi: OpenPaymaster.abi,
+                    args: [entryPoint07Address],
+                })
+            })
+        if (openPaymasterDeploy.hash) {
+            await client.waitForTransactionReceipt({ hash: openPaymasterDeploy.hash });
+        }
+
+        // Deposit OpenPaymaster
+        const depositHash = await anvilClient.writeContract({
+            address: OPEN_PAYMASTER_ADDRESS,
+            abi: OpenPaymaster.abi,
+            functionName: "deposit",
+            args: [],
+            value: parseEther("10")
+        })
+        await client.waitForTransactionReceipt({ hash: depositHash });
     }
 
     const executorPrivateKeys: Hex[] = [anvil1]

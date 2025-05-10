@@ -14,6 +14,7 @@ import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.s
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
 import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
+import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
 
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
@@ -59,7 +60,7 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
 
-            // Deploy SimpleAccountFactory
+            // Deploy 4337 Contracts
             SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
 
             // Deploy core contracts
