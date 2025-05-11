@@ -7,7 +7,7 @@ import {IEntryPoint, PackedUserOperation} from "@ERC4337/account-abstraction/con
 /// @title OpenPaymaster
 /// @notice A paymaster that accepts all UserOps without any validation. Useful for testing.
 contract OpenPaymaster is BasePaymaster {
-    constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
+    constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint, _owner) {}
 
     /// @notice Open paymaster — accepts all UserOps
     function _validatePaymasterUserOp(

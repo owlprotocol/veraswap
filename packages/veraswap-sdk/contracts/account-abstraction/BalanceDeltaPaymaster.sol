@@ -10,7 +10,7 @@ contract BalanceDeltaPaymaster is BasePaymaster {
     /// @dev Reverts if a sender does not reimburse enough ETH to cover actual gas cost
     error BalanceNotReimbursed(address sender, uint256 reimbursed, uint256 actualGasCost);
 
-    constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {}
+    constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint, _owner) {}
 
     /// @notice Returns the sender's address as context for postOp
     function _validatePaymasterUserOp(

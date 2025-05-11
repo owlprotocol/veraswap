@@ -13,9 +13,6 @@ import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
-import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
-import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
-
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 import {MockERC20Utils} from "./utils/MockERC20Utils.sol";
 import {MockSuperchainERC20Utils} from "./utils/MockSuperchainERC20Utils.sol";
@@ -25,7 +22,6 @@ import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
-import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
@@ -60,16 +56,9 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
 
-            // Deploy 4337 Contracts
-            SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
-
             // Deploy core contracts
             console2.log("Deploying contracts on chain: ", chains[i]);
             CoreContracts memory contracts = deployCoreContracts();
-
-            //TODO: Move this to deployCoreContracts & only deploy if chain has the interop predeploys
-            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
-            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
 
             // Deploy mock paymaster for local testing only
             (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();

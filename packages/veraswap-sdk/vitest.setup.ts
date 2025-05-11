@@ -57,11 +57,7 @@ export async function setup() {
     const anvil1 = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
     const anvil2 = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
 
-    // Forge script
-    const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast`;
-    const { stdout } = await execPromise(templateCommand);
-
-    // Deploy Original EntryPoint artifact
+    // Deploy EntryPoint artifact
     const anvilAccount = getAnvilAccount();
     for (let client of [opChainL1Client, opChainAClient, opChainBClient]) {
         const anvilClient = createWalletClient({
@@ -79,32 +75,19 @@ export async function setup() {
         if (entryPointDeploy.hash) {
             await client.waitForTransactionReceipt({ hash: entryPointDeploy.hash });
         }
+    }
 
-        const openPaymasterDeploy = await getOrDeployDeterministicContract(anvilClient,
-            {
-                salt: zeroHash,
-                bytecode: encodeDeployData({
-                    bytecode: OpenPaymaster.bytecode,
-                    abi: OpenPaymaster.abi,
-                    args: [entryPoint07Address],
-                })
-            })
-        if (openPaymasterDeploy.hash) {
-            await client.waitForTransactionReceipt({ hash: openPaymasterDeploy.hash });
-        }
+    // Forge script
+    const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast`;
+    const { stdout } = await execPromise(templateCommand);
 
-        const balancePaymasterDeploy = await getOrDeployDeterministicContract(anvilClient,
-            {
-                salt: zeroHash,
-                bytecode: encodeDeployData({
-                    bytecode: BalanceDeltaPaymaster.bytecode,
-                    abi: BalanceDeltaPaymaster.abi,
-                    args: [entryPoint07Address],
-                })
-            })
-        if (balancePaymasterDeploy.hash) {
-            await client.waitForTransactionReceipt({ hash: balancePaymasterDeploy.hash });
-        }
+    // Topup Paymasters
+    for (let client of [opChainL1Client, opChainAClient, opChainBClient]) {
+        const anvilClient = createWalletClient({
+            account: anvilAccount,
+            chain: client.chain,
+            transport: http(),
+        });
 
         // Deposit OpenPaymaster
         const depositOpenPaymasterHash = await anvilClient.writeContract({
