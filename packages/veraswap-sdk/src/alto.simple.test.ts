@@ -21,14 +21,12 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import { BalanceDeltaPaymaster } from "./artifacts/BalanceDeltaPaymaster.js";
-import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
-import {
-    BALANCE_DELTA_PAYMASTER_ADDRESS,
-    OPEN_PAYMASTER_ADDRESS,
-    SIMPLE_ACCOUNT_FACTORY_ADDRESS,
-} from "./constants/erc4337.js";
+import { opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
+import { ERC4337_CONTRACTS } from "./constants/erc4337.js";
 
 describe("alto.simple.test.ts", function () {
+    const contracts = ERC4337_CONTRACTS[opChainL1Client.chain.id]!;
+
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
 
     const anvilAccount = getAnvilAccount();
@@ -48,11 +46,13 @@ describe("alto.simple.test.ts", function () {
     beforeAll(async () => {
         const entryPointCode = await opChainL1Client.getCode({ address: entryPoint07Address });
         expect(entryPointCode).toBeDefined();
-        const simpleAccountFactoryCode = await opChainL1Client.getCode({ address: SIMPLE_ACCOUNT_FACTORY_ADDRESS });
+        const simpleAccountFactoryCode = await opChainL1Client.getCode({ address: contracts.simpleAccountFactory });
         expect(simpleAccountFactoryCode).toBeDefined();
-        const openPaymasterCode = await opChainL1Client.getCode({ address: OPEN_PAYMASTER_ADDRESS });
+        const openPaymasterCode = await opChainL1Client.getCode({
+            address: contracts.openPaymaster,
+        });
         expect(openPaymasterCode).toBeDefined();
-        const balanceDeltaPaymasterCode = await opChainL1Client.getCode({ address: BALANCE_DELTA_PAYMASTER_ADDRESS });
+        const balanceDeltaPaymasterCode = await opChainL1Client.getCode({ address: contracts.balanceDeltaPaymaster });
         expect(balanceDeltaPaymasterCode).toBeDefined();
     });
 
@@ -62,13 +62,13 @@ describe("alto.simple.test.ts", function () {
             owner: anvilAccount,
             client: opChainL1Client,
             entryPoint,
-            factoryAddress: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
+            factoryAddress: contracts.simpleAccountFactory,
             index: hexToBigInt(smartAccountSalt),
         });
         smartAccountAddress = smartAccount.address;
         smartAccountClient = createSmartAccountClient({
             account: smartAccount,
-            chain: opChainL1,
+            chain: opChainL1Client.chain,
             bundlerTransport,
         });
     });
@@ -128,7 +128,7 @@ describe("alto.simple.test.ts", function () {
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
-            paymaster: OPEN_PAYMASTER_ADDRESS,
+            paymaster: contracts.openPaymaster,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
@@ -157,7 +157,7 @@ describe("alto.simple.test.ts", function () {
                 data: "0x",
             },
             {
-                to: BALANCE_DELTA_PAYMASTER_ADDRESS,
+                to: contracts.balanceDeltaPaymaster,
                 value: parseEther("1"),
                 data: encodeFunctionData({
                     abi: BalanceDeltaPaymaster.abi,
@@ -171,7 +171,7 @@ describe("alto.simple.test.ts", function () {
             callData,
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
-            paymaster: BALANCE_DELTA_PAYMASTER_ADDRESS,
+            paymaster: contracts.balanceDeltaPaymaster,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,

@@ -11,10 +11,10 @@ import { EntryPoint } from "@owlprotocol/contracts-account-abstraction/artifacts
 import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic"
 import { OpenPaymaster } from "./src/artifacts/OpenPaymaster.js";
 import { BalanceDeltaPaymaster } from "./src/artifacts/BalanceDeltaPaymaster.js";
-import { OPEN_PAYMASTER_ADDRESS, BALANCE_DELTA_PAYMASTER_ADDRESS } from "./src/constants/erc4337.js";
+import { ERC4337_CONTRACTS } from "./src/constants/erc4337.js";
 
 import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort, opChainL1Client, opChainAClient, opChainBClient } from "./src/chains/index.js";
-import { createWalletClient, encodeDeployData, Hex, http, parseEther, zeroHash } from "viem";
+import { createWalletClient, Hex, http, parseEther } from "viem";
 
 const execPromise = promisify(exec);
 
@@ -83,6 +83,7 @@ export async function setup() {
 
     // Topup Paymasters
     for (let client of [opChainL1Client, opChainAClient, opChainBClient]) {
+        const contracts = ERC4337_CONTRACTS[client.chain.id]!;
         const anvilClient = createWalletClient({
             account: anvilAccount,
             chain: client.chain,
@@ -91,7 +92,7 @@ export async function setup() {
 
         // Deposit OpenPaymaster
         const depositOpenPaymasterHash = await anvilClient.writeContract({
-            address: OPEN_PAYMASTER_ADDRESS,
+            address: contracts.openPaymaster,
             abi: OpenPaymaster.abi,
             functionName: "deposit",
             value: parseEther("10")
@@ -100,7 +101,7 @@ export async function setup() {
 
         // Deposit BalanceDeltaPaymaster
         const depositBalanceDeltaPaymasterHash = await anvilClient.writeContract({
-            address: BALANCE_DELTA_PAYMASTER_ADDRESS,
+            address: contracts.balanceDeltaPaymaster,
             abi: BalanceDeltaPaymaster.abi,
             functionName: "deposit",
             value: parseEther("10")
