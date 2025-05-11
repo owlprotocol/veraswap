@@ -2,6 +2,7 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { encodeDeployData, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
+import { BalanceDeltaPaymaster } from "../artifacts/BalanceDeltaPaymaster.js";
 import { OpenPaymaster } from "../artifacts/OpenPaymaster.js";
 import { SimpleAccountFactory } from "../artifacts/SimpleAccountFactory.js";
 
@@ -18,6 +19,15 @@ export const OPEN_PAYMASTER_ADDRESS = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: OpenPaymaster.bytecode,
         abi: OpenPaymaster.abi,
+        args: [entryPoint07Address],
+    }),
+    salt: zeroHash,
+});
+
+export const BALANCE_DELTA_PAYMASTER_ADDRESS = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: BalanceDeltaPaymaster.bytecode,
+        abi: BalanceDeltaPaymaster.abi,
         args: [entryPoint07Address],
     }),
     salt: zeroHash,

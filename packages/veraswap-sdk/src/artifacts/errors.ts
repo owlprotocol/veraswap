@@ -347,4 +347,13 @@ export const errors = [
         name: "OwnableUnauthorizedAccount",
         inputs: [{ name: "account", type: "address", internalType: "address" }],
     },
+    {
+        type: "error",
+        name: "BalanceNotReimbursed",
+        inputs: [
+            { name: "sender", type: "address", internalType: "address" },
+            { name: "reimbursed", type: "uint256", internalType: "uint256" },
+            { name: "actualGasCost", type: "uint256", internalType: "uint256" },
+        ],
+    },
 ] as const;

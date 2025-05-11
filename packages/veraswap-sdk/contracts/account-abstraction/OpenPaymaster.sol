@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.26;
 
-import "@ERC4337/account-abstraction/contracts/core/BasePaymaster.sol";
-import "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {BasePaymaster} from "./BasePaymaster.sol";
+import {IEntryPoint, PackedUserOperation} from "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 /// @title OpenPaymaster
 /// @notice A paymaster that accepts all UserOps without any validation. Useful for testing.

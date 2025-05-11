@@ -56,4 +56,5 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IEntryPoint.sol/*.json",
     "out/EntryPoint.sol/*.json",
     "out/OpenPaymaster.sol/*.json",
+    "out/BalanceDeltaPaymaster.sol/*.json",
 ]);

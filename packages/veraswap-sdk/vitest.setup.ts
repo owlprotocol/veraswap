@@ -10,7 +10,8 @@ import { ENTRYPOINT_SALT_V07 } from "@owlprotocol/contracts-account-abstraction"
 import { EntryPoint } from "@owlprotocol/contracts-account-abstraction/artifacts/EntryPoint"
 import { getOrDeployDeterministicContract } from "@veraswap/create-deterministic"
 import { OpenPaymaster } from "./src/artifacts/OpenPaymaster.js";
-import { OPEN_PAYMASTER_ADDRESS } from "./src/constants/erc4337.js";
+import { BalanceDeltaPaymaster } from "./src/artifacts/BalanceDeltaPaymaster.js";
+import { OPEN_PAYMASTER_ADDRESS, BALANCE_DELTA_PAYMASTER_ADDRESS } from "./src/constants/erc4337.js";
 
 import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort, opChainL1Client, opChainAClient, opChainBClient } from "./src/chains/index.js";
 import { createWalletClient, encodeDeployData, Hex, http, parseEther, zeroHash } from "viem";
@@ -92,15 +93,36 @@ export async function setup() {
             await client.waitForTransactionReceipt({ hash: openPaymasterDeploy.hash });
         }
 
+        const balancePaymasterDeploy = await getOrDeployDeterministicContract(anvilClient,
+            {
+                salt: zeroHash,
+                bytecode: encodeDeployData({
+                    bytecode: BalanceDeltaPaymaster.bytecode,
+                    abi: BalanceDeltaPaymaster.abi,
+                    args: [entryPoint07Address],
+                })
+            })
+        if (balancePaymasterDeploy.hash) {
+            await client.waitForTransactionReceipt({ hash: balancePaymasterDeploy.hash });
+        }
+
         // Deposit OpenPaymaster
-        const depositHash = await anvilClient.writeContract({
+        const depositOpenPaymasterHash = await anvilClient.writeContract({
             address: OPEN_PAYMASTER_ADDRESS,
             abi: OpenPaymaster.abi,
             functionName: "deposit",
-            args: [],
             value: parseEther("10")
         })
-        await client.waitForTransactionReceipt({ hash: depositHash });
+        await client.waitForTransactionReceipt({ hash: depositOpenPaymasterHash });
+
+        // Deposit BalanceDeltaPaymaster
+        const depositBalanceDeltaPaymasterHash = await anvilClient.writeContract({
+            address: BALANCE_DELTA_PAYMASTER_ADDRESS,
+            abi: BalanceDeltaPaymaster.abi,
+            functionName: "deposit",
+            value: parseEther("10")
+        })
+        await client.waitForTransactionReceipt({ hash: depositBalanceDeltaPaymasterHash });
     }
 
     const executorPrivateKeys: Hex[] = [anvil1]

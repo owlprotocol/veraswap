@@ -3355,13 +3355,6 @@ export const functions = [
     },
     {
         type: "function",
-        name: "getDeposit",
-        inputs: [],
-        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
         name: "postOp",
         inputs: [
             { name: "mode", type: "uint8", internalType: "enum IPaymaster.PostOpMode" },

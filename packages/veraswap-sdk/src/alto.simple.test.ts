@@ -8,6 +8,7 @@ import {
     bytesToHex,
     Chain,
     createWalletClient,
+    encodeFunctionData,
     Hex,
     hexToBigInt,
     http,
@@ -19,8 +20,13 @@ import { entryPoint07Address } from "viem/account-abstraction";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
+import { BalanceDeltaPaymaster } from "./artifacts/BalanceDeltaPaymaster.js";
 import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
-import { OPEN_PAYMASTER_ADDRESS, SIMPLE_ACCOUNT_FACTORY_ADDRESS } from "./constants/erc4337.js";
+import {
+    BALANCE_DELTA_PAYMASTER_ADDRESS,
+    OPEN_PAYMASTER_ADDRESS,
+    SIMPLE_ACCOUNT_FACTORY_ADDRESS,
+} from "./constants/erc4337.js";
 
 describe("alto.simple.test.ts", function () {
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
@@ -46,6 +52,8 @@ describe("alto.simple.test.ts", function () {
         expect(simpleAccountFactoryCode).toBeDefined();
         const openPaymasterCode = await opChainL1Client.getCode({ address: OPEN_PAYMASTER_ADDRESS });
         expect(openPaymasterCode).toBeDefined();
+        const balanceDeltaPaymasterCode = await opChainL1Client.getCode({ address: BALANCE_DELTA_PAYMASTER_ADDRESS });
+        expect(balanceDeltaPaymasterCode).toBeDefined();
     });
 
     beforeEach(async () => {
@@ -121,6 +129,49 @@ describe("alto.simple.test.ts", function () {
             maxFeePerGas: fees.maxFeePerGas,
             maxPriorityFeePerGas: fees.maxFeePerGas,
             paymaster: OPEN_PAYMASTER_ADDRESS,
+        });
+        const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
+            hash: userOpHash,
+            timeout: 1000 * 15,
+        });
+        expect(userOpReceipt).toBeDefined();
+
+        const balance = await opChainL1Client.getBalance({ address: target.address });
+        expect(balance).toBe(1n);
+    });
+
+    test("paymaster - balance delta", async () => {
+        //Pre-fund wallet to pay target only
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: parseEther("1") + 1n,
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
+        // Simple AA
+        const target = privateKeyToAccount(generatePrivateKey());
+        const callData = await smartAccountClient.account.encodeCalls([
+            {
+                to: target.address,
+                value: 1n,
+                data: "0x",
+            },
+            {
+                to: BALANCE_DELTA_PAYMASTER_ADDRESS,
+                value: parseEther("1"),
+                data: encodeFunctionData({
+                    abi: BalanceDeltaPaymaster.abi,
+                    functionName: "deposit",
+                    args: [],
+                }),
+            },
+        ]);
+        const fees = await opChainL1Client.estimateFeesPerGas();
+        const userOpHash = await smartAccountClient.sendUserOperation({
+            callData,
+            maxFeePerGas: fees.maxFeePerGas,
+            maxPriorityFeePerGas: fees.maxFeePerGas,
+            paymaster: BALANCE_DELTA_PAYMASTER_ADDRESS,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
