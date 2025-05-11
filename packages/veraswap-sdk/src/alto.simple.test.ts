@@ -74,27 +74,40 @@ describe("alto.simple.test.ts", function () {
     });
 
     test("self pay", async () => {
-        //Pre-fund wallet to pay target + gas cost
-        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
-            to: smartAccountAddress,
-            value: parseEther("1"),
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
-
-        // Simple AA
         const target = privateKeyToAccount(generatePrivateKey());
-        const callData = await smartAccountClient.account.encodeCalls([
+        const calls = [
             {
                 to: target.address,
                 value: 1n,
                 data: "0x",
             },
-        ]);
-        const fees = await opChainL1Client.estimateFeesPerGas();
+        ] as const;
+        // Get cost of calls without paymaster
+        const userOpGas = await smartAccountClient.estimateUserOperationGas({
+            calls,
+            //@ts-expect-error expected type error
+            stateOverride: [
+                {
+                    // Adding 100 ETH to the smart account during estimation to prevent AA21 errors while estimating
+                    balance: parseEther("100"),
+                    address: smartAccountClient.account.address,
+                },
+            ],
+        });
+        const userOpGasTotal = userOpGas.preVerificationGas + userOpGas.verificationGasLimit + userOpGas.callGasLimit;
+        const feesPerGas = await opChainL1Client.estimateFeesPerGas();
+        const userOpMaxCost = userOpGasTotal * feesPerGas.maxFeePerGas;
+
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: userOpMaxCost + 1n,
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
         const userOpHash = await smartAccountClient.sendUserOperation({
-            callData,
-            maxFeePerGas: fees.maxFeePerGas,
-            maxPriorityFeePerGas: fees.maxFeePerGas,
+            calls,
+            maxFeePerGas: feesPerGas.maxFeePerGas,
+            maxPriorityFeePerGas: feesPerGas.maxFeePerGas,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,
@@ -141,36 +154,53 @@ describe("alto.simple.test.ts", function () {
     });
 
     test("paymaster - balance delta", async () => {
-        //Pre-fund wallet to pay target only
-        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
-            to: smartAccountAddress,
-            value: parseEther("1") + 1n,
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
-
-        // Simple AA
         const target = privateKeyToAccount(generatePrivateKey());
-        const callData = await smartAccountClient.account.encodeCalls([
+        const calls = [
             {
                 to: target.address,
                 value: 1n,
                 data: "0x",
             },
-            {
-                to: contracts.balanceDeltaPaymaster,
-                value: parseEther("1"),
-                data: encodeFunctionData({
-                    abi: BalanceDeltaPaymaster.abi,
-                    functionName: "deposit",
-                    args: [],
-                }),
-            },
-        ]);
-        const fees = await opChainL1Client.estimateFeesPerGas();
+        ] as const;
+        // Get cost of calls without paymaster
+        const userOpGas = await smartAccountClient.estimateUserOperationGas({
+            calls,
+            //@ts-expect-error expected type error
+            stateOverride: [
+                {
+                    // Adding 100 ETH to the smart account during estimation to prevent AA21 errors while estimating
+                    balance: parseEther("100"),
+                    address: smartAccountClient.account.address,
+                },
+            ],
+        });
+        const DEPOSIT_GAS_COST = 50_000n; //may be even more optimized, but this is a good estimate
+        const userOpGasTotal =
+            userOpGas.preVerificationGas + userOpGas.verificationGasLimit + userOpGas.callGasLimit + DEPOSIT_GAS_COST;
+        const feesPerGas = await opChainL1Client.estimateFeesPerGas();
+        const userOpMaxCost = userOpGasTotal * feesPerGas.maxFeePerGas;
+
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: userOpMaxCost + 1n,
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
         const userOpHash = await smartAccountClient.sendUserOperation({
-            callData,
-            maxFeePerGas: fees.maxFeePerGas,
-            maxPriorityFeePerGas: fees.maxFeePerGas,
+            calls: [
+                ...calls,
+                {
+                    to: contracts.balanceDeltaPaymaster,
+                    value: userOpMaxCost,
+                    data: encodeFunctionData({
+                        abi: BalanceDeltaPaymaster.abi,
+                        functionName: "deposit",
+                        args: [],
+                    }),
+                },
+            ],
+            maxFeePerGas: feesPerGas.maxFeePerGas,
+            maxPriorityFeePerGas: feesPerGas.maxFeePerGas,
             paymaster: contracts.balanceDeltaPaymaster,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
