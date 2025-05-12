@@ -74,9 +74,9 @@ export async function getTransferRemoteWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-        tokenStandard === "HypERC20Collateral" ||
-        tokenStandard === "HypSuperchainERC20Collateral" ||
-        tokenStandard === "NativeToken",
+            tokenStandard === "HypERC20Collateral" ||
+            tokenStandard === "HypSuperchainERC20Collateral" ||
+            tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral or NativeToken`,
     );
 
