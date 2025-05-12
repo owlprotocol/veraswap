@@ -22,6 +22,7 @@ export { IPositionManager } from "./IPositionManager.js";
 export { ISignatureTransfer } from "./ISignatureTransfer.js";
 export { IStateView } from "./IStateView.js";
 export { ISuperchainTokenBridge } from "./ISuperchainTokenBridge.js";
+export { ITokenMessaging } from "./ITokenMessaging.js";
 export { IUniversalRouter } from "./IUniversalRouter.js";
 export { IV4MetaQuoter } from "./IV4MetaQuoter.js";
 export { IV4Quoter } from "./IV4Quoter.js";

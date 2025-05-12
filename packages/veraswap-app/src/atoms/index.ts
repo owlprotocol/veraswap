@@ -12,3 +12,4 @@ export * from "./tokens.js";
 export * from "./token-balance.js";
 export * from "./uniswap.js";
 export * from "./atoms.js";
+export * from "./stargate.js";
