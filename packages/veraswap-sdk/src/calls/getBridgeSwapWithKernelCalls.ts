@@ -94,10 +94,10 @@ export async function getBridgeSwapWithKernelCalls(
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
-        tokenStandard === "HypERC20Collateral" ||
-        tokenStandard === "HypSuperchainERC20Collateral" ||
-        tokenStandard === "SuperchainERC20" ||
-        tokenStandard === "NativeToken",
+            tokenStandard === "HypERC20Collateral" ||
+            tokenStandard === "HypSuperchainERC20Collateral" ||
+            tokenStandard === "SuperchainERC20" ||
+            tokenStandard === "NativeToken",
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
     );
 
