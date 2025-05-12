@@ -56,10 +56,9 @@ import {
     hyperlaneRegistryAtom,
     chainsTypeAtom,
     getSwapStepMessage,
-    orbiterParamsAtom,
-    orbiterAmountOutAtom,
     orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
+    kernelAddressChainOutQueryAtom,
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
@@ -72,6 +71,8 @@ import {
     routeMultichainAtom,
     submittedTransactionTypeAtom,
     amountOutAtom,
+    orbiterQuoteAtom,
+    orbiterRoutersEndpointsAtom,
     slippageToleranceAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
@@ -116,6 +117,7 @@ function Index() {
     const chainOut = useAtomValue(chainOutAtom);
 
     const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
+    const orbiterRoutersEndpoints = useAtomValue(orbiterRoutersEndpointsAtom);
 
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInAccountBalanceQueryAtom);
@@ -130,6 +132,7 @@ function Index() {
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelInitDataAtom);
+    const { data: kernelAddressChainOut } = useAtomValue(kernelAddressChainOutQueryAtom);
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(routeMultichainAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
@@ -177,8 +180,7 @@ function Index() {
 
     const { switchChain } = useSwitchChain();
 
-    const orbiterParams = useAtomValue(orbiterParamsAtom);
-    const orbiterAmountOut = useAtomValue(orbiterAmountOutAtom);
+    const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
 
     const slippageTolerance = useAtomValue(slippageToleranceAtom);
 
@@ -225,10 +227,10 @@ function Index() {
         eventName: "Transfer",
         chainId: chainOut?.id ?? 0,
         address: orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] ?? zeroAddress,
-        args: { to: walletAddress ?? zeroAddress },
+        args: { to: (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress },
         enabled:
             !!chainOut &&
-            !!orbiterParams &&
+            !!orbiterQuote &&
             !!orbiterRoutersEndpointContracts[chainOut?.id ?? 0] &&
             !!hash &&
             !submittedTransactionType?.withSuperchain,
@@ -240,9 +242,14 @@ function Index() {
 
     useWatchBlocks({
         chainId: chainOut?.id ?? 0,
-        enabled: !!chainOut && !!orbiterParams && !!hash && !bridgeRemoteTransactionHash,
+        enabled:
+            !!chainOut &&
+            !!orbiterQuote &&
+            !!hash &&
+            !bridgeRemoteTransactionHash &&
+            !!orbiterRoutersEndpoints[chainOut?.id ?? 0],
         onBlock(block) {
-            const from = orbiterParams?.endpoint.toLowerCase() ?? zeroAddress;
+            const from = orbiterRoutersEndpoints[chainOut?.id ?? 0] ?? zeroAddress;
             // Assume bridging only to same address
             const to = walletAddress?.toLowerCase() ?? zeroAddress;
 
@@ -319,9 +326,9 @@ function Index() {
                           ...transactionType,
                           amountIn: tokenInAmount!,
                           walletAddress,
-                          bridgePayment: bridgePayment,
-                          orbiterParams,
-                          queryClient: queryClient,
+                          bridgePayment,
+                          orbiterQuote,
+                          queryClient,
                           wagmiConfig: config,
                           initData: kernelSmartAccountInitData,
                       } as TransactionParams & TransactionTypeBridge)
@@ -331,19 +338,19 @@ function Index() {
                             amountIn: tokenInAmount!,
                             amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
-                            orbiterAmountOut,
-                            orbiterParams,
-                            queryClient: queryClient,
+                            orbiterQuote,
+                            queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
                       : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
+                            orbiterQuote,
                             amountOutMinimum: adjustedAmountOutMinimum!,
                             walletAddress,
-                            bridgePayment: bridgePayment,
-                            queryClient: queryClient,
+                            bridgePayment,
+                            queryClient,
                             wagmiConfig: config,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
@@ -362,6 +369,7 @@ function Index() {
                 LOCAL_HYPERLANE_CONTRACTS[outChainId]?.mockInterchainGasPaymaster;
 
             // Use custom constant that stores non-registry hyperlane related contracts
+            // TODO: remove fallback
             const erc7579RouterIn = HYPERLANE_CONTRACTS[inChainId]?.erc7579Router ?? zeroAddress;
             const erc7579RouterOut = HYPERLANE_CONTRACTS[outChainId]?.erc7579Router ?? zeroAddress;
 
@@ -491,21 +499,25 @@ function Index() {
             }
         }
 
-        const [hyperlaneBridgeMessageId, hyperlaneSwapMessageId] = hyperlaneMessageIds;
+        const hyperlaneBridgeMessageId = hyperlaneMessageIds[0];
+        const hyperlaneSwapMessageId = !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
 
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId || orbiterParams) {
+            if (hyperlaneBridgeMessageId && !orbiterQuote) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
+            } else if (orbiterQuote) {
+                setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
+                updateTransactionStep({ id: "bridge", status: "processing" });
+            }
 
-                if (submittedTransactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
-                    setSwapMessageId(hyperlaneSwapMessageId);
-                    setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
-                    updateTransactionStep({ id: "swap", status: "processing" });
-                }
+            if (submittedTransactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
+                setSwapMessageId(hyperlaneSwapMessageId);
+                setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
+                updateTransactionStep({ id: "swap", status: "processing" });
             }
         } else {
             updateTransactionStep({ id: "swap", status: "success" });
@@ -514,12 +526,13 @@ function Index() {
                 if (hyperlaneBridgeMessageId) {
                     setBridgeMessageId(hyperlaneBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
-                    updateTransactionStep({ id: "bridge", status: "processing" });
                 } else if (superchainBridgeMessageId) {
                     setSuperchainBridgeMessageId(superchainBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
-                    updateTransactionStep({ id: "bridge", status: "processing" });
+                } else if (orbiterQuote) {
+                    setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 }
+                updateTransactionStep({ id: "bridge", status: "processing" });
             } else if (submittedTransactionType.type === "SWAP") {
                 toast({
                     title: "Swap Complete",

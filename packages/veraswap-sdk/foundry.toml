@@ -55,6 +55,7 @@ somnia-testnet = "https://dream-rpc.somnia.network"
 [etherscan]
 mainnet = { url = "https://api.etherscan.io/v2/api?chainid=1",  key = "${ETHERSCAN_MAINNET_KEY}" }
 sepolia = { url = "https://api.etherscan.io/v2/api?chainid=11155111", key = "${ETHERSCAN_MAINNET_KEY}" }
+optimism = { url = "https://api.etherscan.io/v2/api?chainid=10", key = "${ETHERSCAN_MAINNET_KEY}" }
 optimism-sepolia = { url = "https://api.etherscan.io/v2/api?chainid=11155420", key = "${ETHERSCAN_MAINNET_KEY}" }
 bsc = { url = "https://api.etherscan.io/v2/api?chainid=56", key = "${ETHERSCAN_MAINNET_KEY}" }
 base = { url = "https://api.etherscan.io/v2/api?chainid=8453", key = "${ETHERSCAN_MAINNET_KEY}" }

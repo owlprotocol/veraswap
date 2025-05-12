@@ -245,6 +245,7 @@ export const errors = [
     { type: "error", name: "Permit2AllowanceIsFixedAtInfinity", inputs: [] },
     { type: "error", name: "PermitExpired", inputs: [] },
     { type: "error", name: "TotalSupplyOverflow", inputs: [] },
+    { type: "error", name: "TransferFailed", inputs: [] },
     { type: "error", name: "EnableNotApproved", inputs: [] },
     { type: "error", name: "ExecutionReverted", inputs: [] },
     { type: "error", name: "InitConfigError", inputs: [{ name: "idx", type: "uint256", internalType: "uint256" }] },

@@ -1,9 +1,21 @@
-import { atom } from "jotai";
-import { chainIdToOrbiterChainId, OrbiterParams, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
-import { atomWithQuery } from "jotai-tanstack-query";
+import { Atom, atom } from "jotai";
+import {
+    chainIdToOrbiterChainId,
+    getUniswapV4Address,
+    ORBITER_BRIDGE_SWEEP_ADDRESS,
+    OrbiterParams,
+    OrbiterQuote,
+    OrbiterQuoteParams,
+    orbiterQuoteQueryOptions,
+    orbiterRoutersQueryOptions,
+} from "@owlprotocol/veraswap-sdk";
+import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
 import { chainInAtom, chainOutAtom, tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
-import { transactionTypeAtom } from "./uniswap.js";
+import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
+import { accountAtom } from "./account.js";
+import { kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
+import { disabledQueryOptions } from "./disabledQuery.js";
 
 const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
 const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
@@ -12,6 +24,7 @@ export const orbiterRoutersAllAtom = atom((get) => {
     return [...(get(orbiterRoutersMainnet).data ?? []), ...(get(orbiterRoutersTestnet).data ?? [])];
 });
 
+// NOTE: This is still needed for the new quoting
 export const orbiterRoutersEndpointContractsAtom = atom((get) => {
     const orbiterRoutersAll = get(orbiterRoutersAllAtom);
 
@@ -20,6 +33,19 @@ export const orbiterRoutersEndpointContractsAtom = atom((get) => {
         .reduce(
             (acc, curr) => {
                 return { ...acc, [Number(curr.srcChain)]: curr.endpointContract as Address };
+            },
+            {} as Record<number, Address>,
+        );
+});
+
+export const orbiterRoutersEndpointsAtom = atom((get) => {
+    const orbiterRoutersAll = get(orbiterRoutersAllAtom);
+
+    return orbiterRoutersAll
+        .filter((router) => router.srcToken === zeroAddress)
+        .reduce(
+            (acc, curr) => {
+                return { ...acc, [Number(curr.srcChain)]: curr.endpoint as Address };
             },
             {} as Record<number, Address>,
         );
@@ -47,24 +73,105 @@ export const orbiterRouterAtom = atom((get) => {
 
     if (transactionType.type === "SWAP") return undefined;
 
-    const chainOutSymbol = chainOut.nativeCurrency.symbol;
     const chainInSymbol = chainIn.nativeCurrency.symbol;
+    const chainOutSymbol = chainOut.nativeCurrency.symbol;
 
     if (transactionType.type === "SWAP_BRIDGE") {
+        // TODO: Handle USDC
         if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
             // If bridging on output a native token, must be ETH on both chains
             return undefined;
         }
+
         // Type is either "BRIDGE" or "BRIDGE_SWAP"
+        // TODO: Handle USDC
     } else if (!currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
         // If bridging on input a native token, must be ETH on both chains
         return undefined;
     }
 
-    const line = `${currencyIn.chainId}/${chainOut.id}-${currencyIn.symbol}/${chainOutSymbol}`;
+    // For swap and bridge, tokenOut is what we bridge, else tokenIn
+    const bridgeSymbol = transactionType.type === "SWAP_BRIDGE" ? currencyOut.symbol : currencyIn.symbol;
+
+    const line = `${chainIn.id}/${chainOut.id}-${bridgeSymbol}/${bridgeSymbol}`;
 
     return orbiterRoutersAll.find((router) => router.line === line);
 });
+
+export const orbiterQuoteAtom = atomWithQuery((get) => {
+    const account = get(accountAtom);
+
+    const chainIn = get(chainInAtom);
+    const chainOut = get(chainOutAtom);
+
+    const currencyIn = get(currencyInAtom);
+    const currencyOut = get(currencyOutAtom);
+
+    const tokenInAmount = get(tokenInAmountAtom);
+
+    const transactionType = get(transactionTypeAtom);
+    const routeMultichain = get(routeMultichainAtom);
+
+    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount || !account.address)
+        return disabledQueryOptions;
+
+    const kernelAddressChainOut = get(kernelAddressChainOutQueryAtom).data;
+
+    // Kernel address is only used when bridging and then swapping
+    const targetRecipient = transactionType.type === "BRIDGE_SWAP" ? kernelAddressChainOut : account.address;
+    if (!targetRecipient) return disabledQueryOptions as any;
+
+    // Only supports mainnet for now
+    if (chainIn.testnet) return disabledQueryOptions as any;
+
+    if (transactionType.type === "SWAP") return disabledQueryOptions as any;
+
+    const chainInSymbol = chainIn.nativeCurrency.symbol;
+    const chainOutSymbol = chainOut.nativeCurrency.symbol;
+
+    let amount: bigint;
+
+    if (transactionType.type === "SWAP_BRIDGE") {
+        // TODO: Handle USDC
+        if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
+            // If bridging on output a native token, must be ETH on both chains
+            return disabledQueryOptions as any;
+        }
+
+        // Need to have an estimate of the amout out
+        if (!routeMultichain.data) return disabledQueryOptions as any;
+
+        amount = routeMultichain.data?.amountOut;
+
+        // Type is either "BRIDGE" or "BRIDGE_SWAP"
+    } else {
+        // TODO: Handle USDC
+        if (!currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
+            // If bridging on input a native token, must be ETH on both chains
+            return disabledQueryOptions as any;
+        }
+
+        amount = tokenInAmount;
+    }
+
+    const bridgeTransactionType = transactionType.type === "BRIDGE" ? transactionType : transactionType.bridge;
+    const sourceToken = getUniswapV4Address(bridgeTransactionType.currencyIn);
+    const destToken = getUniswapV4Address(bridgeTransactionType.currencyOut);
+
+    const params: OrbiterQuoteParams = {
+        sourceChainId: chainIn.id,
+        destChainId: chainOut.id,
+        sourceToken,
+        destToken,
+        amount,
+        userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
+        targetRecipient,
+    };
+
+    const isMainnet = true;
+
+    return orbiterQuoteQueryOptions(params, isMainnet);
+}) as unknown as Atom<AtomWithQueryResult<OrbiterQuote>>;
 
 export const orbiterParamsAtom = atom((get) => {
     const orbiterChainId = get(orbiterChainIdOutAtom);
@@ -100,8 +207,6 @@ export const orbiterAmountOutAtom = atom((get) => {
     // minAmt already includes withholdingFee
     if (amountIn < minAmtParsed) return undefined;
     if (amountIn > maxAmtParsed + withholdingFeeParsed) return undefined;
-
-    console.debug({ tradeFee, withholdingFee });
 
     // Assuming tokenIn and tokenOut have the same decimals
 

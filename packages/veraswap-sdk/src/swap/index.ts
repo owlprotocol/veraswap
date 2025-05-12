@@ -5,6 +5,7 @@ export * from "./getHyperlaneSweepBridgeCallTargetParams.js";
 export * from "./getSuperchainBridgeCallTargetParams.js";
 export * from "./getSwapCalls.js";
 export * from "./getSwapAndSuperchainBridgeTransaction.js";
+export * from "./getSwapAndOrbiterETHBridgeTransaction.js";
 export * from "./getSwapAndHyperlaneBridgeTransaction.js";
 export * from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 export * from "./getSwapExactInExecuteData.js";

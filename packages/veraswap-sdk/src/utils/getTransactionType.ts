@@ -42,8 +42,9 @@ export type TransactionType =
     | TransactionTypeSwapBridge
     | TransactionTypeBridgeSwap;
 
+// TODO: Update quoting logic to use actual API and use an amount/minLiquidity parameter (current logic just checks hard-coded poolKeys)
 /**
- * Get transaction type & params (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) for Currency
+ * Get transaction type & params (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP)
  * @param param0
  * @returns
  */
