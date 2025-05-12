@@ -46,7 +46,7 @@ contract BalanceDeltaPaymaster is BasePaymaster {
     }
 
     /// @notice Receives ETH, deposits to EntryPoint, and attributes it to msg.sender
-    function deposit() external payable override {
+    function deposit() external payable {
         bytes32 slot = bytes32(uint256(uint160(msg.sender)));
         uint256 previous;
         assembly {

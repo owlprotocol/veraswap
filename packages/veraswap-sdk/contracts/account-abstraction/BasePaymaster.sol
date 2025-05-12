@@ -98,13 +98,6 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     /**
      * Add a deposit for this paymaster, used for paying for transaction fees.
      */
-    function deposit() external payable virtual {
-        _deposit(msg.value);
-    }
-
-    /**
-     * Add a deposit for this paymaster, used for paying for transaction fees.
-     */
     function _deposit(uint256 value) internal {
         entryPoint.depositTo{value: value}(address(this));
     }

@@ -124,7 +124,6 @@ describe("alto.simple.mainnet.test.ts", function () {
         // Get cost of calls without paymaster
         const userOpGas = await smartAccountClient.estimateUserOperationGas({
             calls,
-            //@ts-expect-error expected type error
             stateOverride: [
                 {
                     // Adding 100 ETH to the smart account during estimation to prevent AA21 errors while estimating
