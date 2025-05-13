@@ -14,7 +14,8 @@ import { BalanceDeltaPaymaster } from "./src/artifacts/BalanceDeltaPaymaster.js"
 import { ERC4337_CONTRACTS } from "./src/constants/erc4337.js";
 
 import { opChainL1, opChainL1Port, opChainA, opChainAPort, opChainB, opChainBPort, opChainABundlerPort, opChainBBundlerPort, opChainL1BundlerPort, opChainL1Client, opChainAClient, opChainBClient } from "./src/chains/index.js";
-import { createWalletClient, Hex, http, parseEther } from "viem";
+import { createWalletClient, Hex, http, parseEther, zeroAddress } from "viem";
+import { BalanceDeltaRefundPaymaster } from "./src/artifacts/BalanceDeltaRefundPaymaster.js";
 
 const execPromise = promisify(exec);
 
@@ -107,6 +108,16 @@ export async function setup() {
             value: parseEther("10")
         })
         await client.waitForTransactionReceipt({ hash: depositBalanceDeltaPaymasterHash });
+
+        // Deposit BalanceDeltaRefundPaymaster
+        const depositBalanceDeltaRefundPaymasterHash = await anvilClient.writeContract({
+            address: contracts.balanceDeltaRefundPaymaster,
+            abi: BalanceDeltaRefundPaymaster.abi,
+            functionName: "deposit",
+            args: [zeroAddress, 0n],
+            value: parseEther("10")
+        })
+        await client.waitForTransactionReceipt({ hash: depositBalanceDeltaRefundPaymasterHash });
     }
 
     const executorPrivateKeys: Hex[] = [anvil1]
