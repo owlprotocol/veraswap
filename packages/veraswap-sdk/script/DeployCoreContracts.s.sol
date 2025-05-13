@@ -27,6 +27,7 @@ import {OrbiterBridgeSweepUtils} from "./utils/OrbiterBridgeSweepUtils.sol";
 import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
 import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
 import {BalanceDeltaPaymasterUtils} from "./utils/BalanceDeltaPaymasterUtils.sol";
+import {BalanceDeltaRefundPaymasterUtils} from "./utils/BalanceDeltaRefundPaymasterUtils.sol";
 // Interop
 import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 // Kernel Account
@@ -201,6 +202,7 @@ contract DeployCoreContracts is DeployParameters {
             SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
             OpenPaymasterUtils.getOrCreate2(entryPoint, msg.sender);
             BalanceDeltaPaymasterUtils.getOrCreate2(entryPoint, msg.sender);
+            BalanceDeltaRefundPaymasterUtils.getOrCreate2(entryPoint, msg.sender);
         } else {
             console2.log(
                 "entryPoint.code == bytes(0), skipping SimpleAccountFactory and BalanceDeltaPaymaster deployment"

@@ -356,4 +356,23 @@ export const errors = [
             { name: "actualGasCost", type: "uint256", internalType: "uint256" },
         ],
     },
+    {
+        type: "error",
+        name: "BalanceNotReimbursed",
+        inputs: [
+            { name: "sender", type: "address", internalType: "address" },
+            { name: "nonce", type: "uint256", internalType: "uint256" },
+            { name: "reimbursed", type: "uint256", internalType: "uint256" },
+            { name: "actualGasCost", type: "uint256", internalType: "uint256" },
+        ],
+    },
+    {
+        type: "error",
+        name: "RefundFailed",
+        inputs: [
+            { name: "sender", type: "address", internalType: "address" },
+            { name: "nonce", type: "uint256", internalType: "uint256" },
+            { name: "surplus", type: "uint256", internalType: "uint256" },
+        ],
+    },
 ] as const;

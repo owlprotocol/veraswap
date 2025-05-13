@@ -3394,4 +3394,14 @@ export const functions = [
         ],
         stateMutability: "nonpayable",
     },
+    {
+        type: "function",
+        name: "deposit",
+        inputs: [
+            { name: "sender", type: "address", internalType: "address" },
+            { name: "nonce", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
 ] as const;

@@ -1,4 +1,5 @@
 export { BalanceDeltaPaymaster } from "./BalanceDeltaPaymaster.js";
+export { BalanceDeltaRefundPaymaster } from "./BalanceDeltaRefundPaymaster.js";
 export { ECDSAValidator } from "./ECDSAValidator.js";
 export { ERC7579ExecutorRouter } from "./ERC7579ExecutorRouter.js";
 export { EntryPoint } from "./EntryPoint.js";
