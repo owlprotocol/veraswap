@@ -5,6 +5,14 @@ import {BasePaymaster} from "./BasePaymaster.sol";
 import {SelfDestructTransfer} from "./SelfDestructTransfer.sol";
 import {IEntryPoint, PackedUserOperation} from "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
+//TODO: Figure out how to rebalance paymaster balance with its entrypoint deposit
+// Some risks include
+// - paymaster balance is insufficient to cover refund of userOp because too much was sent to entrypoint
+// Some ideas
+// - public function that re-deposits current balance to entrypoint
+// - owner only function that re-deposits current balance to entrypoint
+// - if in postOp insufficient balance, withdraw enough from entrypoint to cover refund (this is an edge case)
+
 /// @title BalanceDeltaPaymaster
 /// @notice A paymaster that checks gas reimbursement using transient storage
 contract BalanceDeltaPaymaster is BasePaymaster {
