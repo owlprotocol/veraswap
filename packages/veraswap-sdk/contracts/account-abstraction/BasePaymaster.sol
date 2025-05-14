@@ -13,7 +13,7 @@ import "@ERC4337/account-abstraction/contracts/core/UserOperationLib.sol";
  * Helper class for creating a paymaster.
  * provides helper methods for staking.
  * Validates that the postOp is called only by the entryPoint.
- * Note: Modified for gas efficiency and modularity
+ * Note: only change from official is owner is passed to the constructor
  */
 abstract contract BasePaymaster is IPaymaster, Ownable {
     IEntryPoint public immutable entryPoint;
@@ -98,8 +98,8 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     /**
      * Add a deposit for this paymaster, used for paying for transaction fees.
      */
-    function _deposit(uint256 value) internal {
-        entryPoint.depositTo{value: value}(address(this));
+    function deposit() public payable {
+        entryPoint.depositTo{value: msg.value}(address(this));
     }
 
     /**
@@ -118,6 +118,13 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      */
     function addStake(uint32 unstakeDelaySec) external payable onlyOwner {
         entryPoint.addStake{value: msg.value}(unstakeDelaySec);
+    }
+
+    /**
+     * Return current paymaster's deposit on the entryPoint.
+     */
+    function getDeposit() public view returns (uint256) {
+        return entryPoint.balanceOf(address(this));
     }
 
     /**

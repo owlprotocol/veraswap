@@ -21,7 +21,6 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import { BalanceDeltaPaymaster } from "./artifacts/BalanceDeltaPaymaster.js";
-import { BalanceDeltaRefundPaymaster } from "./artifacts/BalanceDeltaRefundPaymaster.js";
 import { opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
 import { ERC4337_CONTRACTS } from "./constants/erc4337.js";
 
@@ -190,6 +189,7 @@ describe("alto.simple.test.ts", function () {
         });
         await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
 
+        const nonce = await smartAccount.getNonce();
         const userOpHash = await smartAccountClient.sendUserOperation({
             calls: [
                 ...calls,
@@ -198,80 +198,14 @@ describe("alto.simple.test.ts", function () {
                     value: userOpMaxCost,
                     data: encodeFunctionData({
                         abi: BalanceDeltaPaymaster.abi,
-                        functionName: "deposit",
-                        args: [],
-                    }),
-                },
-            ],
-            maxFeePerGas: feesPerGas.maxFeePerGas,
-            maxPriorityFeePerGas: feesPerGas.maxFeePerGas,
-            paymaster: contracts.balanceDeltaPaymaster,
-        });
-        const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
-            hash: userOpHash,
-            timeout: 1000 * 15,
-        });
-        expect(userOpReceipt).toBeDefined();
-
-        const balance = await opChainL1Client.getBalance({ address: target.address });
-        expect(balance).toBe(1n);
-
-        const smartAccountBalance = await opChainL1Client.getBalance({
-            address: smartAccountClient.account.address,
-        });
-        expect(smartAccountBalance).toBe(0n);
-    });
-
-    test.only("paymaster - balance delta with refund", async () => {
-        const target = privateKeyToAccount(generatePrivateKey());
-        const calls = [
-            {
-                to: target.address,
-                value: 1n,
-                data: "0x",
-            },
-        ] as const;
-        // Get cost of calls without paymaster
-        const userOpGas = await smartAccountClient.estimateUserOperationGas({
-            calls,
-            stateOverride: [
-                {
-                    // Adding 100 ETH to the smart account during estimation to prevent AA21 errors while estimating
-                    balance: parseEther("100"),
-                    address: smartAccountClient.account.address,
-                },
-            ],
-        });
-        const DEPOSIT_GAS_COST = 50_000n; //may be even more optimized, but this is a good estimate
-        const userOpGasTotal =
-            userOpGas.preVerificationGas + userOpGas.verificationGasLimit + userOpGas.callGasLimit + DEPOSIT_GAS_COST;
-        const feesPerGas = await opChainL1Client.estimateFeesPerGas();
-        const userOpMaxCost = userOpGasTotal * feesPerGas.maxFeePerGas;
-
-        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
-            to: smartAccountAddress,
-            value: userOpMaxCost + 1n,
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
-
-        const nonce = await smartAccount.getNonce();
-        console.debug({ nonce });
-        const userOpHash = await smartAccountClient.sendUserOperation({
-            calls: [
-                ...calls,
-                {
-                    to: contracts.balanceDeltaRefundPaymaster,
-                    value: userOpMaxCost,
-                    data: encodeFunctionData({
-                        abi: BalanceDeltaRefundPaymaster.abi,
-                        functionName: "deposit",
+                        functionName: "payUserOp",
                         args: [smartAccountClient.account.address, nonce],
                     }),
                 },
             ],
             maxFeePerGas: feesPerGas.maxFeePerGas,
             maxPriorityFeePerGas: feesPerGas.maxFeePerGas,
-            paymaster: contracts.balanceDeltaRefundPaymaster,
+            paymaster: contracts.balanceDeltaPaymaster,
             nonce,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({

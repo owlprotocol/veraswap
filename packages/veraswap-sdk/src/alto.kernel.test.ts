@@ -20,15 +20,18 @@ import {
 } from "viem";
 import { entryPoint07Address, SmartAccount } from "viem/account-abstraction";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 
+import { KernelFactory } from "./artifacts/KernelFactory.js";
 import { opChainL1, opChainL1BundlerClient, opChainL1BundlerPort, opChainL1Client } from "./chains/supersim.js";
+import { ERC4337_CONTRACTS } from "./constants/erc4337.js";
 import { LOCAL_KERNEL_CONTRACTS } from "./constants/kernel.js";
 import { getKernelAddress } from "./smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "./smartaccount/getKernelInitData.js";
-import { installOwnableExecutor } from "./smartaccount/OwnableExecutor.js";
 
 describe("alto.kernel.test.ts", function () {
+    const contracts = ERC4337_CONTRACTS[opChainL1Client.chain.id]!;
+
     const bundlerTransport = http(`http://127.0.0.1:${opChainL1BundlerPort}`);
 
     const anvilAccount = getAnvilAccount();
@@ -41,17 +44,29 @@ describe("alto.kernel.test.ts", function () {
     const entryPoint = { address: entryPoint07Address, version: "0.7" } as const;
     const kernelVersion = KERNEL_V3_1;
 
-    let kernelInitData: Hex;
-    let kernelSalt: Hex;
+    let smartAccountInitData: Hex;
+    let smartAccountSalt: Hex;
 
     let smartAccountAddress: Address;
     let smartAccount: CreateKernelAccountReturnType<"0.7">;
     let smartAccountClient: KernelAccountClient<Transport, Chain, SmartAccount, Client>;
 
     beforeAll(async () => {
-        const EntryPoint = await opChainL1Client.getCode({ address: entryPoint07Address });
-        expect(EntryPoint).toBeDefined();
+        const entryPointCode = await opChainL1Client.getCode({ address: entryPoint07Address });
+        expect(entryPointCode).toBeDefined();
+        const ecdsaValidatorCode = await opChainL1Client.getCode({
+            address: LOCAL_KERNEL_CONTRACTS.ecdsaValidator,
+        });
+        expect(ecdsaValidatorCode).toBeDefined();
+        const openPaymasterCode = await opChainL1Client.getCode({
+            address: contracts.openPaymaster,
+        });
+        expect(openPaymasterCode).toBeDefined();
+        const balanceDeltaPaymasterCode = await opChainL1Client.getCode({ address: contracts.balanceDeltaPaymaster });
+        expect(balanceDeltaPaymasterCode).toBeDefined();
+    });
 
+    beforeEach(async () => {
         // Create smart account
         const ecdsaValidator = await signerToEcdsaValidator(opChainL1Client, {
             entryPoint,
@@ -66,22 +81,16 @@ describe("alto.kernel.test.ts", function () {
             chainId: opChainL1Client.chain.id,
         });
         // Kernel `initialize` call
-        kernelInitData = await getKernelInitData({
+        smartAccountInitData = await getKernelInitData({
             kernelPluginManager,
             initHook: false,
-            initConfig: [
-                installOwnableExecutor({
-                    owner: anvilAccount.address,
-                    executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
-                }),
-            ],
+            initConfig: [],
         });
         // KernelFactory `createAccount` call
-        kernelSalt = padHex(bytesToHex(getRandomValues(new Uint8Array(32))), { size: 32 });
-
+        smartAccountSalt = padHex(bytesToHex(getRandomValues(new Uint8Array(32))), { size: 32 });
         smartAccountAddress = getKernelAddress({
-            data: kernelInitData,
-            salt: kernelSalt,
+            data: smartAccountInitData,
+            salt: smartAccountSalt,
             implementation: LOCAL_KERNEL_CONTRACTS.kernel,
             factoryAddress: LOCAL_KERNEL_CONTRACTS.kernelFactory,
         });
@@ -100,29 +109,49 @@ describe("alto.kernel.test.ts", function () {
             client: opChainL1Client,
         });
 
-        //Pre-fund wallet just to pay tx cost
-        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
-            to: smartAccountAddress,
-            value: parseEther("5"),
+        const deployHash = await anvilClientL1.writeContract({
+            address: LOCAL_KERNEL_CONTRACTS.kernelFactory,
+            abi: KernelFactory.abi,
+            functionName: "createAccount",
+            args: [smartAccountInitData, smartAccountSalt],
         });
-        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+        await opChainL1Client.waitForTransactionReceipt({ hash: deployHash });
     });
 
-    test("Simple AA", async () => {
-        // Simple AA
+    test("self pay", async () => {
         const target = privateKeyToAccount(generatePrivateKey());
-        const callData = await smartAccountClient.account.encodeCalls([
+        const calls = [
             {
                 to: target.address,
                 value: 1n,
                 data: "0x",
             },
-        ]);
-        const fees = await opChainL1Client.estimateFeesPerGas();
+        ] as const;
+        // Get cost of calls without paymaster
+        const userOpGas = await smartAccountClient.estimateUserOperationGas({
+            calls,
+            stateOverride: [
+                {
+                    // Adding 100 ETH to the smart account during estimation to prevent AA21 errors while estimating
+                    balance: parseEther("100"),
+                    address: smartAccountClient.account.address,
+                },
+            ],
+        });
+        const userOpGasTotal = userOpGas.preVerificationGas + userOpGas.verificationGasLimit + userOpGas.callGasLimit;
+        const feesPerGas = await opChainL1Client.estimateFeesPerGas();
+        const userOpMaxCost = userOpGasTotal * feesPerGas.maxFeePerGas;
+
+        const fundSmartAccountHash = await anvilClientL1.sendTransaction({
+            to: smartAccountAddress,
+            value: userOpMaxCost + 1n,
+        });
+        await opChainL1Client.waitForTransactionReceipt({ hash: fundSmartAccountHash });
+
         const userOpHash = await smartAccountClient.sendUserOperation({
-            callData,
-            maxFeePerGas: fees.maxFeePerGas,
-            maxPriorityFeePerGas: fees.maxFeePerGas,
+            calls,
+            maxFeePerGas: feesPerGas.maxFeePerGas,
+            maxPriorityFeePerGas: feesPerGas.maxFeePerGas,
         });
         const userOpReceipt = await opChainL1BundlerClient.waitForUserOperationReceipt({
             hash: userOpHash,

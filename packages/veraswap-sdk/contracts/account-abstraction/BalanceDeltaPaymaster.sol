@@ -2,13 +2,15 @@
 pragma solidity ^0.8.26;
 
 import {BasePaymaster} from "./BasePaymaster.sol";
+import {SelfDestructTransfer} from "./SelfDestructTransfer.sol";
 import {IEntryPoint, PackedUserOperation} from "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 /// @title BalanceDeltaPaymaster
-/// @notice A paymaster that checks balance reimbursement per sender using transient storage
+/// @notice A paymaster that checks gas reimbursement using transient storage
 contract BalanceDeltaPaymaster is BasePaymaster {
     /// @dev Reverts if a sender does not reimburse enough ETH to cover actual gas cost
-    error BalanceNotReimbursed(address sender, uint256 reimbursed, uint256 actualGasCost);
+    error BalanceNotReimbursed(address sender, uint256 nonce, uint256 reimbursed, uint256 actualGasCost);
+    error RefundFailed(address sender, uint256 nonce, uint256 surplus);
 
     constructor(IEntryPoint _entryPoint, address _owner) BasePaymaster(_entryPoint, _owner) {}
 
@@ -18,42 +20,46 @@ contract BalanceDeltaPaymaster is BasePaymaster {
         bytes32,
         uint256
     ) internal pure override returns (bytes memory context, uint256 validationData) {
-        return (abi.encode(userOp.sender), 0);
+        return (abi.encode(userOp.sender, userOp.nonce), 0);
     }
 
     /// @notice Verifies sender refunded at least the actual gas cost, updates transient balance
     function _postOp(PostOpMode, bytes calldata context, uint256 actualGasCost, uint256) internal override {
-        address sender = abi.decode(context, (address));
-        bytes32 slot = bytes32(uint256(uint160(sender)));
+        (address sender, uint256 nonce) = abi.decode(context, (address, uint256));
+        bytes32 slot = keccak256(abi.encodePacked(sender, nonce));
 
         uint256 reimbursed;
         assembly {
             reimbursed := tload(slot)
+            tstore(slot, 0)
         }
 
         if (reimbursed < actualGasCost) {
-            revert BalanceNotReimbursed(sender, reimbursed, actualGasCost);
+            revert BalanceNotReimbursed(sender, nonce, reimbursed, actualGasCost);
         }
 
-        uint256 remaining;
+        uint256 surplus;
         unchecked {
-            remaining = reimbursed - actualGasCost;
+            surplus = reimbursed - actualGasCost;
         }
 
-        assembly {
-            tstore(slot, remaining)
+        if (surplus > 0) {
+            // Refund excess using selfdestruct transfer
+            try new SelfDestructTransfer{value: surplus}(payable(sender)) {
+                // success
+            } catch {
+                revert RefundFailed(sender, nonce, surplus);
+            }
         }
     }
 
-    /// @notice Receives ETH, deposits to EntryPoint, and attributes it to msg.sender
-    function deposit() external payable {
-        bytes32 slot = bytes32(uint256(uint160(msg.sender)));
+    /// @notice Receives ETH and updates the transient balance for the sender/nonce pair
+    function payUserOp(address sender, uint256 nonce) external payable {
+        bytes32 slot = keccak256(abi.encodePacked(sender, nonce));
         uint256 previous;
         assembly {
             previous := tload(slot)
             tstore(slot, add(previous, callvalue()))
         }
-
-        _deposit(msg.value);
     }
 }

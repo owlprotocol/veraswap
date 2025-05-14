@@ -3,7 +3,6 @@ import { Address, encodeDeployData, zeroHash } from "viem";
 import { entryPoint07Address } from "viem/account-abstraction";
 
 import { BalanceDeltaPaymaster } from "../artifacts/BalanceDeltaPaymaster.js";
-import { BalanceDeltaRefundPaymaster } from "../artifacts/BalanceDeltaRefundPaymaster.js";
 import { OpenPaymaster } from "../artifacts/OpenPaymaster.js";
 import { SimpleAccountFactory } from "../artifacts/SimpleAccountFactory.js";
 import { base, opChainA, opChainB, opChainL1 } from "../chains/index.js";
@@ -41,19 +40,6 @@ export function getBalanceDeltaPaymasterAddress(
     });
 }
 
-export function getBalanceDeltaRefundPaymasterAddress(
-    ownerAddress: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-): Address {
-    return getDeployDeterministicAddress({
-        bytecode: encodeDeployData({
-            bytecode: BalanceDeltaRefundPaymaster.bytecode,
-            abi: BalanceDeltaRefundPaymaster.abi,
-            args: [entryPoint07Address, ownerAddress],
-        }),
-        salt: zeroHash,
-    });
-}
-
 const mainnetOwner = "0xAAb6f44B46f19d061582727B66C9a0c84C97a2F6";
 
 export const ERC4337_CONTRACTS: Record<
@@ -62,7 +48,6 @@ export const ERC4337_CONTRACTS: Record<
         simpleAccountFactory: Address;
         openPaymaster: Address;
         balanceDeltaPaymaster: Address;
-        balanceDeltaRefundPaymaster: Address;
     }
     | undefined
 > = {
@@ -70,24 +55,20 @@ export const ERC4337_CONTRACTS: Record<
         simpleAccountFactory: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
         openPaymaster: getOpenPaymasterAddress(),
         balanceDeltaPaymaster: getBalanceDeltaPaymasterAddress(),
-        balanceDeltaRefundPaymaster: getBalanceDeltaRefundPaymasterAddress(),
     },
     [opChainA.id]: {
         simpleAccountFactory: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
         openPaymaster: getOpenPaymasterAddress(),
         balanceDeltaPaymaster: getBalanceDeltaPaymasterAddress(),
-        balanceDeltaRefundPaymaster: getBalanceDeltaRefundPaymasterAddress(),
     },
     [opChainB.id]: {
         simpleAccountFactory: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
         openPaymaster: getOpenPaymasterAddress(),
         balanceDeltaPaymaster: getBalanceDeltaPaymasterAddress(),
-        balanceDeltaRefundPaymaster: getBalanceDeltaRefundPaymasterAddress(),
     },
     [base.id]: {
         simpleAccountFactory: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
         openPaymaster: getOpenPaymasterAddress(mainnetOwner),
         balanceDeltaPaymaster: getBalanceDeltaPaymasterAddress(mainnetOwner),
-        balanceDeltaRefundPaymaster: getBalanceDeltaRefundPaymasterAddress(mainnetOwner),
     },
 };

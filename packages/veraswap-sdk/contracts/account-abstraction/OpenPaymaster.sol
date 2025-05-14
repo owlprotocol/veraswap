@@ -27,11 +27,4 @@ contract OpenPaymaster is BasePaymaster {
     ) internal pure override {
         return;
     }
-
-    /**
-     * Add a deposit for this paymaster, used for paying for transaction fees.
-     */
-    function deposit() external payable {
-        _deposit(msg.value);
-    }
 }
