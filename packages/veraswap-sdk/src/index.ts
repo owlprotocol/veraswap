@@ -3,6 +3,7 @@ export * from "./hooks/index.js";
 export * from "./orbiter/index.js";
 export * from "./query/index.js";
 export * from "./superchain/index.js";
+export * from "./stargate/index.js";
 export * from "./swap/index.js";
 export * from "./types/index.js";
 export * from "./uniswap/index.js";

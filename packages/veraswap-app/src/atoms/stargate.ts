@@ -1,19 +1,12 @@
-import {
-    getUniswapV4Address,
-    StargateQuoteParams,
-    STARGATE_NATIVE_TOKEN_ADDRESS,
-    stargateQuoteQueryOptions,
-    StargateQuoteResponse,
-    isNativeCurrency,
-} from "@owlprotocol/veraswap-sdk";
+import { StargateETHQuote, StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { zeroAddress } from "viem";
 import { accountAtom } from "./account.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
 import { kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { chainInAtom, chainOutAtom, currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { transactionTypeAtom, routeMultichainAtom } from "./uniswap.js";
+import { config } from "@/config.js";
 
 export const stargateQuoteAtom = atomWithQuery((get) => {
     const account = get(accountAtom);
@@ -71,24 +64,18 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
         amount = tokenInAmount;
     }
 
-    const bridgeTransactionType = transactionType.type === "BRIDGE" ? transactionType : transactionType.bridge;
-    const srcToken = isNativeCurrency(bridgeTransactionType.currencyIn)
-        ? STARGATE_NATIVE_TOKEN_ADDRESS
-        : bridgeTransactionType.currencyIn.address;
-    const dstToken = isNativeCurrency(bridgeTransactionType.currencyOut)
-        ? STARGATE_NATIVE_TOKEN_ADDRESS
-        : bridgeTransactionType.currencyOut.address;
+    const bridge = transactionType.type === "BRIDGE" ? transactionType : transactionType.bridge;
 
-    const params: StargateQuoteParams = {
-        srcChainKey: chainIn.name,
-        dstChainKey: chainOut.name,
-        srcToken,
-        dstToken,
+    // TODO: handle USDC bridging
+    if (!bridge.currencyIn.isNative) return disabledQueryOptions as any;
+
+    // Native bridging
+    const params: StargateETHQuoteParams = {
+        srcChain: chainIn.id,
+        dstChain: chainOut.id,
         amount,
         receiver,
-        sender: account.address,
-        isMainnet: true,
     };
 
-    return stargateQuoteQueryOptions(params);
-}) as unknown as Atom<AtomWithQueryResult<StargateQuoteResponse>>;
+    return stargateETHQuoteQueryOptions(config, params);
+}) as unknown as Atom<AtomWithQueryResult<StargateETHQuote | null>>;

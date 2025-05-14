@@ -52,5 +52,6 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/OwnableSignatureExecutor.sol/*.json",
     "out/Execute.sol/*.json",
     // Stargate
-    "out/ITokenMessaging.sol/*.json",
+    "out/IStargate.sol/*.json",
+    "out/StargateBase.sol/*.json",
 ]);
