@@ -64,5 +64,6 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/BasketFixedUnits.sol/*.json",
     "out/ExecuteSweep.sol/*.json",
     // Stargate
-    "out/ITokenMessaging.sol/*.json",
+    "out/IStargate.sol/*.json",
+    "out/StargateBase.sol/*.json",
 ]);

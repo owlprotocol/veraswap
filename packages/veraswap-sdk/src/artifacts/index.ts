@@ -20,6 +20,7 @@ export { IPermit2 } from "./IPermit2.js";
 export { IPoolManager } from "./IPoolManager.js";
 export { IPositionManager } from "./IPositionManager.js";
 export { ISignatureTransfer } from "./ISignatureTransfer.js";
+export { IStargate } from "./IStargate.js";
 export { IStateView } from "./IStateView.js";
 export { ISuperchainTokenBridge } from "./ISuperchainTokenBridge.js";
 export { ITokenMessaging } from "./ITokenMessaging.js";

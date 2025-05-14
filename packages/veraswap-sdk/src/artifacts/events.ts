@@ -759,4 +759,33 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "MsgInspectorSet",
+        inputs: [{ name: "inspector", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "OFTReceived",
+        inputs: [
+            { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "toAddress", type: "address", indexed: true, internalType: "address" },
+            { name: "amountToCreditLD", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amountReceivedLD", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "OFTSent",
+        inputs: [
+            { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "fromAddress", type: "address", indexed: true, internalType: "address" },
+            { name: "amountDebitedLD", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amountToCreditLD", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "composeMsg", type: "bytes", indexed: false, internalType: "bytes" },
+        ],
+        anonymous: false,
+    },
 ] as const;

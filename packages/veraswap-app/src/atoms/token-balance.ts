@@ -25,6 +25,7 @@ import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
 import { orbiterQuoteAtom, orbiterRouterAtom } from "./orbiter.js";
 import { currenciesAtom } from "./chains.js";
 
+import { stargateQuoteAtom } from "./stargate.js";
 import { config } from "@/config.js";
 
 /***** Atom Family *****/
@@ -286,24 +287,35 @@ export const amountOutAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const quoterData = get(routeMultichainAtom).data;
 
+    if (!transactionType || !currencyOut || !tokenInAmount) return "";
+
     const {
         data: orbiterQuote,
         fetchStatus: orbiterQuoteFetchStatus,
         status: orbiterQuoteStatus,
     } = get(orbiterQuoteAtom);
 
-    if (!transactionType || !currencyOut || !tokenInAmount) return "";
+    const {
+        data: stargateQuote,
+        fetchStatus: stargateQuoteFetchStatus,
+        status: stargateQuoteStatus,
+    } = get(stargateQuoteAtom);
 
     let amountOut = "";
 
     // TODO: improve how we show amount out
     if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
-        if (!orbiterQuote && (orbiterQuoteFetchStatus === "fetching" || orbiterQuoteStatus === "error")) {
-            amountOut = "";
+        // TODO: remove orbtier references entirely
+        if (stargateQuote && currencyOut) {
+            amountOut = formatUnits(stargateQuote.amountFeeRemoved, currencyOut.decimals);
         } else if (orbiterRouter && orbiterQuote && currencyOut) {
             const amountOutDecimalsStripped = orbiterQuote.details.minDestTokenAmount.split(".")[0];
             amountOut = formatUnits(BigInt(amountOutDecimalsStripped), currencyOut.decimals);
             // Only shouw
+        } else if (!stargateQuote && (stargateQuoteFetchStatus === "fetching" || stargateQuoteStatus === "error")) {
+            amountOut = "";
+        } else if (!orbiterQuote && (orbiterQuoteFetchStatus === "fetching" || orbiterQuoteStatus === "error")) {
+            amountOut = "";
         } else if (!orbiterRouter && orbiterQuoteFetchStatus === "idle" && orbiterQuoteStatus !== "error") {
             amountOut = formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18);
         }

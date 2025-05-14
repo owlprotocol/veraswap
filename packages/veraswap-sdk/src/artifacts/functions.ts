@@ -3839,14 +3839,134 @@ export const functions = [
     },
     {
         type: "function",
-        name: "driveBus",
+        name: "msgInspector",
+        inputs: [],
+        outputs: [{ name: "", type: "address", internalType: "address" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "oftVersion",
+        inputs: [],
+        outputs: [
+            { name: "major", type: "uint64", internalType: "uint64" },
+            { name: "minor", type: "uint64", internalType: "uint64" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "quoteOFT",
         inputs: [
-            { name: "_dstEid", type: "uint32", internalType: "uint32" },
-            { name: "_passengers", type: "bytes", internalType: "bytes" },
+            {
+                name: "_sendParam",
+                type: "tuple",
+                internalType: "struct SendParam",
+                components: [
+                    { name: "dstEid", type: "uint32", internalType: "uint32" },
+                    { name: "to", type: "bytes32", internalType: "bytes32" },
+                    { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
+                    { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                ],
+            },
+            { name: "_oftCmd", type: "bytes", internalType: "bytes" },
         ],
         outputs: [
             {
-                name: "receipt",
+                name: "",
+                type: "tuple",
+                internalType: "struct OFTLimit",
+                components: [
+                    { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+                    { name: "maxAmountLD", type: "uint256", internalType: "uint256" },
+                ],
+            },
+            {
+                name: "oftFeeDetails",
+                type: "tuple[]",
+                internalType: "struct OFTFeeDetail[]",
+                components: [
+                    { name: "feeAmountLD", type: "uint256", internalType: "uint256" },
+                    { name: "description", type: "string", internalType: "string" },
+                ],
+            },
+            {
+                name: "",
+                type: "tuple",
+                internalType: "struct OFTReceipt",
+                components: [
+                    { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
+                    { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "quoteSend",
+        inputs: [
+            {
+                name: "_sendParam",
+                type: "tuple",
+                internalType: "struct SendParam",
+                components: [
+                    { name: "dstEid", type: "uint32", internalType: "uint32" },
+                    { name: "to", type: "bytes32", internalType: "bytes32" },
+                    { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
+                    { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                ],
+            },
+            { name: "_extraOptions", type: "bytes", internalType: "bytes" },
+            { name: "_payInLzToken", type: "bool", internalType: "bool" },
+            { name: "_composeMsg", type: "bytes", internalType: "bytes" },
+            { name: "_oftCmd", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [
+            {
+                name: "",
+                type: "tuple",
+                internalType: "struct MessagingFee",
+                components: [
+                    { name: "nativeFee", type: "uint256", internalType: "uint256" },
+                    { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "send",
+        inputs: [
+            {
+                name: "_sendParam",
+                type: "tuple",
+                internalType: "struct SendParam",
+                components: [
+                    { name: "dstEid", type: "uint32", internalType: "uint32" },
+                    { name: "to", type: "bytes32", internalType: "bytes32" },
+                    { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
+                    { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                ],
+            },
+            { name: "_extraOptions", type: "bytes", internalType: "bytes" },
+            {
+                name: "_fee",
+                type: "tuple",
+                internalType: "struct MessagingFee",
+                components: [
+                    { name: "nativeFee", type: "uint256", internalType: "uint256" },
+                    { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
+                ],
+            },
+            { name: "_refundAddress", type: "address", internalType: "address" },
+            { name: "_composeMsg", type: "bytes", internalType: "bytes" },
+            { name: "_oftCmd", type: "bytes", internalType: "bytes" },
+        ],
+        outputs: [
+            {
+                name: "",
                 type: "tuple",
                 internalType: "struct MessagingReceipt",
                 components: [
@@ -3861,6 +3981,15 @@ export const functions = [
                             { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
                         ],
                     },
+                ],
+            },
+            {
+                name: "",
+                type: "tuple",
+                internalType: "struct OFTReceipt",
+                components: [
+                    { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
+                    { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
                 ],
             },
         ],
@@ -3868,66 +3997,21 @@ export const functions = [
     },
     {
         type: "function",
-        name: "quoteDriveBus",
-        inputs: [
-            { name: "_dstEid", type: "uint32", internalType: "uint32" },
-            { name: "_passengers", type: "bytes", internalType: "bytes" },
-        ],
-        outputs: [
-            {
-                name: "fee",
-                type: "tuple",
-                internalType: "struct MessagingFee",
-                components: [
-                    { name: "nativeFee", type: "uint256", internalType: "uint256" },
-                    { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
-                ],
-            },
-        ],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
-        name: "quoteRideBus",
-        inputs: [
-            { name: "_dstEid", type: "uint32", internalType: "uint32" },
-            { name: "_nativeDrop", type: "bool", internalType: "bool" },
-        ],
-        outputs: [
-            {
-                name: "fee",
-                type: "tuple",
-                internalType: "struct MessagingFee",
-                components: [
-                    { name: "nativeFee", type: "uint256", internalType: "uint256" },
-                    { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
-                ],
-            },
-        ],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
-        name: "quoteTaxi",
+        name: "sendToken",
         inputs: [
             {
-                name: "_params",
+                name: "_sendParam",
                 type: "tuple",
-                internalType: "struct TaxiParams",
+                internalType: "struct SendParam",
                 components: [
-                    { name: "sender", type: "address", internalType: "address" },
                     { name: "dstEid", type: "uint32", internalType: "uint32" },
-                    { name: "receiver", type: "bytes32", internalType: "bytes32" },
-                    { name: "amountSD", type: "uint64", internalType: "uint64" },
-                    { name: "composeMsg", type: "bytes", internalType: "bytes" },
-                    { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                    { name: "to", type: "bytes32", internalType: "bytes32" },
+                    { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
+                    { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
                 ],
             },
-            { name: "_payInLzToken", type: "bool", internalType: "bool" },
-        ],
-        outputs: [
             {
-                name: "fee",
+                name: "_fee",
                 type: "tuple",
                 internalType: "struct MessagingFee",
                 components: [
@@ -3935,29 +4019,11 @@ export const functions = [
                     { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
                 ],
             },
-        ],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
-        name: "rideBus",
-        inputs: [
-            {
-                name: "_params",
-                type: "tuple",
-                internalType: "struct RideBusParams",
-                components: [
-                    { name: "sender", type: "address", internalType: "address" },
-                    { name: "dstEid", type: "uint32", internalType: "uint32" },
-                    { name: "receiver", type: "bytes32", internalType: "bytes32" },
-                    { name: "amountSD", type: "uint64", internalType: "uint64" },
-                    { name: "nativeDrop", type: "bool", internalType: "bool" },
-                ],
-            },
+            { name: "_refundAddress", type: "address", internalType: "address" },
         ],
         outputs: [
             {
-                name: "receipt",
+                name: "msgReceipt",
                 type: "tuple",
                 internalType: "struct MessagingReceipt",
                 components: [
@@ -3972,6 +4038,15 @@ export const functions = [
                             { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
                         ],
                     },
+                ],
+            },
+            {
+                name: "oftReceipt",
+                type: "tuple",
+                internalType: "struct OFTReceipt",
+                components: [
+                    { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
+                    { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
                 ],
             },
             {
@@ -3984,56 +4059,34 @@ export const functions = [
                 ],
             },
         ],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "setMsgInspector",
+        inputs: [{ name: "_msgInspector", type: "address", internalType: "address" }],
+        outputs: [],
         stateMutability: "nonpayable",
     },
     {
         type: "function",
-        name: "taxi",
-        inputs: [
-            {
-                name: "_params",
-                type: "tuple",
-                internalType: "struct TaxiParams",
-                components: [
-                    { name: "sender", type: "address", internalType: "address" },
-                    { name: "dstEid", type: "uint32", internalType: "uint32" },
-                    { name: "receiver", type: "bytes32", internalType: "bytes32" },
-                    { name: "amountSD", type: "uint64", internalType: "uint64" },
-                    { name: "composeMsg", type: "bytes", internalType: "bytes" },
-                    { name: "extraOptions", type: "bytes", internalType: "bytes" },
-                ],
-            },
-            {
-                name: "_messagingFee",
-                type: "tuple",
-                internalType: "struct MessagingFee",
-                components: [
-                    { name: "nativeFee", type: "uint256", internalType: "uint256" },
-                    { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
-                ],
-            },
-            { name: "_refundAddress", type: "address", internalType: "address" },
-        ],
-        outputs: [
-            {
-                name: "receipt",
-                type: "tuple",
-                internalType: "struct MessagingReceipt",
-                components: [
-                    { name: "guid", type: "bytes32", internalType: "bytes32" },
-                    { name: "nonce", type: "uint64", internalType: "uint64" },
-                    {
-                        name: "fee",
-                        type: "tuple",
-                        internalType: "struct MessagingFee",
-                        components: [
-                            { name: "nativeFee", type: "uint256", internalType: "uint256" },
-                            { name: "lzTokenFee", type: "uint256", internalType: "uint256" },
-                        ],
-                    },
-                ],
-            },
-        ],
-        stateMutability: "payable",
+        name: "sharedDecimals",
+        inputs: [],
+        outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "stargateType",
+        inputs: [],
+        outputs: [{ name: "", type: "uint8", internalType: "enum StargateType" }],
+        stateMutability: "pure",
+    },
+    {
+        type: "function",
+        name: "token",
+        inputs: [],
+        outputs: [{ name: "", type: "address", internalType: "address" }],
+        stateMutability: "view",
     },
 ] as const;

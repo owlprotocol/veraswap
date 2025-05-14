@@ -440,4 +440,13 @@ export const errors = [
     { type: "error", name: "ZeroUnits", inputs: [] },
     { type: "error", name: "AddressEmptyCode", inputs: [{ name: "target", type: "address", internalType: "address" }] },
     { type: "error", name: "CallSelectorApprove", inputs: [] },
+    { type: "error", name: "InvalidLocalDecimals", inputs: [] },
+    {
+        type: "error",
+        name: "SlippageExceeded",
+        inputs: [
+            { name: "amountToCreditLD", type: "uint256", internalType: "uint256" },
+            { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+        ],
+    },
 ] as const;
