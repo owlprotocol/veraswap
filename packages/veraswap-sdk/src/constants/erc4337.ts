@@ -45,10 +45,10 @@ const mainnetOwner = "0xAAb6f44B46f19d061582727B66C9a0c84C97a2F6";
 export const ERC4337_CONTRACTS: Record<
     number,
     | {
-        simpleAccountFactory: Address;
-        openPaymaster: Address;
-        balanceDeltaPaymaster: Address;
-    }
+          simpleAccountFactory: Address;
+          openPaymaster: Address;
+          balanceDeltaPaymaster: Address;
+      }
     | undefined
 > = {
     [opChainL1.id]: {
