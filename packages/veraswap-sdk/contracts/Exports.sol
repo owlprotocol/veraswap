@@ -9,3 +9,5 @@ import {IL2ToL2CrossDomainMessenger} from "@interop-lib/interfaces/IL2ToL2CrossD
 // Kernel
 import {Kernel} from "@zerodev/kernel/Kernel.sol";
 import {KernelFactory} from "@zerodev/kernel/factory/KernelFactory.sol";
+// Stargate
+import {IStargate} from "@stargatefinance/stg-evm-v2/src/interfaces/IStargate.sol";

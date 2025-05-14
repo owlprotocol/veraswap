@@ -10,6 +10,7 @@
 @interop-lib/=lib/interop-lib/src/
 @rhinestone/core-modules/=lib/rhinestone-core-modules/src/
 @zerodev/kernel/=lib/kernel/src/
+@stargatefinance/stg-evm-v2/=node_modules/@stargatefinance/stg-evm-v2/
 
 forge-std/=lib/forge-std/src/
 solmate/=lib/permit2/lib/solmate/
@@ -45,3 +46,5 @@ lib/rhinestone-core-modules/:solarray/=lib/rhinestone-core-modules/node_modules/
 lib/rhinestone-core-modules/:@prb/math/=lib/rhinestone-core-modules/node_modules/@prb/math/src/
 lib/rhinestone-core-modules/:solmate/=lib/rhinestone-core-modules/node_modules/solmate/src/
 lib/rhinestone-core-modules/:ExcessivelySafeCall/=lib/rhinestone-core-modules/node_modules/excessively-safe-call/src/
+
+node_modules/@stargatefinance/stg-evm-v2:@layerzerolabs/=node_modules/@layerzerolabs/

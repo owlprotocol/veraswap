@@ -300,4 +300,13 @@ export const errors = [
     },
     { type: "error", name: "LinkedList_InvalidPage", inputs: [] },
     { type: "error", name: "UnauthorizedAccess", inputs: [] },
+    { type: "error", name: "InvalidLocalDecimals", inputs: [] },
+    {
+        type: "error",
+        name: "SlippageExceeded",
+        inputs: [
+            { name: "amountLD", type: "uint256", internalType: "uint256" },
+            { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+        ],
+    },
 ] as const;
