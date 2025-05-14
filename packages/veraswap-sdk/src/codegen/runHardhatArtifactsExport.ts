@@ -51,4 +51,10 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     // Kernel (custom)
     "out/OwnableSignatureExecutor.sol/*.json",
     "out/Execute.sol/*.json",
+    // Account Abstraction
+    "out/SimpleAccountFactory.sol/*.json",
+    "out/IEntryPoint.sol/*.json",
+    "out/EntryPoint.sol/*.json",
+    "out/OpenPaymaster.sol/*.json",
+    "out/BalanceDeltaPaymaster.sol/*.json",
 ]);

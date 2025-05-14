@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.26;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Permit2CreationCode} from "./Permit2CreationCode.sol";
 
 library Permit2Utils {
+    Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+
     //Default deployer
     address internal constant DETERMINISTIC_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     //Permit2 salt
@@ -21,7 +25,10 @@ library Permit2Utils {
         );
         exists = addr.code.length > 0;
         if (!exists) {
-            Create2.deploy(0, SALT, Permit2CreationCode.PERMIT2_CREATION_CODE);
+            address deployed = Create2.deploy(0, SALT, Permit2CreationCode.PERMIT2_CREATION_CODE);
+            vm.assertEq(deployed, permit2);
+        } else {
+            vm.assertEq(addr, permit2);
         }
     }
 }

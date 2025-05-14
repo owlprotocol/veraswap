@@ -22,7 +22,6 @@ import {HypERC20Utils} from "./utils/HypERC20Utils.sol";
 import {HypERC20CollateralUtils} from "./utils/HypERC20CollateralUtils.sol";
 import {HyperlaneMockMailboxUtils} from "./utils/HyperlaneMockMailboxUtils.sol";
 import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.sol";
-import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
@@ -42,6 +41,8 @@ contract DeployLocal is DeployCoreContracts {
     // Tokens with bytes32 identifiers
     mapping(uint256 chainId => mapping(bytes32 id => address)) public tokens;
 
+    address constant entryPoint = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+
     function run() external virtual override {
         string[] memory chains = new string[](3);
         chains[0] = "localhost";
@@ -55,12 +56,9 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.startBroadcast();
 
+            // Deploy core contracts
             console2.log("Deploying contracts on chain: ", chains[i]);
             CoreContracts memory contracts = deployCoreContracts();
-
-            //TODO: Move this to deployCoreContracts & only deploy if chain has the interop predeploys
-            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
-            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
 
             // Deploy mock paymaster for local testing only
             (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();

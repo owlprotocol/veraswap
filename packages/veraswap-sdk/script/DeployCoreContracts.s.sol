@@ -23,6 +23,12 @@ import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
 import {HyperlaneTestRecipientUtils} from "./utils/HyperlaneTestRecipientUtils.sol";
 // Orbiter
 import {OrbiterBridgeSweepUtils} from "./utils/OrbiterBridgeSweepUtils.sol";
+// ERC4337
+import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
+import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
+import {BalanceDeltaPaymasterUtils} from "./utils/BalanceDeltaPaymasterUtils.sol";
+// Interop
+import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
 // Kernel Account
 import {ECDSAValidatorUtils} from "./utils/ECDSAValidatorUtils.sol";
 import {KernelUtils} from "./utils/KernelUtils.sol";
@@ -188,8 +194,28 @@ contract DeployCoreContracts is DeployParameters {
             }
         }
 
+        // ERC4337 Contracts
+        address entryPoint = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
+        if (entryPoint.code.length > 0) {
+            // Contracts require EntryPoint to be already deployed
+            SimpleAccountFactoryUtils.getOrCreate2(entryPoint);
+            OpenPaymasterUtils.getOrCreate2(entryPoint, msg.sender);
+            BalanceDeltaPaymasterUtils.getOrCreate2(entryPoint, msg.sender);
+        } else {
+            console2.log(
+                "entryPoint.code == bytes(0), skipping SimpleAccountFactory and BalanceDeltaPaymaster deployment"
+            );
+        }
+
+        // Superchain Interop Contracts
+        address tokenBridge = 0x4200000000000000000000000000000000000028;
+        if (tokenBridge.code.length > 0) {
+            // Contracts only work on Superchain Interop chains
+            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+        }
+
         // KERNEL CONTRACTS
-        (address kernel, ) = KernelUtils.getOrCreate2(0x0000000071727De22E5E9d8BAf0edAc6f37da032);
+        (address kernel, ) = KernelUtils.getOrCreate2(entryPoint);
         (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
         (address ecdsaValidator, ) = ECDSAValidatorUtils.getOrCreate2();
 
