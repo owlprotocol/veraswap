@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["node", "react", "react-dom", "vite-plugin-svgr/client"],
+    //TODO: set these to false eventually
+    "noUnusedLocals": false /* Enable error reporting when local variables aren't read. */,
+    "noUnusedParameters": false /* Raise an error when a function parameter isn't read. */,
+    "noImplicitAny": false,
+    /* Paths */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["@trpc/server/unstable-core-do-not-import"],
+  "include": ["src", "vite.config.ts"],
+  "extends": "@owlprotocol/tsconfig"
+}

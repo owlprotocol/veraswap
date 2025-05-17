@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
+        --card: 0 0% 92%;
+        --card-foreground: 240 10% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 3.9%;
+        --primary: 240 5.9% 10%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 92%;
+        --secondary-foreground: 240 5.9% 10%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
+        --warning: 38 92% 50%;
+        --warning-foreground: 48 96% 89%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        /* increased contrast for border and input this slightly from defaults */
+        --border: 240 5.9% 75%;
+        --input: 240 5.9% 80%;
+        --ring: 240 5.9% 10%;
+        --radius: 0.5rem;
+        --gradient-from: 270 100% 97%;
+        --gradient-via: 265 70% 85%;
+        --gradient-to: 260 50% 92%;
+        --header-bg: 270 100% 90% / 0.08;
+        --header-border: 270 80% 40% / 0.12;
+        --logo-from: 0 0% 9%;
+        --logo-to: 0 0% 9%;
+    }
+
+    .dark {
+        --background: 0 0% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 7%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 0 0% 9%;
+        --secondary: 0 0% 14.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 14.9%;
+        --muted-foreground: 0 0% 63.9%;
+        --header: 0 0% 9%;
+        --accent: 0 0% 14.9%;
+        --accent-foreground: 0 0% 98%;
+        --warning: 48 96% 89%;
+        --warning-foreground: 38 92% 20%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 14.9%;
+        --input: 0 0% 14.9%;
+        --ring: 0 0% 83.9%;
+        --gradient-from: 0 0% 7%;
+        --gradient-via: 0 0% 14.9%;
+        --gradient-to: 0 0% 7%;
+        --header-bg: 0 0% 9% / 0.12;
+        --header-border: 0 0% 14.9% / 0.18;
+        --logo-from: 0 0% 98%;
+        --logo-to: 0 0% 98%;
+    }
+
+    :focus {
+        outline: none !important;
+    }
+
+    * {
+        @apply border-border;
+    }
+    body {
+        height: 100vh;
+        @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #2c2c2d;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #000000;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #2c2c2d;
+    }
+
+    /* For Firefox */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #000000 #2c2c2d;
+    }
+    /* .page-gradient {
+        background-image: linear-gradient(
+            to bottom right,
+            hsl(var(--gradient-from)),
+            hsl(var(--gradient-via)),
+            hsl(var(--gradient-to))
+        );
+    } */
+
+    .logo-gradient {
+        background-image: linear-gradient(to right, hsl(var(--logo-from)), hsl(var(--logo-to)));
+    }
+
+    .header-background {
+        background-color: hsla(var(--header-bg));
+        border-color: hsla(var(--header-border));
+    }
+}
+
+.ProgressRoot {
+    position: relative;
+    overflow: hidden;
+    background: #333;
+    border-radius: 99999px;
+    width: 800px;
+    height: 25px;
+
+    /* Fix overflow clipping in Safari */
+    /* https://gist.github.com/domske/b66047671c780a238b51c51ffde8d3a0 */
+    transform: translateZ(0);
+}
+
+.ProgressIndicator {
+    background-color: #ccc;
+    width: 100%;
+    height: 100%;
+    transition: transform 660ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Tables should be only for data and be consistent - TODO: change default table padding via tailwind */
+table td,
+table th {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+}
+
+table td:first-child,
+table th:first-child {
+    padding-left: 16px;
+}
+
+table td:last-child,
+table th:last-child {
+    padding-right: 16px;
+}
+
+.welcome-dialog-gradient {
+    background: linear-gradient(135deg, hsl(var(--gradient-from)), hsl(var(--gradient-via)), hsl(var(--gradient-to)));
+}
+
+.welcome-dialog-card {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+}
+
+.welcome-dialog-button {
+    background: linear-gradient(to right, hsl(var(--logo-from)), hsl(var(--logo-to)));
+    color: hsl(var(--primary-foreground));
+}
+
+.welcome-dialog-button:hover {
+    filter: brightness(110%);
+}
