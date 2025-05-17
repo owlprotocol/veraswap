@@ -1,0 +1,6 @@
+ignores: [
+    "@types/node",
+    "vite",
+    "autoprefixer",
+    "postcss"
+]

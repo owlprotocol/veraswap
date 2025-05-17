@@ -17,6 +17,9 @@ procs:
   frontend:
     cwd: packages/veraswap-app
     shell: pnpm dev
+  frontend-bloomfolio:
+    cwd: packages/bloomfolio-app
+    shell: pnpm dev
   sdk:
     cwd: packages/veraswap-sdk
     shell: pnpm build:watch
