@@ -51,7 +51,7 @@ export default function SimplifiedPortfolioPage() {
     };
 
     const handlePurchase = () => {
-        if (!isConnected || chainId !== 1) return;
+        if (!isConnected || chainId !== base.id) return;
 
         const requiredAmount = Number.parseFloat(amount);
         const userBalance = Number(balance?.value || 0) / 1e6;
@@ -355,8 +355,8 @@ export default function SimplifiedPortfolioPage() {
                                                     className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                                     size="sm"
                                                     onClick={
-                                                        chainId !== 1
-                                                            ? () => switchChain?.({ chainId: 1 })
+                                                        chainId !== base.id
+                                                            ? () => switchChain?.({ chainId: base.id })
                                                             : handlePurchase
                                                     }
                                                     disabled={
@@ -369,7 +369,7 @@ export default function SimplifiedPortfolioPage() {
                                                     <ShoppingCart className="mr-1 h-4 w-4" />
                                                     {!isConnected
                                                         ? "Connect Wallet"
-                                                        : chainId !== 1
+                                                        : chainId !== base.id
                                                           ? "Switch Network"
                                                           : !isAmountValid
                                                             ? "Enter Amount"
