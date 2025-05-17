@@ -54,4 +54,5 @@ temp.*
 *.local
 
 !packages/veraswap-app/src/lib
+!packages/bloomfolio-app/src/lib
 
