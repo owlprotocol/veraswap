@@ -1,4 +1,5 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
+import { base } from "viem/chains";
 
 export type TokenCategory = "native" | "stable" | "alt" | "commodity";
 
@@ -6,43 +7,46 @@ export interface Token {
     address: Address;
     symbol: string;
     name: string;
-    logoURI: string;
+    logoURI?: string;
     category: TokenCategory;
+    decimals?: number;
     chainId: number;
 }
 
 export const MAINNET_TOKENS = [
     {
-        address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        symbol: "USDC",
-        name: "USD Coin",
-        logoURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
         category: "stable",
-        chainId: 1,
+        address: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        name: "USD Coin",
+        symbol: "USDC",
+        decimals: 6,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+        chainId: base.id,
     },
     {
-        address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        address: zeroAddress,
         symbol: "ETH",
         name: "Ethereum",
-        logoURI: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+        logoURI: "https://token-icons.s3.amazonaws.com/eth.png",
         category: "native",
-        chainId: 1,
+        chainId: base.id,
     },
     {
-        address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        symbol: "WBTC",
-        name: "Wrapped Bitcoin",
-        logoURI: "https://cryptologos.cc/logos/wrapped-bitcoin-wbtc-logo.png",
         category: "commodity",
-        chainId: 1,
+        address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+        decimals: 8,
+        name: "Coinbase Wrapped BTC",
+        symbol: "cbBTC",
+        logoURI: "https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp",
+        chainId: base.id,
     },
     {
-        address: "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+        address: "0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196",
         symbol: "LINK",
         name: "Chainlink",
-        logoURI: "https://cryptologos.cc/logos/chainlink-link-logo.png",
+        logoURI: "https://coin-images.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
         category: "alt",
-        chainId: 1,
+        chainId: base.id,
     },
 ] as const satisfies Token[];
 
