@@ -1,7 +1,7 @@
 import { DollarSign, Globe, Bitcoin } from "lucide-react";
 import { Address } from "viem";
 import { base } from "viem/chains";
-import { MAINNET_TOKENS } from "./tokens.js";
+import { BASE_TOKENS } from "./tokens.js";
 
 export interface BucketAllocation {
     address: Address;
@@ -28,8 +28,8 @@ export const BUCKETS = [
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
-            { address: MAINNET_TOKENS[0].address, chainId: base.id, weight: 60n },
-            { address: MAINNET_TOKENS[1].address, chainId: base.id, weight: 40n },
+            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 60n },
+            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40n },
         ],
     },
     {
@@ -40,9 +40,9 @@ export const BUCKETS = [
         gradient: "from-yellow-400 to-orange-500",
         icon: Globe,
         allocations: [
-            { address: MAINNET_TOKENS[0].address, chainId: base.id, weight: 40n }, // USDC
-            { address: MAINNET_TOKENS[1].address, chainId: base.id, weight: 40n }, // ETH
-            { address: MAINNET_TOKENS[2].address, chainId: base.id, weight: 20n }, // cbBTC
+            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 40n }, // USDC
+            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40n }, // ETH
+            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 20n }, // cbBTC
         ],
     },
     {
@@ -53,9 +53,9 @@ export const BUCKETS = [
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
-            { address: MAINNET_TOKENS[1].address, chainId: base.id, weight: 30n }, // ETH
-            { address: MAINNET_TOKENS[2].address, chainId: base.id, weight: 30n }, // cbBTC
-            { address: MAINNET_TOKENS[3].address, chainId: base.id, weight: 40n }, // LINK
+            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 30n }, // ETH
+            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 30n }, // cbBTC
+            { address: BASE_TOKENS[3].address, chainId: base.id, weight: 40n }, // LINK
         ],
     },
 ] as const satisfies Bucket[];
