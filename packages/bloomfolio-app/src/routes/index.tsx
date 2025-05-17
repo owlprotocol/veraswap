@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator.js";
 import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
-import { MAINNET_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { BASE_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -82,7 +82,7 @@ export default function SimplifiedPortfolioPage() {
         allocation: { address: Address; chainId: number; weight: bigint },
         totalWeight: bigint,
     ) => {
-        const token = getTokenDetailsForAllocation(allocation, MAINNET_TOKENS);
+        const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
         if (!token) return null;
 
         const value =
@@ -108,7 +108,7 @@ export default function SimplifiedPortfolioPage() {
     const groupAllocationsByCategory = (allocations: { address: Address; chainId: number; weight: bigint }[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
-                const token = getTokenDetailsForAllocation(allocation, MAINNET_TOKENS);
+                const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
                 if (!token) return acc;
 
                 const category = token.category;
@@ -231,7 +231,7 @@ export default function SimplifiedPortfolioPage() {
                             </CardContent>
                             <CardFooter className="flex justify-center">
                                 <Button onClick={handleReset} className="w-full">
-                                    Make Another Investment
+                                    See Portfolio
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -282,7 +282,7 @@ export default function SimplifiedPortfolioPage() {
                                                         "Loading balance..."
                                                     ) : (
                                                         <>
-                                                            Balance: {userBalance.toFixed(2)} USDC
+                                                            Balance: {userBalance} USDC
                                                             {hasInsufficientBalance && (
                                                                 <div className="text-red-500 mt-1">
                                                                     Insufficient balance
