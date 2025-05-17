@@ -18,7 +18,7 @@ interface Swap {
  * @param swaps
  * @returns encoded trade plan
  */
-export function getBatchSwaps({ swaps, receiver }: { swaps: Swap[]; receiver: Address }): Hex {
+export function getBatchSwaps({ swaps, receiver }: { swaps: Swap[]; receiver?: Address }): Hex {
     const tradePlan = new V4Planner();
     const currencyInAmounts: Record<Address, bigint> = {};
 
