@@ -9,19 +9,22 @@ interface Swap {
     route: PoolKey[];
     amountIn: bigint;
     amountOutMinimum: bigint;
-    receiver: Address;
 }
 
 //TODO: Need to add approvals
+//TODO: Need to add fee for referrals
 /**
- * Encode a batch of swaps
+ * Encode a batch of swaps to a single receiver
  * @param swaps
  * @returns encoded trade plan
  */
-export function getBatchSwaps(swaps: Swap[]): Hex {
+export function getBatchSwaps({ swaps, receiver }: { swaps: Swap[]; receiver: Address }): Hex {
     const tradePlan = new V4Planner();
+    const currencyInAmounts: Record<Address, bigint> = {};
+
+    // Add swaps
     swaps.forEach((swap) => {
-        const { currencyIn, currencyOut, route, amountIn, amountOutMinimum, receiver } = swap;
+        const { currencyIn, route, amountIn, amountOutMinimum } = swap;
 
         if (route.length === 1) {
             const poolKey = route[0];
@@ -35,7 +38,21 @@ export function getBatchSwaps(swaps: Swap[]): Hex {
             tradePlan.addAction(Actions.SWAP_EXACT_IN, [{ currencyIn, path, amountIn, amountOutMinimum }]);
         }
 
+        // Increase input settlement
+        if (!currencyInAmounts[currencyIn]) {
+            currencyInAmounts[currencyIn] = 0n;
+        }
+        currencyInAmounts[currencyIn] += amountIn;
+    });
+
+    // Settle all inputs
+    Object.entries(currencyInAmounts).forEach(([currencyIn, amountIn]) => {
         tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, amountIn]);
+    });
+
+    // Take all outputs
+    const uniqueCurrencyOut = new Set(swaps.map((swap) => swap.currencyOut));
+    uniqueCurrencyOut.forEach((currencyOut) => {
         if (receiver) {
             tradePlan.addAction(Actions.TAKE, [currencyOut, receiver, 0]);
         } else {
