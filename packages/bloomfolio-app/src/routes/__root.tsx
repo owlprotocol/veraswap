@@ -17,7 +17,7 @@ function RootComponent() {
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b header-background">
                 <nav className="mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="hidden md:flex flex-1" />
-                    <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraSwap</h1>
+                    <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraBloom</h1>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
                         {/* TODO: add back later? */}
@@ -47,7 +47,7 @@ function RootComponent() {
                     <div className="mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm">
                         <AlertTriangle className="w-4 h-4" />
                         <span>
-                            Veraswap is currently in beta. Use at your own risk. By using this application, you accept
+                            VeraBloom is currently in beta. Use at your own risk. By using this application, you accept
                             all associated risks.
                         </span>
                     </div>
