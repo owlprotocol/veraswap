@@ -1,0 +1,51 @@
+import { QueryClient } from "@tanstack/react-query";
+import { Config } from "@wagmi/core";
+import { Address } from "viem";
+
+import { PoolKeyOptions } from "../types/PoolKey.js";
+import { getUniswapV4RouteExactIn } from "../uniswap/getUniswapV4Route.js";
+
+export interface GetBasketQuotesParams {
+    chainId: number;
+    currencyIn: Address;
+    currencyHops: Address[];
+    contracts: {
+        v4StateView: Address;
+        v4Quoter: Address;
+    };
+    poolKeyOptions?: PoolKeyOptions[];
+    exactAmount: bigint;
+    basketTokens: {
+        address: Address;
+        weight: number;
+    }[];
+}
+
+/**
+ * Get basket quotes for input token with amount
+ * @param queryClient
+ * @param wagmiConfig
+ * @param params
+ * @returns list of quotes
+ */
+export async function getBasketQuotes(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketQuotesParams) {
+    const { chainId, currencyIn, currencyHops, contracts, poolKeyOptions, exactAmount, basketTokens } = params;
+
+    const totalWeights = basketTokens.reduce((acc, curr) => acc + curr.weight, 0);
+
+    const quotes = await Promise.all(
+        basketTokens.map((token) => {
+            return getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
+                chainId,
+                currencyIn,
+                currencyOut: token.address,
+                currencyHops,
+                contracts,
+                poolKeyOptions,
+                exactAmount: (exactAmount * BigInt(token.weight)) / BigInt(totalWeights),
+            });
+        }),
+    );
+
+    return quotes;
+}
