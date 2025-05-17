@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Check, ShoppingCart, X, ArrowRight, ChevronDown, AlertCircle } from "lucide-react";
 import { useAccount, useBalance, useChainId, useSwitchChain } from "wagmi";
 import { Address } from "viem";
+import { base } from "viem/chains";
+import { USDC_BASE } from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -11,8 +13,6 @@ import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
 import { MAINNET_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
-
-const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -41,7 +41,7 @@ export default function SimplifiedPortfolioPage() {
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address,
-        token: USDC_ADDRESS,
+        token: USDC_BASE.address,
     });
     const { switchChain } = useSwitchChain();
 
@@ -136,7 +136,7 @@ export default function SimplifiedPortfolioPage() {
         totalWeight: bigint,
     ) => {
         const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0n);
-        const categoryPercentage = Number(categoryWeight) / Number(totalWeight);
+        const categoryPercentage = (Number(categoryWeight) / Number(totalWeight)) * 100;
 
         return (
             <Collapsible className="border rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +161,9 @@ export default function SimplifiedPortfolioPage() {
                                     <img src={token.logoURI} alt={token.symbol} className="w-4 h-4 rounded-full" />
                                     <span className="text-muted-foreground">{token.symbol}</span>
                                 </div>
-                                <span className="font-medium">{Number(allocation.weight) / Number(totalWeight)}%</span>
+                                <span className="font-medium">
+                                    {(Number(allocation.weight) / Number(totalWeight)) * 100}%
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -298,18 +300,16 @@ export default function SimplifiedPortfolioPage() {
                                                     </span>
                                                 </div>
                                             )}
-                                            {isConnected && chainId !== 1 && (
+                                            {isConnected && chainId !== base.id && (
                                                 <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
                                                         <AlertCircle className="h-4 w-4" />
-                                                        <span className="text-sm">
-                                                            Please switch to Ethereum mainnet
-                                                        </span>
+                                                        <span className="text-sm">Please switch to Base</span>
                                                     </div>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => switchChain?.({ chainId: 1 })}
+                                                        onClick={() => switchChain?.({ chainId: base.id })}
                                                         className="ml-2"
                                                     >
                                                         Switch Network
@@ -395,56 +395,63 @@ export default function SimplifiedPortfolioPage() {
                                 )}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {BUCKETS.map((bucket) => (
-                                    <Card
-                                        key={bucket.id}
-                                        className={`cursor-pointer transition-all hover:shadow-lg ${
-                                            selectedBucket === bucket.id
-                                                ? "ring-2 ring-primary border-primary"
-                                                : "hover:border-primary/50"
-                                        }`}
-                                        onClick={(e) => {
-                                            if (!(e.target as HTMLElement).closest(".collapsible")) {
-                                                handleSelectBucket(bucket.id);
-                                            }
-                                        }}
-                                    >
-                                        <div className={`bg-gradient-to-r ${bucket.gradient} h-2 rounded-t-lg`} />
-                                        <CardHeader className="pb-2">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <div
-                                                        className={`p-2 rounded-full bg-gradient-to-r ${bucket.gradient} text-white`}
-                                                    >
-                                                        <bucket.icon className="h-5 w-5" />
+                                {BUCKETS.map((bucket) => {
+                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0n);
+                                    return (
+                                        <Card
+                                            key={bucket.id}
+                                            className={`cursor-pointer transition-all hover:shadow-lg ${
+                                                selectedBucket === bucket.id
+                                                    ? "ring-2 ring-primary border-primary"
+                                                    : "hover:border-primary/50"
+                                            }`}
+                                            onClick={(e) => {
+                                                if (!(e.target as HTMLElement).closest(".collapsible")) {
+                                                    handleSelectBucket(bucket.id);
+                                                }
+                                            }}
+                                        >
+                                            <div className={`bg-gradient-to-r ${bucket.gradient} h-2 rounded-t-lg`} />
+                                            <CardHeader className="pb-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-2">
+                                                        <div
+                                                            className={`p-2 rounded-full bg-gradient-to-r ${bucket.gradient} text-white`}
+                                                        >
+                                                            <bucket.icon className="h-5 w-5" />
+                                                        </div>
+                                                        <CardTitle className="text-xl">{bucket.title}</CardTitle>
                                                     </div>
-                                                    <CardTitle className="text-xl">{bucket.title}</CardTitle>
+                                                    {selectedBucket === bucket.id && (
+                                                        <Badge className="bg-primary">Selected</Badge>
+                                                    )}
                                                 </div>
-                                                {selectedBucket === bucket.id && (
-                                                    <Badge className="bg-primary">Selected</Badge>
-                                                )}
-                                            </div>
-                                            <CardDescription className="mt-2">{bucket.description}</CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="mb-4">
-                                                <div className="bg-muted/50 p-3 rounded-lg">
-                                                    <div className="text-xs text-muted-foreground">Risk Level</div>
-                                                    <div className="font-medium">{bucket.riskLevel}</div>
+                                                <CardDescription className="mt-2">{bucket.description}</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="mb-4">
+                                                    <div className="bg-muted/50 p-3 rounded-lg">
+                                                        <div className="text-xs text-muted-foreground">Risk Level</div>
+                                                        <div className="font-medium">{bucket.riskLevel}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <Separator className="my-3" />
+                                                <Separator className="my-3" />
 
-                                            <div className="space-y-2">
-                                                {groupAllocationsByCategory(bucket.allocations).map(
-                                                    ([category, items]) =>
-                                                        renderCategorySection(category as TokenCategory, items),
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                                <div className="space-y-2">
+                                                    {groupAllocationsByCategory(bucket.allocations).map(
+                                                        ([category, items]) =>
+                                                            renderCategorySection(
+                                                                category as TokenCategory,
+                                                                items,
+                                                                totalWeight,
+                                                            ),
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
