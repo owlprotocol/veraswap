@@ -1,9 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
-import { PoolKey } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 
-import { PoolKeyOptions } from "../types/PoolKey.js";
+import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 import { getUniswapV4RouteExactIn } from "../uniswap/getUniswapV4Route.js";
 
 export interface GetBasketQuotesParams {

@@ -3,7 +3,7 @@ import { Address, Hex } from "viem";
 
 import { PoolKey, poolKeysToPathExactIn } from "../types/PoolKey.js";
 
-interface Swap {
+export interface BatchSwapItem {
     currencyIn: Address;
     currencyOut: Address;
     route: PoolKey[];
@@ -18,7 +18,7 @@ interface Swap {
  * @param swaps
  * @returns encoded trade plan
  */
-export function getBatchSwaps({ swaps, receiver }: { swaps: Swap[]; receiver?: Address }): Hex {
+export function getBatchSwaps({ swaps, receiver }: { swaps: BatchSwapItem[]; receiver?: Address }): Hex {
     const tradePlan = new V4Planner();
     const currencyInAmounts: Record<Address, bigint> = {};
 
