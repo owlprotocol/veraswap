@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+import { PoolKey } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { Address } from "viem";
 
@@ -21,6 +22,15 @@ export interface GetBasketQuotesParams {
     }[];
 }
 
+export type GetBasketQuotesReturnType = {
+    currencyIn: Address;
+    currencyOut: Address;
+    route: PoolKey[];
+    amountIn: bigint;
+    amountOut: bigint;
+    gasEstimate: bigint;
+}[];
+
 /**
  * Get basket quotes for input token with amount
  * @param queryClient
@@ -28,24 +38,38 @@ export interface GetBasketQuotesParams {
  * @param params
  * @returns list of quotes
  */
-export async function getBasketQuotes(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketQuotesParams) {
+export async function getBasketQuotes(
+    queryClient: QueryClient,
+    wagmiConfig: Config,
+    params: GetBasketQuotesParams,
+): Promise<GetBasketQuotesReturnType> {
     const { chainId, currencyIn, currencyHops, contracts, poolKeyOptions, exactAmount, basketTokens } = params;
 
     const totalWeights = basketTokens.reduce((acc, curr) => acc + curr.weight, 0);
 
     const quotes = await Promise.all(
-        basketTokens.map((token) => {
-            return getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
+        basketTokens.map(async (token) => {
+            const exactAmountIn = (exactAmount * BigInt(token.weight)) / BigInt(totalWeights);
+            const quote = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
                 chainId,
                 currencyIn,
                 currencyOut: token.address,
                 currencyHops,
                 contracts,
                 poolKeyOptions,
-                exactAmount: (exactAmount * BigInt(token.weight)) / BigInt(totalWeights),
+                exactAmount: exactAmountIn,
             });
+
+            if (!quote) return null;
+
+            return {
+                currencyIn: currencyIn,
+                currencyOut: token.address,
+                amountIn: exactAmountIn,
+                ...quote,
+            };
         }),
     );
 
-    return quotes;
+    return quotes.filter((quote) => !!quote);
 }
