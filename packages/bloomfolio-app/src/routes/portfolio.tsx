@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Separator } from "@/components/ui/separator.js";
 
-export const Route = createFileRoute("/portofolio")({
+export const Route = createFileRoute("/portfolio")({
     component: PortfolioPage,
 });
 
