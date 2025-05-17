@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
-import { BUCKETS } from "@/constants/buckets.js";
-import { MAINNET_TOKENS, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
+import { MAINNET_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
@@ -72,18 +72,22 @@ export default function SimplifiedPortfolioPage() {
     };
 
     const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
+    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0n);
     const userBalance = Number(balance?.value || 0) / 1e6;
     const requiredAmount = Number(amount);
     const hasInsufficientBalance = isConnected && !isBalanceLoading && userBalance < requiredAmount;
     const isAmountValid = requiredAmount > 0;
 
-    const renderAllocationDetails = (allocation: { address: Address; chainId: number; weight: bigint }) => {
+    const renderAllocationDetails = (
+        allocation: { address: Address; chainId: number; weight: bigint },
+        totalWeight: bigint,
+    ) => {
         const token = getTokenDetailsForAllocation(allocation, MAINNET_TOKENS);
         if (!token) return null;
 
         const value =
             !isNaN(Number(amount)) && Number(amount) > 0
-                ? (Number(amount) * Number(allocation.weight)).toFixed(2)
+                ? ((Number(amount) * Number(allocation.weight)) / Number(totalWeight)).toFixed(2)
                 : null;
 
         return (
@@ -111,12 +115,12 @@ export default function SimplifiedPortfolioPage() {
                 if (!acc[category]) {
                     acc[category] = [];
                 }
-                acc[category].push({ allocation, token: token.address });
+                acc[category].push({ allocation, token });
                 return acc;
             },
             {} as Record<
                 TokenCategory,
-                { allocation: { address: Address; chainId: number; weight: bigint }; token: Address }[]
+                { allocation: { address: Address; chainId: number; weight: bigint }; token: Token }[]
             >,
         );
 
@@ -126,8 +130,13 @@ export default function SimplifiedPortfolioPage() {
         });
     };
 
-    const renderCategorySection = (category: TokenCategory, items: Array<{ allocation: any; token: any }>) => {
-        const totalPercentage = items.reduce((sum, { allocation }) => sum + allocation.percentage, 0);
+    const renderCategorySection = (
+        category: TokenCategory,
+        items: { allocation: BucketAllocation; token: Token }[],
+        totalWeight: bigint,
+    ) => {
+        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0n);
+        const categoryPercentage = Number(categoryWeight) / Number(totalWeight);
 
         return (
             <Collapsible className="border rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -139,7 +148,7 @@ export default function SimplifiedPortfolioPage() {
                         <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                         <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                         <Badge variant="secondary" className="ml-2">
-                            {totalPercentage}%
+                            {categoryPercentage}%
                         </Badge>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -152,7 +161,7 @@ export default function SimplifiedPortfolioPage() {
                                     <img src={token.logoURI} alt={token.symbol} className="w-4 h-4 rounded-full" />
                                     <span className="text-muted-foreground">{token.symbol}</span>
                                 </div>
-                                <span className="font-medium">{allocation.percentage}%</span>
+                                <span className="font-medium">{Number(allocation.weight) / Number(totalWeight)}%</span>
                             </div>
                         ))}
                     </div>
@@ -209,9 +218,13 @@ export default function SimplifiedPortfolioPage() {
 
                                 <div>
                                     <div className="text-sm font-medium mb-2">Assets Purchased</div>
-                                    <div className="space-y-2">
-                                        {selectedBucketData?.allocations.map(renderAllocationDetails)}
-                                    </div>
+                                    {selectedBucketData && (
+                                        <div className="space-y-2">
+                                            {selectedBucketData.allocations.map((all: BucketAllocation) =>
+                                                renderAllocationDetails(all, selectedBucketTotalWeight!),
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-center">
@@ -309,9 +322,13 @@ export default function SimplifiedPortfolioPage() {
                                     <div className="lg:col-span-3">
                                         <div className="space-y-3">
                                             <h3 className="font-medium">Order Summary</h3>
-                                            <div className="space-y-1 text-sm">
-                                                {selectedBucketData.allocations.map(renderAllocationDetails)}
-                                            </div>
+                                            {selectedBucketData && (
+                                                <div className="space-y-1 text-sm">
+                                                    {selectedBucketData.allocations.map((all: BucketAllocation) =>
+                                                        renderAllocationDetails(all, selectedBucketTotalWeight!),
+                                                    )}
+                                                </div>
+                                            )}
 
                                             <Separator />
 

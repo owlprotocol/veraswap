@@ -2,6 +2,12 @@ import { DollarSign, Globe, Bitcoin } from "lucide-react";
 import { Address } from "viem";
 import { MAINNET_TOKENS } from "./tokens.js";
 
+export interface BucketAllocation {
+    address: Address;
+    chainId: number;
+    weight: bigint;
+}
+
 export interface Bucket {
     id: string;
     title: string;
@@ -9,7 +15,7 @@ export interface Bucket {
     riskLevel: "Low" | "Medium" | "High";
     gradient: string;
     icon: any;
-    allocations: { address: Address; chainId: number; weight: bigint }[];
+    allocations: BucketAllocation[];
 }
 
 export const BUCKETS = [
