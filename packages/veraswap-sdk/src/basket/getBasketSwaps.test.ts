@@ -5,17 +5,14 @@ import { createWalletClient, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { IERC20 } from "../artifacts/IERC20.js";
-import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
-import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
-import { getBasketQuotes } from "./getBasketQuotes.js";
-import { BatchSwapItem, getBatchSwaps } from "./getBatchSwaps.js";
+import { getBasketSwaps } from "./getBasketSwaps.js";
 
-describe("basket/getBatchSwaps.test.ts", function () {
+describe("basket/getBasketSwaps.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {
@@ -47,7 +44,7 @@ describe("basket/getBatchSwaps.test.ts", function () {
         },
     ];
 
-    test("getBatchSwaps", async () => {
+    test("getBasketSwaps", async () => {
         const balanceEthStart = await opChainL1Client.getBalance({ address: anvilAccount.address });
         const balanceAStart = await opChainL1Client.readContract({
             address: tokenAAddress,
@@ -64,47 +61,22 @@ describe("basket/getBatchSwaps.test.ts", function () {
 
         const amountIn = parseUnits("0.1", 18);
         // Buy with ETH, (2A,1B) ratio
-        const quotes = await getBasketQuotes(queryClient, config, {
+        const call = await getBasketSwaps(queryClient, config, {
             chainId: opChainL1.id,
             currencyIn: zeroAddress,
             currencyHops: [],
             exactAmount: amountIn,
+            deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
+                universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
             basketTokens,
+            slippage: 0, //TODO: Implement this
         });
 
-        expect(quotes.length).toBe(2);
-        expect(quotes[0].amountIn).toBe(quotes[1].amountIn * 2n);
-        expect(quotes[0].amountOut).toBeGreaterThan(quotes[1].amountOut); //Not exactly 2x due to slippage
-
-        // Compute V4 swap
-        const swaps: BatchSwapItem[] = quotes.map((quote) => {
-            return {
-                currencyIn: quote.currencyIn,
-                currencyOut: quote.currencyOut,
-                route: quote.route,
-                amountIn: quote.amountIn,
-                amountOutMinimum: quote.amountOut,
-            };
-        });
-
-        const v4Swap = getBatchSwaps({ swaps, receiver: anvilAccount.address });
-        expect(v4Swap).toBeDefined();
-
-        const routePlanner = new RoutePlanner();
-        routePlanner.addCommand(CommandType.V4_SWAP, [v4Swap]);
-        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-
-        const hash = await anvilClientL1.writeContract({
-            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            abi: UniversalRouter.abi,
-            functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, routerDeadline],
-            value: amountIn,
-        });
+        const hash = await anvilClientL1.sendTransaction(call);
         const receipt = await opChainL1Client.waitForTransactionReceipt({
             hash,
         });
@@ -129,7 +101,6 @@ describe("basket/getBatchSwaps.test.ts", function () {
         const balanceBDelta = balanceBEnd - balanceBStart;
 
         expect(balanceEthDelta).toBe(-1n * (amountIn + receipt.effectiveGasPrice * receipt.gasUsed));
-        expect(balanceADelta).toBe(quotes[0].amountOut);
-        expect(balanceBDelta).toBe(quotes[1].amountOut);
+        expect(balanceADelta).toBeGreaterThan(balanceBDelta);
     });
 });

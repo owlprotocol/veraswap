@@ -8,13 +8,13 @@ import { getUniswapV4RouteExactIn } from "../uniswap/getUniswapV4Route.js";
 export interface GetBasketQuotesParams {
     chainId: number;
     currencyIn: Address;
+    exactAmount: bigint;
     currencyHops: Address[];
     contracts: {
         v4StateView: Address;
         v4Quoter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
-    exactAmount: bigint;
     basketTokens: {
         address: Address;
         weight: bigint;
