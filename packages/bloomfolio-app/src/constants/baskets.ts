@@ -3,23 +3,23 @@ import { Address } from "viem";
 import { bsc } from "viem/chains";
 import { BSC_TOKENS } from "./tokens.js";
 
-export interface BucketAllocation {
+export interface BasketAllocation {
     address: Address;
     chainId: number;
     weight: number;
 }
 
-export interface Bucket {
+export interface Basket {
     id: string;
     title: string;
     description: string;
     riskLevel: "Low" | "Medium" | "High";
     gradient: string;
     icon: any;
-    allocations: BucketAllocation[];
+    allocations: BasketAllocation[];
 }
 
-export const BUCKETS = [
+export const BASKETS = [
     {
         id: "conservative",
         title: "Conservative",
@@ -103,4 +103,4 @@ export const BUCKETS = [
             { address: BSC_TOKENS[9].address, chainId: bsc.id, weight: 20 }, // CAKE
         ],
     },
-] as const satisfies Bucket[];
+] as const satisfies Basket[];

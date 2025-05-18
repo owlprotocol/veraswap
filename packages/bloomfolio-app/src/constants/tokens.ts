@@ -1,6 +1,6 @@
 import { Address, zeroAddress } from "viem";
 import { base, bsc } from "viem/chains";
-import { BucketAllocation } from "./buckets.js";
+import { BasketAllocation } from "./baskets.js";
 
 export type TokenCategory = "native" | "stable" | "alt" | "commodity";
 
@@ -144,7 +144,7 @@ export const BSC_TOKENS = [
     },
 ] as const satisfies Token[];
 
-export function getTokenDetailsForAllocation(allocation: BucketAllocation, tokens: Token[]) {
+export function getTokenDetailsForAllocation(allocation: BasketAllocation, tokens: Token[]) {
     return tokens.find(
         (t) => t.address.toLowerCase() === allocation.address.toLowerCase() && t.chainId === allocation.chainId,
     );

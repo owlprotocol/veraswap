@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge.js";
 import { Separator } from "@/components/ui/separator.js";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.js";
-import { BUCKETS } from "@/constants/buckets.js";
+import { BASKETS } from "@/constants/baskets.js";
 import { BSC_TOKENS, getTokenDetailsForAllocation, Token } from "@/constants/tokens.js";
 
 export const Route = createFileRoute("/portfolio")({
@@ -111,14 +111,14 @@ export default function PortfolioPage() {
     const currentPortfolio = useTokenBalances(BSC_TOKENS);
     const totalValue = usePortfolioValue(currentPortfolio);
     const [previewPortfolio, setPreviewPortfolio] = useState<Assets[] | null>(null);
-    const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+    const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
 
-    const updatePreview = (bucketId: string) => {
-        setSelectedBucket(bucketId);
-        const bucket = BUCKETS.find((b) => b.id === bucketId);
-        if (!bucket) return;
+    const updatePreview = (basketId: string) => {
+        setSelectedBasket(basketId);
+        const basket = BASKETS.find((b) => b.id === basketId);
+        if (!basket) return;
 
-        const preview = bucket.allocations
+        const preview = basket.allocations
             .map((allocation) => {
                 const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
                 if (!token) return null;
@@ -143,12 +143,12 @@ export default function PortfolioPage() {
     };
 
     const handleRebalance = () => {
-        if (!selectedBucket || !previewPortfolio) return;
+        if (!selectedBasket || !previewPortfolio) return;
         setPreviewPortfolio(null);
-        setSelectedBucket(null);
+        setSelectedBasket(null);
     };
 
-    const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
+    const selectedBasketData = selectedBasket ? BASKETS.find((b) => b.id === selectedBasket) : null;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
@@ -313,53 +313,53 @@ export default function PortfolioPage() {
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold">Suggested Strategies</h2>
-                                {selectedBucket && (
+                                {selectedBasket && (
                                     <Badge variant="outline" className="px-3 py-1">
-                                        {selectedBucketData?.title} Selected
+                                        {selectedBasketData?.title} Selected
                                     </Badge>
                                 )}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {BUCKETS.map((bucket) => (
+                                {BASKETS.map((basket) => (
                                     <Card
-                                        key={bucket.id}
+                                        key={basket.id}
                                         className={`cursor-pointer transition-all hover:shadow-lg ${
-                                            selectedBucket === bucket.id
+                                            selectedBasket === basket.id
                                                 ? "ring-2 ring-primary border-primary"
                                                 : "hover:border-primary/50"
                                         }`}
-                                        onClick={() => updatePreview(bucket.id)}
+                                        onClick={() => updatePreview(basket.id)}
                                     >
-                                        <div className={`bg-gradient-to-r ${bucket.gradient} h-2 rounded-t-lg`} />
+                                        <div className={`bg-gradient-to-r ${basket.gradient} h-2 rounded-t-lg`} />
                                         <CardHeader className="pb-2">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-center space-x-2">
                                                     <div
-                                                        className={`p-2 rounded-full bg-gradient-to-r ${bucket.gradient} text-white`}
+                                                        className={`p-2 rounded-full bg-gradient-to-r ${basket.gradient} text-white`}
                                                     >
-                                                        <bucket.icon className="h-5 w-5" />
+                                                        <basket.icon className="h-5 w-5" />
                                                     </div>
-                                                    <CardTitle className="text-xl">{bucket.title}</CardTitle>
+                                                    <CardTitle className="text-xl">{basket.title}</CardTitle>
                                                 </div>
-                                                {selectedBucket === bucket.id && (
+                                                {selectedBasket === basket.id && (
                                                     <Badge className="bg-primary">Selected</Badge>
                                                 )}
                                             </div>
-                                            <CardDescription className="mt-2">{bucket.description}</CardDescription>
+                                            <CardDescription className="mt-2">{basket.description}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="mb-4">
                                                 <div className="bg-muted/50 p-3 rounded-lg">
                                                     <div className="text-xs text-muted-foreground">Risk Level</div>
-                                                    <div className="font-medium">{bucket.riskLevel}</div>
+                                                    <div className="font-medium">{basket.riskLevel}</div>
                                                 </div>
                                             </div>
 
                                             <Separator className="my-3" />
 
                                             <div className="space-y-2">
-                                                {bucket.allocations.map((allocation) => {
+                                                {basket.allocations.map((allocation) => {
                                                     const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
                                                     if (!token) return null;
                                                     return (
@@ -444,23 +444,23 @@ export default function PortfolioPage() {
                                 </div>
                             </div>
                             <CardContent className="p-6">
-                                {selectedBucket ? (
+                                {selectedBasket ? (
                                     <div className="space-y-4">
                                         <div className="bg-muted/50 p-4 rounded-lg">
                                             <div className="flex items-center space-x-2">
                                                 <div
-                                                    className={`p-2 rounded-full bg-gradient-to-r ${selectedBucketData?.gradient} text-white`}
+                                                    className={`p-2 rounded-full bg-gradient-to-r ${selectedBasketData?.gradient} text-white`}
                                                 >
-                                                    {selectedBucketData?.icon && (
-                                                        <selectedBucketData.icon className="h-4 w-4" />
+                                                    {selectedBasketData?.icon && (
+                                                        <selectedBasketData.icon className="h-4 w-4" />
                                                     )}
                                                 </div>
                                                 <div>
                                                     <div className="font-medium">
-                                                        {selectedBucketData?.title} Strategy
+                                                        {selectedBasketData?.title} Strategy
                                                     </div>
                                                     <div className="text-xs text-muted-foreground">
-                                                        {selectedBucketData?.description}
+                                                        {selectedBasketData?.description}
                                                     </div>
                                                 </div>
                                             </div>
@@ -484,7 +484,7 @@ export default function PortfolioPage() {
                                                 variant="outline"
                                                 className="w-full mt-2"
                                                 onClick={() => {
-                                                    setSelectedBucket(null);
+                                                    setSelectedBasket(null);
                                                     setPreviewPortfolio(null);
                                                 }}
                                             >

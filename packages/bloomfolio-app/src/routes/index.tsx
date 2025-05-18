@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
-import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
+import { BasketAllocation, BASKETS } from "@/constants/baskets.js";
 import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { config } from "@/config.js";
 import { queryClient } from "@/App.js";
@@ -42,7 +42,7 @@ const CATEGORY_ICONS: Record<TokenCategory, string> = {
 };
 
 export default function SimplifiedPortfolioPage() {
-    const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+    const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
     const [amount, setAmount] = useState<string>("");
     const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -54,8 +54,8 @@ export default function SimplifiedPortfolioPage() {
     });
     const { switchChain } = useSwitchChain();
 
-    const handleSelectBucket = (bucketId: string) => {
-        setSelectedBucket(bucketId);
+    const handleSelectBasket = (basketId: string) => {
+        setSelectedBasket(basketId);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
@@ -100,7 +100,7 @@ export default function SimplifiedPortfolioPage() {
         //
         // const permit2Signature = await getPermit2PermitSignature(queryClient, {});
         //
-        const bucket = BUCKETS.find((b) => b.id === selectedBucket)!;
+        const basket = BASKETS.find((b) => b.id === selectedBasket)!;
 
         const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
         const swapData = await getBasketSwaps(queryClient, config, {
@@ -111,7 +111,7 @@ export default function SimplifiedPortfolioPage() {
             exactAmount: amountParsed,
 
             currencyHops: [USDC_BASE.address],
-            basketTokens: bucket.allocations,
+            basketTokens: basket.allocations,
         });
         sendTransaction({ chainId: bsc.id, ...swapData });
     };
@@ -121,12 +121,12 @@ export default function SimplifiedPortfolioPage() {
         setAmount(value);
     };
 
-    const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
-    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0);
+    const selectedBasketData = selectedBasket ? BASKETS.find((b) => b.id === selectedBasket) : null;
+    const selectedBasketTotalWeight = selectedBasketData?.allocations.reduce((acc, all) => acc + all.weight, 0);
     const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
     const isAmountValid = amountParsed > 0;
 
-    const renderAllocationDetails = (allocation: BucketAllocation, totalWeight: number) => {
+    const renderAllocationDetails = (allocation: BasketAllocation, totalWeight: number) => {
         const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
         if (!token) return null;
 
@@ -147,7 +147,7 @@ export default function SimplifiedPortfolioPage() {
         );
     };
 
-    const groupAllocationsByCategory = (allocations: BucketAllocation[]) => {
+    const groupAllocationsByCategory = (allocations: BasketAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
                 const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
@@ -160,7 +160,7 @@ export default function SimplifiedPortfolioPage() {
                 acc[category].push({ allocation, token });
                 return acc;
             },
-            {} as Record<TokenCategory, { allocation: BucketAllocation; token: Token }[]>,
+            {} as Record<TokenCategory, { allocation: BasketAllocation; token: Token }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -171,7 +171,7 @@ export default function SimplifiedPortfolioPage() {
 
     const renderCategorySection = (
         category: TokenCategory,
-        items: { allocation: BucketAllocation; token: Token }[],
+        items: { allocation: BasketAllocation; token: Token }[],
         totalWeight: number,
     ) => {
         const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
@@ -232,7 +232,7 @@ export default function SimplifiedPortfolioPage() {
                                 </div>
                                 <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
                                 <CardDescription>
-                                    You've successfully invested {amount} ETH in the {selectedBucketData?.title}{" "}
+                                    You've successfully invested {amount} ETH in the {selectedBasketData?.title}{" "}
                                     strategy
                                 </CardDescription>
                             </CardHeader>
@@ -265,10 +265,10 @@ export default function SimplifiedPortfolioPage() {
 
                                 <div>
                                     <div className="text-sm font-medium mb-2">Assets Purchased</div>
-                                    {selectedBucketData && (
+                                    {selectedBasketData && (
                                         <div className="space-y-2">
-                                            {selectedBucketData.allocations.map((all: BucketAllocation) =>
-                                                renderAllocationDetails(all, selectedBucketTotalWeight!),
+                                            {selectedBasketData.allocations.map((all: BasketAllocation) =>
+                                                renderAllocationDetails(all, selectedBasketTotalWeight!),
                                             )}
                                         </div>
                                     )}
@@ -283,24 +283,24 @@ export default function SimplifiedPortfolioPage() {
                     </div>
                 ) : (
                     <div className="space-y-8">
-                        {selectedBucket && selectedBucketData && (
+                        {selectedBasket && selectedBasketData && (
                             <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300">
-                                <div className={`bg-gradient-to-r ${selectedBucketData.gradient} h-2`} />
+                                <div className={`bg-gradient-to-r ${selectedBasketData.gradient} h-2`} />
                                 <div className="p-6 grid grid-cols-1 lg:grid-cols-9 gap-6">
                                     <div className="lg:col-span-3">
                                         <div className="flex items-start space-x-3">
                                             <div
-                                                className={`p-2 rounded-full bg-gradient-to-r ${selectedBucketData.gradient} text-white`}
+                                                className={`p-2 rounded-full bg-gradient-to-r ${selectedBasketData.gradient} text-white`}
                                             >
-                                                <selectedBucketData.icon className="h-5 w-5" />
+                                                <selectedBasketData.icon className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-lg">{selectedBucketData.title}</h3>
+                                                <h3 className="font-bold text-lg">{selectedBasketData.title}</h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    {selectedBucketData.description}
+                                                    {selectedBasketData.description}
                                                 </p>
                                                 <Badge variant="outline" className="mt-2">
-                                                    {selectedBucketData.riskLevel} Risk
+                                                    {selectedBasketData.riskLevel} Risk
                                                 </Badge>
                                             </div>
                                         </div>
@@ -372,10 +372,10 @@ export default function SimplifiedPortfolioPage() {
                                     <div className="lg:col-span-3">
                                         <div className="space-y-3">
                                             <h3 className="font-medium">Order Summary</h3>
-                                            {selectedBucketData && (
+                                            {selectedBasketData && (
                                                 <div className="space-y-1 text-sm">
-                                                    {selectedBucketData.allocations.map((all: BucketAllocation) =>
-                                                        renderAllocationDetails(all, selectedBucketTotalWeight!),
+                                                    {selectedBasketData.allocations.map((all: BasketAllocation) =>
+                                                        renderAllocationDetails(all, selectedBasketTotalWeight!),
                                                     )}
                                                 </div>
                                             )}
@@ -396,7 +396,7 @@ export default function SimplifiedPortfolioPage() {
                                                     variant="outline"
                                                     size="sm"
                                                     className="flex-1"
-                                                    onClick={() => setSelectedBucket(null)}
+                                                    onClick={() => setSelectedBasket(null)}
                                                 >
                                                     <X className="mr-1 h-4 w-4" />
                                                     Cancel
@@ -447,61 +447,61 @@ export default function SimplifiedPortfolioPage() {
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-2xl font-bold">Choose an Investment Strategy</h2>
-                                {selectedBucket && (
+                                {selectedBasket && (
                                     <div className="flex items-center text-sm text-muted-foreground">
-                                        <span>Selected: {BUCKETS.find((b) => b.id === selectedBucket)?.title}</span>
+                                        <span>Selected: {BASKETS.find((b) => b.id === selectedBasket)?.title}</span>
                                         <ArrowRight className="ml-1 h-4 w-4" />
                                     </div>
                                 )}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {BUCKETS.map((bucket) => {
-                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0);
+                                {BASKETS.map((basket) => {
+                                    const totalWeight = basket.allocations.reduce((sum, all) => all.weight + sum, 0);
                                     return (
                                         <Card
-                                            key={bucket.id}
+                                            key={basket.id}
                                             className={`cursor-pointer transition-all hover:shadow-lg ${
-                                                selectedBucket === bucket.id
+                                                selectedBasket === basket.id
                                                     ? "ring-2 ring-primary border-primary"
                                                     : "hover:border-primary/50"
                                             }`}
                                             onClick={(e) => {
                                                 if (!(e.target as HTMLElement).closest(".collapsible")) {
-                                                    handleSelectBucket(bucket.id);
+                                                    handleSelectBasket(basket.id);
                                                 }
                                             }}
                                         >
-                                            <div className={`bg-gradient-to-r ${bucket.gradient} h-2 rounded-t-lg`} />
+                                            <div className={`bg-gradient-to-r ${basket.gradient} h-2 rounded-t-lg`} />
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
                                                         <div
-                                                            className={`p-2 rounded-full bg-gradient-to-r ${bucket.gradient} text-white`}
+                                                            className={`p-2 rounded-full bg-gradient-to-r ${basket.gradient} text-white`}
                                                         >
-                                                            <bucket.icon className="h-5 w-5" />
+                                                            <basket.icon className="h-5 w-5" />
                                                         </div>
-                                                        <CardTitle className="text-xl">{bucket.title}</CardTitle>
+                                                        <CardTitle className="text-xl">{basket.title}</CardTitle>
                                                     </div>
-                                                    {selectedBucket === bucket.id && (
+                                                    {selectedBasket === basket.id && (
                                                         <Badge className="bg-primary">Selected</Badge>
                                                     )}
                                                 </div>
-                                                <CardDescription className="mt-2">{bucket.description}</CardDescription>
+                                                <CardDescription className="mt-2">{basket.description}</CardDescription>
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="mb-4">
                                                     <div className="bg-muted/50 p-3 rounded-lg">
                                                         <div className="text-xs text-muted-foreground">Risk Level</div>
-                                                        <div className="font-medium">{bucket.riskLevel}</div>
+                                                        <div className="font-medium">{basket.riskLevel}</div>
                                                     </div>
                                                 </div>
 
                                                 <Separator className="my-3" />
 
                                                 <div className="space-y-2">
-                                                    {groupAllocationsByCategory(bucket.allocations).map(
+                                                    {groupAllocationsByCategory(basket.allocations).map(
                                                         ([category, items]) => (
-                                                            <div key={`${bucket.id}-${category}`}>
+                                                            <div key={`${basket.id}-${category}`}>
                                                                 {renderCategorySection(
                                                                     category as TokenCategory,
                                                                     items,
