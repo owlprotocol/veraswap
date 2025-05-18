@@ -7,6 +7,7 @@ import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
+import { V4MetaQuoter } from "../artifacts/V4MetaQuoter.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
@@ -61,6 +62,14 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+    const v4MetaQuoter = getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            abi: V4MetaQuoter.abi,
+            bytecode: V4MetaQuoter.bytecode,
+            args: [v4PoolManager],
+        }),
+        salt: zeroHash,
+    });
 
     // Universal Router
     const routerParams = {
@@ -88,6 +97,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         v4PositionManager,
         v4StateView,
         v4Quoter,
+        v4MetaQuoter,
         universalRouter,
     };
 }
@@ -95,16 +105,18 @@ export function getUniswapContracts(params?: { owner?: Address }) {
 /** Uniswap contracts for local deployment via CREATE2 & salt = bytes32(0) */
 export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
+//TODO: Add metaquoter address (compute using poolManager address)
 /** Uniswap contracts by chain */
 export const UNISWAP_CONTRACTS: Record<
     number,
     | {
-          v4PoolManager: `0x${string}`;
-          v4PositionManager: `0x${string}`;
-          v4StateView: `0x${string}`;
-          v4Quoter: `0x${string}`;
-          universalRouter: `0x${string}`;
-      }
+        v4PoolManager: `0x${string}`;
+        v4PositionManager: `0x${string}`;
+        v4StateView: `0x${string}`;
+        v4Quoter: `0x${string}`;
+        v4MetaQuoter?: `0x${string}`;
+        universalRouter: `0x${string}`;
+    }
     | undefined
 > = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,

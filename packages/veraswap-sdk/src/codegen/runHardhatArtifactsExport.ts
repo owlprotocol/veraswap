@@ -21,6 +21,9 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/V4Quoter.sol/*.json",
     "out/IStateView.sol/*.json",
     "out/StateView.sol/*.json",
+    // Uniswap (custom)
+    "out/IV4MetaQuoter.sol/*.json",
+    "out/V4MetaQuoter.sol/*.json",
     // Hyperlane
     "out/HypERC20.sol/*.json",
     "out/HypERC20Collateral.sol/*.json",
