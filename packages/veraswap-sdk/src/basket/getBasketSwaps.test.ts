@@ -36,11 +36,11 @@ describe("basket/getBasketSwaps.test.ts", function () {
     const basketTokens = [
         {
             address: tokenAAddress,
-            weight: 2n,
+            weight: 2,
         },
         {
             address: tokenBAddress,
-            weight: 1n,
+            weight: 1,
         },
     ];
 
