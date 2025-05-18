@@ -1,7 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ShoppingCart, X, ArrowRight, ChevronDown, AlertCircle } from "lucide-react";
-import { useAccount, useBalance, useChainId, useSwitchChain } from "wagmi";
+import { Check, ShoppingCart, X, ArrowRight, ChevronDown, AlertCircle, Loader2 } from "lucide-react";
+import {
+    useAccount,
+    useBalance,
+    useChainId,
+    useSwitchChain,
+    useWriteContract,
+    useWaitForTransactionReceipt,
+} from "wagmi";
 import { Address } from "viem";
 import { base } from "viem/chains";
 import { USDC_BASE } from "@owlprotocol/veraswap-sdk";
@@ -34,7 +41,7 @@ const CATEGORY_ICONS: Record<TokenCategory, string> = {
 
 export default function SimplifiedPortfolioPage() {
     const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
-    const [amount, setAmount] = useState<string>("10");
+    const [amount, setAmount] = useState<string>("");
     const [showConfirmation, setShowConfirmation] = useState(false);
 
     const { address, isConnected } = useAccount();
@@ -45,25 +52,32 @@ export default function SimplifiedPortfolioPage() {
     });
     const { switchChain } = useSwitchChain();
 
+    const { writeContract, data: hash, isPending: isTransactionPending } = useWriteContract();
+    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+        hash,
+    });
+
+    if (isSuccess && !showConfirmation) {
+        setShowConfirmation(true);
+    }
+
     const handleSelectBucket = (bucketId: string) => {
         setSelectedBucket(bucketId);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handlePurchase = () => {
-        if (!isConnected || chainId !== base.id) return;
+    const handlePurchase = async () => {
+        if (!isConnected || chainId !== base.id || !address) return;
 
         const requiredAmount = Number.parseFloat(amount);
         const userBalance = Number(balance?.value || 0) / 1e6;
         if (userBalance < requiredAmount) return;
-
-        setShowConfirmation(true);
-    };
-
-    const handleReset = () => {
-        setSelectedBucket(null);
-        setAmount("100");
-        setShowConfirmation(false);
+        // TODO: add logic here
+        try {
+            console.log("Transaction successful");
+        } catch (error) {
+            console.error("Transaction failed:", error);
+        }
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,9 +244,9 @@ export default function SimplifiedPortfolioPage() {
                                 </div>
                             </CardContent>
                             <CardFooter className="flex justify-center">
-                                <Button onClick={handleReset} className="w-full">
-                                    See Portfolio
-                                </Button>
+                                <Link to="/portfolio">
+                                    <Button className="w-full">See Portfolio</Button>
+                                </Link>
                             </CardFooter>
                         </Card>
                     </div>
@@ -292,6 +306,11 @@ export default function SimplifiedPortfolioPage() {
                                                     )}
                                                 </div>
                                             )}
+                                            {/* {isConnected && (
+                                                <div className="mt-2">
+                                                    <VeraFundButton />
+                                                </div>
+                                            )} */}
                                             {!isConnected && (
                                                 <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center space-x-2">
                                                     <AlertCircle className="h-4 w-4" />
@@ -363,19 +382,29 @@ export default function SimplifiedPortfolioPage() {
                                                         !isConnected ||
                                                         hasInsufficientBalance ||
                                                         isBalanceLoading ||
-                                                        !isAmountValid
+                                                        !isAmountValid ||
+                                                        isTransactionPending
                                                     }
                                                 >
-                                                    <ShoppingCart className="mr-1 h-4 w-4" />
-                                                    {!isConnected
-                                                        ? "Connect Wallet"
-                                                        : chainId !== base.id
-                                                          ? "Switch Network"
-                                                          : !isAmountValid
-                                                            ? "Enter Amount"
-                                                            : hasInsufficientBalance
-                                                              ? "Insufficient Balance"
-                                                              : "Buy Now"}
+                                                    {isTransactionPending || isConfirming ? (
+                                                        <>
+                                                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                                            {isConfirming ? "Confirming..." : "Processing..."}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ShoppingCart className="mr-1 h-4 w-4" />
+                                                            {!isConnected
+                                                                ? "Connect Wallet"
+                                                                : chainId !== base.id
+                                                                  ? "Switch Network"
+                                                                  : !isAmountValid
+                                                                    ? "Enter Amount"
+                                                                    : hasInsufficientBalance
+                                                                      ? "Insufficient Balance"
+                                                                      : "Buy Now"}
+                                                        </>
+                                                    )}
                                                 </Button>
                                             </div>
                                         </div>
@@ -457,6 +486,20 @@ export default function SimplifiedPortfolioPage() {
                     </div>
                 )}
             </div>
+            {(isTransactionPending || isConfirming) && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-card p-6 rounded-lg shadow-lg text-center space-y-4">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                        <div className="space-y-2">
+                            <h3 className="font-medium text-lg">Processing Transaction</h3>
+                            <p className="text-sm text-muted-foreground">
+                                {isConfirming ? "Confirming transaction..." : "Waiting for confirmation..."}
+                            </p>
+                            {hash && <p className="text-xs text-muted-foreground break-all">Transaction: {hash}</p>}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
