@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Menu, AlertTriangle } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
 import { VeraFundButton } from "@/components/VeraFundButton.js";
@@ -17,7 +17,7 @@ function RootComponent() {
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b header-background">
                 <nav className="mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="hidden md:flex flex-1" />
-                    <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraSwap</h1>
+                    <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">Bloomfolio</h1>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
                         {/* TODO: add back later? */}
@@ -43,18 +43,9 @@ function RootComponent() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-600 dark:text-yellow-400">
-                    <div className="mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>
-                            Veraswap is currently in beta. Use at your own risk. By using this application, you accept
-                            all associated risks.
-                        </span>
-                    </div>
-                </div>
             </header>
 
-            <main className="pt-28 pb-8">
+            <main className="pt-10 pb-8">
                 <Outlet />
             </main>
         </div>
