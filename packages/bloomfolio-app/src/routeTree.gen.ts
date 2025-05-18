@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as PortfolioImport } from './routes/portfolio'
 import { Route as IndexImport } from './routes/index'
+import { Route as BasketsBasketIdImport } from './routes/baskets/$basketId'
 
 // Create/Update Routes
 
@@ -25,6 +26,12 @@ const PortfolioRoute = PortfolioImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BasketsBasketIdRoute = BasketsBasketIdImport.update({
+  id: '/baskets/$basketId',
+  path: '/baskets/$basketId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +53,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortfolioImport
       parentRoute: typeof rootRoute
     }
+    '/baskets/$basketId': {
+      id: '/baskets/$basketId'
+      path: '/baskets/$basketId'
+      fullPath: '/baskets/$basketId'
+      preLoaderRoute: typeof BasketsBasketIdImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +68,41 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/portfolio': typeof PortfolioRoute
+  '/baskets/$basketId': typeof BasketsBasketIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/portfolio': typeof PortfolioRoute
+  '/baskets/$basketId': typeof BasketsBasketIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/portfolio': typeof PortfolioRoute
+  '/baskets/$basketId': typeof BasketsBasketIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/portfolio'
+  fullPaths: '/' | '/portfolio' | '/baskets/$basketId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/portfolio'
-  id: '__root__' | '/' | '/portfolio'
+  to: '/' | '/portfolio' | '/baskets/$basketId'
+  id: '__root__' | '/' | '/portfolio' | '/baskets/$basketId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PortfolioRoute: typeof PortfolioRoute
+  BasketsBasketIdRoute: typeof BasketsBasketIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PortfolioRoute: PortfolioRoute,
+  BasketsBasketIdRoute: BasketsBasketIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +116,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/portfolio"
+        "/portfolio",
+        "/baskets/$basketId"
       ]
     },
     "/": {
@@ -105,6 +125,9 @@ export const routeTree = rootRoute
     },
     "/portfolio": {
       "filePath": "portfolio.tsx"
+    },
+    "/baskets/$basketId": {
+      "filePath": "baskets/$basketId.tsx"
     }
   }
 }

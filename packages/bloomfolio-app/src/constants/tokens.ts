@@ -144,6 +144,24 @@ export const BSC_TOKENS = [
     },
 ] as const satisfies Token[];
 
+export const CMC_TOKEN_IDS = {
+    BTC: 1, // Bitcoin
+    ETH: 1027, // Ethereum
+    BNB: 1839, // Binance Coin
+    UNI: 7083, // Uniswap
+    AAVE: 7278, // Aave
+    SOL: 5426, // Solana
+    LINK: 1975, // Chainlink
+    "1INCH": 8104, // 1inch
+    PEPE: 24478, // Pepe
+    CAKE: 7186, // PancakeSwap
+    DOGE: 74, // Dogecoin
+
+    WETH: 1027, // Wrapped Ethereum
+    WBNB: 1839, // Wrapped BNB
+    BTCB: 1, // Wrapped Bitcoin
+} as const;
+
 export function getTokenDetailsForAllocation(allocation: BasketAllocation, tokens: Token[]) {
     return tokens.find(
         (t) => t.address.toLowerCase() === allocation.address.toLowerCase() && t.chainId === allocation.chainId,

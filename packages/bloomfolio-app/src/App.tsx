@@ -1,7 +1,7 @@
 import { RouterProvider } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
@@ -13,6 +13,7 @@ import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
 import { config } from "./config.js";
 import "@coinbase/onchainkit/styles.css";
+import { queryClient } from "./queryClient.js";
 
 const customTheme = {
     ...lightTheme({
@@ -24,16 +25,6 @@ const customTheme = {
 function InnerApp() {
     return <RouterProvider router={router} />;
 }
-
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            refetchOnWindowFocus: false,
-            staleTime: 2000, //2s
-            refetchInterval: 2000, //2s
-        },
-    },
-});
 
 const HydrateAtoms = ({ children }) => {
     useHydrateAtoms([[queryClientAtom, queryClient]]);
