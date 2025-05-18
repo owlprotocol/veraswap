@@ -5,22 +5,13 @@ import {
     useAccount,
     useBalance,
     useChainId,
-    useWriteContract,
     useSendTransaction,
     useSwitchChain,
     useWaitForTransactionReceipt,
 } from "wagmi";
-import { encodeFunctionData, erc20Abi, formatUnits, parseUnits, zeroAddress, Address } from "viem";
+import { formatEther, parseEther, zeroAddress } from "viem";
 import { base } from "viem/chains";
-import {
-    MAX_UINT_256,
-    PERMIT2_ADDRESS,
-    UNISWAP_CONTRACTS,
-    USDC,
-    USDC_BASE,
-    getPermit2PermitSignature,
-} from "@owlprotocol/veraswap-sdk";
-import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { UNISWAP_CONTRACTS, USDC_BASE, getBasketSwaps } from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -30,6 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
 import { BASE_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { config } from "@/config.js";
+import { queryClient } from "@/App.js";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -58,11 +50,22 @@ export default function SimplifiedPortfolioPage() {
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address,
-        token: USDC_BASE.address,
+        // token: USDC_BASE.address,
     });
     const { switchChain } = useSwitchChain();
 
-    const { writeContract, data: hash, isPending: isTransactionPending } = useWriteContract();
+    const handleSelectBucket = (bucketId: string) => {
+        setSelectedBucket(bucketId);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    // const usdcAllowance = useReadContract({
+    //     abi: erc20Abi,
+    //     functionName: "allowance",
+    //     args: [address ?? zeroAddress, PERMIT2_ADDRESS],
+    // });
+
+    const { sendTransaction, data: hash, isPending: isTransactionPending } = useSendTransaction();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
         hash,
     });
@@ -71,22 +74,10 @@ export default function SimplifiedPortfolioPage() {
         setShowConfirmation(true);
     }
 
-    const handleSelectBucket = (bucketId: string) => {
-        setSelectedBucket(bucketId);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    const universalRouter = UNISWAP_CONTRACTS[base.id]!.universalRouter;
-    // const usdcAllowance = useReadContract({
-    //     abi: erc20Abi,
-    //     functionName: "allowance",
-    //     args: [address ?? zeroAddress, PERMIT2_ADDRESS],
-    // });
-
-    const { sendTransaction, data: _hash } = useSendTransaction();
-
-    const amountParsed = parseUnits(amount, USDC.decimals);
-    const balanceFormatted = formatUnits(balance?.value ?? 0n, USDC.decimals);
+    const amountParsed = parseEther(amount);
+    const balanceFormatted = formatEther(balance?.value ?? 0n);
+    // const amountParsed = parseUnits(amount, USDC.decimals);
+    // const balanceFormatted = formatUnits(balance?.value ?? 0n, USDC.decimals);
     const handlePurchase = async () => {
         if (!isConnected || chainId !== base.id || !balance) return;
 
@@ -108,15 +99,22 @@ export default function SimplifiedPortfolioPage() {
         // }
         //
         // const permit2Signature = await getPermit2PermitSignature(queryClient, {});
-        sendSwapTransaction({});
+        //
+        const bucket = BUCKETS.find((b) => b.id === selectedBucket)!;
 
-        setShowConfirmation(true);
-    };
-
-    const handleReset = () => {
-        setSelectedBucket(null);
-        setAmount("100");
-        setShowConfirmation(false);
+        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const swapData = await getBasketSwaps(queryClient, config, {
+            chainId: base.id,
+            contracts: UNISWAP_CONTRACTS[base.id]!,
+            currencyIn: zeroAddress,
+            deadline: routerDeadline,
+            exactAmount: amountParsed,
+            slippage: 0,
+            currencyHops: [USDC_BASE.address],
+            basketTokens: bucket.allocations,
+        });
+        console.log({ swapData });
+        sendTransaction({ chainId: base.id, ...swapData });
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,7 +233,7 @@ export default function SimplifiedPortfolioPage() {
                                 </div>
                                 <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
                                 <CardDescription>
-                                    You've successfully invested {amount} USDC in the {selectedBucketData?.title}{" "}
+                                    You've successfully invested {amount} ETH in the {selectedBucketData?.title}{" "}
                                     strategy
                                 </CardDescription>
                             </CardHeader>
@@ -249,7 +247,7 @@ export default function SimplifiedPortfolioPage() {
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Payment Method</span>
-                                            <span className="font-medium">USDC</span>
+                                            <span className="font-medium">ETH</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Transaction ID</span>
@@ -304,7 +302,7 @@ export default function SimplifiedPortfolioPage() {
                                     </div>
 
                                     <div className="lg:col-span-3">
-                                        <h3 className="font-medium mb-2">Amount (USDC)</h3>
+                                        <h3 className="font-medium mb-2">Amount (ETH)</h3>
                                         <div className="space-y-2">
                                             <div className="flex items-center space-x-2">
                                                 <Input
@@ -316,7 +314,7 @@ export default function SimplifiedPortfolioPage() {
                                                     className="text-base"
                                                     disabled={!isConnected}
                                                 />
-                                                <span className="text-base font-medium">USDC</span>
+                                                <span className="text-base font-medium">ETH</span>
                                             </div>
                                             {isConnected && (
                                                 <div className="text-sm text-muted-foreground">
@@ -324,7 +322,7 @@ export default function SimplifiedPortfolioPage() {
                                                         "Loading balance..."
                                                     ) : (
                                                         <>
-                                                            Balance: {balanceFormatted} USDC
+                                                            Balance: {balanceFormatted} ETH
                                                             {hasInsufficientBalance && (
                                                                 <div className="text-red-500 mt-1">
                                                                     Insufficient balance
@@ -383,7 +381,7 @@ export default function SimplifiedPortfolioPage() {
                                                 <span>Total</span>
                                                 <span>
                                                     {!isNaN(Number.parseFloat(amount)) && Number.parseFloat(amount) > 0
-                                                        ? `${amount} USDC`
+                                                        ? `${amount} ETH`
                                                         : "-"}
                                                 </span>
                                             </div>

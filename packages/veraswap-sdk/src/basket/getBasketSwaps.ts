@@ -27,7 +27,7 @@ export interface GetBasketSwapsParams {
     poolKeyOptions?: PoolKeyOptions[];
     basketTokens: {
         address: Address;
-        weight: bigint;
+        weight: number;
     }[];
 }
 

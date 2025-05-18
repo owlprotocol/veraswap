@@ -12,7 +12,6 @@ import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
 import { config } from "./config.js";
-import { Toaster } from "@/components/ui/toaster.jsx";
 import "@coinbase/onchainkit/styles.css";
 
 const customTheme = {
@@ -26,7 +25,7 @@ function InnerApp() {
     return <RouterProvider router={router} />;
 }
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             refetchOnWindowFocus: false,
@@ -58,7 +57,6 @@ function App() {
                                     <InnerApp />
                                     <ReactQueryDevtools initialIsOpen={false} />
                                     <Analytics />
-                                    <Toaster />
                                 </HydrateAtoms>
                             </RainbowKitProvider>
                         </QueryClientProvider>

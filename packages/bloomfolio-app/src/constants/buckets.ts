@@ -29,7 +29,7 @@ export const BUCKETS = [
         icon: DollarSign,
         allocations: [
             { address: BASE_TOKENS[0].address, chainId: base.id, weight: 60 },
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 },
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 },
         ],
     },
     {
@@ -41,7 +41,7 @@ export const BUCKETS = [
         icon: Globe,
         allocations: [
             { address: BASE_TOKENS[0].address, chainId: base.id, weight: 40 }, // USDC
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 }, // ETH
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 }, // ETH
             { address: BASE_TOKENS[2].address, chainId: base.id, weight: 20 }, // cbBTC
         ],
     },
@@ -53,7 +53,7 @@ export const BUCKETS = [
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 30 }, // ETH
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 30 }, // ETH
             { address: BASE_TOKENS[2].address, chainId: base.id, weight: 30 }, // cbBTC
             { address: BASE_TOKENS[3].address, chainId: base.id, weight: 40 }, // LINK
         ],

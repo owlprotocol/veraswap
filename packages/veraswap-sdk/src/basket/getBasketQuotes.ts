@@ -17,7 +17,7 @@ export interface GetBasketQuotesParams {
     poolKeyOptions?: PoolKeyOptions[];
     basketTokens: {
         address: Address;
-        weight: bigint;
+        weight: number;
     }[];
 }
 
@@ -44,11 +44,11 @@ export async function getBasketQuotes(
 ): Promise<GetBasketQuotesReturnType> {
     const { chainId, currencyIn, currencyHops, contracts, poolKeyOptions, exactAmount, basketTokens } = params;
 
-    const totalWeights = basketTokens.reduce((acc, curr) => acc + curr.weight, 0n);
+    const totalWeights = basketTokens.reduce((acc, curr) => acc + curr.weight, 0);
 
     const quotes = await Promise.all(
         basketTokens.map(async (token) => {
-            const exactAmountIn = (exactAmount * token.weight) / totalWeights;
+            const exactAmountIn = (exactAmount * BigInt(token.weight)) / BigInt(totalWeights);
             const quote = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
                 chainId,
                 currencyIn,
