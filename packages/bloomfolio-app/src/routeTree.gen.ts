@@ -12,7 +12,10 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as PortfolioImport } from './routes/portfolio'
+import { Route as CreateImport } from './routes/create'
 import { Route as IndexImport } from './routes/index'
+import { Route as BucketsIndexImport } from './routes/buckets/index'
+import { Route as BucketsAddressImport } from './routes/buckets/$address'
 
 // Create/Update Routes
 
@@ -22,9 +25,27 @@ const PortfolioRoute = PortfolioImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const CreateRoute = CreateImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BucketsIndexRoute = BucketsIndexImport.update({
+  id: '/buckets/',
+  path: '/buckets/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const BucketsAddressRoute = BucketsAddressImport.update({
+  id: '/buckets/$address',
+  path: '/buckets/$address',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,11 +60,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateImport
+      parentRoute: typeof rootRoute
+    }
     '/portfolio': {
       id: '/portfolio'
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioImport
+      parentRoute: typeof rootRoute
+    }
+    '/buckets/$address': {
+      id: '/buckets/$address'
+      path: '/buckets/$address'
+      fullPath: '/buckets/$address'
+      preLoaderRoute: typeof BucketsAddressImport
+      parentRoute: typeof rootRoute
+    }
+    '/buckets/': {
+      id: '/buckets/'
+      path: '/buckets'
+      fullPath: '/buckets'
+      preLoaderRoute: typeof BucketsIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -53,37 +95,58 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/portfolio': typeof PortfolioRoute
+  '/buckets/$address': typeof BucketsAddressRoute
+  '/buckets': typeof BucketsIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/portfolio': typeof PortfolioRoute
+  '/buckets/$address': typeof BucketsAddressRoute
+  '/buckets': typeof BucketsIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
   '/portfolio': typeof PortfolioRoute
+  '/buckets/$address': typeof BucketsAddressRoute
+  '/buckets/': typeof BucketsIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/portfolio'
+  fullPaths: '/' | '/create' | '/portfolio' | '/buckets/$address' | '/buckets'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/portfolio'
-  id: '__root__' | '/' | '/portfolio'
+  to: '/' | '/create' | '/portfolio' | '/buckets/$address' | '/buckets'
+  id:
+    | '__root__'
+    | '/'
+    | '/create'
+    | '/portfolio'
+    | '/buckets/$address'
+    | '/buckets/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateRoute: typeof CreateRoute
   PortfolioRoute: typeof PortfolioRoute
+  BucketsAddressRoute: typeof BucketsAddressRoute
+  BucketsIndexRoute: typeof BucketsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateRoute: CreateRoute,
   PortfolioRoute: PortfolioRoute,
+  BucketsAddressRoute: BucketsAddressRoute,
+  BucketsIndexRoute: BucketsIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,14 +160,26 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/portfolio"
+        "/create",
+        "/portfolio",
+        "/buckets/$address",
+        "/buckets/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/create": {
+      "filePath": "create.tsx"
+    },
     "/portfolio": {
       "filePath": "portfolio.tsx"
+    },
+    "/buckets/$address": {
+      "filePath": "buckets/$address.tsx"
+    },
+    "/buckets/": {
+      "filePath": "buckets/index.tsx"
     }
   }
 }

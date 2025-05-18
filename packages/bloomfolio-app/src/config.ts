@@ -16,7 +16,7 @@ export const chains = (import.meta.env.MODE === "development"
 //TODO: Why not support all wallets even in devmode?
 const wallets =
     import.meta.env.MODE === "development"
-        ? [metaMaskWallet]
+        ? [metaMaskWallet, coinbaseWallet]
         : [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet];
 
 export const connectors = connectorsForWallets(
