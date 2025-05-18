@@ -12,6 +12,7 @@ import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
 import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
+import {V4MetaQuoterUtils} from "./utils/V4MetaQuoterUtils.sol";
 import {UniversalRouterUtils} from "./utils/UniversalRouterUtils.sol";
 // Permit2
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
@@ -238,5 +239,8 @@ contract DeployCoreContracts is DeployParameters {
         contracts.erc7579ExecutorRouter = erc7579ExecutorRouter;
         contracts.execute = execute;
         contracts.orbiterBridgeSweep = orbiterBridgeSweep;
+
+        // Custom Contracts
+        V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
     }
 }
