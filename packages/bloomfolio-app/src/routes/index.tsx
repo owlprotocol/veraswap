@@ -5,13 +5,13 @@ import {
     useAccount,
     useBalance,
     useChainId,
+    useSendTransaction,
     useSwitchChain,
-    useWriteContract,
     useWaitForTransactionReceipt,
 } from "wagmi";
-import { Address } from "viem";
+import { formatEther, parseEther, zeroAddress } from "viem";
 import { base } from "viem/chains";
-import { USDC_BASE } from "@owlprotocol/veraswap-sdk";
+import { UNISWAP_CONTRACTS, USDC_BASE, getBasketSwaps } from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
 import { BASE_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { config } from "@/config.js";
+import { queryClient } from "@/App.js";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -48,11 +50,22 @@ export default function SimplifiedPortfolioPage() {
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address,
-        token: USDC_BASE.address,
+        // token: USDC_BASE.address,
     });
     const { switchChain } = useSwitchChain();
 
-    const { writeContract, data: hash, isPending: isTransactionPending } = useWriteContract();
+    const handleSelectBucket = (bucketId: string) => {
+        setSelectedBucket(bucketId);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    // const usdcAllowance = useReadContract({
+    //     abi: erc20Abi,
+    //     functionName: "allowance",
+    //     args: [address ?? zeroAddress, PERMIT2_ADDRESS],
+    // });
+
+    const { sendTransaction, data: hash, isPending: isTransactionPending } = useSendTransaction();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
         hash,
     });
@@ -61,23 +74,47 @@ export default function SimplifiedPortfolioPage() {
         setShowConfirmation(true);
     }
 
-    const handleSelectBucket = (bucketId: string) => {
-        setSelectedBucket(bucketId);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
+    const amountParsed = parseEther(amount);
+    const balanceFormatted = formatEther(balance?.value ?? 0n);
+    // const amountParsed = parseUnits(amount, USDC.decimals);
+    // const balanceFormatted = formatUnits(balance?.value ?? 0n, USDC.decimals);
     const handlePurchase = async () => {
-        if (!isConnected || chainId !== base.id || !address) return;
+        if (!isConnected || chainId !== base.id || !balance) return;
 
-        const requiredAmount = Number.parseFloat(amount);
-        const userBalance = Number(balance?.value || 0) / 1e6;
-        if (userBalance < requiredAmount) return;
-        // TODO: add logic here
-        try {
-            console.log("Transaction successful");
-        } catch (error) {
-            console.error("Transaction failed:", error);
-        }
+        const userBalance = balance?.value;
+        if (userBalance < amountParsed) return;
+
+        // if (usdcAllowance < amountParsed) {
+        //     const allowHash = await sendTransactionPermitAsync({
+        //         to: USDC_BASE.address,
+        //         chainId: base.id,
+        //         data: encodeFunctionData({
+        //             abi: IERC20.abi,
+        //             functionName: "approve",
+        //             args: [PERMIT2_ADDRESS, MAX_UINT_256],
+        //         }),
+        //     });
+        //
+        //     await waitForTransactionReceipt(config, { hash: allowHash });
+        // }
+        //
+        // const permit2Signature = await getPermit2PermitSignature(queryClient, {});
+        //
+        const bucket = BUCKETS.find((b) => b.id === selectedBucket)!;
+
+        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const swapData = await getBasketSwaps(queryClient, config, {
+            chainId: base.id,
+            contracts: UNISWAP_CONTRACTS[base.id]!,
+            currencyIn: zeroAddress,
+            deadline: routerDeadline,
+            exactAmount: amountParsed,
+            slippage: 0,
+            currencyHops: [USDC_BASE.address],
+            basketTokens: bucket.allocations,
+        });
+        console.log({ swapData });
+        sendTransaction({ chainId: base.id, ...swapData });
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,23 +123,15 @@ export default function SimplifiedPortfolioPage() {
     };
 
     const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
-    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0n);
-    const userBalance = Number(balance?.value || 0) / 1e6;
-    const requiredAmount = Number(amount);
-    const hasInsufficientBalance = isConnected && !isBalanceLoading && userBalance < requiredAmount;
-    const isAmountValid = requiredAmount > 0;
+    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0);
+    const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
+    const isAmountValid = amountParsed > 0;
 
-    const renderAllocationDetails = (
-        allocation: { address: Address; chainId: number; weight: bigint },
-        totalWeight: bigint,
-    ) => {
+    const renderAllocationDetails = (allocation: BucketAllocation, totalWeight: number) => {
         const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
         if (!token) return null;
 
-        const value =
-            !isNaN(Number(amount)) && Number(amount) > 0
-                ? ((Number(amount) * Number(allocation.weight)) / Number(totalWeight)).toFixed(2)
-                : null;
+        const value = amountParsed > 0n ? ((Number(amount) * allocation.weight) / totalWeight).toFixed(10) : 0n;
 
         return (
             <div key={token.address} className="flex justify-between text-sm">
@@ -119,7 +148,7 @@ export default function SimplifiedPortfolioPage() {
         );
     };
 
-    const groupAllocationsByCategory = (allocations: { address: Address; chainId: number; weight: bigint }[]) => {
+    const groupAllocationsByCategory = (allocations: BucketAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
                 const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
@@ -132,10 +161,7 @@ export default function SimplifiedPortfolioPage() {
                 acc[category].push({ allocation, token });
                 return acc;
             },
-            {} as Record<
-                TokenCategory,
-                { allocation: { address: Address; chainId: number; weight: bigint }; token: Token }[]
-            >,
+            {} as Record<TokenCategory, { allocation: BucketAllocation; token: Token }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -147,10 +173,10 @@ export default function SimplifiedPortfolioPage() {
     const renderCategorySection = (
         category: TokenCategory,
         items: { allocation: BucketAllocation; token: Token }[],
-        totalWeight: bigint,
+        totalWeight: number,
     ) => {
-        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0n);
-        const categoryPercentage = (Number(categoryWeight) / Number(totalWeight)) * 100;
+        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
+        const categoryPercentage = (categoryWeight / totalWeight) * 100;
 
         return (
             <Collapsible className="border rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -207,7 +233,7 @@ export default function SimplifiedPortfolioPage() {
                                 </div>
                                 <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
                                 <CardDescription>
-                                    You've successfully invested {amount} USDC in the {selectedBucketData?.title}{" "}
+                                    You've successfully invested {amount} ETH in the {selectedBucketData?.title}{" "}
                                     strategy
                                 </CardDescription>
                             </CardHeader>
@@ -221,7 +247,7 @@ export default function SimplifiedPortfolioPage() {
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Payment Method</span>
-                                            <span className="font-medium">USDC</span>
+                                            <span className="font-medium">ETH</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Transaction ID</span>
@@ -276,7 +302,7 @@ export default function SimplifiedPortfolioPage() {
                                     </div>
 
                                     <div className="lg:col-span-3">
-                                        <h3 className="font-medium mb-2">Amount (USDC)</h3>
+                                        <h3 className="font-medium mb-2">Amount (ETH)</h3>
                                         <div className="space-y-2">
                                             <div className="flex items-center space-x-2">
                                                 <Input
@@ -288,7 +314,7 @@ export default function SimplifiedPortfolioPage() {
                                                     className="text-base"
                                                     disabled={!isConnected}
                                                 />
-                                                <span className="text-base font-medium">USDC</span>
+                                                <span className="text-base font-medium">ETH</span>
                                             </div>
                                             {isConnected && (
                                                 <div className="text-sm text-muted-foreground">
@@ -296,7 +322,7 @@ export default function SimplifiedPortfolioPage() {
                                                         "Loading balance..."
                                                     ) : (
                                                         <>
-                                                            Balance: {userBalance} USDC
+                                                            Balance: {balanceFormatted} ETH
                                                             {hasInsufficientBalance && (
                                                                 <div className="text-red-500 mt-1">
                                                                     Insufficient balance
@@ -328,7 +354,7 @@ export default function SimplifiedPortfolioPage() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => switchChain?.({ chainId: base.id })}
+                                                        onClick={() => switchChain({ chainId: base.id })}
                                                         className="ml-2"
                                                     >
                                                         Switch Network
@@ -355,7 +381,7 @@ export default function SimplifiedPortfolioPage() {
                                                 <span>Total</span>
                                                 <span>
                                                     {!isNaN(Number.parseFloat(amount)) && Number.parseFloat(amount) > 0
-                                                        ? `${amount} USDC`
+                                                        ? `${amount} ETH`
                                                         : "-"}
                                                 </span>
                                             </div>
@@ -425,7 +451,7 @@ export default function SimplifiedPortfolioPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {BUCKETS.map((bucket) => {
-                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0n);
+                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0);
                                     return (
                                         <Card
                                             key={bucket.id}

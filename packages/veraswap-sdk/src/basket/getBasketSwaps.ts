@@ -17,7 +17,7 @@ export interface GetBasketSwapsParams {
     deadline: bigint;
     permit2PermitParams?: [PermitSingle, Hex];
     receiver?: Address;
-    slippageCentiBps?: bigint; // 1_000 = 1% (default)
+    slippageCentiBps?: bigint;
     currencyHops: Address[];
     contracts: {
         v4StateView: Address;
@@ -27,7 +27,7 @@ export interface GetBasketSwapsParams {
     poolKeyOptions?: PoolKeyOptions[];
     basketTokens: {
         address: Address;
-        weight: bigint;
+        weight: number;
     }[];
 }
 

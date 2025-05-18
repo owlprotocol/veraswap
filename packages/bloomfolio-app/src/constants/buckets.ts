@@ -6,7 +6,7 @@ import { BASE_TOKENS } from "./tokens.js";
 export interface BucketAllocation {
     address: Address;
     chainId: number;
-    weight: bigint;
+    weight: number;
 }
 
 export interface Bucket {
@@ -28,8 +28,8 @@ export const BUCKETS = [
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
-            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 60n },
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40n },
+            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 60 },
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 },
         ],
     },
     {
@@ -40,9 +40,9 @@ export const BUCKETS = [
         gradient: "from-yellow-400 to-orange-500",
         icon: Globe,
         allocations: [
-            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 40n }, // USDC
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40n }, // ETH
-            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 20n }, // cbBTC
+            { address: BASE_TOKENS[0].address, chainId: base.id, weight: 40 }, // USDC
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 40 }, // ETH
+            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 20 }, // cbBTC
         ],
     },
     {
@@ -53,9 +53,9 @@ export const BUCKETS = [
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
-            { address: BASE_TOKENS[1].address, chainId: base.id, weight: 30n }, // ETH
-            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 30n }, // cbBTC
-            { address: BASE_TOKENS[3].address, chainId: base.id, weight: 40n }, // LINK
+            // { address: BASE_TOKENS[1].address, chainId: base.id, weight: 30 }, // ETH
+            { address: BASE_TOKENS[2].address, chainId: base.id, weight: 30 }, // cbBTC
+            { address: BASE_TOKENS[3].address, chainId: base.id, weight: 40 }, // LINK
         ],
     },
 ] as const satisfies Bucket[];
