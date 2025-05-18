@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator.js";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.js";
 import { BUCKETS } from "@/constants/buckets.js";
-import { BASE_TOKENS, getTokenDetailsForAllocation, Token } from "@/constants/tokens.js";
+import { BSC_TOKENS, getTokenDetailsForAllocation, Token } from "@/constants/tokens.js";
 
 export const Route = createFileRoute("/portfolio")({
     component: PortfolioPage,
@@ -108,7 +108,7 @@ function usePortfolioValue(assets: Assets[]) {
 // };
 
 export default function PortfolioPage() {
-    const currentPortfolio = useTokenBalances(BASE_TOKENS);
+    const currentPortfolio = useTokenBalances(BSC_TOKENS);
     const totalValue = usePortfolioValue(currentPortfolio);
     const [previewPortfolio, setPreviewPortfolio] = useState<Assets[] | null>(null);
     const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function PortfolioPage() {
 
         const preview = bucket.allocations
             .map((allocation) => {
-                const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
+                const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
                 if (!token) return null;
 
                 const currentAsset = currentPortfolio.find((a) => a.token.address === token.address);

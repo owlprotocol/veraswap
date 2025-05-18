@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator.js";
 import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
-import { BASE_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { config } from "@/config.js";
 import { queryClient } from "@/App.js";
 
@@ -127,7 +127,7 @@ export default function SimplifiedPortfolioPage() {
     const isAmountValid = amountParsed > 0;
 
     const renderAllocationDetails = (allocation: BucketAllocation, totalWeight: number) => {
-        const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
+        const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
         if (!token) return null;
 
         const value = amountParsed > 0n ? ((Number(amount) * allocation.weight) / totalWeight).toFixed(10) : 0n;
@@ -150,7 +150,7 @@ export default function SimplifiedPortfolioPage() {
     const groupAllocationsByCategory = (allocations: BucketAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
-                const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
+                const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
                 if (!token) return acc;
 
                 const category = token.category;
