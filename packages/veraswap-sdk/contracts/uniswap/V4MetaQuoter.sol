@@ -14,20 +14,20 @@ import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
 import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol";
 import {BaseV4Quoter} from "@uniswap/v4-periphery/src/base/BaseV4Quoter.sol";
 
-import {IMetaQuoter} from "./IMetaQuoter.sol";
+import {IV4MetaQuoter} from "./IV4MetaQuoter.sol";
 
-/// @title MetaQuoter
+/// @title V4MetaQuoter
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes
 /// similar to how V4Quoter
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
-contract MetaQuoter is IV4Quoter, IMetaQuoter, BaseV4Quoter {
+contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
     constructor(IPoolManager _poolManager) BaseV4Quoter(_poolManager) {}
 
-    /// @inheritdoc IMetaQuoter
+    /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactInput(
         MetaQuoteExactParams memory params
     )
@@ -136,7 +136,7 @@ contract MetaQuoter is IV4Quoter, IMetaQuoter, BaseV4Quoter {
         }
     }
 
-    /// @inheritdoc IMetaQuoter
+    /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactOutput(
         MetaQuoteExactParams memory params
     )

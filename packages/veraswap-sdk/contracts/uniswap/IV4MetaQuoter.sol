@@ -5,9 +5,9 @@ import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
 
-/// @title IMetaQuoter
+/// @title IV4MetaQuoter
 /// @notice Interface for MetaQuoter, a contract that searches for multiple quotes
-interface IMetaQuoter {
+interface IV4MetaQuoter {
     struct PoolKeyOptions {
         uint24 fee;
         int24 tickSpacing;

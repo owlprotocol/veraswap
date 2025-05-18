@@ -1,0 +1,470 @@
+import { Hex } from "viem";
+
+export const _constructor = {
+    type: "constructor",
+    inputs: [{ name: "_poolManager", type: "address", internalType: "contract IPoolManager" }],
+    stateMutability: "nonpayable",
+} as const;
+export const _quoteExactInput = {
+    type: "function",
+    name: "_quoteExactInput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+            ],
+        },
+    ],
+    outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+    stateMutability: "nonpayable",
+} as const;
+export const _quoteExactInputSingle = {
+    type: "function",
+    name: "_quoteExactInputSingle",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactSingleParams",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+            ],
+        },
+    ],
+    outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+    stateMutability: "nonpayable",
+} as const;
+export const _quoteExactOutput = {
+    type: "function",
+    name: "_quoteExactOutput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+            ],
+        },
+    ],
+    outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+    stateMutability: "nonpayable",
+} as const;
+export const _quoteExactOutputSingle = {
+    type: "function",
+    name: "_quoteExactOutputSingle",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactSingleParams",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+            ],
+        },
+    ],
+    outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+    stateMutability: "nonpayable",
+} as const;
+export const metaQuoteExactInput = {
+    type: "function",
+    name: "metaQuoteExactInput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                { name: "variableCurrency", type: "address", internalType: "Currency" },
+                { name: "hopCurrencies", type: "address[]", internalType: "Currency[]" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                {
+                    name: "poolKeyOptions",
+                    type: "tuple[]",
+                    internalType: "struct IV4MetaQuoter.PoolKeyOptions[]",
+                    components: [
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "address" },
+                    ],
+                },
+            ],
+        },
+    ],
+    outputs: [
+        {
+            name: "bestSingleSwap",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+                { name: "variableAmount", type: "uint256", internalType: "uint256" },
+                { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+            ],
+        },
+        {
+            name: "bestMultihopSwap",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactResult",
+            components: [
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "variableAmount", type: "uint256", internalType: "uint256" },
+                { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+            ],
+        },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const metaQuoteExactOutput = {
+    type: "function",
+    name: "metaQuoteExactOutput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                { name: "variableCurrency", type: "address", internalType: "Currency" },
+                { name: "hopCurrencies", type: "address[]", internalType: "Currency[]" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                {
+                    name: "poolKeyOptions",
+                    type: "tuple[]",
+                    internalType: "struct IV4MetaQuoter.PoolKeyOptions[]",
+                    components: [
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "address" },
+                    ],
+                },
+            ],
+        },
+    ],
+    outputs: [
+        {
+            name: "bestSingleSwap",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+                { name: "variableAmount", type: "uint256", internalType: "uint256" },
+                { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+            ],
+        },
+        {
+            name: "bestMultihopSwap",
+            type: "tuple",
+            internalType: "struct IV4MetaQuoter.MetaQuoteExactResult",
+            components: [
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "variableAmount", type: "uint256", internalType: "uint256" },
+                { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+            ],
+        },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const poolManager = {
+    type: "function",
+    name: "poolManager",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "contract IPoolManager" }],
+    stateMutability: "view",
+} as const;
+export const quoteExactInput = {
+    type: "function",
+    name: "quoteExactInput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+            ],
+        },
+    ],
+    outputs: [
+        { name: "amountOut", type: "uint256", internalType: "uint256" },
+        { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const quoteExactInputSingle = {
+    type: "function",
+    name: "quoteExactInputSingle",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactSingleParams",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+            ],
+        },
+    ],
+    outputs: [
+        { name: "amountOut", type: "uint256", internalType: "uint256" },
+        { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const quoteExactOutput = {
+    type: "function",
+    name: "quoteExactOutput",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactParams",
+            components: [
+                { name: "exactCurrency", type: "address", internalType: "Currency" },
+                {
+                    name: "path",
+                    type: "tuple[]",
+                    internalType: "struct PathKey[]",
+                    components: [
+                        { name: "intermediateCurrency", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                        { name: "hookData", type: "bytes", internalType: "bytes" },
+                    ],
+                },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+            ],
+        },
+    ],
+    outputs: [
+        { name: "amountIn", type: "uint256", internalType: "uint256" },
+        { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const quoteExactOutputSingle = {
+    type: "function",
+    name: "quoteExactOutputSingle",
+    inputs: [
+        {
+            name: "params",
+            type: "tuple",
+            internalType: "struct IV4Quoter.QuoteExactSingleParams",
+            components: [
+                {
+                    name: "poolKey",
+                    type: "tuple",
+                    internalType: "struct PoolKey",
+                    components: [
+                        { name: "currency0", type: "address", internalType: "Currency" },
+                        { name: "currency1", type: "address", internalType: "Currency" },
+                        { name: "fee", type: "uint24", internalType: "uint24" },
+                        { name: "tickSpacing", type: "int24", internalType: "int24" },
+                        { name: "hooks", type: "address", internalType: "contract IHooks" },
+                    ],
+                },
+                { name: "zeroForOne", type: "bool", internalType: "bool" },
+                { name: "exactAmount", type: "uint128", internalType: "uint128" },
+                { name: "hookData", type: "bytes", internalType: "bytes" },
+            ],
+        },
+    ],
+    outputs: [
+        { name: "amountIn", type: "uint256", internalType: "uint256" },
+        { name: "gasEstimate", type: "uint256", internalType: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+} as const;
+export const unlockCallback = {
+    type: "function",
+    name: "unlockCallback",
+    inputs: [{ name: "data", type: "bytes", internalType: "bytes" }],
+    outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+    stateMutability: "nonpayable",
+} as const;
+export const NotEnoughLiquidity = {
+    type: "error",
+    name: "NotEnoughLiquidity",
+    inputs: [{ name: "poolId", type: "bytes32", internalType: "PoolId" }],
+} as const;
+export const NotPoolManager = { type: "error", name: "NotPoolManager", inputs: [] } as const;
+export const NotSelf = { type: "error", name: "NotSelf", inputs: [] } as const;
+export const QuoteSwap = {
+    type: "error",
+    name: "QuoteSwap",
+    inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+} as const;
+export const UnexpectedCallSuccess = { type: "error", name: "UnexpectedCallSuccess", inputs: [] } as const;
+export const UnexpectedRevertBytes = {
+    type: "error",
+    name: "UnexpectedRevertBytes",
+    inputs: [{ name: "revertData", type: "bytes", internalType: "bytes" }],
+} as const;
+export const functions = [
+    _constructor,
+    _quoteExactInput,
+    _quoteExactInputSingle,
+    _quoteExactOutput,
+    _quoteExactOutputSingle,
+    metaQuoteExactInput,
+    metaQuoteExactOutput,
+    poolManager,
+    quoteExactInput,
+    quoteExactInputSingle,
+    quoteExactOutput,
+    quoteExactOutputSingle,
+    unlockCallback,
+] as const;
+export const events = [] as const;
+export const errors = [
+    NotEnoughLiquidity,
+    NotPoolManager,
+    NotSelf,
+    QuoteSwap,
+    UnexpectedCallSuccess,
+    UnexpectedRevertBytes,
+] as const;
+export const abi = [...functions, ...events, ...errors] as const;
+
+export const bytecode =
+    "0x60a034607b57601f611cc838819003918201601f19168301916001600160401b03831184841017607f57808492602094604052833981010312607b57516001600160a01b0381168103607b57608052604051611c349081610094823960805181818161015b01528181610b16015281816118770152611a610152f35b5f80fd5b634e487b7160e01b5f52604160045260245ffdfe60806040526004361015610011575f80fd5b5f3560e01c8063147d2af914610d265780635873307314610d0b578063595323f514610c805780636a36a38c14610b9257806391dd734614610ac7578063aa2f1501146109ae578063aa9d21cb14610993578063ab1edd9d14610599578063c2c04613146101b9578063ca253dc91461018a578063dc4c90d3146101465763eebe0c6a1461009d575f80fd5b34610142576100ab366110f5565b303303610133578061010e61010861010360a06001600160801b039501936100d28561148b565b6100eb876100e260c08501611498565b16600f0b61157d565b906100f960e08401846114ac565b9490933690610ff7565b6119b0565b9161148b565b156101295781165b633b2f660160e21b5f521660045260245ffd5b60801d8116610116565b6314e1dbf760e11b5f5260045ffd5b5f80fd5b34610142575f366003190112610142576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b346101425760406101ac6101a56101a036610e85565b611bfc565b91906118eb565b9082519182526020820152f35b34610142576101c736611180565b6101cf6115c4565b906101d86115f6565b9160808201906101e9825151611615565b8351602085015191936001600160a01b039182169290911680831015610590579591805b60018060a01b0316809114955f9660608201986020925b855180518b10156103a5578a61023991611671565b518051858201516040928301519251926001600160a01b03169160029190910b9062ffffff1661026884610d41565b88845260018060a01b038616888501526040840152606083015260808201526102c96001600160801b038d5116604051906102a282610d70565b838252868883015260408201526040516102bc8882610da6565b5f81526060820152611bd1565b90633b2f660160e21b63ffffffff60e01b888301511603610393576102ed906118eb565b604051926102fa84610d41565b8352858784015260405161030e8882610da6565b5f815260408401526060830152608082015261032a8b8b611671565b526103358a8a611671565b505f5b895181101561037a57606061034d828c611671565b51015160608a015110610363575b600101610338565b97506001610371898b611671565b5198905061035b565b50919395909294986001905b0198949290959391610224565b50505091939590929498600190610386565b888c8689858c825151946103c86103c3604085019788515190611685565b611698565b925f945b8051805187101561057d57866103e4919a959a611671565b51935f908886019260408701925b8b51805182101561051757600191906001600160a01b0390610415908390611671565b51168c62ffffff8b5116885160020b90858060a01b03895116926040519461043c86610d41565b8552840152604083015260608201528c6104596040519182610da6565b5f815260808201526104696116e7565b9061047382611664565b5261047d81611664565b508c6104b4848060a01b038a51166001600160801b038c5116604051916104a383610d8b565b825284848301526040820152611bfc565b9190633b2f660160e21b63ffffffff60e01b83830151160361050e576104d9906118eb565b90604051936104e785610d8b565b845283015260408201526104fb8c8c611671565b526105068b8b611671565b505b016103f2565b50505050610508565b50509396989a95509698939150505f5b8751811015610568578961053b828a611671565b510151606088015110610551575b600101610527565b9350600161055f8589611671565b51949050610549565b509497919691956001909201949193906103cc565b6040518061058c878d8361140a565b0390f35b8296929061020d565b34610142576105a736611180565b6105af6115c4565b906105b86115f6565b9160808201906105c9825151611615565b8351602085015191936001600160a01b03918216929091168083101561098a579591805b60018060a01b0316809114955f9660608201986020925b855180518b101561079e578a61061991611671565b518051858201516040928301519251926001600160a01b03169160029190910b9062ffffff1661064884610d41565b88845260018060a01b038616888501526040840152606083015260808201526106a96001600160801b038d51166040519061068282610d70565b8382528688830152604082015260405161069c8882610da6565b5f81526060820152611985565b90633b2f660160e21b63ffffffff60e01b88830151160361078c576106cd906118eb565b604051926106da84610d41565b835285878401526040516106ee8882610da6565b5f815260408401526060830152608082015261070a8b8b611671565b526107158a8a611671565b50885161077a575b5f5b8951811015610761576060610734828c611671565b51015160608a01511161074a575b60010161071f565b97506001610758898b611671565b51989050610742565b50919395909294986001905b0198949290959391610604565b965061078588611664565b519661071d565b5050509193959092949860019061076d565b888c8689858c825151946107bc6103c3604085019788515190611685565b925f945b8051805187101561057d57866107d8919a959a611671565b51935f908886019260408701925b8b51805182101561090b57600191906001600160a01b0390610809908390611671565b51168c62ffffff8b5116885160020b90858060a01b03895116926040519461083086610d41565b8552840152604083015260608201528c61084d6040519182610da6565b5f8152608082015261085d6116e7565b9061086782611664565b5261087181611664565b508c6108a8848060a01b038a51166001600160801b038c51166040519161089783610d8b565b825284848301526040820152611817565b9190633b2f660160e21b63ffffffff60e01b838301511603610902576108cd906118eb565b90604051936108db85610d8b565b845283015260408201526108ef8c8c611671565b526108fa8b8b611671565b505b016107e6565b505050506108fc565b50509396989a95509698939150508651610978575b5f5b87518110156109635789610936828a611671565b51015160608801511161094c575b600101610922565b9350600161095a8589611671565b51949050610944565b509497919691956001909201949193906107c0565b925061098386611664565b5192610920565b829692906105ed565b346101425760406101ac6101a56109a936611060565b611bd1565b34610142576109bc3661114d565b30330361013357602081016109d181836114fe565b90506109df60408401611498565b916109e984611533565b9190815b610a0d576001600160801b0384633b2f660160e21b5f521660045260245ffd5b909192610a1a82866114fe565b91905f198501858111610a9957610a4a610a436001600160801b0392610a8896610a6695611547565b9788611b26565b9390610a5960808a018a6114ac565b93909216908515906119b0565b9015610aad57610a7890600f0b6114de565b6001600160801b03165b93611533565b918015610a99575f190190816109ed565b634e487b7160e01b5f52601160045260245ffd5b610ab99060801d6114de565b6001600160801b0316610a82565b34610142576020366003190112610142576004356001600160401b0381116101425736602382011215610142578060040135906001600160401b038211610142573660248383010111610142577f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03163303610b83575f6024819284806040519384930183378101838152039082305af1610b676117e8565b90610b7457602081519101fd5b63703a952d60e11b5f5260045ffd5b63570c108560e11b5f5260045ffd5b3461014257610ba03661114d565b303303610133576020810190610bb682826114fe565b9050610bc460408301611498565b91610bce81611533565b935f915b838310610bf5576001600160801b0385633b2f660160e21b5f521660045260245ffd5b90919293610c646001600160801b03610c4e610c39600194610c2b610c248a610c1e8b8b6114fe565b90611547565b9b8c611b26565b948593919216600f0b61157d565b610c4660808d018d6114ac565b9390926119b0565b9015610c6f576001600160801b03165b96611533565b959493019190610bd2565b60801d6001600160801b0316610c5e565b3461014257610c8e366110f5565b3033036101335780610cd161010861010360a06001600160801b03950193610cb58561148b565b86610cc260c08401611498565b16906100f960e08401846114ac565b15610cf857610ce29060801d6114de565b633b2f660160e21b5f9081529116600452602490fd5b610d0490600f0b6114de565b8116610116565b346101425760406101ac6101a5610d2136611060565b611985565b346101425760406101ac6101a5610d3c36610e85565b611817565b60a081019081106001600160401b03821117610d5c57604052565b634e487b7160e01b5f52604160045260245ffd5b608081019081106001600160401b03821117610d5c57604052565b606081019081106001600160401b03821117610d5c57604052565b90601f801991011681019081106001600160401b03821117610d5c57604052565b35906001600160a01b038216820361014257565b6001600160401b038111610d5c5760051b60200190565b359062ffffff8216820361014257565b35908160020b820361014257565b6001600160401b038111610d5c57601f01601f191660200190565b81601f8201121561014257803590610e4282610e10565b92610e506040519485610da6565b8284526020838301011161014257815f926020809301838601378301015290565b35906001600160801b038216820361014257565b6020600319820112610142576004356001600160401b03811161014257606081830360031901126101425760405191610ebd83610d8b565b610ec982600401610dc7565b835260248201356001600160401b038111610142578201908060238301121561014257600482013591610efb83610ddb565b92610f096040519485610da6565b808452602060048186019260051b84010101918383116101425760248101915b838310610f4e5750505050506020830152610f4690604401610e71565b604082015290565b82356001600160401b038111610142576004908301019060a0601f1983880301126101425760405190610f8082610d41565b610f8c60208401610dc7565b8252610f9a60408401610df2565b6020830152610fab60608401610e02565b6040830152610fbc60808401610dc7565b606083015260a0830135916001600160401b03831161014257610fe788602080969581960101610e2b565b6080820152815201920191610f29565b91908260a09103126101425760405161100f81610d41565b608061105b81839561102081610dc7565b855261102e60208201610dc7565b602086015261103f60408201610df2565b604086015261105060608201610e02565b606086015201610dc7565b910152565b6020600319820112610142576004356001600160401b038111610142576101008183036003190112610142576040519161109983610d70565b6110a68183600401610ff7565b835260a482013580151581036101425760208401526110c760c48301610e71565b604084015260e4820135916001600160401b038311610142576110ed9201600401610e2b565b606082015290565b602060031982011261014257600435906001600160401b038211610142576101009082900360031901126101425760040190565b805180835260209291819084018484015e5f828201840152601f01601f1916010190565b602060031982011261014257600435906001600160401b0382116101425760609082900360031901126101425760040190565b602060031982011261014257600435906001600160401b0382116101425760a0828203600319011261014257604051916111b983610d41565b6111c581600401610dc7565b83526111d360248201610dc7565b602084015260448101356001600160401b038111610142578101826023820112156101425760048101359061120782610ddb565b916112156040519384610da6565b808352602060048185019260051b840101019185831161014257602401905b82821061131457505050604084015261124f60648201610e71565b60608401526084810135906001600160401b0382116101425701816023820112156101425760048101359061128382610ddb565b926112916040519485610da6565b8284526020600460608287019502840101019181831161014257602401925b8284106112c35750505050608082015290565b6060848303126101425760206060916040516112de81610d8b565b6112e787610df2565b81526112f4838801610e02565b8382015261130460408801610dc7565b60408201528152019301926112b0565b6020809161132184610dc7565b815201910190611234565b80516001600160a01b03908116835260208083015182169084015260408083015162ffffff169084015260608083015160020b9084015260809182015116910152565b9080602083519182815201916020808360051b8301019401925f915b83831061139a57505050505090565b90919293946020806113fb600193601f1986820301875260a060808b518780841b03815116845262ffffff868201511686850152604081015160020b60408501528780841b0360608201511660608501520151918160808201520190611129565b9701930193019193929061138b565b6040815261141c60408201835161132c565b6020820151151560e082015260806114466040840151610120610100850152610160840190611129565b92606081015161012084015201516101408201526020818303910152604080611478845160608552606085019061136f565b9360208101516020850152015191015290565b3580151581036101425790565b356001600160801b03811681036101425790565b903590601e198136030182121561014257018035906001600160401b0382116101425760200191813603831361014257565b600f0b6f7fffffffffffffffffffffffffffffff198114610a99575f0390565b903590601e198136030182121561014257018035906001600160401b03821161014257602001918160051b3603831361014257565b356001600160a01b03811681036101425790565b91908110156115695760051b81013590609e1981360301821215610142570190565b634e487b7160e01b5f52603260045260245ffd5b600160ff1b8114610a99575f0390565b91908203918211610a9957565b604051906115a782610d41565b5f6080838281528260208201528260408201528260608201520152565b604051906115d182610d41565b5f6080836115dd61159a565b8152826020820152606060408201528260608201520152565b6040519061160382610d8b565b5f604083606081528260208201520152565b9061161f82610ddb565b61162c6040519182610da6565b828152809261163d601f1991610ddb565b01905f5b82811061164d57505050565b6020906116586115c4565b82828501015201611641565b8051156115695760200190565b80518210156115695760209160051b010190565b81810292918115918404141715610a9957565b906116a282610ddb565b6116af6040519182610da6565b82815280926116c0601f1991610ddb565b01905f5b8281106116d057505050565b6020906116db6115f6565b828285010152016116c4565b604080519091906116f88382610da6565b6001815291601f1901825f5b82811061171057505050565b60209060405161171f81610d41565b5f81525f838201525f60408201525f60608201526060608082015282828501015201611704565b6020815260018060a01b03825116602082015260606001600160801b03604061177c60208601518483870152608086019061136f565b9401511691015290565b602081830312610142578051906001600160401b038211610142570181601f82011215610142578051906117b982610e10565b926117c76040519485610da6565b8284526020838301011161014257815f9260208093018386015e8301015290565b3d15611812573d906117f982610e10565b916118076040519384610da6565b82523d5f602084013e565b606090565b60605f6118725f6118426118505a9660405192839163aa2f150160e01b602084015260248301611746565b03601f198101835282610da6565b604051809381926348c8949160e01b8352602060048401526024830190611129565b0381837f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af190816118cb575b506118c65750506118c26118ba6117e8565b915a9061158d565b9091565b915091565b6118e6903d805f833e6118de8183610da6565b810190611786565b6118a8565b60208101516001600160e01b0319166304d099ff60e21b0161190e576024015190565b6040516306190b2b60e41b815260206004820152908190611933906024830190611129565b0390fd5b6101206060611982936020845261195260208501825161132c565b6020810151151560c08501526001600160801b0360408201511660e0850152015191610100808201520190611129565b90565b60605f6118725f6118426118505a9660405192839163595323f560e01b602084015260248301611937565b939493926020908215611b08576101446401000276a4935b604051906119d582610d8b565b1515988982528085830194888652604084019760018060a01b031688526040519788968795633cf3645360e21b8752611a128d600489019061132c565b51151560a48701525160c4860152516001600160a01b031660e48501526101206101048501526101248401829052848401375f838284010152601f801991011681010301815f60018060a01b037f0000000000000000000000000000000000000000000000000000000000000000165af1908115611afd575f91611acb575b5080945f8312145f14611ac35760801d5b600f0b03611aad5750565b60a09020631e97b5cd60e21b5f5260045260245ffd5b600f0b611aa2565b90506020813d602011611af5575b81611ae660209383610da6565b8101031261014257515f611a91565b3d9150611ad9565b6040513d5f823e3d90fd5b61014473fffd8963efd1fc6a506488495d951d5263988d25936119c8565b90611b2f61159a565b50611b3982611533565b6001600160a01b038281169290821680841015611bc757505b6001600160a01b031691821492602081013562ffffff811690819003610142576040820135918260020b80930361014257606001359260018060a01b0384168094036101425760405194611ba586610d41565b85526001600160a01b0316602085015260408401526060830152608082015291565b9150508190611b52565b60605f6118725f6118426118505a9660405192839163775f063560e11b602084015260248301611937565b60605f6118725f6118426118505a96604051928391631a8da8e360e21b60208401526024830161174656fea164736f6c634300081a000a" as Hex;
+export const deployedBytecode =
+    "0x60806040526004361015610011575f80fd5b5f3560e01c8063147d2af914610d265780635873307314610d0b578063595323f514610c805780636a36a38c14610b9257806391dd734614610ac7578063aa2f1501146109ae578063aa9d21cb14610993578063ab1edd9d14610599578063c2c04613146101b9578063ca253dc91461018a578063dc4c90d3146101465763eebe0c6a1461009d575f80fd5b34610142576100ab366110f5565b303303610133578061010e61010861010360a06001600160801b039501936100d28561148b565b6100eb876100e260c08501611498565b16600f0b61157d565b906100f960e08401846114ac565b9490933690610ff7565b6119b0565b9161148b565b156101295781165b633b2f660160e21b5f521660045260245ffd5b60801d8116610116565b6314e1dbf760e11b5f5260045ffd5b5f80fd5b34610142575f366003190112610142576040517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168152602090f35b346101425760406101ac6101a56101a036610e85565b611bfc565b91906118eb565b9082519182526020820152f35b34610142576101c736611180565b6101cf6115c4565b906101d86115f6565b9160808201906101e9825151611615565b8351602085015191936001600160a01b039182169290911680831015610590579591805b60018060a01b0316809114955f9660608201986020925b855180518b10156103a5578a61023991611671565b518051858201516040928301519251926001600160a01b03169160029190910b9062ffffff1661026884610d41565b88845260018060a01b038616888501526040840152606083015260808201526102c96001600160801b038d5116604051906102a282610d70565b838252868883015260408201526040516102bc8882610da6565b5f81526060820152611bd1565b90633b2f660160e21b63ffffffff60e01b888301511603610393576102ed906118eb565b604051926102fa84610d41565b8352858784015260405161030e8882610da6565b5f815260408401526060830152608082015261032a8b8b611671565b526103358a8a611671565b505f5b895181101561037a57606061034d828c611671565b51015160608a015110610363575b600101610338565b97506001610371898b611671565b5198905061035b565b50919395909294986001905b0198949290959391610224565b50505091939590929498600190610386565b888c8689858c825151946103c86103c3604085019788515190611685565b611698565b925f945b8051805187101561057d57866103e4919a959a611671565b51935f908886019260408701925b8b51805182101561051757600191906001600160a01b0390610415908390611671565b51168c62ffffff8b5116885160020b90858060a01b03895116926040519461043c86610d41565b8552840152604083015260608201528c6104596040519182610da6565b5f815260808201526104696116e7565b9061047382611664565b5261047d81611664565b508c6104b4848060a01b038a51166001600160801b038c5116604051916104a383610d8b565b825284848301526040820152611bfc565b9190633b2f660160e21b63ffffffff60e01b83830151160361050e576104d9906118eb565b90604051936104e785610d8b565b845283015260408201526104fb8c8c611671565b526105068b8b611671565b505b016103f2565b50505050610508565b50509396989a95509698939150505f5b8751811015610568578961053b828a611671565b510151606088015110610551575b600101610527565b9350600161055f8589611671565b51949050610549565b509497919691956001909201949193906103cc565b6040518061058c878d8361140a565b0390f35b8296929061020d565b34610142576105a736611180565b6105af6115c4565b906105b86115f6565b9160808201906105c9825151611615565b8351602085015191936001600160a01b03918216929091168083101561098a579591805b60018060a01b0316809114955f9660608201986020925b855180518b101561079e578a61061991611671565b518051858201516040928301519251926001600160a01b03169160029190910b9062ffffff1661064884610d41565b88845260018060a01b038616888501526040840152606083015260808201526106a96001600160801b038d51166040519061068282610d70565b8382528688830152604082015260405161069c8882610da6565b5f81526060820152611985565b90633b2f660160e21b63ffffffff60e01b88830151160361078c576106cd906118eb565b604051926106da84610d41565b835285878401526040516106ee8882610da6565b5f815260408401526060830152608082015261070a8b8b611671565b526107158a8a611671565b50885161077a575b5f5b8951811015610761576060610734828c611671565b51015160608a01511161074a575b60010161071f565b97506001610758898b611671565b51989050610742565b50919395909294986001905b0198949290959391610604565b965061078588611664565b519661071d565b5050509193959092949860019061076d565b888c8689858c825151946107bc6103c3604085019788515190611685565b925f945b8051805187101561057d57866107d8919a959a611671565b51935f908886019260408701925b8b51805182101561090b57600191906001600160a01b0390610809908390611671565b51168c62ffffff8b5116885160020b90858060a01b03895116926040519461083086610d41565b8552840152604083015260608201528c61084d6040519182610da6565b5f8152608082015261085d6116e7565b9061086782611664565b5261087181611664565b508c6108a8848060a01b038a51166001600160801b038c51166040519161089783610d8b565b825284848301526040820152611817565b9190633b2f660160e21b63ffffffff60e01b838301511603610902576108cd906118eb565b90604051936108db85610d8b565b845283015260408201526108ef8c8c611671565b526108fa8b8b611671565b505b016107e6565b505050506108fc565b50509396989a95509698939150508651610978575b5f5b87518110156109635789610936828a611671565b51015160608801511161094c575b600101610922565b9350600161095a8589611671565b51949050610944565b509497919691956001909201949193906107c0565b925061098386611664565b5192610920565b829692906105ed565b346101425760406101ac6101a56109a936611060565b611bd1565b34610142576109bc3661114d565b30330361013357602081016109d181836114fe565b90506109df60408401611498565b916109e984611533565b9190815b610a0d576001600160801b0384633b2f660160e21b5f521660045260245ffd5b909192610a1a82866114fe565b91905f198501858111610a9957610a4a610a436001600160801b0392610a8896610a6695611547565b9788611b26565b9390610a5960808a018a6114ac565b93909216908515906119b0565b9015610aad57610a7890600f0b6114de565b6001600160801b03165b93611533565b918015610a99575f190190816109ed565b634e487b7160e01b5f52601160045260245ffd5b610ab99060801d6114de565b6001600160801b0316610a82565b34610142576020366003190112610142576004356001600160401b0381116101425736602382011215610142578060040135906001600160401b038211610142573660248383010111610142577f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03163303610b83575f6024819284806040519384930183378101838152039082305af1610b676117e8565b90610b7457602081519101fd5b63703a952d60e11b5f5260045ffd5b63570c108560e11b5f5260045ffd5b3461014257610ba03661114d565b303303610133576020810190610bb682826114fe565b9050610bc460408301611498565b91610bce81611533565b935f915b838310610bf5576001600160801b0385633b2f660160e21b5f521660045260245ffd5b90919293610c646001600160801b03610c4e610c39600194610c2b610c248a610c1e8b8b6114fe565b90611547565b9b8c611b26565b948593919216600f0b61157d565b610c4660808d018d6114ac565b9390926119b0565b9015610c6f576001600160801b03165b96611533565b959493019190610bd2565b60801d6001600160801b0316610c5e565b3461014257610c8e366110f5565b3033036101335780610cd161010861010360a06001600160801b03950193610cb58561148b565b86610cc260c08401611498565b16906100f960e08401846114ac565b15610cf857610ce29060801d6114de565b633b2f660160e21b5f9081529116600452602490fd5b610d0490600f0b6114de565b8116610116565b346101425760406101ac6101a5610d2136611060565b611985565b346101425760406101ac6101a5610d3c36610e85565b611817565b60a081019081106001600160401b03821117610d5c57604052565b634e487b7160e01b5f52604160045260245ffd5b608081019081106001600160401b03821117610d5c57604052565b606081019081106001600160401b03821117610d5c57604052565b90601f801991011681019081106001600160401b03821117610d5c57604052565b35906001600160a01b038216820361014257565b6001600160401b038111610d5c5760051b60200190565b359062ffffff8216820361014257565b35908160020b820361014257565b6001600160401b038111610d5c57601f01601f191660200190565b81601f8201121561014257803590610e4282610e10565b92610e506040519485610da6565b8284526020838301011161014257815f926020809301838601378301015290565b35906001600160801b038216820361014257565b6020600319820112610142576004356001600160401b03811161014257606081830360031901126101425760405191610ebd83610d8b565b610ec982600401610dc7565b835260248201356001600160401b038111610142578201908060238301121561014257600482013591610efb83610ddb565b92610f096040519485610da6565b808452602060048186019260051b84010101918383116101425760248101915b838310610f4e5750505050506020830152610f4690604401610e71565b604082015290565b82356001600160401b038111610142576004908301019060a0601f1983880301126101425760405190610f8082610d41565b610f8c60208401610dc7565b8252610f9a60408401610df2565b6020830152610fab60608401610e02565b6040830152610fbc60808401610dc7565b606083015260a0830135916001600160401b03831161014257610fe788602080969581960101610e2b565b6080820152815201920191610f29565b91908260a09103126101425760405161100f81610d41565b608061105b81839561102081610dc7565b855261102e60208201610dc7565b602086015261103f60408201610df2565b604086015261105060608201610e02565b606086015201610dc7565b910152565b6020600319820112610142576004356001600160401b038111610142576101008183036003190112610142576040519161109983610d70565b6110a68183600401610ff7565b835260a482013580151581036101425760208401526110c760c48301610e71565b604084015260e4820135916001600160401b038311610142576110ed9201600401610e2b565b606082015290565b602060031982011261014257600435906001600160401b038211610142576101009082900360031901126101425760040190565b805180835260209291819084018484015e5f828201840152601f01601f1916010190565b602060031982011261014257600435906001600160401b0382116101425760609082900360031901126101425760040190565b602060031982011261014257600435906001600160401b0382116101425760a0828203600319011261014257604051916111b983610d41565b6111c581600401610dc7565b83526111d360248201610dc7565b602084015260448101356001600160401b038111610142578101826023820112156101425760048101359061120782610ddb565b916112156040519384610da6565b808352602060048185019260051b840101019185831161014257602401905b82821061131457505050604084015261124f60648201610e71565b60608401526084810135906001600160401b0382116101425701816023820112156101425760048101359061128382610ddb565b926112916040519485610da6565b8284526020600460608287019502840101019181831161014257602401925b8284106112c35750505050608082015290565b6060848303126101425760206060916040516112de81610d8b565b6112e787610df2565b81526112f4838801610e02565b8382015261130460408801610dc7565b60408201528152019301926112b0565b6020809161132184610dc7565b815201910190611234565b80516001600160a01b03908116835260208083015182169084015260408083015162ffffff169084015260608083015160020b9084015260809182015116910152565b9080602083519182815201916020808360051b8301019401925f915b83831061139a57505050505090565b90919293946020806113fb600193601f1986820301875260a060808b518780841b03815116845262ffffff868201511686850152604081015160020b60408501528780841b0360608201511660608501520151918160808201520190611129565b9701930193019193929061138b565b6040815261141c60408201835161132c565b6020820151151560e082015260806114466040840151610120610100850152610160840190611129565b92606081015161012084015201516101408201526020818303910152604080611478845160608552606085019061136f565b9360208101516020850152015191015290565b3580151581036101425790565b356001600160801b03811681036101425790565b903590601e198136030182121561014257018035906001600160401b0382116101425760200191813603831361014257565b600f0b6f7fffffffffffffffffffffffffffffff198114610a99575f0390565b903590601e198136030182121561014257018035906001600160401b03821161014257602001918160051b3603831361014257565b356001600160a01b03811681036101425790565b91908110156115695760051b81013590609e1981360301821215610142570190565b634e487b7160e01b5f52603260045260245ffd5b600160ff1b8114610a99575f0390565b91908203918211610a9957565b604051906115a782610d41565b5f6080838281528260208201528260408201528260608201520152565b604051906115d182610d41565b5f6080836115dd61159a565b8152826020820152606060408201528260608201520152565b6040519061160382610d8b565b5f604083606081528260208201520152565b9061161f82610ddb565b61162c6040519182610da6565b828152809261163d601f1991610ddb565b01905f5b82811061164d57505050565b6020906116586115c4565b82828501015201611641565b8051156115695760200190565b80518210156115695760209160051b010190565b81810292918115918404141715610a9957565b906116a282610ddb565b6116af6040519182610da6565b82815280926116c0601f1991610ddb565b01905f5b8281106116d057505050565b6020906116db6115f6565b828285010152016116c4565b604080519091906116f88382610da6565b6001815291601f1901825f5b82811061171057505050565b60209060405161171f81610d41565b5f81525f838201525f60408201525f60608201526060608082015282828501015201611704565b6020815260018060a01b03825116602082015260606001600160801b03604061177c60208601518483870152608086019061136f565b9401511691015290565b602081830312610142578051906001600160401b038211610142570181601f82011215610142578051906117b982610e10565b926117c76040519485610da6565b8284526020838301011161014257815f9260208093018386015e8301015290565b3d15611812573d906117f982610e10565b916118076040519384610da6565b82523d5f602084013e565b606090565b60605f6118725f6118426118505a9660405192839163aa2f150160e01b602084015260248301611746565b03601f198101835282610da6565b604051809381926348c8949160e01b8352602060048401526024830190611129565b0381837f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165af190816118cb575b506118c65750506118c26118ba6117e8565b915a9061158d565b9091565b915091565b6118e6903d805f833e6118de8183610da6565b810190611786565b6118a8565b60208101516001600160e01b0319166304d099ff60e21b0161190e576024015190565b6040516306190b2b60e41b815260206004820152908190611933906024830190611129565b0390fd5b6101206060611982936020845261195260208501825161132c565b6020810151151560c08501526001600160801b0360408201511660e0850152015191610100808201520190611129565b90565b60605f6118725f6118426118505a9660405192839163595323f560e01b602084015260248301611937565b939493926020908215611b08576101446401000276a4935b604051906119d582610d8b565b1515988982528085830194888652604084019760018060a01b031688526040519788968795633cf3645360e21b8752611a128d600489019061132c565b51151560a48701525160c4860152516001600160a01b031660e48501526101206101048501526101248401829052848401375f838284010152601f801991011681010301815f60018060a01b037f0000000000000000000000000000000000000000000000000000000000000000165af1908115611afd575f91611acb575b5080945f8312145f14611ac35760801d5b600f0b03611aad5750565b60a09020631e97b5cd60e21b5f5260045260245ffd5b600f0b611aa2565b90506020813d602011611af5575b81611ae660209383610da6565b8101031261014257515f611a91565b3d9150611ad9565b6040513d5f823e3d90fd5b61014473fffd8963efd1fc6a506488495d951d5263988d25936119c8565b90611b2f61159a565b50611b3982611533565b6001600160a01b038281169290821680841015611bc757505b6001600160a01b031691821492602081013562ffffff811690819003610142576040820135918260020b80930361014257606001359260018060a01b0384168094036101425760405194611ba586610d41565b85526001600160a01b0316602085015260408401526060830152608082015291565b9150508190611b52565b60605f6118725f6118426118505a9660405192839163775f063560e11b602084015260248301611937565b60605f6118725f6118426118505a96604051928391631a8da8e360e21b60208401526024830161174656fea164736f6c634300081a000a" as Hex;
+export const V4MetaQuoter = {
+    abi,
+    bytecode,
+    deployedBytecode,
+};
