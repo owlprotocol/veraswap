@@ -113,7 +113,6 @@ export default function SimplifiedPortfolioPage() {
             currencyHops: [USDC_BASE.address],
             basketTokens: bucket.allocations,
         });
-        console.log({ swapData });
         sendTransaction({ chainId: base.id, ...swapData });
     };
 
@@ -188,7 +187,7 @@ export default function SimplifiedPortfolioPage() {
                         <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                         <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                         <Badge variant="secondary" className="ml-2">
-                            {categoryPercentage}%
+                            {categoryPercentage.toFixed(2)}%
                         </Badge>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -202,7 +201,7 @@ export default function SimplifiedPortfolioPage() {
                                     <span className="text-muted-foreground">{token.symbol}</span>
                                 </div>
                                 <span className="font-medium">
-                                    {(Number(allocation.weight) / Number(totalWeight)) * 100}%
+                                    {((Number(allocation.weight) / Number(totalWeight)) * 100).toFixed(2)}%
                                 </span>
                             </div>
                         ))}
