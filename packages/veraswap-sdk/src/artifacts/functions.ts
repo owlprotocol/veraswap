@@ -3559,4 +3559,35 @@ export const functions = [
         outputs: [],
         stateMutability: "payable",
     },
+    {
+        type: "function",
+        name: "basket",
+        inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        outputs: [
+            { name: "addr", type: "address", internalType: "address" },
+            { name: "units", type: "uint256", internalType: "uint256" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "basketLength",
+        inputs: [],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        name: "burn",
+        inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "mint",
+        inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+        outputs: [],
+        stateMutability: "payable",
+    },
 ] as const;
