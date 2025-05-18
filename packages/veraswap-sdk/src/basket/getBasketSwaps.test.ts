@@ -73,7 +73,6 @@ describe("basket/getBasketSwaps.test.ts", function () {
                 universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
             basketTokens,
-            slippage: 0, //TODO: Implement this
         });
 
         const hash = await anvilClientL1.sendTransaction(call);

@@ -109,7 +109,7 @@ export default function SimplifiedPortfolioPage() {
             currencyIn: zeroAddress,
             deadline: routerDeadline,
             exactAmount: amountParsed,
-            slippage: 0,
+
             currencyHops: [USDC_BASE.address],
             basketTokens: bucket.allocations,
         });
