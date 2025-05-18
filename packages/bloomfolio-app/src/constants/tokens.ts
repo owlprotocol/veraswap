@@ -1,5 +1,6 @@
 import { Address, zeroAddress } from "viem";
 import { base } from "viem/chains";
+import { BucketAllocation } from "./buckets.js";
 
 export type TokenCategory = "native" | "stable" | "alt" | "commodity";
 
@@ -50,10 +51,7 @@ export const BASE_TOKENS = [
     },
 ] as const satisfies Token[];
 
-export function getTokenDetailsForAllocation(
-    allocation: { address: Address; chainId: number; weight: bigint },
-    tokens: Token[],
-) {
+export function getTokenDetailsForAllocation(allocation: BucketAllocation, tokens: Token[]) {
     return tokens.find(
         (t) => t.address.toLowerCase() === allocation.address.toLowerCase() && t.chainId === allocation.chainId,
     );

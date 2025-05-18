@@ -1,10 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, ShoppingCart, X, ArrowRight, ChevronDown, AlertCircle } from "lucide-react";
-import { useAccount, useBalance, useChainId, useSwitchChain } from "wagmi";
-import { Address } from "viem";
+import {
+    useAccount,
+    useBalance,
+    useChainId,
+    useReadContract,
+    useSendCalls,
+    useSendTransaction,
+    useSwitchChain,
+    useWaitForTransactionReceipt,
+} from "wagmi";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import { encodeFunctionData, erc20Abi, formatUnits, parseUnits, zeroAddress } from "viem";
 import { base } from "viem/chains";
-import { USDC_BASE } from "@owlprotocol/veraswap-sdk";
+import {
+    MAX_UINT_256,
+    PERMIT2_ADDRESS,
+    UNISWAP_CONTRACTS,
+    USDC,
+    USDC_BASE,
+    getPermit2PermitSignature,
+} from "@owlprotocol/veraswap-sdk";
+import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -13,6 +31,7 @@ import { Input } from "@/components/ui/input.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BucketAllocation, BUCKETS } from "@/constants/buckets.js";
 import { BASE_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { config } from "@/config.js";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -50,12 +69,39 @@ export default function SimplifiedPortfolioPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handlePurchase = () => {
-        if (!isConnected || chainId !== base.id) return;
+    const universalRouter = UNISWAP_CONTRACTS[base.id]!.universalRouter;
+    // const usdcAllowance = useReadContract({
+    //     abi: erc20Abi,
+    //     functionName: "allowance",
+    //     args: [address ?? zeroAddress, PERMIT2_ADDRESS],
+    // });
 
-        const requiredAmount = Number.parseFloat(amount);
-        const userBalance = Number(balance?.value || 0) / 1e6;
-        if (userBalance < requiredAmount) return;
+    const { sendTransaction, hash } = useSendTransaction();
+
+    const amountParsed = parseUnits(amount, USDC.decimals);
+    const balanceFormatted = formatUnits(balance?.value ?? 0n, USDC.decimals);
+    const handlePurchase = async () => {
+        if (!isConnected || chainId !== base.id || !balance) return;
+
+        const userBalance = balance?.value;
+        if (userBalance < amountParsed) return;
+
+        // if (usdcAllowance < amountParsed) {
+        //     const allowHash = await sendTransactionPermitAsync({
+        //         to: USDC_BASE.address,
+        //         chainId: base.id,
+        //         data: encodeFunctionData({
+        //             abi: IERC20.abi,
+        //             functionName: "approve",
+        //             args: [PERMIT2_ADDRESS, MAX_UINT_256],
+        //         }),
+        //     });
+        //
+        //     await waitForTransactionReceipt(config, { hash: allowHash });
+        // }
+        //
+        // const permit2Signature = await getPermit2PermitSignature(queryClient, {});
+        sendSwapTransaction({});
 
         setShowConfirmation(true);
     };
@@ -72,23 +118,15 @@ export default function SimplifiedPortfolioPage() {
     };
 
     const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
-    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0n);
-    const userBalance = Number(balance?.value || 0) / 1e6;
-    const requiredAmount = Number(amount);
-    const hasInsufficientBalance = isConnected && !isBalanceLoading && userBalance < requiredAmount;
-    const isAmountValid = requiredAmount > 0;
+    const selectedBucketTotalWeight = selectedBucketData?.allocations.reduce((acc, all) => acc + all.weight, 0);
+    const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
+    const isAmountValid = amountParsed > 0;
 
-    const renderAllocationDetails = (
-        allocation: { address: Address; chainId: number; weight: bigint },
-        totalWeight: bigint,
-    ) => {
+    const renderAllocationDetails = (allocation: BucketAllocation, totalWeight: number) => {
         const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
         if (!token) return null;
 
-        const value =
-            !isNaN(Number(amount)) && Number(amount) > 0
-                ? ((Number(amount) * Number(allocation.weight)) / Number(totalWeight)).toFixed(2)
-                : null;
+        const value = amountParsed > 0n ? ((Number(amount) * allocation.weight) / totalWeight).toFixed(10) : 0n;
 
         return (
             <div key={token.address} className="flex justify-between text-sm">
@@ -105,7 +143,7 @@ export default function SimplifiedPortfolioPage() {
         );
     };
 
-    const groupAllocationsByCategory = (allocations: { address: Address; chainId: number; weight: bigint }[]) => {
+    const groupAllocationsByCategory = (allocations: BucketAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
                 const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
@@ -118,10 +156,7 @@ export default function SimplifiedPortfolioPage() {
                 acc[category].push({ allocation, token });
                 return acc;
             },
-            {} as Record<
-                TokenCategory,
-                { allocation: { address: Address; chainId: number; weight: bigint }; token: Token }[]
-            >,
+            {} as Record<TokenCategory, { allocation: BucketAllocation; token: Token }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -133,10 +168,10 @@ export default function SimplifiedPortfolioPage() {
     const renderCategorySection = (
         category: TokenCategory,
         items: { allocation: BucketAllocation; token: Token }[],
-        totalWeight: bigint,
+        totalWeight: number,
     ) => {
-        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0n);
-        const categoryPercentage = (Number(categoryWeight) / Number(totalWeight)) * 100;
+        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
+        const categoryPercentage = (categoryWeight / totalWeight) * 100;
 
         return (
             <Collapsible className="border rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -282,7 +317,7 @@ export default function SimplifiedPortfolioPage() {
                                                         "Loading balance..."
                                                     ) : (
                                                         <>
-                                                            Balance: {userBalance} USDC
+                                                            Balance: {balanceFormatted} USDC
                                                             {hasInsufficientBalance && (
                                                                 <div className="text-red-500 mt-1">
                                                                     Insufficient balance
@@ -309,7 +344,7 @@ export default function SimplifiedPortfolioPage() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => switchChain?.({ chainId: base.id })}
+                                                        onClick={() => switchChain({ chainId: base.id })}
                                                         className="ml-2"
                                                     >
                                                         Switch Network
@@ -396,7 +431,7 @@ export default function SimplifiedPortfolioPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {BUCKETS.map((bucket) => {
-                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0n);
+                                    const totalWeight = bucket.allocations.reduce((sum, all) => all.weight + sum, 0);
                                     return (
                                         <Card
                                             key={bucket.id}
