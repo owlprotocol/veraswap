@@ -17,7 +17,7 @@ export interface GetBasketSwapsParams {
     deadline: bigint;
     permit2PermitParams?: [PermitSingle, Hex];
     receiver?: Address;
-    slippage: number;
+    slippageCentiBps?: bigint; // 1_000 = 1% (default)
     currencyHops: Address[];
     contracts: {
         v4StateView: Address;
@@ -39,17 +39,27 @@ export interface GetBasketSwapsParams {
  * @returns list of quotes
  */
 export async function getBasketSwaps(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketSwapsParams) {
-    const { contracts, currencyIn, exactAmount, permit2PermitParams, deadline, receiver } = params;
+    const {
+        contracts,
+        currencyIn,
+        exactAmount,
+        slippageCentiBps = 1_000n,
+        permit2PermitParams,
+        deadline,
+        receiver,
+    } = params;
     const quotes = await getBasketQuotes(queryClient, wagmiConfig, params);
 
     // Compute V4 swap
     const swaps: BatchSwapItem[] = quotes.map((quote) => {
+        const amountOutMinimum = (quote.amountOut * (100_000n - slippageCentiBps)) / 100_000n;
+
         return {
             currencyIn: quote.currencyIn,
             currencyOut: quote.currencyOut,
             route: quote.route,
             amountIn: quote.amountIn,
-            amountOutMinimum: quote.amountOut, //TODO: Add slippage
+            amountOutMinimum,
         };
     });
     const v4Swap = getBatchSwaps({ swaps, receiver });
