@@ -1,4 +1,3 @@
-import { AbiParametersToPrimitiveTypes } from "abitype";
 import { parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
