@@ -3,7 +3,6 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
-import { VeraFundButton } from "@/components/VeraFundButton.js";
 
 import { Button } from "@/components/ui/button.js";
 
@@ -20,8 +19,6 @@ function RootComponent() {
                     <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">Bloomfolio</h1>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
-                        {/* TODO: add back later? */}
-                        {/* <VeraFundButton /> */}
                         <ThemeSwitcher />
                         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
                     </div>
@@ -38,7 +35,6 @@ function RootComponent() {
                         }`}
                     >
                         <div className="px-4 flex flex-col items-center space-y-3">
-                            <VeraFundButton />
                             <ConnectButton showBalance={false} accountStatus="address" chainStatus="full" />
                         </div>
                     </div>
