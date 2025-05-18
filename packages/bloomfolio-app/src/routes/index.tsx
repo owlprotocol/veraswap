@@ -469,12 +469,15 @@ export default function SimplifiedPortfolioPage() {
 
                                                 <div className="space-y-2">
                                                     {groupAllocationsByCategory(bucket.allocations).map(
-                                                        ([category, items]) =>
-                                                            renderCategorySection(
-                                                                category as TokenCategory,
-                                                                items,
-                                                                totalWeight,
-                                                            ),
+                                                        ([category, items]) => (
+                                                            <div key={`${bucket.id}-${category}`}>
+                                                                {renderCategorySection(
+                                                                    category as TokenCategory,
+                                                                    items,
+                                                                    totalWeight,
+                                                                )}
+                                                            </div>
+                                                        ),
                                                     )}
                                                 </div>
                                             </CardContent>
