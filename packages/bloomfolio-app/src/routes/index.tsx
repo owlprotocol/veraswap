@@ -10,7 +10,7 @@ import {
     useWaitForTransactionReceipt,
 } from "wagmi";
 import { formatEther, parseEther, zeroAddress } from "viem";
-import { base } from "viem/chains";
+import { bsc } from "viem/chains";
 import { UNISWAP_CONTRACTS, USDC_BASE, getBasketSwaps } from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
@@ -79,7 +79,7 @@ export default function SimplifiedPortfolioPage() {
     // const amountParsed = parseUnits(amount, USDC.decimals);
     // const balanceFormatted = formatUnits(balance?.value ?? 0n, USDC.decimals);
     const handlePurchase = async () => {
-        if (!isConnected || chainId !== base.id || !balance) return;
+        if (!isConnected || chainId !== bsc.id || !balance) return;
 
         const userBalance = balance?.value;
         if (userBalance < amountParsed) return;
@@ -87,7 +87,7 @@ export default function SimplifiedPortfolioPage() {
         // if (usdcAllowance < amountParsed) {
         //     const allowHash = await sendTransactionPermitAsync({
         //         to: USDC_BASE.address,
-        //         chainId: base.id,
+        //         chainId: bsc.id,
         //         data: encodeFunctionData({
         //             abi: IERC20.abi,
         //             functionName: "approve",
@@ -104,8 +104,8 @@ export default function SimplifiedPortfolioPage() {
 
         const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
         const swapData = await getBasketSwaps(queryClient, config, {
-            chainId: base.id,
-            contracts: UNISWAP_CONTRACTS[base.id]!,
+            chainId: bsc.id,
+            contracts: UNISWAP_CONTRACTS[bsc.id]!,
             currencyIn: zeroAddress,
             deadline: routerDeadline,
             exactAmount: amountParsed,
@@ -113,7 +113,7 @@ export default function SimplifiedPortfolioPage() {
             currencyHops: [USDC_BASE.address],
             basketTokens: bucket.allocations,
         });
-        sendTransaction({ chainId: base.id, ...swapData });
+        sendTransaction({ chainId: bsc.id, ...swapData });
     };
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,7 +251,7 @@ export default function SimplifiedPortfolioPage() {
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Transaction ID</span>
                                             <a
-                                                href={`https://basescan.org/tx/${hash}`}
+                                                href={`https://bscscan.com/tx/${hash}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="font-medium text-primary hover:underline flex items-center gap-1"
@@ -350,16 +350,16 @@ export default function SimplifiedPortfolioPage() {
                                                     </span>
                                                 </div>
                                             )}
-                                            {isConnected && chainId !== base.id && (
+                                            {isConnected && chainId !== bsc.id && (
                                                 <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
                                                         <AlertCircle className="h-4 w-4" />
-                                                        <span className="text-sm">Please switch to Base</span>
+                                                        <span className="text-sm">Please switch to BSC</span>
                                                     </div>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => switchChain({ chainId: base.id })}
+                                                        onClick={() => switchChain({ chainId: bsc.id })}
                                                         className="ml-2"
                                                     >
                                                         Switch Network
@@ -405,8 +405,8 @@ export default function SimplifiedPortfolioPage() {
                                                     className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                                     size="sm"
                                                     onClick={
-                                                        chainId !== base.id
-                                                            ? () => switchChain?.({ chainId: base.id })
+                                                        chainId !== bsc.id
+                                                            ? () => switchChain?.({ chainId: bsc.id })
                                                             : handlePurchase
                                                     }
                                                     disabled={
@@ -427,7 +427,7 @@ export default function SimplifiedPortfolioPage() {
                                                             <ShoppingCart className="mr-1 h-4 w-4" />
                                                             {!isConnected
                                                                 ? "Connect Wallet"
-                                                                : chainId !== base.id
+                                                                : chainId !== bsc.id
                                                                   ? "Switch Network"
                                                                   : !isAmountValid
                                                                     ? "Enter Amount"
