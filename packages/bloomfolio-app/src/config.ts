@@ -13,11 +13,7 @@ export const chains = (import.meta.env.MODE === "development"
     ? [...allChains, ...localChains]
     : allChains) as unknown as [ChainWithMetadata, ...ChainWithMetadata[]];
 
-//TODO: Why not support all wallets even in devmode?
-const wallets =
-    import.meta.env.MODE === "development"
-        ? [metaMaskWallet]
-        : [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet];
+const wallets = [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet];
 
 export const connectors = connectorsForWallets(
     [
