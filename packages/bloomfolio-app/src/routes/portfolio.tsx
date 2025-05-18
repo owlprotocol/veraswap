@@ -1,31 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import {
-    ArrowRightLeft,
-    Coins,
-    TrendingUp,
-    Landmark,
-    BarChart3,
-    ChevronRight,
-    Wallet,
-    TrendingDown,
-    Info,
-} from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
+import { formatUnits, zeroAddress } from "viem";
+import { useAccount, useBalance, useReadContracts } from "wagmi";
+import { erc20Abi } from "viem";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Separator } from "@/components/ui/separator.js";
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.js";
+import { BUCKETS } from "@/constants/buckets.js";
+import { BASE_TOKENS, getTokenDetailsForAllocation, Token } from "@/constants/tokens.js";
 
 export const Route = createFileRoute("/portfolio")({
     component: PortfolioPage,
 });
 
 const COLORS = {
-    bitcoin: "#F7931A",
-    ethereum: "#627EEA",
-    stablecoins: "#26A17B",
-    altcoins: "#8A92B2",
+    stable: "#26A17B",
+    native: "#627EEA",
+    commodity: "#F7931A",
+    alt: "#8A92B2",
     background: {
         primary: "from-violet-500 to-purple-500",
         secondary: "from-blue-500 to-cyan-400",
@@ -34,110 +30,125 @@ const COLORS = {
     },
 };
 
-const initialPortfolio = [
-    { name: "Bitcoin", value: 45, color: COLORS.bitcoin },
-    { name: "Ethereum", value: 30, color: COLORS.ethereum },
-    { name: "Stablecoins", value: 15, color: COLORS.stablecoins },
-    { name: "Other Altcoins", value: 10, color: COLORS.altcoins },
-];
+interface Assets {
+    name: string;
+    value: number;
+    color: string;
+    token: Token;
+    balance: bigint;
+    balanceUsd: number;
+    change?: number;
+}
 
-const suggestions = [
-    {
-        id: "stablecoins",
-        title: "Stablecoins",
-        description: "Lower volatility, steady returns",
-        icon: Coins,
-        allocation: { Bitcoin: 20, Ethereum: 20, "USDC/USDT": 50, "Other Altcoins": 10 },
-        gradient: COLORS.background.tertiary,
-        riskLevel: "Low",
-    },
-    {
-        id: "growth",
-        title: "Growth",
-        description: "Higher risk, higher potential returns",
-        icon: TrendingUp,
-        allocation: { Bitcoin: 40, Ethereum: 40, "USDC/USDT": 5, "Other Altcoins": 15 },
-        gradient: COLORS.background.secondary,
-        riskLevel: "High",
-    },
-    {
-        id: "balanced",
-        title: "Balanced",
-        description: "Moderate risk and returns",
-        icon: BarChart3,
-        allocation: { Bitcoin: 30, Ethereum: 30, "USDC/USDT": 30, "Other Altcoins": 10 },
-        gradient: COLORS.background.primary,
-        riskLevel: "Medium",
-    },
-    {
-        id: "conservative",
-        title: "Conservative",
-        description: "Focus on established assets",
-        icon: Landmark,
-        allocation: { Bitcoin: 25, Ethereum: 15, "USDC/USDT": 55, "Other Altcoins": 5 },
-        gradient: COLORS.background.quaternary,
-        riskLevel: "Low-Medium",
-    },
-];
+function useNativeBalance() {
+    const { address } = useAccount();
+    const { data: ethBalance } = useBalance({ address });
+    return ethBalance?.value ?? 0n;
+}
 
-const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
-                <p className="font-medium text-lg">{payload[0].name}</p>
-                <p className="text-primary font-bold">{payload[0].value}%</p>
-            </div>
-        );
-    }
-    return null;
-};
-export default function PortfolioPage() {
-    const [currentPortfolio, setCurrentPortfolio] = useState(initialPortfolio);
-    const [previewPortfolio, setPreviewPortfolio] = useState<typeof initialPortfolio | null>(null);
-    const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
+function useTokenBalances(tokens: Token[]): Assets[] {
+    const { address } = useAccount();
+    const ethBalance = useNativeBalance();
 
-    const updatePreview = (strategyId: string) => {
-        setSelectedStrategy(strategyId);
+    const prices = {
+        USDC: 1,
+        ETH: 3000,
+        cbBTC: 60000,
+        LINK: 15,
+    } as const;
 
-        const strategy = suggestions.find((s) => s.id === strategyId);
-        if (!strategy) return;
+    const erc20Tokens = tokens.filter((token) => token.address !== zeroAddress);
+    const { data: erc20Balances } = useReadContracts({
+        contracts: erc20Tokens.map((token) => ({
+            address: token.address,
+            abi: erc20Abi,
+            functionName: "balanceOf",
+            args: [address],
+        })),
+    });
 
-        const newPortfolio = [
-            { name: "Bitcoin", value: strategy.allocation.Bitcoin, color: COLORS.bitcoin },
-            { name: "Ethereum", value: strategy.allocation.Ethereum, color: COLORS.ethereum },
-            { name: "Stablecoins", value: strategy.allocation["USDC/USDT"], color: COLORS.stablecoins },
-            { name: "Other Altcoins", value: strategy.allocation["Other Altcoins"], color: COLORS.altcoins },
-        ];
+    return tokens.map((token) => {
+        const balance: bigint =
+            token.address === zeroAddress
+                ? ethBalance
+                : ((erc20Balances?.[erc20Tokens.findIndex((t) => t.address === token.address)]?.result as bigint) ??
+                  0n);
 
-        setPreviewPortfolio(newPortfolio);
-    };
-    const handleRebalance = () => {
-        if (!selectedStrategy) return;
+        const balanceUsd =
+            balance === 0n
+                ? 0
+                : Number(formatUnits(balance, token.decimals ?? 18)) *
+                  (prices[token.symbol as keyof typeof prices] ?? 0);
 
-        if (previewPortfolio) {
-            setCurrentPortfolio(previewPortfolio);
-            setPreviewPortfolio(null);
-            setSelectedStrategy(null);
-        }
-    };
-
-    // Calculate the change for each asset
-    const getAssetChange = (assetName: string) => {
-        if (!previewPortfolio) return { value: 0, isPositive: false };
-
-        const currentAsset = currentPortfolio.find((a) => a.name === assetName);
-        const previewAsset = previewPortfolio.find((a) => a.name === assetName);
-
-        if (!currentAsset || !previewAsset) return { value: 0, isPositive: false };
-
-        const change = previewAsset.value - currentAsset.value;
         return {
-            value: Math.abs(change),
-            isPositive: change > 0,
+            name: token.symbol,
+            value: balanceUsd,
+            color: COLORS[token.category],
+            token,
+            balance,
+            balanceUsd,
         };
+    });
+}
+
+function usePortfolioValue(assets: Assets[]) {
+    return assets.reduce((sum, asset) => sum + asset.balanceUsd, 0);
+}
+
+// const CustomTooltip = ({ active, payload }: any) => {
+//     if (active && payload && payload.length) {
+//         return (
+//             <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
+//                 <p className="font-medium text-lg">{payload[0].name}</p>
+//                 <p className="text-primary font-bold">{payload[0].value}%</p>
+//             </div>
+//         );
+//     }
+//     return null;
+// };
+
+export default function PortfolioPage() {
+    const currentPortfolio = useTokenBalances(BASE_TOKENS);
+    const totalValue = usePortfolioValue(currentPortfolio);
+    const [previewPortfolio, setPreviewPortfolio] = useState<Assets[] | null>(null);
+    const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
+
+    const updatePreview = (bucketId: string) => {
+        setSelectedBucket(bucketId);
+        const bucket = BUCKETS.find((b) => b.id === bucketId);
+        if (!bucket) return;
+
+        const preview = bucket.allocations
+            .map((allocation) => {
+                const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
+                if (!token) return null;
+
+                const currentAsset = currentPortfolio.find((a) => a.token.address === token.address);
+                if (!currentAsset) return null;
+
+                const targetValue = (Number(allocation.weight) / 100) * totalValue;
+                const currentValue = currentAsset.balanceUsd;
+                const change = targetValue - currentValue;
+
+                return {
+                    ...currentAsset,
+                    value: targetValue,
+                    balanceUsd: targetValue,
+                    change,
+                };
+            })
+            .filter((asset): asset is Assets & { change: number } => asset !== null);
+
+        setPreviewPortfolio(preview);
     };
 
-    const selectedStrategyData = selectedStrategy ? suggestions.find((s) => s.id === selectedStrategy) : null;
+    const handleRebalance = () => {
+        if (!selectedBucket || !previewPortfolio) return;
+        setPreviewPortfolio(null);
+        setSelectedBucket(null);
+    };
+
+    const selectedBucketData = selectedBucket ? BUCKETS.find((b) => b.id === selectedBucket) : null;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
@@ -150,213 +161,150 @@ export default function PortfolioPage() {
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Main content area */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* Portfolio visualization */}
                         <Card className="overflow-hidden border-none shadow-lg">
                             <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-6">
-                                <h2 className="text-2xl font-bold">Asset Distribution</h2>
-                                <p className="text-muted-foreground">
-                                    Visualize and compare your portfolio allocations
-                                </p>
+                                <h2 className="text-2xl font-bold">Portfolio Balances</h2>
+                                <p className="text-muted-foreground">View and manage your token balances</p>
                             </div>
 
                             <CardContent className="p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Current Allocation Chart */}
-                                    <div className="flex flex-col">
-                                        <h3 className="text-lg font-medium mb-2 text-center">Current Allocation</h3>
-                                        <div className="h-[300px] w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={currentPortfolio}
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        labelLine={false}
-                                                        outerRadius={110}
-                                                        innerRadius={60}
-                                                        fill="#8884d8"
-                                                        dataKey="value"
-                                                        paddingAngle={2}
-                                                        isAnimationActive={true}
-                                                        activeIndex={[]}
-                                                        activeShape={(props) => {
-                                                            const RADIAN = Math.PI / 180;
-                                                            const {
-                                                                cx,
-                                                                cy,
-                                                                midAngle,
-                                                                outerRadius,
-                                                                startAngle,
-                                                                endAngle,
-                                                                fill,
-                                                            } = props;
-                                                            return (
-                                                                <g>
-                                                                    <path
-                                                                        d={`M${cx},${cy}L${cx + outerRadius * Math.cos(-midAngle * RADIAN)},${
-                                                                            cy +
-                                                                            outerRadius * Math.sin(-midAngle * RADIAN)
-                                                                        }A${outerRadius},${outerRadius},0,${endAngle - startAngle >= 180 ? 1 : 0},0,${
-                                                                            cx +
-                                                                            outerRadius * Math.cos(-startAngle * RADIAN)
-                                                                        },${cy + outerRadius * Math.sin(-startAngle * RADIAN)}Z`}
-                                                                        fill={fill}
-                                                                        stroke={fill}
-                                                                        strokeWidth={2}
-                                                                        opacity={0.9}
+                                <div className="space-y-6">
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Asset</TableHead>
+                                                    <TableHead className="text-right">Balance</TableHead>
+                                                    <TableHead className="text-right">USD Value</TableHead>
+                                                    <TableHead className="text-right">Allocation</TableHead>
+                                                    <TableHead className="text-right">Change</TableHead>
+                                                    {/* Portfolio Distribution Column - Temporarily disabled
+                                                    <TableHead className="w-[100px]"></TableHead>
+                                                    */}
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {currentPortfolio.map((asset) => {
+                                                    const previewAsset = previewPortfolio?.find(
+                                                        (a) => a.token.address === asset.token.address,
+                                                    );
+                                                    const allocation = (asset.balanceUsd / totalValue) * 100;
+                                                    const change = previewAsset ? previewAsset.change : 0;
+
+                                                    return (
+                                                        <TableRow key={asset.name}>
+                                                            <TableCell>
+                                                                <div className="flex items-center">
+                                                                    <div
+                                                                        className="w-4 h-4 rounded-full mr-2"
+                                                                        style={{ backgroundColor: asset.color }}
                                                                     />
-                                                                </g>
-                                                            );
-                                                        }}
-                                                    >
-                                                        {currentPortfolio.map((entry, index) => (
-                                                            <Cell
-                                                                key={`cell-${index}`}
-                                                                fill={entry.color}
-                                                                stroke="none"
-                                                            />
-                                                        ))}
-                                                    </Pie>
-                                                    <Tooltip
-                                                        content={<CustomTooltip />}
-                                                        cursor={false}
-                                                        wrapperStyle={{ outline: "none" }}
-                                                    />
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                                                                    <span className="font-medium">{asset.name}</span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right font-medium">
+                                                                {formatUnits(asset.balance, asset.token.decimals ?? 18)}
+                                                            </TableCell>
+                                                            <TableCell className="text-right font-medium">
+                                                                $
+                                                                {asset.balanceUsd.toLocaleString(undefined, {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2,
+                                                                })}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {allocation.toFixed(2)}%
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                {previewAsset?.change !== undefined && (
+                                                                    <span
+                                                                        className={`font-medium ${
+                                                                            previewAsset.change > 0
+                                                                                ? "text-green-500"
+                                                                                : "text-red-500"
+                                                                        }`}
+                                                                    >
+                                                                        {previewAsset.change > 0 ? "+" : ""}$
+                                                                        {Math.abs(previewAsset.change).toLocaleString(
+                                                                            undefined,
+                                                                            {
+                                                                                minimumFractionDigits: 2,
+                                                                                maximumFractionDigits: 2,
+                                                                            },
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </TableCell>
+                                                            {/* Portfolio Distribution Dialog - Temporarily disabled
+                                                            <TableCell className="text-right">
+                                                                <Dialog>
+                                                                    <DialogTrigger asChild>
+                                                                        <Button variant="ghost" size="sm">
+                                                                            <BarChart3 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DialogTrigger>
+                                                                    <DialogContent className="max-w-3xl">
+                                                                        <DialogHeader>
+                                                                            <DialogTitle>
+                                                                                Portfolio Distribution
+                                                                            </DialogTitle>
+                                                                        </DialogHeader>
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                                                            <div className="flex flex-col">
+                                                                                <h3 className="text-lg font-medium mb-2 text-center">
+                                                                                    Current Allocation
+                                                                                </h3>
+                                                                                <div className="h-[300px] w-full">
+                                                                                    <ResponsiveContainer
+                                                                                        width="100%"
+                                                                                        height="100%"
+                                                                                    >
+                                                                                        <PieChart>
+                                                                                            <Pie
+                                                                                                data={currentPortfolio}
+                                                                                                cx="50%"
+                                                                                                cy="50%"
+                                                                                                labelLine={false}
+                                                                                                outerRadius={110}
+                                                                                                innerRadius={60}
+                                                                                                fill="#8884d8"
+                                                                                                dataKey="value"
+                                                                                                paddingAngle={2}
+                                                                                                isAnimationActive={true}
+                                                                                            >
+                                                                                                {currentPortfolio.map(
+                                                                                                    (entry) => (
+                                                                                                        <Cell
+                                                                                                            key={`cell-${entry.name}`}
+                                                                                                            fill={
+                                                                                                                entry.color
+                                                                                                            }
+                                                                                                            stroke="none"
+                                                                                                        />
+                                                                                                    ),
+                                                                                                )}
+                                                                                            </Pie>
+                                                                                            <Tooltip
+                                                                                                content={
+                                                                                                    <CustomTooltip />
+                                                                                                }
+                                                                                            />
+                                                                                        </PieChart>
+                                                                                    </ResponsiveContainer>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </DialogContent>
+                                                                </Dialog>
+                                                            </TableCell>
+                                                            */}
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
                                     </div>
-
-                                    <div className="flex flex-col">
-                                        <h3 className="text-lg font-medium mb-2 text-center">
-                                            {selectedStrategy
-                                                ? `${selectedStrategyData?.title} Preview`
-                                                : "Strategy Preview"}
-                                        </h3>
-                                        <div className="h-[300px] w-full">
-                                            {selectedStrategy ? (
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={previewPortfolio || currentPortfolio}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            labelLine={false}
-                                                            outerRadius={110}
-                                                            innerRadius={60}
-                                                            fill="#8884d8"
-                                                            dataKey="value"
-                                                            paddingAngle={2}
-                                                            isAnimationActive={true}
-                                                            activeIndex={[]}
-                                                            activeShape={(props) => {
-                                                                const RADIAN = Math.PI / 180;
-                                                                const {
-                                                                    cx,
-                                                                    cy,
-                                                                    midAngle,
-                                                                    outerRadius,
-                                                                    startAngle,
-                                                                    endAngle,
-                                                                    fill,
-                                                                } = props;
-                                                                return (
-                                                                    <g>
-                                                                        <path
-                                                                            d={`M${cx},${cy}L${cx + outerRadius * Math.cos(-midAngle * RADIAN)},${
-                                                                                cy +
-                                                                                outerRadius *
-                                                                                    Math.sin(-midAngle * RADIAN)
-                                                                            }A${outerRadius},${outerRadius},0,${endAngle - startAngle >= 180 ? 1 : 0},0,${
-                                                                                cx +
-                                                                                outerRadius *
-                                                                                    Math.cos(-startAngle * RADIAN)
-                                                                            },${cy + outerRadius * Math.sin(-startAngle * RADIAN)}Z`}
-                                                                            fill={fill}
-                                                                            stroke={fill}
-                                                                            strokeWidth={2}
-                                                                            opacity={0.9}
-                                                                        />
-                                                                    </g>
-                                                                );
-                                                            }}
-                                                        >
-                                                            {(previewPortfolio || currentPortfolio).map(
-                                                                (entry, index) => (
-                                                                    <Cell
-                                                                        key={`cell-${index}`}
-                                                                        fill={entry.color}
-                                                                        stroke="none"
-                                                                    />
-                                                                ),
-                                                            )}
-                                                        </Pie>
-                                                        <Tooltip
-                                                            content={<CustomTooltip />}
-                                                            cursor={false}
-                                                            wrapperStyle={{ outline: "none" }}
-                                                        />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                            ) : (
-                                                <div className="h-full w-full flex flex-col items-center justify-center">
-                                                    <div className="w-[220px] h-[220px] rounded-full border-4 border-dashed border-muted-foreground/20 flex items-center justify-center">
-                                                        <p className="text-muted-foreground text-center px-6">
-                                                            Select a strategy below to preview allocation changes
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-8">
-                                    {currentPortfolio.map((asset, index) => {
-                                        const previewAsset = previewPortfolio?.find((a) => a.name === asset.name);
-                                        const showPreview = selectedStrategy && previewAsset;
-                                        const change = getAssetChange(asset.name);
-
-                                        return (
-                                            <div key={index} className="flex flex-col">
-                                                <div className="flex items-center mb-2">
-                                                    <div
-                                                        className="w-4 h-4 rounded-full mr-2"
-                                                        style={{ backgroundColor: asset.color }}
-                                                    ></div>
-                                                    <div className="text-base font-medium">{asset.name}</div>
-                                                </div>
-
-                                                <div className="text-2xl font-bold">{asset.value}%</div>
-
-                                                {showPreview ? (
-                                                    <div className="flex items-center mt-1">
-                                                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                                        <span
-                                                            className={`text-sm font-medium ${change.isPositive ? "text-green-500" : "text-red-500"}`}
-                                                        >
-                                                            {previewAsset?.value}%
-                                                            {change.value > 0 && (
-                                                                <span className="ml-1">
-                                                                    ({change.isPositive ? "+" : "-"}
-                                                                    {change.value}%)
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center mt-1">
-                                                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-sm font-medium text-muted-foreground">
-                                                            --
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -365,58 +313,69 @@ export default function PortfolioPage() {
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold">Suggested Strategies</h2>
-                                {selectedStrategy && (
+                                {selectedBucket && (
                                     <Badge variant="outline" className="px-3 py-1">
-                                        {selectedStrategyData?.title} Selected
+                                        {selectedBucketData?.title} Selected
                                     </Badge>
                                 )}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {suggestions.map((suggestion) => (
+                                {BUCKETS.map((bucket) => (
                                     <Card
-                                        key={suggestion.id}
+                                        key={bucket.id}
                                         className={`cursor-pointer transition-all hover:shadow-lg ${
-                                            selectedStrategy === suggestion.id
+                                            selectedBucket === bucket.id
                                                 ? "ring-2 ring-primary border-primary"
                                                 : "hover:border-primary/50"
                                         }`}
-                                        onClick={() => updatePreview(suggestion.id)}
+                                        onClick={() => updatePreview(bucket.id)}
                                     >
-                                        <div className={`bg-gradient-to-r ${suggestion.gradient} h-2 rounded-t-lg`} />
+                                        <div className={`bg-gradient-to-r ${bucket.gradient} h-2 rounded-t-lg`} />
                                         <CardHeader className="pb-2">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-center space-x-2">
                                                     <div
-                                                        className={`p-2 rounded-full bg-gradient-to-r ${suggestion.gradient} text-white`}
+                                                        className={`p-2 rounded-full bg-gradient-to-r ${bucket.gradient} text-white`}
                                                     >
-                                                        <suggestion.icon className="h-5 w-5" />
+                                                        <bucket.icon className="h-5 w-5" />
                                                     </div>
-                                                    <CardTitle className="text-xl">{suggestion.title}</CardTitle>
+                                                    <CardTitle className="text-xl">{bucket.title}</CardTitle>
                                                 </div>
-                                                {selectedStrategy === suggestion.id && (
+                                                {selectedBucket === bucket.id && (
                                                     <Badge className="bg-primary">Selected</Badge>
                                                 )}
                                             </div>
-                                            <CardDescription className="mt-2">{suggestion.description}</CardDescription>
+                                            <CardDescription className="mt-2">{bucket.description}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="mb-4">
                                                 <div className="bg-muted/50 p-3 rounded-lg">
                                                     <div className="text-xs text-muted-foreground">Risk Level</div>
-                                                    <div className="font-medium">{suggestion.riskLevel}</div>
+                                                    <div className="font-medium">{bucket.riskLevel}</div>
                                                 </div>
                                             </div>
 
                                             <Separator className="my-3" />
 
                                             <div className="space-y-2">
-                                                {Object.entries(suggestion.allocation).map(([asset, percentage]) => (
-                                                    <div key={asset} className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">{asset}</span>
-                                                        <span className="font-medium">{percentage}%</span>
-                                                    </div>
-                                                ))}
+                                                {bucket.allocations.map((allocation) => {
+                                                    const token = getTokenDetailsForAllocation(allocation, BASE_TOKENS);
+                                                    if (!token) return null;
+                                                    return (
+                                                        <div
+                                                            key={token.address}
+                                                            className="flex justify-between text-sm"
+                                                        >
+                                                            <span className="text-muted-foreground">
+                                                                {token.symbol}
+                                                            </span>
+                                                            <span className="font-medium">
+                                                                {Number(allocation.weight)}%
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -426,6 +385,7 @@ export default function PortfolioPage() {
                     </div>
 
                     <div className="lg:col-span-4 space-y-6">
+                        {/* Portfolio Summary Card - Temporarily disabled
                         <Card className="border-none shadow-lg overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-500/10 to-cyan-400/10 p-6">
                                 <div className="flex items-center space-x-2">
@@ -473,6 +433,7 @@ export default function PortfolioPage() {
                                 </div>
                             </CardContent>
                         </Card>
+                        */}
 
                         <Card className="border-none shadow-lg overflow-hidden">
                             <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-6">
@@ -482,23 +443,23 @@ export default function PortfolioPage() {
                                 </div>
                             </div>
                             <CardContent className="p-6">
-                                {selectedStrategy ? (
+                                {selectedBucket ? (
                                     <div className="space-y-4">
                                         <div className="bg-muted/50 p-4 rounded-lg">
                                             <div className="flex items-center space-x-2">
                                                 <div
-                                                    className={`p-2 rounded-full bg-gradient-to-r ${selectedStrategyData?.gradient} text-white`}
+                                                    className={`p-2 rounded-full bg-gradient-to-r ${selectedBucketData?.gradient} text-white`}
                                                 >
-                                                    {selectedStrategyData?.icon && (
-                                                        <selectedStrategyData.icon className="h-4 w-4" />
+                                                    {selectedBucketData?.icon && (
+                                                        <selectedBucketData.icon className="h-4 w-4" />
                                                     )}
                                                 </div>
                                                 <div>
                                                     <div className="font-medium">
-                                                        {selectedStrategyData?.title} Strategy
+                                                        {selectedBucketData?.title} Strategy
                                                     </div>
                                                     <div className="text-xs text-muted-foreground">
-                                                        {selectedStrategyData?.description}
+                                                        {selectedBucketData?.description}
                                                     </div>
                                                 </div>
                                             </div>
@@ -522,7 +483,7 @@ export default function PortfolioPage() {
                                                 variant="outline"
                                                 className="w-full mt-2"
                                                 onClick={() => {
-                                                    setSelectedStrategy(null);
+                                                    setSelectedBucket(null);
                                                     setPreviewPortfolio(null);
                                                 }}
                                             >
