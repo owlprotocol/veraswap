@@ -251,9 +251,15 @@ export default function SimplifiedPortfolioPage() {
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Transaction ID</span>
-                                            <span className="font-medium">
-                                                {Math.random().toString(36).substring(2, 10).toUpperCase()}
-                                            </span>
+                                            <a
+                                                href={`https://basescan.org/tx/${hash}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-medium text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                {hash?.slice(0, 6)}...{hash?.slice(-4)}
+                                                <ArrowRight className="h-3 w-3" />
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

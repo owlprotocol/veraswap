@@ -309,7 +309,7 @@ export default function PortfolioPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Strategy selection */}
+                        {/* Strategy selection - Temporarily disabled
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold">Suggested Strategies</h2>
@@ -382,6 +382,7 @@ export default function PortfolioPage() {
                                 ))}
                             </div>
                         </div>
+                        */}
                     </div>
 
                     <div className="lg:col-span-4 space-y-6">
