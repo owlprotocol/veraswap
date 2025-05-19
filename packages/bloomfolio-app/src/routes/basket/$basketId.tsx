@@ -40,7 +40,8 @@ function BasketDetailsPage() {
     const performanceData = tokenPrices
         ? tokenPrices?.map(({ timestamp, prices }) => {
               const value = basket!.allocations.reduce(
-                  (sum, all, idx) => sum + (all.weight * (prices[idx].price ?? 0)) / totaWeight!,
+                  // TODO:: fix units conversion, possible overflow
+                  (sum, all, idx) => sum + (Number(all.units) * (prices[idx].price ?? 0))!,
                   0,
               );
               return {
