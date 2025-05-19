@@ -4,7 +4,7 @@ import { bsc } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { BSC_TOKENS } from "./tokens.js";
+import { BSC_TOKENS, tokenBAddress, tokenAAddress } from "./tokens.js";
 
 export interface BasketAllocation {
     address: Address;
