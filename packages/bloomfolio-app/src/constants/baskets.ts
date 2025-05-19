@@ -103,4 +103,4 @@ export const BASKETS = [
             { address: BSC_TOKENS[9].address, chainId: bsc.id, weight: 20 }, // CAKE
         ],
     },
-] as const satisfies Basket[];
+] satisfies Basket[];

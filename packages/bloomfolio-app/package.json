@@ -37,6 +37,7 @@
     "tsr:generate": "tsr generate"
   },
   "dependencies": {
+    "@codex-data/sdk": "^1.0.7",
     "@coinbase/onchainkit": "^0.37.4",
     "@hookform/resolvers": "^3.3.4",
     "@hyperlane-xyz/registry": "^10.2.0",

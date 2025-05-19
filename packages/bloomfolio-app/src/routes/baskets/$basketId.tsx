@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BasketAllocation } from "@/constants/baskets.js";
-import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation, CMC_TOKEN_IDS } from "@/constants/tokens.js";
+import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
-import { useTokenPrices } from "@/hooks/useCoinMarketCap.js";
+import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 
 export const Route = createFileRoute("/baskets/$basketId")({
     component: BasketDetailsPage,
@@ -33,56 +33,23 @@ const CATEGORY_ICONS: Record<TokenCategory, string> = {
 function BasketDetailsPage() {
     const { basketId } = useParams({ from: "/baskets/$basketId" });
     const basket = BASKETS.find((b) => b.id === basketId);
+    const totaWeight = basket?.allocations.reduce((sum, all) => sum + all.weight, 0);
 
-    const tokenIds =
-        basket?.allocations
-            .map((allocation) => {
-                const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
-                const symbol = token?.symbol;
-                return symbol ? CMC_TOKEN_IDS[symbol] : undefined;
-            })
-            .filter((id): id is number => id !== undefined) ?? [];
+    const { data: tokenPrices, isLoading, isError } = useTokenPrices(basket?.allocations ?? []);
 
-    const { data: tokenPrices, isLoading, isError } = useTokenPrices(tokenIds);
-
-    console.log("tokenPrices", tokenPrices);
-
-    const calculateBasketPerformance = () => {
-        if (!tokenPrices?.data || !basket) return [];
-
-        const firstTokenId = Object.keys(tokenPrices.data)[0];
-        const baseQuotes = tokenPrices.data[firstTokenId]?.quotes;
-        if (!baseQuotes) return [];
-
-        return baseQuotes.map((baseQuote, index) => {
-            let totalValue = 0;
-            let totalWeight = 0;
-
-            Object.values(tokenPrices.data).forEach((tokenData) => {
-                const quote = tokenData.quotes[index];
-                if (!quote) return;
-
-                const allocation = basket.allocations.find(
-                    (a) => getTokenDetailsForAllocation(a, BSC_TOKENS)?.symbol === tokenData.symbol,
-                );
-                if (!allocation) return;
-
-                const weight = allocation.weight / 100;
-                const price = quote.quote.USD.price;
-
-                totalValue += price * weight;
-                totalWeight += weight;
-            });
-
-            return {
-                date: new Date(baseQuote.timestamp).toLocaleDateString(),
-                value: totalWeight > 0 ? totalValue / totalWeight : 0,
-                timestamp: baseQuote.timestamp,
-            };
-        });
-    };
-
-    const performanceData = calculateBasketPerformance();
+    const performanceData = tokenPrices
+        ? tokenPrices?.map(({ timestamp, prices }) => {
+              const value = basket!.allocations.reduce(
+                  (sum, all, idx) => sum + (all.weight * (prices[idx].price ?? 0)) / totaWeight!,
+                  0,
+              );
+              return {
+                  date: new Date(timestamp * 1000).toLocaleString(),
+                  timestamp: timestamp * 1000,
+                  value,
+              };
+          })
+        : [];
 
     if (!basket) {
         return (
@@ -164,7 +131,7 @@ function BasketDetailsPage() {
                                     <div className="font-medium">
                                         {((allocation.weight / totalWeight) * 100).toFixed(2)}%
                                     </div>
-                                    <div className="text-sm text-muted-foreground">Weight: {allocation.weight}%</div>
+                                    {/* TODO: show nominal unit <div className="text-sm text-muted-foreground">Weight: {allocation.weight}%</div> */}
                                 </div>
                             </div>
                         ))}
@@ -179,14 +146,16 @@ function BasketDetailsPage() {
 
         const firstValue = data[0].value;
         const lastValue = data[data.length - 1].value;
-        const change = ((lastValue - firstValue) / firstValue) * 100;
-        const high = Math.max(...data.map((d) => d.value));
-        const low = Math.min(...data.map((d) => d.value));
+
+        if (!firstValue || !lastValue) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
+        // const change = ((lastValue - firstValue) / firstValue) * 100;
+        // const high = Math.max(...data.map((d) => d.value).filter((v) => !!v));
+        // const low = Math.min(...data.map((d) => d.value).filter((v) => !!v));
 
         return {
-            change,
-            high,
-            low,
+            // change,
+            // high,
+            // low,
             current: lastValue,
             start: firstValue,
         };
@@ -245,7 +214,7 @@ function BasketDetailsPage() {
                                     <div className="h-[300px] w-full flex items-center justify-center">
                                         <Skeleton className="h-full w-full" />
                                     </div>
-                                ) : isError ? (
+                                ) : isError && !!performanceData && performanceData.length === 0 ? (
                                     <div className="h-[300px] w-full flex items-center justify-center text-destructive">
                                         Failed to load market data
                                     </div>
@@ -295,10 +264,10 @@ function BasketDetailsPage() {
                                                     content={({ active, payload, label }) => {
                                                         if (active && payload && payload.length) {
                                                             const value = payload[0].value as number;
-                                                            const change =
-                                                                ((value - performanceData[0].value) /
-                                                                    performanceData[0].value) *
-                                                                100;
+                                                            // const change =
+                                                            //     ((value - performanceData[0]!.value!) /
+                                                            //         performanceData[0].value!) *
+                                                            //     100;
 
                                                             return (
                                                                 <div className="bg-card border rounded-lg shadow-lg p-3 space-y-2">
@@ -312,7 +281,7 @@ function BasketDetailsPage() {
                                                                                 ${value.toFixed(2)}
                                                                             </span>
                                                                         </div>
-                                                                        <div className="flex items-center justify-between gap-4">
+                                                                        {/* <div className="flex items-center justify-between gap-4">
                                                                             <span className="text-muted-foreground">
                                                                                 Change:
                                                                             </span>
@@ -322,7 +291,7 @@ function BasketDetailsPage() {
                                                                                 {change >= 0 ? "+" : ""}
                                                                                 {change.toFixed(2)}%
                                                                             </span>
-                                                                        </div>
+                                                                        </div> */}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -343,7 +312,7 @@ function BasketDetailsPage() {
                                     </div>
                                 )}
                                 <div className="mt-4 grid grid-cols-3 gap-4">
-                                    <div className="space-y-1">
+                                    {/* <div className="space-y-1">
                                         <div className="text-sm text-muted-foreground">7d Change</div>
                                         {isLoading ? (
                                             <Skeleton className="h-6 w-24" />
@@ -362,7 +331,7 @@ function BasketDetailsPage() {
                                                 </span>
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
                                     <div className="space-y-1">
                                         <div className="text-sm text-muted-foreground">Current Value</div>
                                         {isLoading ? (
@@ -372,7 +341,7 @@ function BasketDetailsPage() {
                                         )}
                                     </div>
                                     <div className="space-y-1">
-                                        <div className="text-sm text-muted-foreground">Starting Value</div>
+                                        <div className="text-sm text-muted-foreground">Past 7 Days</div>
                                         {isLoading ? (
                                             <Skeleton className="h-6 w-24" />
                                         ) : (
@@ -422,7 +391,7 @@ function BasketDetailsPage() {
                                     {basket.allocations
                                         .sort((a, b) => b.weight - a.weight)
                                         .slice(0, 3)
-                                        .map((allocation) => {
+                                        .map((allocation: BasketAllocation) => {
                                             const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
                                             if (!token) return null;
                                             return (
