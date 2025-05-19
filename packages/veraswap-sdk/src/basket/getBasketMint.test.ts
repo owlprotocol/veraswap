@@ -10,6 +10,7 @@ import {
     Hex,
     http,
     numberToHex,
+    padHex,
     parseAbi,
     parseEther,
     zeroAddress,
@@ -275,7 +276,7 @@ describe("basket/getBasketMint.test.ts", function () {
         expect(balancePostMintBasket0 - balancePreMintBasket0).toEqual(mintAmount);
     });
 
-    test.only("mint, sweep extra ETH", async () => {
+    test("mint, sweep extra ETH", async () => {
         const mintAmount = parseEther("0.01");
         const receiver = anvilAccount.address;
         const basketMintParams = {
@@ -326,7 +327,7 @@ describe("basket/getBasketMint.test.ts", function () {
         const balanceUniversalRouterEth = await opChainL1Client.getBalance({
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
         });
-        expect(balanceUniversalRouterEth).toEqual(0n); //ZERO! => Sweep V4
+        expect(balanceUniversalRouterEth, "UniversalRouter balance should be 0").toEqual(0n);
         // Check ETH balance of sender post-swap
         const balancePostSwapEth = await opChainL1Client.getBalance({ address: anvilAccount.address });
         //TODO: Get quote first to check = -txFee + -currencyInAmount
