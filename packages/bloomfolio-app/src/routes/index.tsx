@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useState } from "react";
-import { ArrowRight, Loader2, Share } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { BASKETS } from "@/constants/baskets.js";
 import { BasketCard } from "@/components/BasketCard.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { BasketPurchaseConfirmation } from "@/components/BasketPurchaseConfirmation.js";
-import { shareLink } from "@/utils/shareLink.js";
+import { ShareButton } from "@/components/ShareButton.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -53,18 +53,7 @@ export default function SimplifiedPortfolioPage() {
                         </h1>
                         <p className="text-muted-foreground mt-2">Select a strategy and start investing in minutes</p>
                     </div>
-                    <button
-                        onClick={() =>
-                            shareLink({
-                                address,
-                                description: "Share this link with your friends to earn rewards.",
-                            })
-                        }
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2"
-                    >
-                        <Share className="h-4 w-4" />
-                        Share
-                    </button>
+                    <ShareButton address={address} />
                 </header>
 
                 {showConfirmation ? (

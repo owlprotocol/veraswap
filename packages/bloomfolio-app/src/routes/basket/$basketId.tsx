@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, ChevronDown, ArrowRight, Share } from "lucide-react";
+import { ArrowLeft, ChevronDown, ArrowRight } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useAccount } from "wagmi";
 import { BASKETS } from "@/constants/baskets.js";
@@ -13,7 +13,7 @@ import { BasketAllocation } from "@/constants/baskets.js";
 import { TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
-import { shareLink } from "@/utils/shareLink.js";
+import { ShareButton } from "@/components/ShareButton.js";
 
 export const Route = createFileRoute("/basket/$basketId")({
     validateSearch: z.object({
@@ -182,19 +182,7 @@ function BasketDetailsPage() {
                                 Back to Baskets
                             </Button>
                         </Link>
-                        <Button
-                            onClick={() => {
-                                shareLink({
-                                    address,
-                                    description: "Share this basket with your friends to earn rewards.",
-                                });
-                            }}
-                            variant="outline"
-                            className="flex items-center gap-2"
-                        >
-                            <Share className="h-4 w-4" />
-                            Share
-                        </Button>
+                        <ShareButton address={address} variant="outline" />
                     </div>
                     <div className="flex items-start space-x-4">
                         <div className={`p-3 rounded-full bg-gradient-to-r ${basket.gradient} text-white`}>
