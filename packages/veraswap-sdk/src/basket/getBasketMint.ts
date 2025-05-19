@@ -151,7 +151,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     });
 
     // Settle all inputs
-    //TODO: WARNING: Depending on exact in / out? SETTLE / TAKE have different meaning???
     //TODO: Add slippage for input & sweep any dust to user
     tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, MAX_UINT_256]);
     // Take all outputs (send to ExecuteSweep)
@@ -168,7 +167,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     }
     // Add v4 swap command
     routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-    /*
     // Add call target command
     // Encode mint call
     const mintCall = encodeFunctionData({
@@ -185,7 +183,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         args: [basket, mintCall, mintUnitEthAmount],
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [EXECUTE_SWEEP, 0n, executeSweepCall]);
-    */
 
     const inputIsNative = currencyIn === zeroAddress;
 
