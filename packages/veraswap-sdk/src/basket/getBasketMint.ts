@@ -2,17 +2,17 @@ import { QueryClient } from "@tanstack/react-query";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, Hex, numberToHex, zeroAddress } from "viem";
 
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { metaQuoteExactOutput } from "../artifacts/IV4MetaQuoter.js";
+import { metaQuoteExactOutputBest } from "../artifacts/IV4MetaQuoter.js";
 import { EXECUTE_SWEEP } from "../constants/uniswap.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-import { V4MetaQuoteReturnType } from "../uniswap/V4MetaQuoter.js";
+import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
 
 export interface GetBasketMintParams {
     chainId: number;
@@ -48,6 +48,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         referrer,
         currencyIn,
         //TODO: Compute slippage
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         slippageCentiBps = 1_000n,
         permit2PermitParams,
         deadline,
@@ -76,9 +77,9 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
             const quote = await queryClient.fetchQuery(
                 readContractQueryOptions(wagmiConfig, {
                     chainId,
-                    address: basket,
-                    abi: [metaQuoteExactOutput],
-                    functionName: "metaQuoteExactOut",
+                    address: contracts.v4MetaQuoter,
+                    abi: [metaQuoteExactOutputBest],
+                    functionName: "metaQuoteExactOutputBest",
                     args: [
                         {
                             exactCurrency: token,
@@ -86,7 +87,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
                             hopCurrencies: currencyHops.filter(
                                 (hopToken) => hopToken !== token && hopToken !== currencyIn,
                             ),
-                            exactAmount: units,
+                            exactAmount: numberToHex(units),
                             poolKeyOptions,
                         } as const,
                     ],
@@ -95,42 +96,45 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
 
             return { quote, currencyOut: token, amountOut: units };
         }),
-    )) as { quote: V4MetaQuoteReturnType; currencyOut: Address; amountOut: bigint }[];
+    )) as { quote: V4MetaQuoteExactBestReturnType; currencyOut: Address; amountOut: bigint }[];
 
     // Encode swaps
     const tradePlan = new V4Planner();
     let currencyInAmount = 0n;
     // Add swaps
     quotes.forEach((swap) => {
-        const [bestSingleSwap, bestMultihopSwap] = swap.quote;
+        const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
         const currencyOut = swap.currencyOut;
         const amountOut = swap.amountOut;
 
-        if (bestSingleSwap.variableAmount <= bestMultihopSwap.variableAmount) {
+        if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
             // Cheapest swap is single hop
             tradePlan.addAction(Actions.SWAP_EXACT_OUT_SINGLE, [
                 {
                     poolKey: bestSingleSwap.poolKey,
                     zeroForOne: bestSingleSwap.zeroForOne,
                     amountOut,
-                    amountInMinimum: bestSingleSwap.variableAmount,
+                    amountInMaximum: bestSingleSwap.variableAmount,
                     hookData: bestSingleSwap.hookData,
                 },
             ]);
             // Increase input settlement
             currencyInAmount += bestSingleSwap.variableAmount;
-        } else {
+        } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
             // Cheapest swap is multihop
             tradePlan.addAction(Actions.SWAP_EXACT_OUT, [
                 {
                     currencyOut,
                     path: bestMultihopSwap.path,
                     amountOut,
-                    amountInMinimum: bestMultihopSwap.variableAmount,
+                    amountInMaximum: bestMultihopSwap.variableAmount,
                 },
             ]);
             // Increase input settlement
             currencyInAmount += bestSingleSwap.variableAmount;
+        } else {
+            //TODO: Return null?
+            throw new Error("no liquidity");
         }
     });
 
@@ -141,7 +145,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     // Take all outputs (send to ExecuteSweep)
     const uniqueCurrencyOut = new Set(mintUnits.map(({ addr }) => addr));
     uniqueCurrencyOut.forEach((currencyOut) => {
-        tradePlan.addAction(Actions.TAKE_ALL, [currencyOut, EXECUTE_SWEEP, 0]);
+        tradePlan.addAction(Actions.TAKE, [currencyOut, EXECUTE_SWEEP, 0]);
     });
 
     // Encode router plan
