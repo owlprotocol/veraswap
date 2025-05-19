@@ -1,7 +1,10 @@
-import { DollarSign, Globe, Bitcoin, Rocket, TrendingUp, Dog, Sparkles, Coins } from "lucide-react";
-import { Address } from "viem";
+import { DollarSign, Globe, Bitcoin, Rocket, Dog, Coins } from "lucide-react";
+import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { bsc } from "viem/chains";
-import { BSC_TOKENS } from "./tokens.js";
+import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
+import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
+import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import { BSC_TOKENS, tokenBAddress, tokenAAddress } from "./tokens.js";
 
 export interface BasketAllocation {
     address: Address;
@@ -16,12 +19,14 @@ export interface Basket {
     riskLevel: "Low" | "Medium" | "High";
     gradient: string;
     icon: any;
+    address: Address;
     allocations: BasketAllocation[];
 }
 
-export const BASKETS = [
+export const MAINNET_BASKETS = [
     {
         id: "conservative",
+        address: zeroAddress,
         title: "Conservative",
         description: "Low risk, mostly stablecoins, WBNB, and BTCB.",
         riskLevel: "Low",
@@ -35,6 +40,7 @@ export const BASKETS = [
     },
     {
         id: "balanced",
+        address: zeroAddress,
         title: "Balanced",
         description: "Mix of WBNB, BTCB, and established DeFi tokens.",
         riskLevel: "Medium",
@@ -49,6 +55,7 @@ export const BASKETS = [
     },
     {
         id: "growth",
+        address: zeroAddress,
         title: "Growth",
         description: "Higher risk, mix of established and emerging tokens.",
         riskLevel: "High",
@@ -64,6 +71,7 @@ export const BASKETS = [
     },
     {
         id: "meme",
+        address: zeroAddress,
         title: "Meme Mania",
         description: "High risk, meme coins and viral tokens.",
         riskLevel: "High",
@@ -77,6 +85,7 @@ export const BASKETS = [
     },
     {
         id: "defi",
+        address: zeroAddress,
         title: "DeFi Focus",
         description: "Concentrated in DeFi protocols and governance tokens.",
         riskLevel: "Medium",
@@ -91,6 +100,7 @@ export const BASKETS = [
     },
     {
         id: "moon",
+        address: zeroAddress,
         title: "Moon Shot",
         description: "Maximum risk, high potential tokens.",
         riskLevel: "High",
@@ -104,3 +114,61 @@ export const BASKETS = [
         ],
     },
 ] satisfies Basket[];
+
+const basketAddr0 = tokenAAddress < tokenBAddress ? tokenAAddress : tokenBAddress;
+const basketAddr1 = tokenAAddress > tokenBAddress ? tokenAAddress : tokenBAddress;
+const basket = [
+    { addr: basketAddr0, units: 10n ** 18n },
+    { addr: basketAddr1, units: 10n ** 18n },
+];
+
+const indexAB50NoFeeAddress = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: BasketFixedUnits.bytecode,
+        abi: BasketFixedUnits.abi,
+        args: ["Index AB50", "AB50", zeroAddress, 0n, basket],
+    }),
+    salt: zeroHash,
+});
+
+const indexAB50WithFeeAddress = getDeployDeterministicAddress({
+    bytecode: encodeDeployData({
+        bytecode: BasketFixedUnits.bytecode,
+        abi: BasketFixedUnits.abi,
+        args: ["Index AB50", "AB50", "0x0000000000000000000000000000000000000001", 10_000n, basket],
+    }),
+    salt: zeroHash,
+});
+
+export const LOCAL_BASKETS = [
+    {
+        id: "test-0",
+        riskLevel: "Low",
+        gradient: "from-purple-600 to-pink-600",
+        icon: Rocket,
+        address: indexAB50NoFeeAddress,
+        title: "Index AB50 No Fee",
+        description: "Index AB50 No Fee for testing purposes",
+        allocations: [
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50 },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50 },
+        ],
+    },
+    {
+        id: "test-1",
+        riskLevel: "Low",
+        gradient: "from-green-600 to-red-600",
+        icon: Dog,
+        address: indexAB50WithFeeAddress,
+        title: "Index AB50 With Fee",
+        description: "Index AB50 With Fee for testing purposes",
+        allocations: [
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50 },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50 },
+        ],
+    },
+] satisfies Basket[];
+
+export const BASKETS = (
+    import.meta.env.MODE === "development" ? [...MAINNET_BASKETS, ...LOCAL_BASKETS] : MAINNET_BASKETS
+) satisfies Basket[];

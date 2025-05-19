@@ -1,5 +1,7 @@
 import { Address, zeroAddress } from "viem";
 import { base, bsc } from "viem/chains";
+import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
+import { getMockERC20Address } from "@owlprotocol/veraswap-sdk";
 import { BasketAllocation } from "./baskets.js";
 
 export type TokenCategory = "native" | "stable" | "alt" | "commodity";
@@ -144,23 +146,32 @@ export const BSC_TOKENS = [
     },
 ] as const satisfies Token[];
 
-export const CMC_TOKEN_IDS = {
-    BTC: 1, // Bitcoin
-    ETH: 1027, // Ethereum
-    BNB: 1839, // Binance Coin
-    UNI: 7083, // Uniswap
-    AAVE: 7278, // Aave
-    SOL: 5426, // Solana
-    LINK: 1975, // Chainlink
-    "1INCH": 8104, // 1inch
-    PEPE: 24478, // Pepe
-    CAKE: 7186, // PancakeSwap
-    DOGE: 74, // Dogecoin
+export const tokenAAddress = getMockERC20Address({ name: "Token A", symbol: "A", decimals: 18 });
+export const tokenBAddress = getMockERC20Address({ name: "Token B", symbol: "B", decimals: 18 });
 
-    WETH: 1027, // Wrapped Ethereum
-    WBNB: 1839, // Wrapped BNB
-    BTCB: 1, // Wrapped Bitcoin
-} as const;
+export const LOCAL_TOKENS = [
+    {
+        address: tokenAAddress,
+        name: "Token A",
+        symbol: "A",
+        category: "alt",
+        chainId: opChainL1.id,
+        logoURI: "https://coin-images.coingecko.com/coins/images/15768/large/dogecoin.png?1696515392",
+    },
+    {
+        address: tokenBAddress,
+        name: "Token B",
+        symbol: "B",
+        category: "alt",
+        chainId: opChainL1.id,
+        logoURI: "https://coin-images.coingecko.com/coins/images/15768/large/dogecoin.png?1696515392",
+    },
+] as const satisfies Token[];
+
+export const TOKENS =
+    import.meta.env.MODE === "development"
+        ? [...BASE_TOKENS, ...BSC_TOKENS, ...LOCAL_TOKENS]
+        : [...BASE_TOKENS, ...BSC_TOKENS];
 
 export function getTokenDetailsForAllocation(allocation: BasketAllocation, tokens: Token[]) {
     return tokens.find(
