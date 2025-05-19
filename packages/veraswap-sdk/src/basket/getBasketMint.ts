@@ -205,9 +205,9 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     }
     // Add v4 swap command
     routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-    /*
     // Add native token sweep command (if input is native)
     const inputIsNative = currencyIn === zeroAddress;
+    /*
     if (inputIsNative) {
         //TODO: Add param to configure sweep recipient (default 0 = msg.sender)
         routePlanner.addCommand(CommandType.SWEEP, [zeroAddress, zeroAddress, 0n]);
