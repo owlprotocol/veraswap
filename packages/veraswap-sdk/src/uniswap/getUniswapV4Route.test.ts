@@ -7,6 +7,7 @@ import { opChainL1 } from "../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
+import { poolKeysToPathExactIn, poolKeysToPathExactOut } from "../types/PoolKey.js";
 
 import { getUniswapV4RouteExactIn, getUniswapV4RouteExactOut } from "./getUniswapV4Route.js";
 
@@ -76,9 +77,12 @@ describe("uniswap/getUniswapV4Route.test.ts", function () {
         expect(result).not.toBe(null);
         expect(result!.route.length).toBe(2);
         expect(result!.amountOut).toBeGreaterThan(0n);
+        console.debug(result!.route);
+        console.debug(poolKeysToPathExactIn(tokenAAddress, result!.route));
+        console.debug(tokenAAddress, tokenBAddress);
     });
 
-    test("getUniswapV4RouteExactOut - multi hop", async () => {
+    test.only("getUniswapV4RouteExactOut - multi hop", async () => {
         const result = await getUniswapV4RouteExactOut(queryClient, config, {
             chainId: opChainL1.id,
             currencyIn: tokenAAddress,
@@ -94,5 +98,8 @@ describe("uniswap/getUniswapV4Route.test.ts", function () {
         expect(result).not.toBe(null);
         expect(result!.route.length).toBe(2);
         expect(result!.amountIn).toBeGreaterThan(0n);
+        console.debug(result!.route);
+        console.debug(poolKeysToPathExactOut(tokenBAddress, result!.route));
+        console.debug(tokenAAddress, tokenBAddress);
     });
 });

@@ -100,7 +100,7 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
         (Currency currency0, Currency currency1) = params.exactCurrency < params.variableCurrency
             ? (params.exactCurrency, params.variableCurrency)
             : (params.variableCurrency, params.exactCurrency);
-        bool zeroForOne = params.exactCurrency == currency0;
+        bool zeroForOne = params.exactCurrency == currency1;
 
         // Loop through the poolKeyOptions and create a PoolKey for each
         // Quote using quoteExactInputSingle
@@ -163,15 +163,24 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
             PoolKeyOptions memory poolKeyOptions = params.poolKeyOptions[i];
 
             for (uint256 j = 0; j < params.hopCurrencies.length; j++) {
-                PathKey memory pathKey = PathKey({
+                PathKey memory pathKeyIntermediate = PathKey({
                     intermediateCurrency: params.hopCurrencies[j],
                     fee: poolKeyOptions.fee,
                     tickSpacing: poolKeyOptions.tickSpacing,
                     hooks: IHooks(poolKeyOptions.hooks),
                     hookData: ""
                 });
-                PathKey[] memory path = new PathKey[](1);
-                path[0] = pathKey;
+                PathKey memory pathKeyOutput = PathKey({
+                    intermediateCurrency: params.variableCurrency,
+                    fee: poolKeyOptions.fee,
+                    tickSpacing: poolKeyOptions.tickSpacing,
+                    hooks: IHooks(poolKeyOptions.hooks),
+                    hookData: ""
+                });
+                // Input -> Intermediate -> Output
+                PathKey[] memory path = new PathKey[](2);
+                path[0] = pathKeyIntermediate;
+                path[1] = pathKeyOutput;
 
                 QuoteExactParams memory quoteParams = QuoteExactParams({
                     exactCurrency: params.exactCurrency,
@@ -219,15 +228,24 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
             PoolKeyOptions memory poolKeyOptions = params.poolKeyOptions[i];
 
             for (uint256 j = 0; j < params.hopCurrencies.length; j++) {
-                PathKey memory pathKey = PathKey({
+                PathKey memory pathKeyInput = PathKey({
+                    intermediateCurrency: params.variableCurrency,
+                    fee: poolKeyOptions.fee,
+                    tickSpacing: poolKeyOptions.tickSpacing,
+                    hooks: IHooks(poolKeyOptions.hooks),
+                    hookData: ""
+                });
+                PathKey memory pathKeyIntermediate = PathKey({
                     intermediateCurrency: params.hopCurrencies[j],
                     fee: poolKeyOptions.fee,
                     tickSpacing: poolKeyOptions.tickSpacing,
                     hooks: IHooks(poolKeyOptions.hooks),
                     hookData: ""
                 });
-                PathKey[] memory path = new PathKey[](1);
-                path[0] = pathKey;
+                // Input -> Intermediate -> Output
+                PathKey[] memory path = new PathKey[](2);
+                path[0] = pathKeyInput;
+                path[1] = pathKeyIntermediate;
 
                 QuoteExactParams memory quoteParams = QuoteExactParams({
                     exactCurrency: params.exactCurrency,
