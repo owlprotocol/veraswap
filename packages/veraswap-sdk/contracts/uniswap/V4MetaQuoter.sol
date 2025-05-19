@@ -155,53 +155,66 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
     function metaQuoteExactInput(
         MetaQuoteExactParams memory params
     ) public returns (MetaQuoteExactResult[] memory swaps) {
-        uint256 quoteResultsMaxLen = params.poolKeyOptions.length * params.hopCurrencies.length;
+        // Try all poolKeyOption permutations with all hop currencies
+        uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
+            params.poolKeyOptions.length *
+            params.hopCurrencies.length;
         uint256 quoteResultsCount = 0;
         MetaQuoteExactResult[] memory quoteResults = new MetaQuoteExactResult[](quoteResultsMaxLen);
 
         for (uint256 i = 0; i < params.poolKeyOptions.length; i++) {
-            PoolKeyOptions memory poolKeyOptions = params.poolKeyOptions[i];
+            PoolKeyOptions memory poolKeyOptions0 = params.poolKeyOptions[i];
 
-            for (uint256 j = 0; j < params.hopCurrencies.length; j++) {
-                PathKey memory pathKeyIntermediate = PathKey({
-                    intermediateCurrency: params.hopCurrencies[j],
-                    fee: poolKeyOptions.fee,
-                    tickSpacing: poolKeyOptions.tickSpacing,
-                    hooks: IHooks(poolKeyOptions.hooks),
-                    hookData: ""
-                });
-                PathKey memory pathKeyOutput = PathKey({
-                    intermediateCurrency: params.variableCurrency,
-                    fee: poolKeyOptions.fee,
-                    tickSpacing: poolKeyOptions.tickSpacing,
-                    hooks: IHooks(poolKeyOptions.hooks),
-                    hookData: ""
-                });
-                // Input -> Intermediate -> Output
-                PathKey[] memory path = new PathKey[](2);
-                path[0] = pathKeyIntermediate;
-                path[1] = pathKeyOutput;
+            for (uint256 j = 0; j < params.poolKeyOptions.length; j++) {
+                PoolKeyOptions memory poolKeyOptions1 = params.poolKeyOptions[j];
 
-                QuoteExactParams memory quoteParams = QuoteExactParams({
-                    exactCurrency: params.exactCurrency,
-                    path: path,
-                    exactAmount: params.exactAmount
-                });
+                for (uint256 k = 0; k < params.hopCurrencies.length; k++) {
+                    PathKey memory pathKeyIntermediate = PathKey({
+                        intermediateCurrency: params.hopCurrencies[k],
+                        fee: poolKeyOptions0.fee,
+                        tickSpacing: poolKeyOptions0.tickSpacing,
+                        hooks: IHooks(poolKeyOptions0.hooks),
+                        hookData: ""
+                    });
+                    PathKey memory pathKeyOutput = PathKey({
+                        intermediateCurrency: params.variableCurrency,
+                        fee: poolKeyOptions1.fee,
+                        tickSpacing: poolKeyOptions1.tickSpacing,
+                        hooks: IHooks(poolKeyOptions1.hooks),
+                        hookData: ""
+                    });
+                    // Input -> Intermediate -> Output
+                    PathKey[] memory path = new PathKey[](2);
+                    path[0] = pathKeyIntermediate;
+                    path[1] = pathKeyOutput;
 
-                (bytes memory reason, uint256 gasEstimate) = _quoteExactInputReason(quoteParams);
-                if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
-                    // Quote failed (eg. insufficient liquidity), skip this pool
-                    continue;
+                    QuoteExactParams memory quoteParams = QuoteExactParams({
+                        exactCurrency: params.exactCurrency,
+                        path: path,
+                        exactAmount: params.exactAmount
+                    });
+
+                    (bytes memory reason, uint256 gasEstimate) = _quoteExactInputReason(quoteParams);
+                    if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
+                        // Quote failed (eg. insufficient liquidity), skip this pool
+                        continue;
+                    }
+                    quoteResultsCount++;
+                    uint256 variableAmount = reason.parseQuoteAmount();
+
+                    MetaQuoteExactResult memory quote = MetaQuoteExactResult({
+                        path: path,
+                        variableAmount: variableAmount,
+                        gasEstimate: gasEstimate
+                    });
+                    uint256 quoteIndex = i *
+                        params.poolKeyOptions.length *
+                        params.hopCurrencies.length +
+                        j *
+                        params.hopCurrencies.length +
+                        k;
+                    quoteResults[quoteIndex] = quote;
                 }
-                quoteResultsCount++;
-                uint256 variableAmount = reason.parseQuoteAmount();
-
-                MetaQuoteExactResult memory quote = MetaQuoteExactResult({
-                    path: path,
-                    variableAmount: variableAmount,
-                    gasEstimate: gasEstimate
-                });
-                quoteResults[i * params.hopCurrencies.length + j] = quote;
             }
         }
 
@@ -220,53 +233,65 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
     function metaQuoteExactOutput(
         MetaQuoteExactParams memory params
     ) public returns (MetaQuoteExactResult[] memory swaps) {
-        uint256 quoteResultsMaxLen = params.poolKeyOptions.length * params.hopCurrencies.length;
+        uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
+            params.poolKeyOptions.length *
+            params.hopCurrencies.length;
         uint256 quoteResultsCount = 0;
         MetaQuoteExactResult[] memory quoteResults = new MetaQuoteExactResult[](quoteResultsMaxLen);
 
         for (uint256 i = 0; i < params.poolKeyOptions.length; i++) {
-            PoolKeyOptions memory poolKeyOptions = params.poolKeyOptions[i];
+            PoolKeyOptions memory poolKeyOptions0 = params.poolKeyOptions[i];
 
-            for (uint256 j = 0; j < params.hopCurrencies.length; j++) {
-                PathKey memory pathKeyInput = PathKey({
-                    intermediateCurrency: params.variableCurrency,
-                    fee: poolKeyOptions.fee,
-                    tickSpacing: poolKeyOptions.tickSpacing,
-                    hooks: IHooks(poolKeyOptions.hooks),
-                    hookData: ""
-                });
-                PathKey memory pathKeyIntermediate = PathKey({
-                    intermediateCurrency: params.hopCurrencies[j],
-                    fee: poolKeyOptions.fee,
-                    tickSpacing: poolKeyOptions.tickSpacing,
-                    hooks: IHooks(poolKeyOptions.hooks),
-                    hookData: ""
-                });
-                // Input -> Intermediate -> Output
-                PathKey[] memory path = new PathKey[](2);
-                path[0] = pathKeyInput;
-                path[1] = pathKeyIntermediate;
+            for (uint256 j = 0; j < params.poolKeyOptions.length; j++) {
+                PoolKeyOptions memory poolKeyOptions1 = params.poolKeyOptions[j];
 
-                QuoteExactParams memory quoteParams = QuoteExactParams({
-                    exactCurrency: params.exactCurrency,
-                    path: path,
-                    exactAmount: params.exactAmount
-                });
+                for (uint256 k = 0; k < params.hopCurrencies.length; k++) {
+                    PathKey memory pathKeyInput = PathKey({
+                        intermediateCurrency: params.variableCurrency,
+                        fee: poolKeyOptions0.fee,
+                        tickSpacing: poolKeyOptions0.tickSpacing,
+                        hooks: IHooks(poolKeyOptions0.hooks),
+                        hookData: ""
+                    });
+                    PathKey memory pathKeyIntermediate = PathKey({
+                        intermediateCurrency: params.hopCurrencies[k],
+                        fee: poolKeyOptions1.fee,
+                        tickSpacing: poolKeyOptions1.tickSpacing,
+                        hooks: IHooks(poolKeyOptions1.hooks),
+                        hookData: ""
+                    });
+                    // Input -> Intermediate -> Output
+                    PathKey[] memory path = new PathKey[](2);
+                    path[0] = pathKeyInput;
+                    path[1] = pathKeyIntermediate;
 
-                (bytes memory reason, uint256 gasEstimate) = _quoteExactOutputReason(quoteParams);
-                if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
-                    // Quote failed (eg. insufficient liquidity), skip this pool
-                    continue;
+                    QuoteExactParams memory quoteParams = QuoteExactParams({
+                        exactCurrency: params.exactCurrency,
+                        path: path,
+                        exactAmount: params.exactAmount
+                    });
+
+                    (bytes memory reason, uint256 gasEstimate) = _quoteExactOutputReason(quoteParams);
+                    if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
+                        // Quote failed (eg. insufficient liquidity), skip this pool
+                        continue;
+                    }
+                    quoteResultsCount++;
+                    uint256 variableAmount = reason.parseQuoteAmount();
+
+                    MetaQuoteExactResult memory quote = MetaQuoteExactResult({
+                        path: path,
+                        variableAmount: variableAmount,
+                        gasEstimate: gasEstimate
+                    });
+                    uint256 quoteIndex = i *
+                        params.poolKeyOptions.length *
+                        params.hopCurrencies.length +
+                        j *
+                        params.hopCurrencies.length +
+                        k;
+                    quoteResults[quoteIndex] = quote;
                 }
-                quoteResultsCount++;
-                uint256 variableAmount = reason.parseQuoteAmount();
-
-                MetaQuoteExactResult memory quote = MetaQuoteExactResult({
-                    path: path,
-                    variableAmount: variableAmount,
-                    gasEstimate: gasEstimate
-                });
-                quoteResults[i * params.hopCurrencies.length + j] = quote;
             }
         }
 
