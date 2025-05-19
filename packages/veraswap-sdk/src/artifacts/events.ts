@@ -746,4 +746,17 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "Mint",
+        inputs: [
+            { name: "receiver", type: "address", indexed: true, internalType: "address" },
+            { name: "owner", type: "address", indexed: true, internalType: "address" },
+            { name: "referrer", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "ownerFeeAmount", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "referrerFeeAmount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
 ] as const;

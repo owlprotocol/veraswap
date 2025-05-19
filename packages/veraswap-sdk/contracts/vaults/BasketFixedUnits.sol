@@ -46,6 +46,15 @@ contract BasketFixedUnits is ERC20 {
     uint256 public immutable mintFeeCentiBips; // 10_000 = 1% fee
     BasketToken[] internal basket;
 
+    event Mint(
+        address indexed receiver,
+        address indexed owner,
+        address indexed referrer,
+        uint256 amount,
+        uint256 ownerFeeAmount,
+        uint256 referrerFeeAmount
+    );
+
     /* ───────────── Constructor ───────────── */
     constructor(
         string memory _name,
@@ -117,6 +126,7 @@ contract BasketFixedUnits is ERC20 {
         if (mintFeeCentiBips == 0 || receiver == owner) {
             // No fee, mint all to receiver
             _mint(receiver, amount);
+            emit Mint(receiver, owner, referrer, amount, 0, 0);
         } else {
             // Calculate fee and mint to owner
             uint256 fee = amount.mulDivRoundingUp(mintFeeCentiBips, 1_000_000); // round-up (minimum 1 wei);
@@ -124,11 +134,13 @@ contract BasketFixedUnits is ERC20 {
 
             if (referrer == address(0)) {
                 _mint(owner, fee);
+                emit Mint(receiver, owner, referrer, amount, fee, 0);
             } else {
                 //TODO: Add custom fee split logic
                 // Referrer gets 50% of the fee
                 _mint(referrer, fee / 2);
                 _mint(owner, fee / 2);
+                emit Mint(receiver, owner, referrer, amount, fee / 2, fee / 2);
             }
         }
     }
