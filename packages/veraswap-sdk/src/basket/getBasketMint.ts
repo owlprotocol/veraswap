@@ -2,12 +2,13 @@ import { QueryClient } from "@tanstack/react-query";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, encodeFunctionData, Hex, numberToHex, zeroAddress } from "viem";
+import { Address, encodeFunctionData, Hex, numberToHex, padHex, parseAbi, parseEther, zeroAddress } from "viem";
 
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { metaQuoteExactOutputBest } from "../artifacts/IV4MetaQuoter.js";
+import { MAX_UINT_256 } from "../constants/uint256.js";
 import { EXECUTE_SWEEP } from "../constants/uniswap.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
@@ -30,6 +31,17 @@ export interface GetBasketMintParams {
         universalRouter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
+}
+
+// eslint-disable-next-line @typescript-eslint/require-await
+export async function getBasketMintStub(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
+    console.debug("getMasketMint", params);
+
+    return {
+        to: padHex("0x1", { size: 20 }), //address 1,
+        data: "0x",
+        value: 0n,
+    };
 }
 
 /**
@@ -139,9 +151,9 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     });
 
     // Settle all inputs
+    //TODO: WARNING: Depending on exact in / out? SETTLE / TAKE have different meaning???
     //TODO: Add slippage for input & sweep any dust to user
-    tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, currencyInAmount]);
-
+    tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, MAX_UINT_256]);
     // Take all outputs (send to ExecuteSweep)
     const uniqueCurrencyOut = new Set(mintUnits.map(({ addr }) => addr));
     uniqueCurrencyOut.forEach((currencyOut) => {
@@ -156,6 +168,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     }
     // Add v4 swap command
     routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
+    /*
     // Add call target command
     // Encode mint call
     const mintCall = encodeFunctionData({
@@ -172,9 +185,24 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         args: [basket, mintCall, mintUnitEthAmount],
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [EXECUTE_SWEEP, 0n, executeSweepCall]);
+    */
 
     const inputIsNative = currencyIn === zeroAddress;
 
+    const errorAbi = parseAbi([
+        "error DeltaNotNegative(address)",
+        "error DeltaNotPositive(address)",
+        "error CurrencyNotSettled()",
+    ]);
+    return {
+        abi: [...IUniversalRouter.abi, ...errorAbi],
+        address: contracts.universalRouter,
+        value: inputIsNative ? currencyInAmount : 0n,
+        functionName: "execute",
+        args: [routePlanner.commands, routePlanner.inputs, deadline],
+    } as const;
+
+    /*
     return {
         to: contracts.universalRouter,
         value: inputIsNative ? currencyInAmount : 0n,
@@ -183,5 +211,5 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
             functionName: "execute",
             args: [routePlanner.commands, routePlanner.inputs, deadline],
         }),
-    };
+        */
 }

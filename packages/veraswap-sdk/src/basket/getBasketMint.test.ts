@@ -60,7 +60,7 @@ describe("basket/getBasketMint.test.ts", function () {
         const call = await getBasketMint(queryClient, config, {
             chainId: opChainL1.id,
             basket: basket0,
-            mintAmount: parseEther("0.1"),
+            mintAmount: parseEther("0.01"),
             receiver: anvilAccount.address,
             currencyIn: zeroAddress,
             slippageCentiBps: 0n, //TODO: Ignored for now
@@ -71,7 +71,7 @@ describe("basket/getBasketMint.test.ts", function () {
                 universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
         });
-        const hash = await anvilClientL1.sendTransaction(call);
+        const hash = await anvilClientL1.writeContract(call);
 
         const receipt = await opChainL1Client.waitForTransactionReceipt({ hash: hash });
         expect(receipt).toBeDefined();
