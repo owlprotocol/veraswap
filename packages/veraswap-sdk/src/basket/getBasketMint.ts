@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, encodeFunctionData, Hex, numberToHex, padHex, parseAbi, parseEther, zeroAddress } from "viem";
+import { Address, encodeFunctionData, Hex, numberToHex, padHex, parseAbi, zeroAddress } from "viem";
 
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
@@ -15,55 +15,35 @@ import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
 
-export interface GetBasketMintParams {
+export interface GetBasketMintQuoteParams {
     chainId: number;
     basket: Address;
     mintAmount: bigint;
-    receiver: Address;
-    referrer?: Address;
     currencyIn: Address;
-    deadline: bigint;
-    permit2PermitParams?: [PermitSingle, Hex];
-    slippageCentiBps?: bigint;
     currencyHops: Address[];
     contracts: {
         v4MetaQuoter: Address;
-        universalRouter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
 }
 
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function getBasketMintStub(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
-    console.debug("getMasketMint", params);
-
-    return {
-        to: padHex("0x1", { size: 20 }), //address 1,
-        data: "0x",
-        value: 0n,
-    };
-}
-
 /**
- * Get basket quotes for input token with amount
+ * Get basket mint quote for input token with amount
  * @param queryClient
  * @param wagmiConfig
  * @param params
  * @returns list of quotes
  */
-export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
+export async function getBasketMintQuote(
+    queryClient: QueryClient,
+    wagmiConfig: Config,
+    params: GetBasketMintQuoteParams,
+) {
     const {
         chainId,
         basket,
         mintAmount,
-        receiver,
-        referrer,
         currencyIn,
-        //TODO: Compute slippage
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        slippageCentiBps = 1_000n,
-        permit2PermitParams,
-        deadline,
         contracts,
         currencyHops,
         poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),
@@ -110,9 +90,71 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         }),
     )) as { quote: V4MetaQuoteExactBestReturnType; currencyOut: Address; amountOut: bigint }[];
 
-    // Encode swaps
+    const currencyInAmount = quotes.reduce((acc, swap) => {
+        const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
+        if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+            // Cheapest swap is single hop
+            return acc + bestSingleSwap.variableAmount; // Increase input settlement
+        } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
+            // Cheapest swap is multihop
+            return acc + bestMultihopSwap.variableAmount; // Increase input settlement
+        } else {
+            //TODO: Return null?
+            throw new Error("no liquidity");
+        }
+    }, 0n);
+    return { mintUnits, quotes, currencyInAmount };
+}
+
+export interface GetBasketMintParams extends GetBasketMintQuoteParams {
+    receiver: Address;
+    referrer?: Address;
+    deadline: bigint;
+    permit2PermitParams?: [PermitSingle, Hex];
+    slippageCentiBps?: bigint;
+    contracts: {
+        v4MetaQuoter: Address;
+        universalRouter: Address;
+    };
+}
+
+// eslint-disable-next-line @typescript-eslint/require-await
+export async function getBasketMintStub(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
+    console.debug("getMasketMint", params);
+
+    return {
+        to: padHex("0x1", { size: 20 }), //address 1,
+        data: "0x",
+        value: 0n,
+    };
+}
+
+/**
+ * Get basket quotes for input token with amount
+ * @param queryClient
+ * @param wagmiConfig
+ * @param params
+ * @returns list of quotes
+ */
+export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
+    const {
+        basket,
+        mintAmount,
+        receiver,
+        referrer,
+        currencyIn,
+        //TODO: Compute slippage
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        slippageCentiBps = 1_000n,
+        permit2PermitParams,
+        deadline,
+        contracts,
+    } = params;
+
+    // Get quotes for underlying tokens
+    const { mintUnits, quotes, currencyInAmount } = await getBasketMintQuote(queryClient, wagmiConfig, params);
+
     const tradePlan = new V4Planner();
-    let currencyInAmount = 0n;
     // Add swaps
     quotes.forEach((swap) => {
         const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
@@ -130,8 +172,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
                     hookData: bestSingleSwap.hookData,
                 },
             ]);
-            // Increase input settlement
-            currencyInAmount += bestSingleSwap.variableAmount;
         } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
             // Cheapest swap is multihop
             tradePlan.addAction(Actions.SWAP_EXACT_OUT, [
@@ -142,8 +182,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
                     amountInMaximum: bestMultihopSwap.variableAmount,
                 },
             ]);
-            // Increase input settlement
-            currencyInAmount += bestSingleSwap.variableAmount;
         } else {
             //TODO: Return null?
             throw new Error("no liquidity");
@@ -154,7 +192,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     //TODO: Add slippage for input & sweep any dust to user
     tradePlan.addAction(Actions.SETTLE_ALL, [currencyIn, MAX_UINT_256]);
     // Take all outputs (send to ExecuteSweep)
-    const uniqueCurrencyOut = new Set(mintUnits.map(({ addr }) => addr));
+    const uniqueCurrencyOut = new Set(quotes.map(({ currencyOut }) => currencyOut));
     uniqueCurrencyOut.forEach((currencyOut) => {
         tradePlan.addAction(Actions.TAKE, [currencyOut, EXECUTE_SWEEP, 0]);
     });
