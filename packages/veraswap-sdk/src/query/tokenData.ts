@@ -6,6 +6,7 @@ import * as chains from "viem/chains";
 
 import { decimals as decimalsAbi, name as nameAbi, symbol as symbolAbi } from "../artifacts/MockERC20.js";
 import { inkSepolia, unichainSepolia } from "../chains/index.js";
+import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
 import { tokenRegistryData } from "./tokenRegistryData.js";
 
@@ -21,8 +22,7 @@ export const getChainById = (chainId: number): Chain | undefined => {
     const chain = (Object.values(chains) as Chain[]).find((chain) => chain.id === chainId);
     if (chain) return chain;
 
-    if (inkSepolia.id === chainId) return inkSepolia;
-    if (unichainSepolia.id === chainId) return unichainSepolia;
+    return [opChainA, opChainB, opChainL1, inkSepolia, unichainSepolia].find((c) => chainId === c.id);
 };
 
 export function tokenDataQueryOptions(
