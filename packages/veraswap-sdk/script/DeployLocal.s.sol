@@ -172,6 +172,8 @@ contract DeployLocal is DeployCoreContracts {
             // Set Permit2 Approvals for ExecuteSweep
             (address executeSweepAddr, ) = ExecuteSweepUtils.getOrCreate2();
             ExecuteSweep executeSweep = ExecuteSweep(payable(executeSweepAddr));
+            executeSweep.approveAll(basketToken0, Permit2Utils.permit2);
+            executeSweep.approveAll(basketToken1, Permit2Utils.permit2);
             executeSweep.approveAll(basketToken0, basketAddr0);
             executeSweep.approveAll(basketToken1, basketAddr0);
             executeSweep.approveAll(basketToken0, basketAddr1);
