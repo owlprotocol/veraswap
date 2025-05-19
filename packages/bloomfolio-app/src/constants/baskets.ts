@@ -63,7 +63,7 @@ export const MAINNET_BASKETS = [
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
-            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 25 }, // SOL
+            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: parseUnits("30", 18), weight: 25 }, // SOL
             { address: BSC_TOKENS[1].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 25 }, // LINK
             { address: BSC_TOKENS[6].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // 1INCH
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // CAKE

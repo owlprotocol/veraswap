@@ -2,14 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/react-collapsible";
 import { Separator } from "@radix-ui/react-separator";
 import { ChevronDown } from "lucide-react";
+import { zeroAddress } from "viem";
 import { CardContent, CardHeader, CardDescription, Card, CardTitle } from "./ui/card.js";
 import { Button } from "./ui/button.js";
 import { Badge } from "./ui/badge.js";
+import { Skeleton } from "./ui/skeleton.js";
 import { Token } from "@/constants/tokens.js";
-
 import { BasketAllocation } from "@/constants/baskets.js";
 import { getTokenDetailsForAllocation, TokenCategory } from "@/constants/tokens.js";
 import { TOKENS } from "@/constants/tokens.js";
+import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 
 const CATEGORY_LABELS: Record<TokenCategory, string> = {
     native: "Native Tokens",
@@ -26,14 +28,21 @@ const CATEGORY_ICONS: Record<TokenCategory, string> = {
 };
 
 export function BasketCard({ basket, isSelected, onSelect }) {
-    //TODO: Use totalWeight from useGetTokenValues
-    const totalWeight = basket.allocations.reduce((sum, all) => all.weight + sum, 0);
+    const { data: tokenValues, isLoading: isTokenValuesLoading } = useGetTokenValues({
+        basket,
+        quoteCurrency: basket
+            ? {
+                  address: zeroAddress,
+                  chainId: basket.allocations[0].chainId,
+              }
+            : undefined,
+    });
 
-    console.log("totalWeight", totalWeight);
+    const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
 
     const groupAllocationsByCategory = (allocations: BasketAllocation[]) => {
         const grouped = allocations.reduce(
-            (acc, allocation) => {
+            (acc, allocation, index) => {
                 const token = getTokenDetailsForAllocation(allocation, TOKENS);
                 if (!token) return acc;
 
@@ -41,10 +50,10 @@ export function BasketCard({ basket, isSelected, onSelect }) {
                 if (!acc[category]) {
                     acc[category] = [];
                 }
-                acc[category].push({ allocation, token });
+                acc[category].push({ allocation, token, index });
                 return acc;
             },
-            {} as Record<TokenCategory, { allocation: BasketAllocation; token: Token }[]>,
+            {} as Record<TokenCategory, { allocation: BasketAllocation; token: Token; index: number }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -104,7 +113,9 @@ export function BasketCard({ basket, isSelected, onSelect }) {
                             key={`${basket.id}-${category}`}
                             category={category as TokenCategory}
                             items={items}
-                            totalWeight={totalWeight}
+                            totalValue={totalValue}
+                            isLoading={isTokenValuesLoading}
+                            tokenValues={tokenValues}
                         />
                     ))}
                 </div>
@@ -113,9 +124,13 @@ export function BasketCard({ basket, isSelected, onSelect }) {
     );
 }
 
-function CategorySection({ category, items, totalWeight }) {
-    const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
-    const categoryPercentage = (categoryWeight / totalWeight) * 100;
+function CategorySection({ category, items, totalValue, isLoading, tokenValues }) {
+    const categoryValue = items.reduce((sum, { index }) => {
+        const tokenValue = tokenValues?.[index] ?? 0n;
+        return sum + tokenValue;
+    }, 0n);
+
+    const categoryPercentage = totalValue > 0n ? (Number(categoryValue) / Number(totalValue)) * 100 : 0;
 
     return (
         <Collapsible className="border rounded-lg overflow-hidden collapsible" onClick={(e) => e.stopPropagation()}>
@@ -127,24 +142,31 @@ function CategorySection({ category, items, totalWeight }) {
                     <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                     <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                     <Badge variant="secondary" className="ml-2">
-                        {categoryPercentage.toFixed(2)}%
+                        {isLoading ? <Skeleton className="h-4 w-10" /> : `${categoryPercentage.toFixed(2)}%`}
                     </Badge>
                 </div>
                 <ChevronDown className="h-4 w-4 transition-transform duration-200" />
             </CollapsibleTrigger>
             <CollapsibleContent onClick={(e) => e.stopPropagation()}>
                 <div className="p-3 space-y-2 bg-background">
-                    {items.map(({ allocation, token }) => (
-                        <div key={token.address} className="flex justify-between text-sm">
-                            <div className="flex items-center space-x-2">
-                                <img src={token.logoURI} alt={token.symbol} className="w-4 h-4 rounded-full" />
-                                <span className="text-muted-foreground">{token.symbol}</span>
+                    {items.map(({ token, index }) => {
+                        const tokenValue = tokenValues?.[index] ?? 0n;
+                        const tokenPercentage = totalValue > 0n ? (Number(tokenValue) / Number(totalValue)) * 100 : 0;
+
+                        return (
+                            <div key={token.address} className="flex justify-between text-sm">
+                                <div className="flex items-center space-x-2">
+                                    <img src={token.logoURI} alt={token.symbol} className="w-4 h-4 rounded-full" />
+                                    <span className="text-muted-foreground">{token.symbol}</span>
+                                </div>
+                                {isLoading ? (
+                                    <Skeleton className="h-4 w-12" />
+                                ) : (
+                                    <span className="font-medium">{tokenPercentage.toFixed(2)}%</span>
+                                )}
                             </div>
-                            <span className="font-medium">
-                                {((Number(allocation.weight) / Number(totalWeight)) * 100).toFixed(2)}%
-                            </span>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </CollapsibleContent>
         </Collapsible>
