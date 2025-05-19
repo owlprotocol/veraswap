@@ -44,7 +44,7 @@ contract BasketFixedUnits is ERC20 {
 
     address public immutable owner;
     uint256 public immutable mintFeeCentiBips; // 10_000 = 1% fee
-    BasketToken[] public basket;
+    BasketToken[] internal basket;
 
     /* ───────────── Constructor ───────────── */
     constructor(
@@ -82,9 +82,8 @@ contract BasketFixedUnits is ERC20 {
         basket = _basket;
     }
 
-    //TODO: Is this needed?
-    function basketLength() external view returns (uint256) {
-        return basket.length;
+    function getBasket() external view returns (BasketToken[] memory) {
+        return basket;
     }
 
     function mint(uint256 amount, address receiver, address referrer) external payable {
