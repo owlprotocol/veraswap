@@ -275,7 +275,7 @@ describe("basket/getBasketMint.test.ts", function () {
         expect(balancePostMintBasket0 - balancePreMintBasket0).toEqual(mintAmount);
     });
 
-    test.only("mint/burn - no fee", async () => {
+    test.only("mint, sweep extra ETH", async () => {
         const mintAmount = parseEther("0.01");
         const receiver = anvilAccount.address;
         const basketMintParams = {
@@ -304,7 +304,11 @@ describe("basket/getBasketMint.test.ts", function () {
         // Check ETH balance of sender pre-swap
         const balancePreSwapEth = await opChainL1Client.getBalance({ address: anvilAccount.address });
 
-        const hash = await anvilClientL1.writeContract(basketMintCall);
+        // Send extra 0.1 ETH (to test extra ETH sweep)
+        const hash = await anvilClientL1.writeContract({
+            ...basketMintCall,
+            value: basketMintQuote.currencyInAmount + parseEther("0.1"),
+        });
 
         const receipt = await opChainL1Client.waitForTransactionReceipt({ hash: hash });
         expect(receipt).toBeDefined();
@@ -318,6 +322,11 @@ describe("basket/getBasketMint.test.ts", function () {
         });
         // Receiver receivers mintAmount of basket tokens
         expect(balancePostMintBasket0 - balancePreMintBasket0).toEqual(mintAmount);
+        // Check ETH Balance of UniversalRouter
+        const balanceUniversalRouterEth = await opChainL1Client.getBalance({
+            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+        });
+        expect(balanceUniversalRouterEth).toEqual(0n); //ZERO! => Sweep V4
         // Check ETH balance of sender post-swap
         const balancePostSwapEth = await opChainL1Client.getBalance({ address: anvilAccount.address });
         //TODO: Get quote first to check = -txFee + -currencyInAmount

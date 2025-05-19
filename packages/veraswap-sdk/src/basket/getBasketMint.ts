@@ -205,6 +205,15 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     }
     // Add v4 swap command
     routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
+    /*
+    // Add native token sweep command (if input is native)
+    const inputIsNative = currencyIn === zeroAddress;
+    if (inputIsNative) {
+        //TODO: Add param to configure sweep recipient (default 0 = msg.sender)
+        routePlanner.addCommand(CommandType.SWEEP, [zeroAddress, zeroAddress, 0n]);
+    }
+    */
+
     // Add call target command
     // Encode mint call
     const mintCall = encodeFunctionData({
@@ -221,8 +230,6 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         args: [basket, mintCall, mintUnitEthAmount],
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [EXECUTE_SWEEP, 0n, executeSweepCall]);
-
-    const inputIsNative = currencyIn === zeroAddress;
 
     const errorAbi = parseAbi([
         "error DeltaNotNegative(address)",
