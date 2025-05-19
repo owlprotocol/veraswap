@@ -27,16 +27,16 @@ export interface Basket {
 export const MAINNET_BASKETS = [
     {
         id: "conservative",
-        address: zeroAddress,
+        address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
         title: "Conservative",
-        description: "Low risk, mostly stablecoins and BTC.",
+        description: "Conservative 50/50 allocation to BTC and ETH.",
         riskLevel: "Low",
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
-            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 30, units: parseUnits("1", 18) }, // WETH
+            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: 40n }, // WETH
             // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: parseUnits("0.01", 18) }, // WBNB
-            // { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 30, units: parseUnits("0.00001", 18) }, // BTCB
+            { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: 1n }, // BTCB
         ],
     },
     {
