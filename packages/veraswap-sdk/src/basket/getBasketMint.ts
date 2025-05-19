@@ -112,6 +112,7 @@ export interface GetBasketMintParams extends GetBasketMintQuoteParams {
     deadline: bigint;
     permit2PermitParams?: [PermitSingle, Hex];
     slippageCentiBps?: bigint;
+    nativeSweepRecipient?: Address; // Native token sweep recipient, defaults to address(1) which sweeps to caller
     contracts: {
         v4MetaQuoter: Address;
         universalRouter: Address;
@@ -143,6 +144,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         receiver,
         referrer,
         currencyIn,
+        nativeSweepRecipient,
         //TODO: Compute slippage
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         slippageCentiBps = 1_000n,
@@ -207,12 +209,14 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
     routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
     // Add native token sweep command (if input is native)
     const inputIsNative = currencyIn === zeroAddress;
-    /*
     if (inputIsNative) {
-        //TODO: Add param to configure sweep recipient (default 0 = msg.sender)
-        routePlanner.addCommand(CommandType.SWEEP, [zeroAddress, zeroAddress, 0n]);
+        // Sweep any extra native tokens to `nativeSweepRecipient` or caller (address(1))
+        routePlanner.addCommand(CommandType.SWEEP, [
+            zeroAddress,
+            nativeSweepRecipient ?? padHex("0x1", { size: 20 }),
+            0n,
+        ]);
     }
-    */
 
     // Add call target command
     // Encode mint call
