@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
 import { BasketAllocation } from "@/constants/baskets.js";
-import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
+import { TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 
@@ -77,7 +77,7 @@ function BasketDetailsPage() {
     const groupAllocationsByCategory = (allocations: BasketAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
-                const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
+                const token = getTokenDetailsForAllocation(allocation, TOKENS);
                 if (!token) return acc;
 
                 const category = token.category;
@@ -392,7 +392,7 @@ function BasketDetailsPage() {
                                         .sort((a: { weight: number }, b: { weight: number }) => b.weight - a.weight)
                                         .slice(0, 3)
                                         .map((allocation: BasketAllocation) => {
-                                            const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);
+                                            const token = getTokenDetailsForAllocation(allocation, TOKENS);
                                             if (!token) return null;
                                             return (
                                                 <div key={token.address} className="flex items-center justify-between">

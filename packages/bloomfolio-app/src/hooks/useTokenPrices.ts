@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Codex } from "@codex-data/sdk";
 import { GetPriceInput } from "@codex-data/sdk/dist/resources/graphql.js";
 import { Address } from "viem";
+import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 
 const CODEX_API_KEY = import.meta.env.VITE_CODEX_API_KEY;
 
@@ -29,6 +30,16 @@ async function fetchTokenData(
         ),
     );
 
+    if (tokens[0].chainId === opChainL1.id) {
+        return timestamps.map((timestamp, i) => ({
+            timestamp,
+            prices: tokens.map(({ chainId, address }, j) => ({
+                chainId,
+                address,
+                price: ((Math.random() * nowSeconds) % timestamp) / nowSeconds + 1,
+            })),
+        }));
+    }
     const query = await codexSdk.queries.getTokenPrices({ inputs });
     if (!query.getTokenPrices) return null;
 
