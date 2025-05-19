@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { zeroAddress } from "viem";
+import { formatUnits, zeroAddress } from "viem";
 import { useGetTokenValues } from "./useGetTokenValues.js";
 import { Basket } from "@/constants/baskets.js";
 
@@ -31,7 +31,12 @@ export function useBasketWeights(basket: Basket) {
         const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n);
 
         const percentages =
-            totalValue > 0n ? tokenValues.map((value) => Number(((value ?? 0n) * 10000n) / totalValue) / 100) : [];
+            totalValue > 0n
+                ? tokenValues.map((value) =>
+                      // TODO: clean up
+                      (Number(formatUnits(((value ?? 0n) * 10n ** 18n) / totalValue, 18)) * 100).toFixed(3),
+                  )
+                : [];
 
         return {
             totalValue,
