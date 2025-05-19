@@ -33,7 +33,7 @@ import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
 
-import { getBasketMint } from "./getBasketMint.js";
+import { getBasketMint, getBasketMintQuote } from "./getBasketMint.js";
 
 describe("basket/getBasketMint.test.ts", function () {
     const config = createConfig({
@@ -275,10 +275,10 @@ describe("basket/getBasketMint.test.ts", function () {
         expect(balancePostMintBasket0 - balancePreMintBasket0).toEqual(mintAmount);
     });
 
-    test("mint/burn - no fee", async () => {
+    test.only("mint/burn - no fee", async () => {
         const mintAmount = parseEther("0.01");
         const receiver = anvilAccount.address;
-        const call = await getBasketMint(queryClient, config, {
+        const basketMintParams = {
             chainId: opChainL1.id,
             basket: basket0,
             mintAmount,
@@ -291,7 +291,9 @@ describe("basket/getBasketMint.test.ts", function () {
                 v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
-        });
+        };
+        const basketMintQuote = await getBasketMintQuote(queryClient, config, basketMintParams);
+        const basketMintCall = await getBasketMint(queryClient, config, basketMintParams);
         // Check basket0 balance of receiver pre-mint
         const balancePreMintBasket0 = await opChainL1Client.readContract({
             address: basket0,
@@ -299,7 +301,10 @@ describe("basket/getBasketMint.test.ts", function () {
             functionName: "balanceOf",
             args: [receiver],
         });
-        const hash = await anvilClientL1.writeContract(call);
+        // Check ETH balance of sender pre-swap
+        const balancePreSwapEth = await opChainL1Client.getBalance({ address: anvilAccount.address });
+
+        const hash = await anvilClientL1.writeContract(basketMintCall);
 
         const receipt = await opChainL1Client.waitForTransactionReceipt({ hash: hash });
         expect(receipt).toBeDefined();
@@ -313,5 +318,11 @@ describe("basket/getBasketMint.test.ts", function () {
         });
         // Receiver receivers mintAmount of basket tokens
         expect(balancePostMintBasket0 - balancePreMintBasket0).toEqual(mintAmount);
+        // Check ETH balance of sender post-swap
+        const balancePostSwapEth = await opChainL1Client.getBalance({ address: anvilAccount.address });
+        //TODO: Get quote first to check = -txFee + -currencyInAmount
+        const swapFeeEth = basketMintQuote.currencyInAmount;
+        const txFeeEth = receipt.gasUsed * receipt.effectiveGasPrice;
+        expect(balancePostSwapEth - balancePreSwapEth).toBe(-txFeeEth - swapFeeEth);
     });
 });
