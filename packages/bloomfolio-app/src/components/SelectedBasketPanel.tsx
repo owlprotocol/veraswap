@@ -1,8 +1,8 @@
-import { getBasketSwaps, UNISWAP_CONTRACTS, USDC_BASE } from "@owlprotocol/veraswap-sdk";
+import { getBasketSwaps, getChainById, UNISWAP_CONTRACTS, USDC_BASE } from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, ShoppingCart } from "lucide-react";
 import { formatEther, parseUnits, zeroAddress, formatUnits } from "viem";
-import { bsc } from "viem/chains";
 import { useAccount, useChainId, useBalance, useSwitchChain } from "wagmi";
+import { useMemo } from "react";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
@@ -20,7 +20,13 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
     const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
     const { switchChain } = useSwitchChain();
 
-    const selectedBasketData = BASKETS.find((b) => b.id === selectedBasket)!;
+    const selectedBasketData = useMemo(() => BASKETS.find((b) => b.id === selectedBasket)!, [selectedBasket]);
+
+    const basketChain = useMemo(
+        () => getChainById(selectedBasketData.allocations[0].chainId)!,
+        [selectedBasketData.allocations],
+    );
+
     const balanceFormatted = formatEther(balance?.value ?? 0n);
     const amountParsed = parseUnits(amount, 18);
 
@@ -37,10 +43,13 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         setAmount(value);
     };
 
+    // TODO: change native currency to input symbol
+    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
+
     const handlePurchase = async () => {
         if (
             !isConnected ||
-            chainId !== bsc.id ||
+            chainId !== basketChain.id ||
             !balance ||
             !tokenValues ||
             tokenValues.some((value) => value === undefined)
@@ -53,7 +62,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         // if (usdcAllowance < amountParsed) {
         //     const allowHash = await sendTransactionPermitAsync({
         //         to: USDC_BASE.address,
-        //         chainId: bsc.id,
+        //         chainId: basketChain.id,
         //         data: encodeFunctionData({
         //             abi: IERC20.abi,
         //             functionName: "approve",
@@ -70,8 +79,8 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
 
         const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
         const swapData = await getBasketSwaps(queryClient, config, {
-            chainId: bsc.id,
-            contracts: UNISWAP_CONTRACTS[bsc.id]!,
+            chainId: basketChain.id,
+            contracts: UNISWAP_CONTRACTS[basketChain.id]!,
             currencyIn: zeroAddress,
             deadline: routerDeadline,
             exactAmount: amountParsed,
@@ -79,10 +88,10 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
             currencyHops: [USDC_BASE.address],
             basketTokens: selectedBasketData.allocations,
         });
-        sendTransaction({ chainId: bsc.id, ...swapData });
+        sendTransaction({ chainId: basketChain.id, ...swapData });
     };
 
-    const renderAllocationDetails = (allocation: BasketAllocation, idx) => {
+    const renderAllocationDetails = (allocation: BasketAllocation, idx: number) => {
         const token = getTokenDetailsForAllocation(allocation, TOKENS);
         if (!token) return null;
 
@@ -127,8 +136,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                 </div>
 
                 <div className="lg:col-span-3">
-                    {/* TODO: change BNB to input symbol */}
-                    <h3 className="font-medium mb-2">Amount (BNB)</h3>
+                    <h3 className="font-medium mb-2">Amount ({inputSymbol})</h3>
                     <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                             <Input
@@ -140,8 +148,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 className="text-base"
                                 disabled={!isConnected}
                             />
-                            {/* TODO: change BNB to input symbol */}
-                            <span className="text-base font-medium">BNB</span>
+                            <span className="text-base font-medium">{inputSymbol}</span>
                         </div>
                         {isConnected && (
                             <div className="text-sm text-muted-foreground">
@@ -149,8 +156,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                     "Loading balance..."
                                 ) : (
                                     <>
-                                        {/* TODO: change BNB to input symbol */}
-                                        Balance: {balanceFormatted} BNB
+                                        Balance: {balanceFormatted} {inputSymbol}
                                         {hasInsufficientBalance && (
                                             <div className="text-red-500 mt-1">Insufficient balance</div>
                                         )}
@@ -169,16 +175,16 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 <span className="text-sm">Please connect your wallet to proceed</span>
                             </div>
                         )}
-                        {isConnected && chainId !== bsc.id && (
+                        {isConnected && chainId !== basketChain.id && (
                             <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                     <AlertCircle className="h-4 w-4" />
-                                    <span className="text-sm">Please switch to BSC</span>
+                                    <span className="text-sm">Please switch to {basketChain.name}</span>
                                 </div>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => switchChain({ chainId: bsc.id })}
+                                    onClick={() => switchChain({ chainId: basketChain.id })}
                                     className="ml-2"
                                 >
                                     Switch Network
@@ -203,7 +209,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                         <Separator />
                         <h3 className="font-medium">Breakdown</h3>
                         <div className="space-y-1 text-sm">
-                            {selectedBasketData.allocations.map((all: BasketAllocation, idx) =>
+                            {selectedBasketData.allocations.map((all: BasketAllocation, idx: number) =>
                                 renderAllocationDetails(all, idx),
                             )}
                         </div>
@@ -212,7 +218,11 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                             <Button
                                 className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                 size="sm"
-                                onClick={chainId !== bsc.id ? () => switchChain?.({ chainId: bsc.id }) : handlePurchase}
+                                onClick={
+                                    chainId !== basketChain.id
+                                        ? () => switchChain?.({ chainId: basketChain.id })
+                                        : handlePurchase
+                                }
                                 disabled={
                                     !isConnected ||
                                     hasInsufficientBalance ||
@@ -224,7 +234,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 <ShoppingCart className="mr-1 h-4 w-4" />
                                 {!isConnected
                                     ? "Connect Wallet"
-                                    : chainId !== bsc.id
+                                    : chainId !== basketChain.id
                                       ? "Switch Network"
                                       : !isAmountValid
                                         ? "Enter Amount"
