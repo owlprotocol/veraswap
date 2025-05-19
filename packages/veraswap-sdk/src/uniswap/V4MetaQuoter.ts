@@ -11,10 +11,10 @@ export enum V4MetaQuoteBestType {
 export type V4MetaQuoteExactSingleParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputSingle)["inputs"]>;
 export type V4MetaQuoteExactSingleReturnType = AbiParametersToPrimitiveTypes<
     (typeof metaQuoteExactInputSingle)["outputs"]
->;
+>[number];
 
 export type V4MetaQuoteExactParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["inputs"]>;
-export type V4MetaQuoteExactReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["outputs"]>;
+export type V4MetaQuoteExactReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["outputs"]>[number];
 
 export type V4MetaQuoteExactBestParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputBest)["inputs"]>;
 export type V4MetaQuoteExactBestReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputBest)["outputs"]>;
