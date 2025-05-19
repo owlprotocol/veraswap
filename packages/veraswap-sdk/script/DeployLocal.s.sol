@@ -8,6 +8,8 @@ import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionMa
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
 
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+
 import {MockMailbox} from "@hyperlane-xyz/core/mock/MockMailbox.sol";
 import {HypERC20} from "@hyperlane-xyz/core/token/HypERC20.sol";
 import {HypERC20Collateral} from "@hyperlane-xyz/core/token/HypERC20Collateral.sol";
@@ -30,6 +32,10 @@ import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
 import {MockInterchainGasPaymasterUtils} from "./utils/MockInterchainGasPaymasterUtils.sol";
+
+// Baskets
+import {BasketFixedUnits} from "../contracts/vaults/BasketFixedUnits.sol";
+import {BasketFixedUnitsUtils} from "./utils/BasketFixedUnitsUtils.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
@@ -122,6 +128,46 @@ contract DeployLocal is DeployCoreContracts {
                     hypERC20CollateralTokenB
                 );
             }
+            // Create BasketFixedUnits with A/B
+            BasketFixedUnits.BasketToken[] memory basket = new BasketFixedUnits.BasketToken[](2);
+            (address basketToken0, address basketToken1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+            basket[0] = BasketFixedUnits.BasketToken({addr: basketToken0, units: 1e18});
+            basket[1] = BasketFixedUnits.BasketToken({addr: basketToken1, units: 1e18});
+            (address basketAddr0, ) = BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50", address(0), 0, basket);
+            (address basketAddr1, ) = BasketFixedUnitsUtils.getOrCreate2(
+                "Index AB50",
+                "AB50",
+                address(1),
+                10_000,
+                basket
+            );
+            // Basket 0 Approvals
+            IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
+                address(basketToken0),
+                address(basketAddr0),
+                type(uint160).max,
+                type(uint48).max
+            );
+            IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
+                address(basketToken1),
+                address(basketAddr0),
+                type(uint160).max,
+                type(uint48).max
+            );
+            // Basket 1 Approvals
+            IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
+                address(basketToken0),
+                address(basketAddr1),
+                type(uint160).max,
+                type(uint48).max
+            );
+            IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
+                address(basketToken1),
+                address(basketAddr1),
+                type(uint160).max,
+                type(uint48).max
+            );
+
             vm.stopBroadcast();
         }
 
