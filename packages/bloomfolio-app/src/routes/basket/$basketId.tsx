@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { z } from "zod";
 import { ArrowLeft, ChevronDown, ArrowRight } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { useAccount } from "wagmi";
 import { BASKETS } from "@/constants/baskets.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -11,8 +13,12 @@ import { BasketAllocation } from "@/constants/baskets.js";
 import { TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
+import { ShareButton } from "@/components/ShareButton.js";
 
 export const Route = createFileRoute("/basket/$basketId")({
+    validateSearch: z.object({
+        referrer: z.string().optional(),
+    }),
     component: BasketDetailsPage,
 });
 
@@ -34,6 +40,8 @@ function BasketDetailsPage() {
     const { basketId } = useParams({ from: "/basket/$basketId" });
     const basket = BASKETS.find((b) => b.id === basketId);
     const totaWeight = basket?.allocations.reduce((sum, all) => sum + all.weight, 0);
+    const { address } = useAccount();
+    const { referrer } = Route.useSearch();
 
     const { data: tokenPrices, isLoading, isError } = useTokenPrices(basket?.allocations ?? []);
 
@@ -168,12 +176,15 @@ function BasketDetailsPage() {
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <Link to="/">
-                        <Button variant="ghost" className="mb-4">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Baskets
-                        </Button>
-                    </Link>
+                    <div className="flex justify-between items-center mb-4">
+                        <Link to="/">
+                            <Button variant="ghost">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Baskets
+                            </Button>
+                        </Link>
+                        <ShareButton address={address} variant="outline" />
+                    </div>
                     <div className="flex items-start space-x-4">
                         <div className={`p-3 rounded-full bg-gradient-to-r ${basket.gradient} text-white`}>
                             <basket.icon className="h-8 w-8" />
@@ -415,7 +426,7 @@ function BasketDetailsPage() {
                             </CardContent>
                         </Card>
 
-                        <Link to="/">
+                        <Link to="/" search={(prev) => ({ ...prev })}>
                             <Button className="w-full bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600">
                                 Invest in this Basket
                                 <ArrowRight className="ml-2 h-4 w-4" />

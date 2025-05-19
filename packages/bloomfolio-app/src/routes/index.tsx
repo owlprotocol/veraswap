@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
+import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { BASKETS } from "@/constants/baskets.js";
 import { BasketCard } from "@/components/BasketCard.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { BasketPurchaseConfirmation } from "@/components/BasketPurchaseConfirmation.js";
+import { ShareButton } from "@/components/ShareButton.js";
 
 export const Route = createFileRoute("/")({
+    validateSearch: z.object({
+        referrer: z.string().optional(),
+    }),
     component: SimplifiedPortfolioPage,
 });
 
@@ -15,6 +20,8 @@ export default function SimplifiedPortfolioPage() {
     const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
     const [amount, setAmount] = useState<string>("");
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const { address } = useAccount();
+    // const { referrer } = Route.useSearch();
 
     const handleSelectBasket = (basketId: string) => {
         setSelectedBasket(basketId);
@@ -39,11 +46,14 @@ export default function SimplifiedPortfolioPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
             <div className="container mx-auto px-4 py-8">
-                <header className="mb-8">
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
-                        Quick Invest
-                    </h1>
-                    <p className="text-muted-foreground mt-2">Select a strategy and start investing in minutes</p>
+                <header className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
+                            Quick Invest
+                        </h1>
+                        <p className="text-muted-foreground mt-2">Select a strategy and start investing in minutes</p>
+                    </div>
+                    <ShareButton address={address} />
                 </header>
 
                 {showConfirmation ? (

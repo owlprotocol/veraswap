@@ -11,6 +11,7 @@ import { useHydrateAtoms } from "jotai/react/utils";
 import { router } from "./router.js";
 import { Analytics } from "./components/analytics.js";
 import { ThemeProvider } from "./components/theme-provider.js";
+import { Toaster } from "./components/ui/toaster.jsx";
 import { config } from "./config.js";
 import "@coinbase/onchainkit/styles.css";
 import { queryClient } from "./queryClient.js";
@@ -48,6 +49,7 @@ function App() {
                                     <InnerApp />
                                     <ReactQueryDevtools initialIsOpen={false} />
                                     <Analytics />
+                                    <Toaster />
                                 </HydrateAtoms>
                             </RainbowKitProvider>
                         </QueryClientProvider>
