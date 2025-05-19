@@ -21,7 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { BasketAllocation, BASKETS } from "@/constants/baskets.js";
 import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { config } from "@/config.js";
-import { queryClient } from "@/App.js";
+import { queryClient } from "@/queryClient.js";
 
 export const Route = createFileRoute("/")({
     component: SimplifiedPortfolioPage,
@@ -482,9 +482,20 @@ export default function SimplifiedPortfolioPage() {
                                                         </div>
                                                         <CardTitle className="text-xl">{basket.title}</CardTitle>
                                                     </div>
-                                                    {selectedBasket === basket.id && (
-                                                        <Badge className="bg-primary">Selected</Badge>
-                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        {selectedBasket === basket.id && (
+                                                            <Badge className="bg-primary">Selected</Badge>
+                                                        )}
+                                                        <Link
+                                                            to="/basket/$basketId"
+                                                            params={{ basketId: basket.id }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Button variant="outline" size="sm" className="h-8 w-24">
+                                                                Details
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
                                                 </div>
                                                 <CardDescription className="mt-2">{basket.description}</CardDescription>
                                             </CardHeader>
