@@ -3585,6 +3585,23 @@ export const functions = [
     },
     {
         type: "function",
+        name: "getMintUnits",
+        inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+        outputs: [
+            {
+                name: "mintUnits",
+                type: "tuple[]",
+                internalType: "struct BasketFixedUnits.BasketToken[]",
+                components: [
+                    { name: "addr", type: "address", internalType: "address" },
+                    { name: "units", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
         name: "mint",
         inputs: [
             { name: "amount", type: "uint256", internalType: "uint256" },

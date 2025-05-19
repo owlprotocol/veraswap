@@ -86,6 +86,19 @@ contract BasketFixedUnits is ERC20 {
         return basket;
     }
 
+    /// @dev Returns the number of underlying tokens required to mint `amount` of basket tokens
+    function getMintUnits(uint256 amount) external view returns (BasketToken[] memory mintUnits) {
+        mintUnits = new BasketToken[](basket.length);
+
+        for (uint256 i = 0; i < basket.length; ++i) {
+            BasketToken memory token = basket[i];
+            uint256 required = amount.mulDivRoundingUp(token.units, 1e18); // round-up (minimum 1 wei)
+            mintUnits[i] = BasketToken({addr: token.addr, units: required});
+        }
+
+        return mintUnits;
+    }
+
     function mint(uint256 amount, address receiver, address referrer) external payable {
         if (amount == 0) revert ZeroAmount();
 
