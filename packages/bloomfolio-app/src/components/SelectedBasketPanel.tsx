@@ -43,6 +43,9 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         setAmount(value);
     };
 
+    // TODO: change native currency to input symbol
+    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
+
     const handlePurchase = async () => {
         if (
             !isConnected ||
@@ -133,8 +136,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                 </div>
 
                 <div className="lg:col-span-3">
-                    {/* TODO: change BNB to input symbol */}
-                    <h3 className="font-medium mb-2">Amount (BNB)</h3>
+                    <h3 className="font-medium mb-2">Amount ({inputSymbol})</h3>
                     <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                             <Input
@@ -146,8 +148,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 className="text-base"
                                 disabled={!isConnected}
                             />
-                            {/* TODO: change BNB to input symbol */}
-                            <span className="text-base font-medium">BNB</span>
+                            <span className="text-base font-medium">{inputSymbol}</span>
                         </div>
                         {isConnected && (
                             <div className="text-sm text-muted-foreground">
@@ -155,8 +156,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                     "Loading balance..."
                                 ) : (
                                     <>
-                                        {/* TODO: change BNB to input symbol */}
-                                        Balance: {balanceFormatted} BNB
+                                        Balance: {balanceFormatted} {inputSymbol}
                                         {hasInsufficientBalance && (
                                             <div className="text-red-500 mt-1">Insufficient balance</div>
                                         )}
