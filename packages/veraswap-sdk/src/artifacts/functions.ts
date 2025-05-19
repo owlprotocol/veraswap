@@ -3561,27 +3561,44 @@ export const functions = [
     },
     {
         type: "function",
-        name: "basket",
-        inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        name: "burn",
+        inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "getBasket",
+        inputs: [],
         outputs: [
-            { name: "addr", type: "address", internalType: "address" },
-            { name: "units", type: "uint256", internalType: "uint256" },
+            {
+                name: "",
+                type: "tuple[]",
+                internalType: "struct BasketFixedUnits.BasketToken[]",
+                components: [
+                    { name: "addr", type: "address", internalType: "address" },
+                    { name: "units", type: "uint256", internalType: "uint256" },
+                ],
+            },
         ],
         stateMutability: "view",
     },
     {
         type: "function",
-        name: "basketLength",
-        inputs: [],
-        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-        stateMutability: "view",
-    },
-    {
-        type: "function",
-        name: "burn",
+        name: "getMintUnits",
         inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
-        outputs: [],
-        stateMutability: "nonpayable",
+        outputs: [
+            {
+                name: "mintUnits",
+                type: "tuple[]",
+                internalType: "struct BasketFixedUnits.BasketToken[]",
+                components: [
+                    { name: "addr", type: "address", internalType: "address" },
+                    { name: "units", type: "uint256", internalType: "uint256" },
+                ],
+            },
+        ],
+        stateMutability: "view",
     },
     {
         type: "function",
