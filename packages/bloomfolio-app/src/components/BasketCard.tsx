@@ -78,6 +78,7 @@ export function BasketCard({ basket, isSelected, onSelect }) {
                         <Link
                             to="/basket/$basketId"
                             params={{ basketId: basket.id }}
+                            search={(prev) => ({ ...prev })}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <Button variant="outline" size="sm" className="h-8 w-24">
