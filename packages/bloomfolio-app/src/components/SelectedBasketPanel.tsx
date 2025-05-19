@@ -9,7 +9,7 @@ import { Separator } from "./ui/separator.js";
 import { Badge } from "./ui/badge.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
-import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
+import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
@@ -27,18 +27,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
     const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
     const isAmountValid = amountParsed > 0;
 
-    const { data: tokenValues } = useGetTokenValues({
-        basket: selectedBasketData,
-        quoteCurrency: selectedBasketData
-            ? {
-                  address: zeroAddress,
-                  chainId: selectedBasketData.allocations[0].chainId,
-              }
-            : undefined,
-    });
-
-    const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
-    // const weights = tokenValues ?? [];
+    const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData);
 
     const shares = totalValue > 0n ? (amountParsed * 10n ** 18n) / totalValue : 0n;
     const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
@@ -224,7 +213,13 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                 size="sm"
                                 onClick={chainId !== bsc.id ? () => switchChain?.({ chainId: bsc.id }) : handlePurchase}
-                                disabled={!isConnected || hasInsufficientBalance || isBalanceLoading || !isAmountValid}
+                                disabled={
+                                    !isConnected ||
+                                    hasInsufficientBalance ||
+                                    isBalanceLoading ||
+                                    !isAmountValid ||
+                                    isTokenValuesLoading
+                                }
                             >
                                 <ShoppingCart className="mr-1 h-4 w-4" />
                                 {!isConnected
