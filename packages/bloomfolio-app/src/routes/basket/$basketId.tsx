@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, ChevronDown, ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, ArrowRight } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { BASKETS } from "@/constants/baskets.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
@@ -12,7 +12,7 @@ import { BSC_TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 
-export const Route = createFileRoute("/baskets/$basketId")({
+export const Route = createFileRoute("/basket/$basketId")({
     component: BasketDetailsPage,
 });
 
@@ -31,7 +31,7 @@ const CATEGORY_ICONS: Record<TokenCategory, string> = {
 };
 
 function BasketDetailsPage() {
-    const { basketId } = useParams({ from: "/baskets/$basketId" });
+    const { basketId } = useParams({ from: "/basket/$basketId" });
     const basket = BASKETS.find((b) => b.id === basketId);
     const totaWeight = basket?.allocations.reduce((sum, all) => sum + all.weight, 0);
 
@@ -389,7 +389,7 @@ function BasketDetailsPage() {
                                 <div className="space-y-2">
                                     <div className="text-sm font-medium">Top Holdings</div>
                                     {basket.allocations
-                                        .sort((a, b) => b.weight - a.weight)
+                                        .sort((a: { weight: number }, b: { weight: number }) => b.weight - a.weight)
                                         .slice(0, 3)
                                         .map((allocation: BasketAllocation) => {
                                             const token = getTokenDetailsForAllocation(allocation, BSC_TOKENS);

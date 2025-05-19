@@ -487,7 +487,7 @@ export default function SimplifiedPortfolioPage() {
                                                             <Badge className="bg-primary">Selected</Badge>
                                                         )}
                                                         <Link
-                                                            to="/baskets/$basketId"
+                                                            to="/basket/$basketId"
                                                             params={{ basketId: basket.id }}
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
