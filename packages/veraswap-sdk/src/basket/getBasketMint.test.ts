@@ -10,7 +10,6 @@ import {
     Hex,
     http,
     numberToHex,
-    padHex,
     parseAbi,
     parseEther,
     zeroAddress,

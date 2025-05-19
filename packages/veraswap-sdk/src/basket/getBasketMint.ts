@@ -120,7 +120,7 @@ export interface GetBasketMintParams extends GetBasketMintQuoteParams {
 }
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export async function getBasketMintStub(queryClient: QueryClient, wagmiConfig: Config, params: GetBasketMintParams) {
+export async function getBasketMintStub(_queryClient: QueryClient, _wagmiConfig: Config, params: GetBasketMintParams) {
     console.debug("getMasketMint", params);
 
     return {
@@ -146,8 +146,8 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         currencyIn,
         nativeSweepRecipient,
         //TODO: Compute slippage
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        slippageCentiBps = 1_000n,
+
+        // slippageCentiBps = 1_000n,
         permit2PermitParams,
         deadline,
         contracts,
