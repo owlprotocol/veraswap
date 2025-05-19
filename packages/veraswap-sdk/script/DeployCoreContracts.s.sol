@@ -38,6 +38,8 @@ import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol";
 import {ExecuteUtils} from "./utils/ExecuteUtils.sol";
+// Custom
+import {ExecuteSweepUtils} from "./utils/ExecuteSweepUtils.sol";
 
 import {HyperlaneDeployParams, UniswapContracts, HyperlaneContracts, CoreContracts} from "./Structs.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";
@@ -242,5 +244,6 @@ contract DeployCoreContracts is DeployParameters {
 
         // Custom Contracts
         V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+        ExecuteSweepUtils.getOrCreate2();
     }
 }

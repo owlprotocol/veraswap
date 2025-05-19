@@ -438,4 +438,6 @@ export const errors = [
     { type: "error", name: "UnsortedDuplicate", inputs: [{ name: "token", type: "address", internalType: "address" }] },
     { type: "error", name: "ZeroAmount", inputs: [] },
     { type: "error", name: "ZeroUnits", inputs: [] },
+    { type: "error", name: "AddressEmptyCode", inputs: [{ name: "target", type: "address", internalType: "address" }] },
+    { type: "error", name: "CallSelectorApprove", inputs: [] },
 ] as const;

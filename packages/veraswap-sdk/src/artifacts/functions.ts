@@ -3618,4 +3618,15 @@ export const functions = [
         outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
         stateMutability: "view",
     },
+    {
+        type: "function",
+        name: "execute",
+        inputs: [
+            { name: "target", type: "address", internalType: "address" },
+            { name: "data", type: "bytes", internalType: "bytes" },
+            { name: "value", type: "uint256", internalType: "uint256" },
+        ],
+        outputs: [{ name: "", type: "bytes", internalType: "bytes" }],
+        stateMutability: "payable",
+    },
 ] as const;

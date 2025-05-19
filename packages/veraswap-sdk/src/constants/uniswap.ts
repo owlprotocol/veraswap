@@ -2,6 +2,7 @@ import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, sepolia } from "viem/chains";
 
+import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
@@ -13,6 +14,12 @@ import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
 export const V4_SWAP = 0x10;
+
+/*** Custom Contracts ***/
+export const EXECUTE_SWEEP = getDeployDeterministicAddress({
+    bytecode: ExecuteSweep.bytecode,
+    salt: zeroHash,
+});
 
 /*** Uniswap Constants ***/
 export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
