@@ -11,12 +11,11 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 
 import {ExecuteSweep} from "../../contracts/ExecuteSweep.sol";
 import {ExecuteSweepUtils} from "../utils/ExecuteSweepUtils.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract DeployBSC is Script {
     function run() external virtual {
         vm.startBroadcast();
-
-        (address permit2,) = Permit2Utils.getOrCreate2();
 
         (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
 
@@ -44,10 +43,15 @@ contract DeployBSC is Script {
         for (uint256 i = 0; i < conservativeTokens.length; i++) {
             address token = conservativeTokens[i];
 
-            (uint160 allowance,,) = IAllowanceTransfer(permit2).allowance(executeSweep, token, conservativeBasketAddr);
+            uint256 allowancePermit2 = IERC20(token).allowance(executeSweep, Permit2Utils.permit2);
+            if (allowancePermit2 == 0) {
+                ExecuteSweep(payable(executeSweep)).approveAll(token, Permit2Utils.permit2);
+            }
+
+            (uint160 allowance,,) =
+                IAllowanceTransfer(Permit2Utils.permit2).allowance(executeSweep, token, conservativeBasketAddr);
 
             if (allowance == 0) {
-                // Approve all
                 ExecuteSweep(payable(executeSweep)).approveAll(token, conservativeBasketAddr);
             }
         }
