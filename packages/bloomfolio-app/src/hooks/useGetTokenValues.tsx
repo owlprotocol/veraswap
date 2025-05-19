@@ -1,10 +1,4 @@
-import {
-    getUniswapV4RouteExactIn,
-    getUniswapV4RouteExactOut,
-    UNISWAP_CONTRACTS,
-    USDC_BASE,
-    USDC_BSC,
-} from "@owlprotocol/veraswap-sdk";
+import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS, USDC_BASE, USDC_BSC, USDT_BSC } from "@owlprotocol/veraswap-sdk";
 import { zeroAddress, Address } from "viem";
 import { useQuery } from "@tanstack/react-query";
 
@@ -27,9 +21,10 @@ export function useGetTokenValues({
             if (!basket || !quoteCurrency) return null;
 
             const chainId = basket.allocations[0].chainId;
-            let currencyHops;
+
+            let currencyHops: Address[];
             if (chainId === bsc.id) {
-                currencyHops = [USDC_BSC.address, zeroAddress];
+                currencyHops = [USDC_BSC.address, USDT_BSC.address, zeroAddress];
             } else if (chainId === base.id) {
                 currencyHops = [USDC_BASE.address, zeroAddress];
             } else {
