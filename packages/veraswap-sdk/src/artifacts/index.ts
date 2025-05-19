@@ -5,6 +5,7 @@ export { ECDSAValidator } from "./ECDSAValidator.js";
 export { ERC7579ExecutorRouter } from "./ERC7579ExecutorRouter.js";
 export { EntryPoint } from "./EntryPoint.js";
 export { Execute } from "./Execute.js";
+export { ExecuteSweep } from "./ExecuteSweep.js";
 export { GasRouter } from "./GasRouter.js";
 export { HypERC20 } from "./HypERC20.js";
 export { HypERC20Collateral } from "./HypERC20Collateral.js";
