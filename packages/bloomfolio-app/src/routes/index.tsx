@@ -92,7 +92,7 @@ export default function SimplifiedPortfolioPage() {
     // TODO: change to use input currency
     const amountParsed = parseUnits(amount, 18);
 
-    const shares = (amountParsed * 10n ** 18n) / totalValue;
+    const shares = totalValue > 0n ? (amountParsed * 10n ** 18n) / totalValue : 0n;
     const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
 
     const balanceFormatted = formatEther(balance?.value ?? 0n);
