@@ -3586,8 +3586,19 @@ export const functions = [
     {
         type: "function",
         name: "mint",
-        inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
+        inputs: [
+            { name: "amount", type: "uint256", internalType: "uint256" },
+            { name: "receiver", type: "address", internalType: "address" },
+            { name: "referrer", type: "address", internalType: "address" },
+        ],
         outputs: [],
         stateMutability: "payable",
+    },
+    {
+        type: "function",
+        name: "mintFeeCentiBips",
+        inputs: [],
+        outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        stateMutability: "view",
     },
 ] as const;

@@ -366,7 +366,14 @@ export const errors = [
             { name: "surplus", type: "uint256", internalType: "uint256" },
         ],
     },
-    { type: "error", name: "AmountTooLarge", inputs: [] },
+    {
+        type: "error",
+        name: "AmountTooLarge",
+        inputs: [
+            { name: "amount", type: "uint256", internalType: "uint256" },
+            { name: "max", type: "uint256", internalType: "uint256" },
+        ],
+    },
     {
         type: "error",
         name: "ERC20InsufficientAllowance",

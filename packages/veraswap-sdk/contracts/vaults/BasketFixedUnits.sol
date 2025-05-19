@@ -23,7 +23,7 @@ error ZeroUnits();
 error UnsortedDuplicate(address token);
 error ZeroAmount();
 error IncorrectETH(uint256 actual, uint256 expected);
-error AmountTooLarge();
+error AmountTooLarge(uint256 amount, uint256 max);
 
 /// @title BasketUnitWeighted
 /// @notice Simple on-chain basket with fixed units of each asset
@@ -42,10 +42,18 @@ contract BasketFixedUnits is ERC20 {
         uint256 units;
     }
 
+    address public immutable owner;
+    uint256 public immutable mintFeeCentiBips; // 10_000 = 1% fee
     BasketToken[] public basket;
 
     /* ───────────── Constructor ───────────── */
-    constructor(BasketToken[] memory _basket, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _owner,
+        uint256 _mintFeeCentiBips,
+        BasketToken[] memory _basket
+    ) ERC20(_name, _symbol) {
         // Validate basket
         if (_basket.length == 0) revert EmptyBasket();
 
@@ -56,7 +64,21 @@ contract BasketFixedUnits is ERC20 {
             if (i > 0 && _basket[i - 1].addr >= _basket[i].addr) revert UnsortedDuplicate(_basket[i].addr);
         }
 
-        // Write basket to storage
+        if (_owner == address(0)) {
+            // Max mint fee is 0%
+            if (_mintFeeCentiBips > 0) {
+                revert AmountTooLarge(_mintFeeCentiBips, 0);
+            }
+        } else {
+            // Max mint fee is 1%
+            if (_mintFeeCentiBips > 10_000) {
+                revert AmountTooLarge(_mintFeeCentiBips, 10_000);
+            }
+        }
+
+        // Write to storage
+        owner = _owner;
+        mintFeeCentiBips = _mintFeeCentiBips;
         basket = _basket;
     }
 
@@ -65,7 +87,7 @@ contract BasketFixedUnits is ERC20 {
         return basket.length;
     }
 
-    function mint(uint256 amount) external payable {
+    function mint(uint256 amount, address receiver, address referrer) external payable {
         if (amount == 0) revert ZeroAmount();
 
         for (uint256 i = 0; i < basket.length; ++i) {
@@ -75,13 +97,28 @@ contract BasketFixedUnits is ERC20 {
             if (token.addr == NATIVE) {
                 if (msg.value != required) revert IncorrectETH(msg.value, required);
             } else {
-                if (required > type(uint160).max) revert AmountTooLarge();
+                if (required > type(uint160).max) revert AmountTooLarge(required, type(uint160).max);
                 IAllowanceTransfer(PERMIT2_ADDR).transferFrom(msg.sender, address(this), uint160(required), token.addr);
             }
         }
 
-        // TODO: When we add fees, reduce mint amount for user
-        _mint(msg.sender, amount);
+        if (mintFeeCentiBips == 0 || receiver == owner) {
+            // No fee, mint all to receiver
+            _mint(receiver, amount);
+        } else {
+            // Calculate fee and mint to owner
+            uint256 fee = amount.mulDivRoundingUp(mintFeeCentiBips, 1_000_000); // round-up (minimum 1 wei);
+            _mint(receiver, amount - fee);
+
+            if (referrer == address(0)) {
+                _mint(owner, fee);
+            } else {
+                //TODO: Add custom fee split logic
+                // Referrer gets 50% of the fee
+                _mint(referrer, fee / 2);
+                _mint(owner, fee / 2);
+            }
+        }
     }
 
     function burn(uint256 amount) external {

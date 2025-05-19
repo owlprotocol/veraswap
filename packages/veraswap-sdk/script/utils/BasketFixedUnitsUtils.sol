@@ -10,21 +10,39 @@ library BasketFixedUnitsUtils {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     function getDeployBytecode(
-        BasketFixedUnits.BasketToken[] memory basket,
-        string memory name,
-        string memory symbol
+        string memory _name,
+        string memory _symbol,
+        address _owner,
+        uint256 _mintFeeCentiBips,
+        BasketFixedUnits.BasketToken[] memory _basket
     ) internal pure returns (bytes memory) {
-        return abi.encodePacked(type(BasketFixedUnits).creationCode, abi.encode(basket, name, symbol));
+        return
+            abi.encodePacked(
+                type(BasketFixedUnits).creationCode,
+                abi.encode(_name, _symbol, _owner, _mintFeeCentiBips, _basket)
+            );
     }
 
     function getOrCreate2(
-        BasketFixedUnits.BasketToken[] memory basket,
-        string memory name,
-        string memory symbol
+        string memory _name,
+        string memory _symbol,
+        address _owner,
+        uint256 _mintFeeCentiBips,
+        BasketFixedUnits.BasketToken[] memory _basket
     ) internal returns (address addr, bool exists) {
-        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(basket, name, symbol));
+        (addr, exists) = Create2Utils.getAddressExists(
+            getDeployBytecode(_name, _symbol, _owner, _mintFeeCentiBips, _basket)
+        );
         if (!exists) {
-            address deployed = address(new BasketFixedUnits{salt: Create2Utils.BYTES32_ZERO}(basket, name, symbol));
+            address deployed = address(
+                new BasketFixedUnits{salt: Create2Utils.BYTES32_ZERO}(
+                    _name,
+                    _symbol,
+                    _owner,
+                    _mintFeeCentiBips,
+                    _basket
+                )
+            );
             vm.assertEq(deployed, addr);
         }
     }
