@@ -1,12 +1,25 @@
 import { Check, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { getChainById } from "@owlprotocol/veraswap-sdk";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./ui/card.js";
 import { Button } from "./ui/button.js";
 import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 
 export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
-    const selectedBasketData = selectedBasket ? BASKETS.find((b) => b.id === selectedBasket) : null;
+    const selectedBasketData = useMemo(
+        () => (selectedBasket ? BASKETS.find((b) => b.id === selectedBasket) : null),
+        [selectedBasket],
+    );
+
+    const basketChain = useMemo(
+        () => (selectedBasketData ? getChainById(selectedBasketData.allocations[0].chainId)! : null),
+        [selectedBasketData],
+    );
+
+    // TODO: change native currency to input symbol
+    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
 
     const renderAllocationDetails = (allocation: BasketAllocation, totalWeight: number) => {
         const token = getTokenDetailsForAllocation(allocation, TOKENS);
@@ -34,8 +47,7 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
                     </div>
                     <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
                     <CardDescription>
-                        {/* TODO: change BNB to input symbol */}
-                        You've successfully invested {amount} BNB in the {selectedBasketData?.title} strategy
+                        You've successfully invested {amount} {inputSymbol} in the {selectedBasketData?.title} strategy
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -48,8 +60,7 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Payment Method</span>
-                                {/* TODO: change BNB to input symbol */}
-                                <span className="font-medium">BNB</span>
+                                <span className="font-medium">{inputSymbol}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Transaction ID</span>
