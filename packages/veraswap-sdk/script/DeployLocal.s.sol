@@ -36,6 +36,8 @@ import {MockInterchainGasPaymasterUtils} from "./utils/MockInterchainGasPaymaste
 // Baskets
 import {BasketFixedUnits} from "../contracts/vaults/BasketFixedUnits.sol";
 import {BasketFixedUnitsUtils} from "./utils/BasketFixedUnitsUtils.sol";
+import {ExecuteSweep} from "../contracts/ExecuteSweep.sol";
+import {ExecuteSweepUtils} from "./utils/ExecuteSweepUtils.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
@@ -167,6 +169,13 @@ contract DeployLocal is DeployCoreContracts {
                 type(uint160).max,
                 type(uint48).max
             );
+            // Set Permit2 Approvals for ExecuteSweep
+            (address executeSweepAddr, ) = ExecuteSweepUtils.getOrCreate2();
+            ExecuteSweep executeSweep = ExecuteSweep(payable(executeSweepAddr));
+            executeSweep.approveAll(basketToken0, basketAddr0);
+            executeSweep.approveAll(basketToken1, basketAddr0);
+            executeSweep.approveAll(basketToken0, basketAddr1);
+            executeSweep.approveAll(basketToken1, basketAddr1);
 
             vm.stopBroadcast();
         }
