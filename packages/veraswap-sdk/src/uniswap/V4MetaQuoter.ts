@@ -1,6 +1,20 @@
 import { AbiParametersToPrimitiveTypes } from "abitype";
 
-import { metaQuoteExactInput } from "../artifacts/IV4MetaQuoter.js";
+import { metaQuoteExactInput, metaQuoteExactInputBest, metaQuoteExactInputSingle } from "../artifacts/IV4MetaQuoter.js";
 
-export type V4MetaQuoteParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["inputs"]>;
-export type V4MetaQuoteReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["outputs"]>;
+export enum V4MetaQuoteBestType {
+    None = 0,
+    Single = 1,
+    Multihop = 2,
+}
+
+export type V4MetaQuoteExactSingleParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputSingle)["inputs"]>;
+export type V4MetaQuoteExactSingleReturnType = AbiParametersToPrimitiveTypes<
+    (typeof metaQuoteExactInputSingle)["outputs"]
+>;
+
+export type V4MetaQuoteExactParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["inputs"]>;
+export type V4MetaQuoteExactReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInput)["outputs"]>;
+
+export type V4MetaQuoteExactBestParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputBest)["inputs"]>;
+export type V4MetaQuoteExactBestReturnType = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputBest)["outputs"]>;
