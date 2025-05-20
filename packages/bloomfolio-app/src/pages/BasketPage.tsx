@@ -447,7 +447,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             >
                                 Buy this Basket
                             </Button>
-                            <Link to="/" search={(prev) => ({ ...prev })} className="w-full">
+                            <Link to="/" className="w-full">
                                 <Button variant="outline" className="w-full">
                                     View all baskets
                                 </Button>
