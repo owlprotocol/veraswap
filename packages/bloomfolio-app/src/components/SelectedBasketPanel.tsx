@@ -9,11 +9,10 @@ import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
-import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
-import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
+import { unitsToQuote, useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 
 const maxFeeCentiBips = 1_000_000n;
 
@@ -43,7 +42,18 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
     const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
     const isAmountValid = amountParsed > 0;
 
-    const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData);
+    // TODO: change native currency to input symbol
+    const inputCurrency = zeroAddress;
+    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
+
+    const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
+        basket: selectedBasketData,
+        quoteCurrency: {
+            address: inputCurrency,
+            chainId: basketChain.id,
+        },
+    });
+    const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
 
     const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
     const sharesFormatted =
@@ -55,9 +65,6 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         const value = e.target.value.replace(/[^0-9.]/g, "");
         setAmount(value);
     };
-
-    // TODO: change native currency to input symbol
-    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
 
     const handlePurchase = async () => {
         if (
