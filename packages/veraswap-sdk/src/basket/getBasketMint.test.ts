@@ -72,7 +72,7 @@ describe("basket/getBasketMint.test.ts", function () {
         bytecode: encodeDeployData({
             abi: BasketFixedUnits.abi,
             bytecode: BasketFixedUnits.bytecode,
-            args: ["Index AB50", "AB50", zeroAddress, 0n, basketTokens],
+            args: ["Index AB50", "AB50.NF", zeroAddress, 0n, basketTokens],
         }),
         salt: zeroHash,
     });

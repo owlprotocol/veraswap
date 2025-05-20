@@ -192,6 +192,7 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0xD676ec87044B939D152499469889f5fB3a77D1E0",
         v4Quoter: "0xA2FDfA0B5EC2375575915D1361380Ea3fd812e43",
         universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
+        v4MetaQuoter: "0xab49293ff734f0615dfa67fdb3b4625fca0747e2",
     },
     [optimism.id]: {
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
