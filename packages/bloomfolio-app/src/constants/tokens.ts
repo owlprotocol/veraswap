@@ -51,6 +51,30 @@ export const BASE_TOKENS = [
         category: "alt",
         chainId: base.id,
     },
+    {
+        address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        symbol: "VIRTUAL",
+        name: "Virtual Protocol",
+        logoURI: "https://coin-images.coingecko.com/coins/images/34057/large/LOGOMARK.png",
+        category: "alt",
+        chainId: base.id,
+    },
+    {
+        address: "0x1111111111166b7FE7bd91427724B487980aFc69",
+        symbol: "ZORA",
+        name: "Zora",
+        logoURI: "https://coin-images.coingecko.com/coins/images/54693/large/zora.jpg",
+        category: "alt",
+        chainId: base.id,
+    },
+    {
+        address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553",
+        symbol: "KAITO",
+        name: "Kaito",
+        logoURI: "https://coin-images.coingecko.com/coins/images/54411/large/Qm4DW488_400x400.jpg",
+        category: "alt",
+        chainId: base.id,
+    },
 ] as const satisfies Token[];
 
 export const BSC_TOKENS = [
