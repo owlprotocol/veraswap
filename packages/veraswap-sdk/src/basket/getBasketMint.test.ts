@@ -61,11 +61,11 @@ describe("basket/getBasketMint.test.ts", function () {
     const basketTokens = [
         {
             addr: basketToken0,
-            units: parseEther("1"),
+            units: 1n,
         },
         {
             addr: basketToken1,
-            units: parseEther("1"),
+            units: 1n,
         },
     ];
     const basket0 = getDeployDeterministicAddress({
