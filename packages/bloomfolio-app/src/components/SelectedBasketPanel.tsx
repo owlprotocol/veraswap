@@ -15,6 +15,8 @@ import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
 import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
 
+const maxFeeCentiBips = 1_000_000n;
+
 export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTransaction }) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -34,8 +36,6 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         address: selectedBasketData.address,
         functionName: "mintFeeCentiBips",
     });
-
-    const maxFeeCentiBips = 1_000_000n;
 
     const balanceFormatted = formatEther(balance?.value ?? 0n);
     const amountParsed = parseUnits(amount, 18);
