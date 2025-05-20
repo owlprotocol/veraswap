@@ -26,9 +26,8 @@ function BasketDetailsPage() {
         icon: basket?.icon,
     };
 
-    const chainId = basket?.allocations[0].chainId;
-    const address = basket?.address;
-    console.log({ chainId, address });
+    const chainId = basket.allocations[0].chainId;
+    const address = basket.address;
 
     return (
         <BasketPage chainId={chainId} address={address} details={details} referrer={referrer as Address | undefined} />
