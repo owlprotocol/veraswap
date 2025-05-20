@@ -11,6 +11,7 @@ import { poolKeysToPathExactIn, poolKeysToPathExactOut } from "../types/PoolKey.
 
 import { getUniswapV4RouteExactIn, getUniswapV4RouteExactOut } from "./getUniswapV4Route.js";
 
+//TODO: Re-enable, fails due to interactions with other tests
 describe("uniswap/getUniswapV4Route.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
