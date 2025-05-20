@@ -53,7 +53,7 @@ const USDC_ADDRESSES = {
     42161: USDC_ARBITRUM.address,
 } as const;
 
-const getUSDCForChain = (chainId: number) => {
+const getUSDCForChain = (chainId: number): Address | undefined => {
     const address = USDC_ADDRESSES[chainId];
     return address ?? undefined;
 };
