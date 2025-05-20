@@ -59,8 +59,6 @@ export function SelectedBasketPanel({
     const selectedBasketData = useMemo(() => {
         if (!basketDetails) return null;
 
-        const totalUnits = basketDetails.reduce((sum, token) => sum + token.units, 0n);
-
         const allocations = basketDetails.map((token) => ({
             address: token.addr,
             chainId: basketChainId,
@@ -103,11 +101,9 @@ export function SelectedBasketPanel({
     // TODO: fix
     const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData!);
 
-    const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
-    const sharesFormatted =
-        totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
-            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
-            : "";
+    const shares = totalValue > 0n && amountParsed > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
+    const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;
+    const sharesMinusFeeFormatted = sharesMinusFee > 0n ? formatUnits(sharesMinusFee, 18) : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9.]/g, "");
@@ -165,7 +161,7 @@ export function SelectedBasketPanel({
         if (!token) return null;
 
         // Assume it's ETH TODO: change decimals
-        const value = formatUnits(shares * allocation.units, token.decimals ?? 18);
+        const value = formatUnits(sharesMinusFee * allocation.units, token.decimals ?? 18);
 
         return (
             <div key={token.address} className="flex justify-between text-sm">
@@ -274,8 +270,8 @@ export function SelectedBasketPanel({
                         <h2 className="font-medium text-xl">Order Summary</h2>
                         <div className="flex justify-between font-medium">
                             <span>Basket Shares</span>
-                            {sharesFormatted !== "" ? (
-                                <span>{sharesFormatted}</span>
+                            {sharesMinusFeeFormatted !== "" ? (
+                                <span>{sharesMinusFeeFormatted}</span>
                             ) : (
                                 <span className="text-muted-foreground">-</span>
                             )}

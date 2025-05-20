@@ -3,6 +3,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { Address } from "viem";
 import { BASKETS } from "@/constants/baskets.js";
 import { BasketCard } from "@/components/BasketCard.js";
 import { BasketPurchaseConfirmation } from "@/components/BasketPurchaseConfirmation.js";
@@ -67,6 +68,7 @@ export default function SimplifiedPortfolioPage() {
                                 amount={amount}
                                 setAmount={setAmount}
                                 sendTransaction={sendTransaction}
+                                referrer={referrer as Address | undefined}
                             />
                         )}
 
