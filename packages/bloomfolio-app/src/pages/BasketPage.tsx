@@ -14,13 +14,14 @@ import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
 import { Separator } from "@/components/ui/separator.js";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.js";
-import { BasketAllocation } from "@/constants/baskets.js";
+import { BasketPercentageAllocation } from "@/constants/baskets.js";
 import { TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
+import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 
 interface BasketPageProps {
     referrer?: Address;
@@ -81,7 +82,9 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         console.log("sell all");
     };
 
-    if (!basketDetails) {
+    const { percentages, weights } = useBasketWeights({ chainId, basketDetails: basketDetails ?? [] });
+
+    if (!basketDetails || !percentages) {
         return (
             <div className="container mx-auto py-8 px-4">
                 <Card className="max-w-md mx-auto text-center">
@@ -97,18 +100,15 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         );
     }
 
-    const totalUnits = basketDetails.reduce((sum, token) => sum + token.units, 0n);
-
-    const basketAllocations = basketDetails.map((token) => ({
+    const basketAllocations = basketDetails.map((token, idx) => ({
         address: token.addr,
         units: token.units,
-        weight: Number((token.units * 100n) / totalUnits),
+        percentage: percentages[idx],
+        weight: weights[idx],
         chainId,
     }));
 
-    const totalWeight = basketAllocations.reduce((sum, all) => sum + all.weight, 0);
-
-    const groupAllocationsByCategory = (allocations: BasketAllocation[]) => {
+    const groupAllocationsByCategory = (allocations: BasketPercentageAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation) => {
                 const token = getTokenDetailsForAllocation(allocation, TOKENS);
@@ -121,7 +121,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                 acc[category].push({ allocation, token });
                 return acc;
             },
-            {} as Record<TokenCategory, { allocation: BasketAllocation; token: Token }[]>,
+            {} as Record<TokenCategory, { allocation: BasketPercentageAllocation; token: Token }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -132,11 +132,9 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
 
     const renderCategorySection = (
         category: TokenCategory,
-        items: { allocation: BasketAllocation; token: Token }[],
-        totalWeight: number,
+        items: { allocation: BasketPercentageAllocation; token: Token }[],
     ) => {
-        const categoryWeight = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
-        const categoryPercentage = (categoryWeight / totalWeight) * 100;
+        const categoryPercentage = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
 
         return (
             <Collapsible className="border rounded-lg overflow-hidden">
@@ -145,7 +143,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                         <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                         <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                         <Badge variant="secondary" className="ml-2">
-                            {categoryPercentage.toFixed(2)}%
+                            {categoryPercentage.toFixed(3)}%
                         </Badge>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -162,9 +160,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="font-medium">
-                                        {((allocation.weight / totalWeight) * 100).toFixed(2)}%
-                                    </div>
+                                    <div className="font-medium">{allocation.percentage}%</div>
                                 </div>
                             </div>
                         ))}
@@ -364,9 +360,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {groupAllocationsByCategory(basketAllocations).map(([category, items]) => (
-                                    <div key={category}>
-                                        {renderCategorySection(category as TokenCategory, items, totalWeight)}
-                                    </div>
+                                    <div key={category}>{renderCategorySection(category as TokenCategory, items)}</div>
                                 ))}
                             </CardContent>
                         </Card>
@@ -413,9 +407,9 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                 <div className="space-y-2">
                                     <div className="text-sm font-medium">Top Holdings</div>
                                     {basketAllocations
-                                        .sort((a: { weight: number }, b: { weight: number }) => b.weight - a.weight)
+                                        .sort((a, b) => b.weight - a.weight)
                                         .slice(0, 3)
-                                        .map((allocation: BasketAllocation) => {
+                                        .map((allocation: BasketPercentageAllocation) => {
                                             const token = getTokenDetailsForAllocation(allocation, TOKENS);
                                             if (!token) return null;
                                             return (
@@ -428,9 +422,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                                         />
                                                         <span className="font-medium">{token.symbol}</span>
                                                     </div>
-                                                    <Badge variant="outline">
-                                                        {((allocation.weight / totalWeight) * 100).toFixed(1)}%
-                                                    </Badge>
+                                                    <Badge variant="outline">{allocation.percentage}%</Badge>
                                                 </div>
                                             );
                                         })}

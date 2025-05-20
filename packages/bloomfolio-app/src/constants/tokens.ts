@@ -204,7 +204,7 @@ export function getCurrencyHops(chainId: number) {
     return [zeroAddress];
 }
 
-export function getTokenDetailsForAllocation(allocation: BasketAllocation, tokens: Token[]) {
+export function getTokenDetailsForAllocation(allocation: { address: Address; chainId: number }, tokens: Token[]) {
     return tokens.find(
         (t) => t.address.toLowerCase() === allocation.address.toLowerCase() && t.chainId === allocation.chainId,
     );
