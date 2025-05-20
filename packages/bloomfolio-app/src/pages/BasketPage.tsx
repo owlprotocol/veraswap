@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 import { config } from "@/config.js";
-import { SelectedBasketPanel2 } from "@/components/SelectedBasketPanel2.js";
+import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 
 interface BasketPageProps {
     referrer?: string;
@@ -204,19 +204,13 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                         </Button>
                     </Link>
                     {showPurchasePanel ? (
-                        // <SelectedBasketPanel
-                        //     address={address}
-                        //     chainId={chainId}
-                        //     amount={amount}
-                        //     setAmount={setAmount}
-                        //     sendTransaction={sendTransaction}
-                        // />
-                        <SelectedBasketPanel2
+                        <SelectedBasketPanel
                             address={address}
                             chainId={chainId}
                             amount={amount}
                             setAmount={setAmount}
                             sendTransaction={sendTransaction}
+                            referrer={referrer}
                         />
                     ) : null}
                     <div className="flex items-start space-x-4">

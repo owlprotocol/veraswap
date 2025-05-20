@@ -12,14 +12,22 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as PortfolioImport } from './routes/portfolio'
+import { Route as ChainIdRouteImport } from './routes/$chainId/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as BasketBasketIdImport } from './routes/basket/$basketId'
+import { Route as ChainIdAddressImport } from './routes/$chainId/$address'
 
 // Create/Update Routes
 
 const PortfolioRoute = PortfolioImport.update({
   id: '/portfolio',
   path: '/portfolio',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ChainIdRouteRoute = ChainIdRouteImport.update({
+  id: '/$chainId',
+  path: '/$chainId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -35,6 +43,12 @@ const BasketBasketIdRoute = BasketBasketIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ChainIdAddressRoute = ChainIdAddressImport.update({
+  id: '/$address',
+  path: '/$address',
+  getParentRoute: () => ChainIdRouteRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -46,12 +60,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$chainId': {
+      id: '/$chainId'
+      path: '/$chainId'
+      fullPath: '/$chainId'
+      preLoaderRoute: typeof ChainIdRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/portfolio': {
       id: '/portfolio'
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioImport
       parentRoute: typeof rootRoute
+    }
+    '/$chainId/$address': {
+      id: '/$chainId/$address'
+      path: '/$address'
+      fullPath: '/$chainId/$address'
+      preLoaderRoute: typeof ChainIdAddressImport
+      parentRoute: typeof ChainIdRouteImport
     }
     '/basket/$basketId': {
       id: '/basket/$basketId'
@@ -65,42 +93,78 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
+interface ChainIdRouteRouteChildren {
+  ChainIdAddressRoute: typeof ChainIdAddressRoute
+}
+
+const ChainIdRouteRouteChildren: ChainIdRouteRouteChildren = {
+  ChainIdAddressRoute: ChainIdAddressRoute,
+}
+
+const ChainIdRouteRouteWithChildren = ChainIdRouteRoute._addFileChildren(
+  ChainIdRouteRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$chainId': typeof ChainIdRouteRouteWithChildren
   '/portfolio': typeof PortfolioRoute
+  '/$chainId/$address': typeof ChainIdAddressRoute
   '/basket/$basketId': typeof BasketBasketIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$chainId': typeof ChainIdRouteRouteWithChildren
   '/portfolio': typeof PortfolioRoute
+  '/$chainId/$address': typeof ChainIdAddressRoute
   '/basket/$basketId': typeof BasketBasketIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/$chainId': typeof ChainIdRouteRouteWithChildren
   '/portfolio': typeof PortfolioRoute
+  '/$chainId/$address': typeof ChainIdAddressRoute
   '/basket/$basketId': typeof BasketBasketIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/portfolio' | '/basket/$basketId'
+  fullPaths:
+    | '/'
+    | '/$chainId'
+    | '/portfolio'
+    | '/$chainId/$address'
+    | '/basket/$basketId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/portfolio' | '/basket/$basketId'
-  id: '__root__' | '/' | '/portfolio' | '/basket/$basketId'
+  to:
+    | '/'
+    | '/$chainId'
+    | '/portfolio'
+    | '/$chainId/$address'
+    | '/basket/$basketId'
+  id:
+    | '__root__'
+    | '/'
+    | '/$chainId'
+    | '/portfolio'
+    | '/$chainId/$address'
+    | '/basket/$basketId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChainIdRouteRoute: typeof ChainIdRouteRouteWithChildren
   PortfolioRoute: typeof PortfolioRoute
   BasketBasketIdRoute: typeof BasketBasketIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChainIdRouteRoute: ChainIdRouteRouteWithChildren,
   PortfolioRoute: PortfolioRoute,
   BasketBasketIdRoute: BasketBasketIdRoute,
 }
@@ -116,6 +180,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/$chainId",
         "/portfolio",
         "/basket/$basketId"
       ]
@@ -123,8 +188,18 @@ export const routeTree = rootRoute
     "/": {
       "filePath": "index.tsx"
     },
+    "/$chainId": {
+      "filePath": "$chainId/route.tsx",
+      "children": [
+        "/$chainId/$address"
+      ]
+    },
     "/portfolio": {
       "filePath": "portfolio.tsx"
+    },
+    "/$chainId/$address": {
+      "filePath": "$chainId/$address.tsx",
+      "parent": "/$chainId"
     },
     "/basket/$basketId": {
       "filePath": "basket/$basketId.tsx"

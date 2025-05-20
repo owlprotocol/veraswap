@@ -1,40 +1,87 @@
 import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
-import { AlertCircle, ShoppingCart } from "lucide-react";
-import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData } from "viem";
+import { AlertCircle, LucideIcon, ShoppingCart } from "lucide-react";
+import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useMemo } from "react";
-import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
+import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
+import React from "react";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
+import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
-import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
+import { BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
-import { unitsToQuote, useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 
-const maxFeeCentiBips = 1_000_000n;
+interface SelectedBasketPanel2Props {
+    address: Address;
+    chainId: number;
+    referrer?: Address;
+    amount: string;
+    setAmount: (value: string) => void;
+    sendTransaction: any;
+    icon?: LucideIcon;
+}
 
-export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTransaction, referrer }) {
+export function SelectedBasketPanel({
+    address: basketAddress,
+    chainId: basketChainId,
+    referrer,
+    amount,
+    setAmount,
+    sendTransaction,
+    icon,
+}: SelectedBasketPanel2Props) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
     const { switchChain } = useSwitchChain();
 
-    const selectedBasketData = useMemo(() => BASKETS.find((b) => b.id === selectedBasket)!, [selectedBasket]);
+    const { data: basketDetails } = useReadContract({
+        chainId: basketChainId,
+        address: basketAddress,
+        abi: [getBasket],
+        functionName: "getBasket",
+    });
 
-    const basketChain = useMemo(
-        () => getChainById(selectedBasketData.allocations[0].chainId)!,
-        [selectedBasketData.allocations],
+    const { data: tokenMetadata } = useSuspenseQuery(
+        tokenDataQueryOptions(config, { chainId: basketChainId, address: basketAddress }),
     );
 
-    const { data: mintFeeCentiBips } = useReadContract({
-        chainId: basketChain.id,
-        abi: BasketFixedUnits.abi,
-        address: selectedBasketData.address,
-        functionName: "mintFeeCentiBips",
-    });
+    const selectedBasketData = useMemo(() => {
+        if (!basketDetails) return null;
+
+        const totalUnits = basketDetails.reduce((sum, token) => sum + token.units, 0n);
+
+        const allocations = basketDetails.map((token) => ({
+            address: token.addr,
+            chainId: basketChainId,
+            weight: Number((token.units * 100n) / totalUnits),
+            units: token.units,
+        }));
+
+        return {
+            id: "on-chain",
+            title: tokenMetadata?.name || "Custom Basket",
+            description: tokenMetadata?.symbol || "Custom Basket",
+            gradient: "from-blue-500 to-purple-500",
+            icon: ShoppingCart,
+            address: basketAddress,
+            allocations,
+            symbol: tokenMetadata?.symbol || "BSKT",
+        };
+    }, [basketDetails, basketAddress, basketChainId, tokenMetadata]);
+
+    const basketChain = useMemo(() => {
+        if (selectedBasketData && selectedBasketData.allocations.length > 0) {
+            return getChainById(selectedBasketData.allocations[0].chainId);
+        }
+        return getChainById(basketChainId);
+    }, [basketChainId, selectedBasketData]);
 
     const balanceFormatted = formatEther(balance?.value ?? 0n);
     const amountParsed = parseUnits(amount, 18);
@@ -42,61 +89,50 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
     const hasInsufficientBalance = isConnected && !isBalanceLoading && balance && balance.value < amountParsed;
     const isAmountValid = amountParsed > 0;
 
-    // TODO: change native currency to input symbol
-    const inputCurrency = zeroAddress;
-    const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
+    // TODO: fix
+    const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData!);
 
-    const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
-        basket: selectedBasketData,
-        quoteCurrency: {
-            address: inputCurrency,
-            chainId: basketChain.id,
-        },
-    });
-    const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
+    // TODO: fix
+    // const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
+    //     basket: selectedBasketData,
+    //     quoteCurrency: {
+    //         address: inputCurrency,
+    //         chainId: basketChain.id,
+    //     },
+    // });
+    // const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
 
-    const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
-    const sharesFormatted =
-        totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
-            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
-            : "";
+    // const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
+    // const sharesFormatted =
+    //     totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
+    //         ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
+    //         : "";
+
+    const shares = totalValue > 0n ? (amountParsed * 10n ** 16n) / totalValue : 0n;
+    const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9.]/g, "");
         setAmount(value);
     };
 
+    // TODO: change native currency to input symbol
+    const inputSymbol = basketChain ? basketChain.nativeCurrency.symbol : "";
+
     const handlePurchase = async () => {
         if (
             !isConnected ||
-            chainId !== basketChain.id ||
+            chainId !== basketChain?.id ||
             !address ||
             !balance ||
             !tokenValues ||
-            tokenValues.some((value) => value === undefined)
+            tokenValues.some((value) => value === undefined) ||
+            !selectedBasketData
         )
             return;
 
         const userBalance = balance?.value;
         if (userBalance < amountParsed) return;
-
-        // if (usdcAllowance < amountParsed) {
-        //     const allowHash = await sendTransactionPermitAsync({
-        //         to: USDC_BASE.address,
-        //         chainId: basketChain.id,
-        //         data: encodeFunctionData({
-        //             abi: IERC20.abi,
-        //             functionName: "approve",
-        //             args: [PERMIT2_ADDRESS, MAX_UINT_256],
-        //         }),
-        //     });
-        //
-        //     await waitForTransactionReceipt(config, { hash: allowHash });
-        // }
-        //
-        // const permit2Signature = await getPermit2PermitSignature(queryClient, {});
-        //
-        // const allocationsAmountOut = tokenValues?.map((value) => (amountParsed * value!) / totalValue);
 
         const receiver = address;
 
@@ -148,6 +184,16 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         );
     };
 
+    if (!basketDetails || !selectedBasketData) {
+        return (
+            <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300">
+                <div className="p-6">
+                    <div className="text-center">Loading basket details...</div>
+                </div>
+            </Card>
+        );
+    }
+
     return (
         <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300">
             <div className={`bg-gradient-to-r ${selectedBasketData.gradient} h-2`} />
@@ -155,7 +201,9 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                 <div className="lg:col-span-3">
                     <div className="flex items-start space-x-3">
                         <div className={`p-2 rounded-full bg-gradient-to-r ${selectedBasketData.gradient} text-white`}>
-                            <selectedBasketData.icon className="h-5 w-5" />
+                            {/* <selectedBasketData.icon className="h-5 w-5" /> */}
+                            {/* TODO: add icon */}
+                            <ShoppingCart className="h-5 w-5" />
                         </div>
                         <div>
                             <h3 className="font-bold text-lg">{selectedBasketData.title}</h3>
@@ -204,7 +252,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 <span className="text-sm">Please connect your wallet to proceed</span>
                             </div>
                         )}
-                        {isConnected && chainId !== basketChain.id && (
+                        {isConnected && basketChain && chainId !== basketChain.id && (
                             <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                     <AlertCircle className="h-4 w-4" />
@@ -248,8 +296,8 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                 className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                 size="sm"
                                 onClick={
-                                    chainId !== basketChain.id
-                                        ? () => switchChain?.({ chainId: basketChain.id })
+                                    !basketChain || chainId !== basketChain.id
+                                        ? () => basketChain && switchChain?.({ chainId: basketChain.id })
                                         : handlePurchase
                                 }
                                 disabled={
@@ -257,13 +305,14 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                                     hasInsufficientBalance ||
                                     isBalanceLoading ||
                                     !isAmountValid ||
-                                    isTokenValuesLoading
+                                    isTokenValuesLoading ||
+                                    !selectedBasketData
                                 }
                             >
                                 <ShoppingCart className="mr-1 h-4 w-4" />
                                 {!isConnected
                                     ? "Connect Wallet"
-                                    : chainId !== basketChain.id
+                                    : !basketChain || chainId !== basketChain.id
                                       ? "Switch Network"
                                       : !isAmountValid
                                         ? "Enter Amount"

@@ -135,8 +135,8 @@ export const MAINNET_BASKETS = [
 const basketAddr0 = tokenAAddress < tokenBAddress ? tokenAAddress : tokenBAddress;
 const basketAddr1 = tokenAAddress > tokenBAddress ? tokenAAddress : tokenBAddress;
 const basket = [
-    { addr: basketAddr0, units: 10n ** 18n },
-    { addr: basketAddr1, units: 10n ** 18n },
+    { addr: basketAddr0, units: 1n },
+    { addr: basketAddr1, units: 1n },
 ];
 
 const indexAB50NoFeeAddress = getDeployDeterministicAddress({
