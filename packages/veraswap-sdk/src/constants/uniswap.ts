@@ -185,6 +185,7 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0x4DA860C1bA78a330391fE9c1106841389F1aEC01",
         v4Quoter: "0x25Ba53B6288B05B099A2771C94EDF593C85a428e",
         universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
+        v4MetaQuoter: "0x8EEF9d75c396e4EeF76EDb51A828805b5BeE8c1A",
     },
     [bsc.id]: {
         v4PoolManager: "0x28e2Ea090877bF75740558f6BFB36A5ffeE9e9dF",
