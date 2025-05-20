@@ -1,6 +1,6 @@
 import { DollarSign, Globe, Bitcoin, Rocket, Dog, Coins } from "lucide-react";
 import { Address, encodeDeployData, parseUnits, zeroAddress, zeroHash } from "viem";
-import { bsc } from "viem/chains";
+import { base, bsc } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
@@ -109,12 +109,25 @@ export const MAINNET_BASKETS = [
         icon: Rocket,
         allocations: [
             { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n, weight: 30 }, // SOL
-
             // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: 10n, weight: 30 }, // PEPE
             { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 20 }, // DOGE
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 10n, weight: 20 }, // CAKE
         ],
         symbol: "",
+    },
+    {
+        id: "khan",
+        address: "0xd6dc30f62e6ddf44f890e6bc9be48ddc9302f685",
+        title: "Emperor Khan Super Special",
+        description: "",
+        gradient: "from-red-700 to-green-400",
+        icon: Rocket,
+        allocations: [
+            { address: "0x1111111111166b7FE7bd91427724B487980aFc69", chainId: base.id, units: 1000n, weight: 30 }, // ZORA
+            { address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b", chainId: base.id, units: 5n, weight: 20 }, // VIRTUAL
+            { address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553", chainId: base.id, units: 5n, weight: 20 }, // KAITO
+        ],
+        symbol: "EKSS",
     },
 ] satisfies Basket[];
 
