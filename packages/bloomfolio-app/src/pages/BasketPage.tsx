@@ -22,6 +22,7 @@ import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
+import { ShareButton } from "@/components/ShareButton.js";
 
 interface BasketPageProps {
     referrer?: Address;
@@ -209,28 +210,35 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             referrer={referrer}
                         />
                     ) : null}
-                    <div className="flex items-start space-x-4">
-                        <div className={`p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white`}>
-                            {details?.icon ? <details.icon className="h-8 w-8" /> : <span className="text-xl">🧺</span>}
+                    <div className="flex items-start justify-between space-x-4">
+                        <div className="flex items-start space-x-4">
+                            <div className={`p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white`}>
+                                {details?.icon ? (
+                                    <details.icon className="h-8 w-8" />
+                                ) : (
+                                    <span className="text-xl">🧺</span>
+                                )}
+                            </div>
+                            <div className="space-y-1">
+                                <h1 className="text-4xl font-bold">{tokenMetadata?.name || details?.title}</h1>
+                                <p className="text-muted-foreground text-lg">{details?.description}</p>
+                                {address !== zeroAddress && explorerUrl && (
+                                    <div className="pt-1">
+                                        <span className="text-xs text-muted-foreground/70">Contract Address:</span>
+                                        <a
+                                            href={`${explorerUrl}/address/${address}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="ml-2 text-sm font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted/70 transition-colors inline-flex items-center gap-2"
+                                        >
+                                            {address}
+                                            <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="space-y-1">
-                            <h1 className="text-4xl font-bold">{tokenMetadata?.name || details?.title}</h1>
-                            <p className="text-muted-foreground text-lg">{details?.description}</p>
-                            {address !== zeroAddress && explorerUrl && (
-                                <div className="pt-1">
-                                    <span className="text-xs text-muted-foreground/70">Contract Address:</span>
-                                    <a
-                                        href={`${explorerUrl}/address/${address}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="ml-2 text-sm font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted/70 transition-colors inline-flex items-center gap-2"
-                                    >
-                                        {address}
-                                        <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                </div>
-                            )}
-                        </div>
+                        <ShareButton address={address} />
                     </div>
                 </div>
 
