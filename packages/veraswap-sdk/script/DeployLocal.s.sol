@@ -69,7 +69,7 @@ contract DeployLocal is DeployCoreContracts {
             CoreContracts memory contracts = deployCoreContracts();
 
             // Deploy mock paymaster for local testing only
-            (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();
+            (address mockInterchainGasPaymaster,) = MockInterchainGasPaymasterUtils.getOrCreate2();
             console2.log("mockInterchainGasPaymaster:", mockInterchainGasPaymaster);
 
             vm.stopBroadcast();
@@ -88,7 +88,9 @@ contract DeployLocal is DeployCoreContracts {
             chainContracts[chainIds[i]] = contracts;
         }
 
-        /***** Main Fork *****/
+        /**
+         * Main Fork ****
+         */
         // Create HypERC20Collateral for token A and B
         {
             vm.selectFork(forks[0]);
@@ -96,23 +98,17 @@ contract DeployLocal is DeployCoreContracts {
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             (address tokenA, address tokenB) = deployTokensAndPools(
-                contracts.uniswap.universalRouter,
-                contracts.uniswap.v4PositionManager,
-                contracts.uniswap.v4StateView
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
             );
             tokens[chainIds[0]][keccak256("MockERC20A")] = tokenA;
             tokens[chainIds[0]][keccak256("MockERC20B")] = tokenB;
 
-            (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenA,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenA,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenA, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
 
-            (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenB,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenB,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenB, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
             tokens[chainIds[0]][keccak256("A")] = hypERC20CollateralTokenA;
             tokens[chainIds[0]][keccak256("B")] = hypERC20CollateralTokenB;
@@ -120,14 +116,12 @@ contract DeployLocal is DeployCoreContracts {
             // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
             if (IERC20(tokenA).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenA) == 0) {
                 HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenA,
-                    hypERC20CollateralTokenA
+                    tokenA, hypERC20CollateralTokenA
                 );
             }
             if (IERC20(tokenB).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenB) == 0) {
                 HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenB,
-                    hypERC20CollateralTokenB
+                    tokenB, hypERC20CollateralTokenB
                 );
             }
             // Create BasketFixedUnits with A/B
@@ -135,42 +129,25 @@ contract DeployLocal is DeployCoreContracts {
             (address basketToken0, address basketToken1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
             basket[0] = BasketFixedUnits.BasketToken({addr: basketToken0, units: 1e18});
             basket[1] = BasketFixedUnits.BasketToken({addr: basketToken1, units: 1e18});
-            (address basketAddr0, ) = BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50", address(0), 0, basket);
-            (address basketAddr1, ) = BasketFixedUnitsUtils.getOrCreate2(
-                "Index AB50",
-                "AB50",
-                address(1),
-                10_000,
-                basket
-            );
+            (address basketAddr0,) = BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50.NF", address(0), 0, basket);
+            (address basketAddr1,) =
+                BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50.WF", address(1), 10_000, basket);
             // Basket 0 Approvals
             IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
-                address(basketToken0),
-                address(basketAddr0),
-                type(uint160).max,
-                type(uint48).max
+                address(basketToken0), address(basketAddr0), type(uint160).max, type(uint48).max
             );
             IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
-                address(basketToken1),
-                address(basketAddr0),
-                type(uint160).max,
-                type(uint48).max
+                address(basketToken1), address(basketAddr0), type(uint160).max, type(uint48).max
             );
             // Basket 1 Approvals
             IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
-                address(basketToken0),
-                address(basketAddr1),
-                type(uint160).max,
-                type(uint48).max
+                address(basketToken0), address(basketAddr1), type(uint160).max, type(uint48).max
             );
             IAllowanceTransfer(address(Permit2Utils.permit2)).approve(
-                address(basketToken1),
-                address(basketAddr1),
-                type(uint160).max,
-                type(uint48).max
+                address(basketToken1), address(basketAddr1), type(uint160).max, type(uint48).max
             );
             // Set Permit2 Approvals for ExecuteSweep
-            (address executeSweepAddr, ) = ExecuteSweepUtils.getOrCreate2();
+            (address executeSweepAddr,) = ExecuteSweepUtils.getOrCreate2();
             ExecuteSweep executeSweep = ExecuteSweep(payable(executeSweepAddr));
             executeSweep.approveAll(basketToken0, Permit2Utils.permit2);
             executeSweep.approveAll(basketToken1, Permit2Utils.permit2);
@@ -182,23 +159,27 @@ contract DeployLocal is DeployCoreContracts {
             vm.stopBroadcast();
         }
 
-        /***** Remote Fork(s) Deploy Tokens *****/
+        /**
+         * Remote Fork(s) Deploy Tokens ****
+         */
         for (uint256 i = 1; i < chains.length; i++) {
             vm.selectFork(forks[i]);
             vm.startBroadcast();
             CoreContracts storage contracts = chainContracts[chainIds[i]];
 
             // Deploy HypERC20 tokens for A and B
-            (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token A", "A");
+            (address hypERC20TokenA,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token A", "A");
             console2.log("hypERC20TokenA:", hypERC20TokenA);
-            (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token B", "B");
+            (address hypERC20TokenB,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token B", "B");
             console2.log("hypERC20TokenB:", hypERC20TokenB);
             tokens[chainIds[i]][keccak256("A")] = hypERC20TokenA;
             tokens[chainIds[i]][keccak256("B")] = hypERC20TokenB;
             vm.stopBroadcast();
         }
 
-        /***** Enroll Tokens *****/
+        /**
+         * Enroll Tokens ****
+         */
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
             vm.startBroadcast();
@@ -221,7 +202,9 @@ contract DeployLocal is DeployCoreContracts {
             vm.stopBroadcast();
         }
 
-        /**** MockMailbox Environment *****/
+        /**
+         * MockMailbox Environment ****
+         */
         {
             // This deployment is used for crosschain unit tests and NOT by local development
             // Everything is deployed on the main chain and the mailboxes are mocked
@@ -232,75 +215,60 @@ contract DeployLocal is DeployCoreContracts {
             uint32 chainL1Domain = uint32(chainIds[0]);
             uint32 chainOpADomain = uint32(chainIds[1]);
 
-            (address mailboxL1, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainL1Domain);
-            (address mailboxOpA, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainOpADomain);
+            (address mailboxL1,) = HyperlaneMockMailboxUtils.getOrCreate2(chainL1Domain);
+            (address mailboxOpA,) = HyperlaneMockMailboxUtils.getOrCreate2(chainOpADomain);
             MockMailbox(mailboxL1).addRemoteMailbox(chainOpADomain, MockMailbox(mailboxOpA));
             MockMailbox(mailboxOpA).addRemoteMailbox(chainL1Domain, MockMailbox(mailboxL1));
             // MockMailbox HypERC20Collateral
-            (address hypMockERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokens[chainIds[0]][keccak256("MockERC20A")],
-                mailboxL1
-            );
-            (address hypMockERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokens[chainIds[0]][keccak256("MockERC20B")],
-                mailboxL1
-            );
+            (address hypMockERC20CollateralTokenA,) =
+                HypERC20CollateralUtils.getOrCreate2(tokens[chainIds[0]][keccak256("MockERC20A")], mailboxL1);
+            (address hypMockERC20CollateralTokenB,) =
+                HypERC20CollateralUtils.getOrCreate2(tokens[chainIds[0]][keccak256("MockERC20B")], mailboxL1);
             // MockMaibox HypERC20
-            (address hypMockERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
-            (address hypMockERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
+            (address hypMockERC20TokenA,) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
+            (address hypMockERC20TokenB,) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
             IERC20(hypMockERC20TokenA).approve(address(Permit2Utils.permit2), type(uint256).max);
             IERC20(hypMockERC20TokenB).approve(address(Permit2Utils.permit2), type(uint256).max);
             // Enroll remote routers
             TokenRouter(hypMockERC20CollateralTokenA).enrollRemoteRouter(
-                chainOpADomain,
-                bytes32(uint256(uint160(hypMockERC20TokenA)))
+                chainOpADomain, bytes32(uint256(uint160(hypMockERC20TokenA)))
             );
             TokenRouter(hypMockERC20CollateralTokenB).enrollRemoteRouter(
-                chainOpADomain,
-                bytes32(uint256(uint160(hypMockERC20TokenB)))
+                chainOpADomain, bytes32(uint256(uint160(hypMockERC20TokenB)))
             );
             TokenRouter(hypMockERC20TokenA).enrollRemoteRouter(
-                chainL1Domain,
-                bytes32(uint256(uint160(hypMockERC20CollateralTokenA)))
+                chainL1Domain, bytes32(uint256(uint160(hypMockERC20CollateralTokenA)))
             );
             TokenRouter(hypMockERC20TokenB).enrollRemoteRouter(
-                chainL1Domain,
-                bytes32(uint256(uint160(hypMockERC20CollateralTokenB)))
+                chainL1Domain, bytes32(uint256(uint160(hypMockERC20CollateralTokenB)))
             );
             // ERC7579ExecutorRouter
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             // L1 Executor Router
             ERC7579ExecutorRouterUtils.getOrCreate2(
-                mailboxL1,
-                address(0),
-                contracts.ownableSignatureExecutor,
-                contracts.kernelFactory
+                mailboxL1, address(0), contracts.ownableSignatureExecutor, contracts.kernelFactory
             );
 
             // New implementations to avoid collisions
-            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
-            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
+            (address ownableSignatureExecutorOpA,) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
+            (address kernelFactoryOpA,) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
 
             // OPA Executor Router
             ERC7579ExecutorRouterUtils.getOrCreate2(
-                mailboxOpA,
-                address(0),
-                ownableSignatureExecutorOpA,
-                kernelFactoryOpA
+                mailboxOpA, address(0), ownableSignatureExecutorOpA, kernelFactoryOpA
             );
 
             vm.stopBroadcast();
         }
     }
 
-    function deployTokensAndPools(
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address tokenA, address tokenB) {
-        (tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
-        (tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
+    function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenA, address tokenB)
+    {
+        (tokenA,) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
+        (tokenB,) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
 
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
@@ -320,7 +288,7 @@ contract DeployLocal is DeployCoreContracts {
         address v4PositionManager,
         address v4StateView
     ) internal returns (address token) {
-        (token, ) = MockSuperchainERC20Utils.getOrCreate2(name, symbol, 18);
+        (token,) = MockSuperchainERC20Utils.getOrCreate2(name, symbol, 18);
 
         PoolUtils.setupToken(IERC20(token), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(token, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));

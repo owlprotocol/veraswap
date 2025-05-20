@@ -22,6 +22,7 @@ export interface Basket {
     icon: any;
     address: Address;
     allocations: BasketAllocation[];
+    symbol: string;
 }
 
 export const MAINNET_BASKETS = [
@@ -35,9 +36,11 @@ export const MAINNET_BASKETS = [
         icon: DollarSign,
         allocations: [
             { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: 40n }, // WETH
+
             // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: parseUnits("0.01", 18) }, // WBNB
             { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: 1n }, // BTCB
         ],
+        symbol: "CB.ETH/BTC.50",
     },
     {
         id: "balanced",
@@ -53,6 +56,7 @@ export const MAINNET_BASKETS = [
             { address: BSC_TOKENS[2].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // UNI
             { address: BSC_TOKENS[3].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // AAVE
         ],
+        symbol: "",
     },
     {
         id: "growth",
@@ -69,6 +73,7 @@ export const MAINNET_BASKETS = [
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // CAKE
             { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // DOGE
         ],
+        symbol: "",
     },
     {
         id: "meme",
@@ -83,6 +88,7 @@ export const MAINNET_BASKETS = [
             { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 40 }, // DOGE
             // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // WBNB
         ],
+        symbol: "",
     },
     {
         id: "defi",
@@ -98,6 +104,7 @@ export const MAINNET_BASKETS = [
             { address: BSC_TOKENS[6].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 25 }, // 1INCH
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // CAKE
         ],
+        symbol: "",
     },
     {
         id: "moon",
@@ -109,10 +116,12 @@ export const MAINNET_BASKETS = [
         icon: Rocket,
         allocations: [
             { address: BSC_TOKENS[0].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // SOL
+
             // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 30 }, // PEPE
             { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // DOGE
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 20 }, // CAKE
         ],
+        symbol: "",
     },
 ] satisfies Basket[];
 
@@ -127,7 +136,7 @@ const indexAB50NoFeeAddress = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: BasketFixedUnits.bytecode,
         abi: BasketFixedUnits.abi,
-        args: ["Index AB50", "AB50", zeroAddress, 0n, basket],
+        args: ["Index AB50", "AB50.NF", zeroAddress, 0n, basket],
     }),
     salt: zeroHash,
 });
@@ -136,7 +145,7 @@ const indexAB50WithFeeAddress = getDeployDeterministicAddress({
     bytecode: encodeDeployData({
         bytecode: BasketFixedUnits.bytecode,
         abi: BasketFixedUnits.abi,
-        args: ["Index AB50", "AB50", "0x0000000000000000000000000000000000000001", 10_000n, basket],
+        args: ["Index AB50", "AB50.WF", "0x0000000000000000000000000000000000000001", 10_000n, basket],
     }),
     salt: zeroHash,
 });
@@ -154,6 +163,7 @@ export const LOCAL_BASKETS = [
             { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
             { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
         ],
+        symbol: "AB50.NF",
     },
     {
         id: "test-1",
@@ -167,6 +177,7 @@ export const LOCAL_BASKETS = [
             { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
             { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
         ],
+        symbol: "AB50.WF",
     },
 ] satisfies Basket[];
 

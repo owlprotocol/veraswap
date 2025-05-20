@@ -12,20 +12,7 @@ import { BasketAllocation } from "@/constants/baskets.js";
 import { getTokenDetailsForAllocation, TokenCategory } from "@/constants/tokens.js";
 import { TOKENS } from "@/constants/tokens.js";
 import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
-
-const CATEGORY_LABELS: Record<TokenCategory, string> = {
-    native: "Native Tokens",
-    stable: "Stablecoins",
-    alt: "Alt Tokens",
-    commodity: "Commodities",
-};
-
-const CATEGORY_ICONS: Record<TokenCategory, string> = {
-    native: "🌐",
-    stable: "💵",
-    alt: "🚀",
-    commodity: "🪙",
-};
+import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 
 export function BasketCard({ basket, isSelected, onSelect }) {
     const { data: tokenValues, isLoading: isTokenValuesLoading } = useGetTokenValues({

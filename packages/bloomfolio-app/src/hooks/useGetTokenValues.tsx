@@ -1,11 +1,10 @@
-import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS, USDC_BASE, USDC_BSC, USDT_BSC } from "@owlprotocol/veraswap-sdk";
-import { zeroAddress, Address } from "viem";
+import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { Address } from "viem";
 import { useQuery } from "@tanstack/react-query";
 
-import { base, bsc } from "viem/chains";
 import { config } from "@/config.js";
 import { Basket } from "@/constants/baskets.js";
-import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
+import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { queryClient } from "@/queryClient.js";
 
 export function useGetTokenValues({
@@ -22,15 +21,6 @@ export function useGetTokenValues({
 
             const chainId = basket.allocations[0].chainId;
 
-            let currencyHops: Address[];
-            if (chainId === bsc.id) {
-                currencyHops = [USDC_BSC.address, USDT_BSC.address, zeroAddress];
-            } else if (chainId === base.id) {
-                currencyHops = [USDC_BASE.address, zeroAddress];
-            } else {
-                currencyHops = [zeroAddress];
-            }
-
             const quotes = await Promise.all(
                 basket.allocations.map(async (allocation) => {
                     const token = getTokenDetailsForAllocation(allocation, TOKENS);
@@ -42,7 +32,7 @@ export function useGetTokenValues({
                         currencyIn: token.address,
                         currencyOut: quoteCurrency.address,
                         contracts: UNISWAP_CONTRACTS[allocation.chainId]!,
-                        currencyHops,
+                        currencyHops: getCurrencyHops(chainId),
                     });
                 }),
             );

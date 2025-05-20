@@ -1,6 +1,6 @@
-import { getBasketSwaps, getChainById, UNISWAP_CONTRACTS, USDC_BASE } from "@owlprotocol/veraswap-sdk";
+import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, ShoppingCart } from "lucide-react";
-import { formatEther, parseUnits, zeroAddress, formatUnits } from "viem";
+import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain } from "wagmi";
 import { useMemo } from "react";
 import { Card } from "./ui/card.js";
@@ -10,7 +10,7 @@ import { Badge } from "./ui/badge.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
-import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
+import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
 
@@ -50,6 +50,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         if (
             !isConnected ||
             chainId !== basketChain.id ||
+            !address ||
             !balance ||
             !tokenValues ||
             tokenValues.some((value) => value === undefined)
@@ -77,18 +78,33 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         //
         // const allocationsAmountOut = tokenValues?.map((value) => (amountParsed * value!) / totalValue);
 
-        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const swapData = await getBasketSwaps(queryClient, config, {
-            chainId: basketChain.id,
-            contracts: UNISWAP_CONTRACTS[basketChain.id]!,
-            currencyIn: zeroAddress,
-            deadline: routerDeadline,
-            exactAmount: amountParsed,
+        const receiver = address;
+        // TODO: make this variable
+        const mintAmount = parseUnits("0.1", 18);
 
-            currencyHops: [USDC_BASE.address],
-            basketTokens: selectedBasketData.allocations,
+        const uniswapContract = UNISWAP_CONTRACTS[basketChain.id]!;
+
+        const basketMintWrite = await getBasketMint(queryClient, config, {
+            basket: selectedBasketData.address,
+            chainId: basketChain.id,
+            contracts: {
+                universalRouter: uniswapContract.universalRouter,
+                v4MetaQuoter: uniswapContract.v4MetaQuoter!,
+            },
+            currencyHops: getCurrencyHops(basketChain.id),
+            // TODO: use input currency
+            currencyIn: zeroAddress,
+            deadline: BigInt(Math.floor(Date.now() / 1000) + 60),
+            receiver,
+            mintAmount,
         });
-        sendTransaction({ chainId: basketChain.id, ...swapData });
+
+        sendTransaction({
+            chainId: basketChain.id,
+            to: basketMintWrite.address,
+            value: basketMintWrite.value,
+            data: encodeFunctionData(basketMintWrite),
+        });
     };
 
     const renderAllocationDetails = (allocation: BasketAllocation, idx: number) => {
