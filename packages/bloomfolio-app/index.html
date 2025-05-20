@@ -1,24 +1,41 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo_rounded.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verabloom</title>
-        <meta property="og:title" content="VeraBloom" />
-        <meta property="og:image" content="https://verabloom.io/thumbnail.png" />
-    <style type="text/css">
-        html.light > body {
-            background-color: #fff;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/logo_rounded.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        html.dark > body {
-            background-color: #111;
-        }
-    </style>
-  </head>
-  <body style="min-height: 90vh;">
-    <div id="root" style="height: 100%;"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+        <!-- HTML Meta Tags -->
+        <title>VeraBloom</title>
+        <meta name="description" content="Social onchain baskets" />
+
+        <!-- Facebook Meta Tags -->
+        <meta property="og:url" content="https://verabloom.io" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="VeraBloom" />
+        <meta property="og:description" content="" />
+        <meta property="og:image" content="https://verabloom.io/thumbnail.png" />
+
+        <!-- Twitter Meta Tags -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="verabloom.io" />
+        <meta property="twitter:url" content="https://verabloom.io" />
+        <meta name="twitter:title" content="VeraBloom" />
+        <meta name="twitter:description" content="Social onchain baskets" />
+        <meta name="twitter:image" content="https://verabloom.io/thumbnail.png" />
+
+        <style type="text/css">
+            html.light > body {
+                background-color: #fff;
+            }
+
+            html.dark > body {
+                background-color: #111;
+            }
+        </style>
+    </head>
+    <body style="min-height: 90vh">
+        <div id="root" style="height: 100%"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
 </html>
