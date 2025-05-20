@@ -57,8 +57,8 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
 
     const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
     const sharesFormatted =
-        totalValue > 0n && amountParsed > 0n
-            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips!)) / maxFeeCentiBips, 18)
+        totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
+            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
             : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
