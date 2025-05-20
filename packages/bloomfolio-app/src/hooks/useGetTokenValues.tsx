@@ -13,6 +13,8 @@ import { config } from "@/config.js";
 import { Basket } from "@/constants/baskets.js";
 import { getCurrencyHops } from "@/constants/tokens.js";
 
+export const unitsToQuote = 10n ** 16n;
+
 export function useGetTokenValues({
     basket,
     quoteCurrency,
@@ -34,7 +36,7 @@ export function useGetTokenValues({
                           // @ts-expect-error wrong type since query key can't have a bigint
                           args: [
                               {
-                                  exactAmount: numberToHex(allocation.units * 10n ** 16n),
+                                  exactAmount: numberToHex(allocation.units * unitsToQuote),
                                   exactCurrency: allocation.address,
                                   variableCurrency: quoteCurrency.address,
                                   hopCurrencies,
@@ -47,10 +49,11 @@ export function useGetTokenValues({
         combine: (results) => ({
             data: results.map((result) => {
                 if (!result.data) return 0n;
-                // @ts-ignore
+                // @ts-ignore result.data does exist
                 const data = result.data as V4MetaQuoteExactBestReturnType;
+
                 const bestSwap = data[2];
-                return data[bestSwap as 0 | 1].variableAmount;
+                return data[(bestSwap - 1) as 0 | 1].variableAmount;
             }),
             pending: results.some((result) => result.isPending),
         }),

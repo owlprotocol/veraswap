@@ -12,6 +12,7 @@ import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
+import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
 
 export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTransaction }) {
     const { address, isConnected } = useAccount();
@@ -34,7 +35,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
 
     const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData);
 
-    const shares = totalValue > 0n ? (amountParsed * 10n ** 16n) / totalValue : 0n;
+    const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
     const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
