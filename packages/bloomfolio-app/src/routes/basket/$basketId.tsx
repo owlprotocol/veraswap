@@ -2,9 +2,10 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
+import { zeroAddress, formatUnits } from "viem";
 import { BASKETS } from "@/constants/baskets.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -33,6 +34,11 @@ function BasketDetailsPage() {
     const { sendTransaction } = useSendTransaction();
     const { address } = useAccount();
     const { referrer } = Route.useSearch();
+    const { data: balance } = useBalance({
+        address,
+        token: basket?.address,
+        chainId: basket?.allocations[0].chainId,
+    });
 
     const { data: tokenPrices, isLoading, isError } = useTokenPrices(basket?.allocations ?? []);
 
@@ -50,6 +56,11 @@ function BasketDetailsPage() {
               };
           })
         : [];
+
+    const handleSellAll = () => {
+        // TODO: implement
+        console.log("sell all");
+    };
 
     if (!basket) {
         return (
@@ -187,21 +198,7 @@ function BasketDetailsPage() {
                         </div>
                         <div>
                             <h1 className="text-4xl font-bold">{basket.title}</h1>
-                            <p className="text-muted-foreground mt-2 text-lg">{basket.description}</p>
-                            <div className="flex items-center space-x-2 mt-3">
-                                <Badge
-                                    variant="secondary"
-                                    className={`${
-                                        basket.riskLevel === "Low"
-                                            ? "bg-green-500/20 text-green-500"
-                                            : basket.riskLevel === "Medium"
-                                              ? "bg-yellow-500/20 text-yellow-500"
-                                              : "bg-red-500/20 text-red-500"
-                                    }`}
-                                >
-                                    {basket.riskLevel} Risk
-                                </Badge>
-                            </div>
+                            <p className="text-muted-foreground mt-2 text-lg">{basket.description}</p>{" "}
                         </div>
                     </div>
                 </div>
@@ -381,6 +378,31 @@ function BasketDetailsPage() {
                                 <CardTitle>Quick Stats</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {address && basket?.address !== zeroAddress && (
+                                    <>
+                                        <div className="space-y-1">
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-sm text-muted-foreground">Your Balance</div>
+                                                {balance && balance.value > 0n && (
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={handleSellAll}
+                                                        size="sm"
+                                                        className="h-7"
+                                                    >
+                                                        Sell All
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <div className="text-2xl font-bold">
+                                                {balance
+                                                    ? `${formatUnits(balance.value, balance.decimals)} ${balance.symbol}`
+                                                    : "0"}
+                                            </div>
+                                        </div>
+                                        <Separator />
+                                    </>
+                                )}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <div className="text-sm text-muted-foreground">Total Assets</div>

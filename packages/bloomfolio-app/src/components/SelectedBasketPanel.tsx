@@ -144,9 +144,6 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                         <div>
                             <h3 className="font-bold text-lg">{selectedBasketData.title}</h3>
                             <p className="text-sm text-muted-foreground">{selectedBasketData.description}</p>
-                            <Badge variant="outline" className="mt-2">
-                                {selectedBasketData.riskLevel} Risk
-                            </Badge>
                         </div>
                     </div>
                 </div>

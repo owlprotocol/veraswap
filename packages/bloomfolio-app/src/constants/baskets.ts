@@ -17,7 +17,6 @@ export interface Basket {
     id: string;
     title: string;
     description: string;
-    riskLevel: "Low" | "Medium" | "High";
     gradient: string;
     icon: any;
     address: Address;
@@ -31,7 +30,6 @@ export const MAINNET_BASKETS = [
         address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
         title: "Conservative",
         description: "Conservative 50/50 allocation to BTC and ETH.",
-        riskLevel: "Low",
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
@@ -47,7 +45,6 @@ export const MAINNET_BASKETS = [
         address: zeroAddress,
         title: "Balanced",
         description: "Mix of BTCB, and established DeFi tokens.",
-        riskLevel: "Medium",
         gradient: "from-yellow-400 to-orange-500",
         icon: Globe,
         allocations: [
@@ -63,7 +60,6 @@ export const MAINNET_BASKETS = [
         address: zeroAddress,
         title: "Growth",
         description: "Higher risk, mix of established and emerging tokens.",
-        riskLevel: "High",
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
@@ -80,7 +76,6 @@ export const MAINNET_BASKETS = [
         address: zeroAddress,
         title: "Meme Mania",
         description: "High risk, meme coins and viral tokens.",
-        riskLevel: "High",
         gradient: "from-red-500 to-pink-500",
         icon: Dog,
         allocations: [
@@ -95,7 +90,6 @@ export const MAINNET_BASKETS = [
         address: zeroAddress,
         title: "DeFi Focus",
         description: "Concentrated in DeFi protocols and governance tokens.",
-        riskLevel: "Medium",
         gradient: "from-blue-500 to-indigo-600",
         icon: Coins,
         allocations: [
@@ -111,7 +105,6 @@ export const MAINNET_BASKETS = [
         address: zeroAddress,
         title: "Moon Shot",
         description: "Maximum risk, high potential tokens.",
-        riskLevel: "High",
         gradient: "from-purple-600 to-pink-600",
         icon: Rocket,
         allocations: [
@@ -153,7 +146,6 @@ const indexAB50WithFeeAddress = getDeployDeterministicAddress({
 export const LOCAL_BASKETS = [
     {
         id: "test-0",
-        riskLevel: "Low",
         gradient: "from-purple-600 to-pink-600",
         icon: Rocket,
         address: indexAB50NoFeeAddress,
@@ -167,7 +159,7 @@ export const LOCAL_BASKETS = [
     },
     {
         id: "test-1",
-        riskLevel: "Low",
+
         gradient: "from-green-600 to-red-600",
         icon: Dog,
         address: indexAB50WithFeeAddress,

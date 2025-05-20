@@ -86,13 +86,6 @@ export function BasketCard({ basket, isSelected, onSelect }) {
                 <CardDescription className="mt-2">{basket.description}</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="mb-4">
-                    <div className="bg-muted/50 p-3 rounded-lg">
-                        <div className="text-xs text-muted-foreground">Risk Level</div>
-                        <div className="font-medium">{basket.riskLevel}</div>
-                    </div>
-                </div>
-
                 <Separator className="my-3" />
 
                 <div className="space-y-2">
