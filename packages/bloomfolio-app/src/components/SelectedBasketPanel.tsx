@@ -79,8 +79,6 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         // const allocationsAmountOut = tokenValues?.map((value) => (amountParsed * value!) / totalValue);
 
         const receiver = address;
-        // TODO: make this variable
-        const mintAmount = parseUnits("0.1", 18);
 
         const uniswapContract = UNISWAP_CONTRACTS[basketChain.id]!;
 
@@ -96,7 +94,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
             currencyIn: zeroAddress,
             deadline: BigInt(Math.floor(Date.now() / 1000) + 60),
             receiver,
-            mintAmount,
+            mintAmount: shares,
         });
 
         sendTransaction({
