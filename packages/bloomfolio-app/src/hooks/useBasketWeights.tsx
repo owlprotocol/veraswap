@@ -33,17 +33,20 @@ export function useBasketWeights({
 
         const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n);
 
-        const percentages =
+        const weights =
             totalValue > 0n
-                ? tokenValues.map((value) =>
-                      // TODO: clean up
-                      (Number(formatUnits(((value ?? 0n) * 10n ** 18n) / totalValue, 18)) * 100).toFixed(3),
+                ? tokenValues.map(
+                      (value) =>
+                          // TODO: clean up
+                          Number(formatUnits(((value ?? 0n) * 10n ** 18n) / totalValue, 18)) * 100,
                   )
                 : [];
+        const percentages = weights.map((w) => w.toFixed(3));
 
         return {
             totalValue,
             tokenValues,
+            weights,
             percentages,
             isReady: true,
         };

@@ -13,6 +13,13 @@ export interface BasketAllocation {
     units: bigint;
 }
 
+export interface BasketPercentageAllocation {
+    address: Address;
+    chainId: number;
+    percentage: string;
+    weight: number;
+}
+
 export interface Basket {
     id: string;
     title: string;
