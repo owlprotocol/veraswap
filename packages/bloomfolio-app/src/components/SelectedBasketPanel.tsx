@@ -1,8 +1,9 @@
 import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, ShoppingCart } from "lucide-react";
 import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData } from "viem";
-import { useAccount, useChainId, useBalance, useSwitchChain } from "wagmi";
+import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useMemo } from "react";
+import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
@@ -27,6 +28,15 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         [selectedBasketData.allocations],
     );
 
+    const { data: mintFeeCentiBips } = useReadContract({
+        chainId: basketChain.id,
+        abi: BasketFixedUnits.abi,
+        address: selectedBasketData.address,
+        functionName: "mintFeeCentiBips",
+    });
+
+    const maxFeeCentiBips = 1_000_000n;
+
     const balanceFormatted = formatEther(balance?.value ?? 0n);
     const amountParsed = parseUnits(amount, 18);
 
@@ -36,7 +46,10 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
     const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData);
 
     const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
-    const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
+    const sharesFormatted =
+        totalValue > 0n && amountParsed > 0n
+            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips!)) / maxFeeCentiBips, 18)
+            : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9.]/g, "");
