@@ -15,7 +15,7 @@ import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 
 export function BasketCard({ basket, isSelected, onSelect }) {
-    const { data: tokenValues, isLoading: isTokenValuesLoading } = useGetTokenValues({
+    const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
         basket,
         quoteCurrency: basket
             ? {

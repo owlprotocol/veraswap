@@ -6,8 +6,8 @@ import { Basket } from "@/constants/baskets.js";
 export function useBasketWeights(basket: Basket) {
     const {
         data: tokenValues,
-        isLoading,
-        isError,
+        pending: isLoading,
+        // isError,
     } = useGetTokenValues({
         basket,
         quoteCurrency: basket
@@ -17,6 +17,8 @@ export function useBasketWeights(basket: Basket) {
               }
             : undefined,
     });
+
+    const isError = tokenValues.some((value) => value === 0n);
 
     const calculatedData = useMemo(() => {
         if (!tokenValues || tokenValues.length === 0) {

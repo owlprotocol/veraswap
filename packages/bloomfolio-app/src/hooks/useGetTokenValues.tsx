@@ -1,11 +1,17 @@
-import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
-import { Address } from "viem";
-import { useQuery } from "@tanstack/react-query";
+import {
+    DEFAULT_POOL_PARAMS,
+    V4MetaQuoteExactBestParams,
+    V4MetaQuoteExactBestReturnType,
+    UNISWAP_CONTRACTS,
+} from "@owlprotocol/veraswap-sdk";
+import { Address, numberToHex } from "viem";
+import { useQueries } from "@tanstack/react-query";
 
+import { metaQuoteExactOutputBest } from "@owlprotocol/veraswap-sdk/artifacts/IV4MetaQuoter";
+import { readContractQueryOptions } from "wagmi/query";
 import { config } from "@/config.js";
 import { Basket } from "@/constants/baskets.js";
-import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
-import { queryClient } from "@/queryClient.js";
+import { getCurrencyHops } from "@/constants/tokens.js";
 
 export function useGetTokenValues({
     basket,
@@ -14,32 +20,39 @@ export function useGetTokenValues({
     basket?: Basket;
     quoteCurrency?: { address: Address; chainId: number };
 }) {
-    return useQuery({
-        queryKey: ["getTokenValues", basket?.id ?? "", quoteCurrency?.address ?? ""],
-        queryFn: async () => {
-            if (!basket || !quoteCurrency) return null;
+    const v4MetaQuoter = basket ? UNISWAP_CONTRACTS[basket.allocations[0].chainId]!.v4MetaQuoter : undefined;
+    const hopCurrencies = basket ? getCurrencyHops(basket.allocations[0].chainId) : [];
 
-            const chainId = basket.allocations[0].chainId;
-
-            const quotes = await Promise.all(
-                basket.allocations.map(async (allocation) => {
-                    const token = getTokenDetailsForAllocation(allocation, TOKENS);
-                    if (!token) return null;
-
-                    return getUniswapV4RouteExactIn(queryClient, config, {
-                        chainId,
-                        // TODO: change to constant quoteShareAmount
-                        exactAmount: allocation.units * 10n ** 16n,
-                        currencyIn: token.address,
-                        currencyOut: quoteCurrency.address,
-                        contracts: UNISWAP_CONTRACTS[allocation.chainId]!,
-                        currencyHops: getCurrencyHops(chainId),
-                    });
-                }),
-            );
-
-            return quotes.map((q) => q?.amountOut);
-        },
-        enabled: !!basket && !!quoteCurrency,
+    return useQueries({
+        queries:
+            basket && v4MetaQuoter && quoteCurrency
+                ? basket.allocations.map((allocation) =>
+                      readContractQueryOptions(config, {
+                          abi: [metaQuoteExactOutputBest],
+                          address: v4MetaQuoter,
+                          functionName: "metaQuoteExactOutputBest",
+                          // @ts-expect-error wrong type since query key can't have a bigint
+                          args: [
+                              {
+                                  exactAmount: numberToHex(allocation.units * 10n ** 16n),
+                                  exactCurrency: allocation.address,
+                                  variableCurrency: quoteCurrency.address,
+                                  hopCurrencies,
+                                  poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                              },
+                          ] as V4MetaQuoteExactBestParams,
+                      }),
+                  )
+                : [],
+        combine: (results) => ({
+            data: results.map((result) => {
+                if (!result.data) return 0n;
+                // @ts-ignore
+                const data = result.data as V4MetaQuoteExactBestReturnType;
+                const bestSwap = data[2];
+                return data[bestSwap as 0 | 1].variableAmount;
+            }),
+            pending: results.some((result) => result.isPending),
+        }),
     });
 }
