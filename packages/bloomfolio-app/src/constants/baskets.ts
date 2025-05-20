@@ -152,8 +152,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 No Fee",
         description: "Index AB50 No Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n },
         ],
         symbol: "AB50.NF",
     },
@@ -166,8 +166,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 With Fee",
         description: "Index AB50 With Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: parseUnits("1", 18) },
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n },
         ],
         symbol: "AB50.WF",
     },

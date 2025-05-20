@@ -127,8 +127,8 @@ contract DeployLocal is DeployCoreContracts {
             // Create BasketFixedUnits with A/B
             BasketFixedUnits.BasketToken[] memory basket = new BasketFixedUnits.BasketToken[](2);
             (address basketToken0, address basketToken1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-            basket[0] = BasketFixedUnits.BasketToken({addr: basketToken0, units: 1e18});
-            basket[1] = BasketFixedUnits.BasketToken({addr: basketToken1, units: 1e18});
+            basket[0] = BasketFixedUnits.BasketToken({addr: basketToken0, units: 1});
+            basket[1] = BasketFixedUnits.BasketToken({addr: basketToken1, units: 1});
             (address basketAddr0,) = BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50.NF", address(0), 0, basket);
             (address basketAddr1,) =
                 BasketFixedUnitsUtils.getOrCreate2("Index AB50", "AB50.WF", address(1), 10_000, basket);
