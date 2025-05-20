@@ -21,7 +21,7 @@ export default function SimplifiedPortfolioPage() {
     const [amount, setAmount] = useState<string>("");
     const [showConfirmation, setShowConfirmation] = useState(false);
     const { address } = useAccount();
-    // const { referrer } = Route.useSearch();
+    const { referrer } = Route.useSearch();
 
     const handleSelectBasket = (basketId: string) => {
         setSelectedBasket(basketId);
@@ -66,6 +66,7 @@ export default function SimplifiedPortfolioPage() {
                                 amount={amount}
                                 setAmount={setAmount}
                                 sendTransaction={sendTransaction}
+                                referrer={referrer}
                             />
                         )}
 

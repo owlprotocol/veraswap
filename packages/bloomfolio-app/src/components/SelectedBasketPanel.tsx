@@ -16,7 +16,7 @@ import { unitsToQuote, useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 
 const maxFeeCentiBips = 1_000_000n;
 
-export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTransaction }) {
+export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTransaction, referrer }) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
@@ -115,6 +115,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
             deadline: BigInt(Math.floor(Date.now() / 1000) + 60),
             receiver,
             mintAmount: shares,
+            referrer,
         });
 
         sendTransaction({

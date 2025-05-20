@@ -195,6 +195,7 @@ function BasketDetailsPage() {
                             amount={amount}
                             setAmount={setAmount}
                             sendTransaction={sendTransaction}
+                            referrer={referrer}
                         />
                     ) : null}
                     <div className="flex items-start space-x-4">
