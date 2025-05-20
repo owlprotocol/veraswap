@@ -1,10 +1,10 @@
 import { Address, zeroAddress } from "viem";
 import { base, bsc } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
-import { getMockERC20Address } from "@owlprotocol/veraswap-sdk";
+import { getMockERC20Address, USDC_BASE, USDC_BSC, USDT_BSC } from "@owlprotocol/veraswap-sdk";
 import { BasketAllocation } from "./baskets.js";
 
-export type TokenCategory = "native" | "stable" | "alt" | "commodity";
+export type TokenCategory = "native" | "stable" | "alt" | "commodity" | "basket";
 
 export interface Token {
     address: Address;
@@ -172,6 +172,13 @@ export const TOKENS =
     import.meta.env.MODE === "development"
         ? [...BASE_TOKENS, ...BSC_TOKENS, ...LOCAL_TOKENS]
         : [...BASE_TOKENS, ...BSC_TOKENS];
+
+export function getCurrencyHops(chainId: number) {
+    if (chainId === bsc.id) return [USDC_BSC.address, USDT_BSC.address, zeroAddress];
+    if (chainId === base.id) return [USDC_BASE.address, zeroAddress];
+
+    return [zeroAddress];
+}
 
 export function getTokenDetailsForAllocation(allocation: BasketAllocation, tokens: Token[]) {
     return tokens.find(

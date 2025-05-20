@@ -4,10 +4,8 @@ import { ArrowRightLeft } from "lucide-react";
 import { formatUnits, zeroAddress } from "viem";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
 import { erc20Abi } from "viem";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
+import { Card, CardContent } from "@/components/ui/card.js";
 import { Button } from "@/components/ui/button.js";
-import { Badge } from "@/components/ui/badge.js";
-import { Separator } from "@/components/ui/separator.js";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.js";
 import { BASKETS } from "@/constants/baskets.js";
@@ -22,6 +20,7 @@ const COLORS = {
     native: "#627EEA",
     commodity: "#F7931A",
     alt: "#8A92B2",
+    basket: "#8B5CF6",
     background: {
         primary: "from-violet-500 to-purple-500",
         secondary: "from-blue-500 to-cyan-400",
@@ -58,6 +57,7 @@ function useTokenBalances(tokens: Token[]): Assets[] {
     } as const;
 
     const erc20Tokens = tokens.filter((token) => token.address !== zeroAddress);
+
     const { data: erc20Balances } = useReadContracts({
         contracts: erc20Tokens.map((token) => ({
             address: token.address,
@@ -108,7 +108,17 @@ function usePortfolioValue(assets: Assets[]) {
 // };
 
 export default function PortfolioPage() {
-    const currentPortfolio = useTokenBalances(TOKENS);
+    const portfolioTokens = BASKETS.map(
+        (b) =>
+            ({
+                address: b.address,
+                symbol: b.symbol,
+                chainId: b.allocations[0].chainId,
+                category: "basket",
+            }) as Token,
+    ).filter((t) => t.address !== zeroAddress);
+
+    const currentPortfolio = useTokenBalances([...portfolioTokens, ...TOKENS]);
     const totalValue = usePortfolioValue(currentPortfolio);
     const [previewPortfolio, setPreviewPortfolio] = useState<Assets[] | null>(null);
     const [selectedBasket, setSelectedBasket] = useState<string | null>(null);

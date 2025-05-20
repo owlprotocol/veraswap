@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, ChevronDown, ArrowRight } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useAccount } from "wagmi";
 import { useState } from "react";
@@ -15,8 +15,8 @@ import { BasketAllocation } from "@/constants/baskets.js";
 import { TOKENS, Token, TokenCategory, getTokenDetailsForAllocation } from "@/constants/tokens.js";
 import { Skeleton } from "@/components/ui/skeleton.js";
 import { useTokenPrices } from "@/hooks/useTokenPrices.js";
-import { ShareButton } from "@/components/ShareButton.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
+import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 
 export const Route = createFileRoute("/basket/$basketId")({
     validateSearch: z.object({
@@ -25,27 +25,12 @@ export const Route = createFileRoute("/basket/$basketId")({
     component: BasketDetailsPage,
 });
 
-const CATEGORY_LABELS: Record<TokenCategory, string> = {
-    native: "Native Tokens",
-    stable: "Stablecoins",
-    alt: "Alt Tokens",
-    commodity: "Commodities",
-};
-
-const CATEGORY_ICONS: Record<TokenCategory, string> = {
-    native: "🌐",
-    stable: "💵",
-    alt: "🚀",
-    commodity: "🪙",
-};
-
 function BasketDetailsPage() {
     const { basketId } = useParams({ from: "/basket/$basketId" });
     const basket = BASKETS.find((b) => b.id === basketId);
     const [showPurchasePanel, setShowPurchasePanel] = useState(false);
     const [amount, setAmount] = useState("");
     const { sendTransaction } = useSendTransaction();
-    const totaWeight = basket?.allocations.reduce((sum, all) => sum + all.weight, 0);
     const { address } = useAccount();
     const { referrer } = Route.useSearch();
 
@@ -106,7 +91,7 @@ function BasketDetailsPage() {
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
-            const order: TokenCategory[] = ["native", "stable", "commodity", "alt"];
+            const order: TokenCategory[] = ["native", "stable", "commodity", "alt", "basket"];
             return order.indexOf(a as TokenCategory) - order.indexOf(b as TokenCategory);
         });
     };
