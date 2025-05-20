@@ -48,10 +48,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-yellow-400 to-orange-500",
         icon: Globe,
         allocations: [
-            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // WBNB
-            { address: BSC_TOKENS[7].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // BTCB
-            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // UNI
-            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // AAVE
+            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 30 }, // WBNB
+            { address: BSC_TOKENS[7].address, chainId: bsc.id, units: 1n, weight: 30 }, // BTCB
+            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 20 }, // UNI
+            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 20 }, // AAVE
         ],
         symbol: "",
     },
@@ -63,11 +63,11 @@ export const MAINNET_BASKETS = [
         gradient: "from-pink-500 to-purple-600",
         icon: Bitcoin,
         allocations: [
-            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: parseUnits("30", 18), weight: 25 }, // SOL
-            { address: BSC_TOKENS[1].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 25 }, // LINK
-            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // 1INCH
-            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // CAKE
-            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // DOGE
+            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 1n, weight: 25 }, // SOL
+            { address: BSC_TOKENS[1].address, chainId: bsc.id, units: 20n, weight: 25 }, // LINK
+            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 500n, weight: 20 }, // 1INCH
+            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 50n, weight: 15 }, // CAKE
+            // { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 15 }, // DOGE
         ],
         symbol: "",
     },
@@ -80,8 +80,8 @@ export const MAINNET_BASKETS = [
         icon: Dog,
         allocations: [
             { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 40 }, // PEPE
-            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 40 }, // DOGE
-            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // WBNB
+            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 40 }, // DOGE
+            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 20 }, // WBNB
         ],
         symbol: "",
     },
@@ -93,10 +93,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-blue-500 to-indigo-600",
         icon: Coins,
         allocations: [
-            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // UNI
-            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // AAVE
-            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 25 }, // 1INCH
-            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 15 }, // CAKE
+            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 30 }, // UNI
+            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 30 }, // AAVE
+            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 5n, weight: 25 }, // 1INCH
+            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 5n, weight: 15 }, // CAKE
         ],
         symbol: "",
     },
@@ -108,10 +108,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-purple-600 to-pink-600",
         icon: Rocket,
         allocations: [
-            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 30 }, // SOL
+            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n, weight: 30 }, // SOL
 
             // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 30 }, // PEPE
-            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: parseUnits("0.05", 18), weight: 20 }, // DOGE
+            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 20 }, // DOGE
             { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 20 }, // CAKE
         ],
         symbol: "",

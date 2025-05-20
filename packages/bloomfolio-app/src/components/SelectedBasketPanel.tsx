@@ -35,7 +35,7 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
 
     const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData);
 
-    const shares = totalValue > 0n ? (amountParsed * 10n ** 18n) / totalValue : 0n;
+    const shares = totalValue > 0n ? (amountParsed * 10n ** 16n) / totalValue : 0n;
     const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,8 +114,8 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         const tokenValue = tokenValues?.[idx] ?? 0n;
 
         // Assume it's ETH TODO: change decimals
-        const value =
-            totalValue > 0n && tokenValue > 0n ? formatUnits((tokenValue * amountParsed) / totalValue, 18) : "";
+        const value = formatUnits(shares * allocation.units, token.decimals ?? 18);
+        // totalValue > 0n && tokenValue > 0n ? formatUnits((tokenValue * amountParsed) / totalValue, 18) : "";
 
         return (
             <div key={token.address} className="flex justify-between text-sm">

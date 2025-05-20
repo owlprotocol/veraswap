@@ -28,7 +28,8 @@ export function useGetTokenValues({
 
                     return getUniswapV4RouteExactIn(queryClient, config, {
                         chainId,
-                        exactAmount: allocation.units,
+                        // TODO: change to constant quoteShareAmount
+                        exactAmount: allocation.units * 10n ** 16n,
                         currencyIn: token.address,
                         currencyOut: quoteCurrency.address,
                         contracts: UNISWAP_CONTRACTS[allocation.chainId]!,
