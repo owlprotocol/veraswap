@@ -123,9 +123,9 @@ export const MAINNET_BASKETS = [
         gradient: "from-red-700 to-green-400",
         icon: Rocket,
         allocations: [
-            { address: "0x1111111111166b7FE7bd91427724B487980aFc69", chainId: base.id, units: 1000n, weight: 30 }, // ZORA
-            { address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b", chainId: base.id, units: 5n, weight: 20 }, // VIRTUAL
-            { address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553", chainId: base.id, units: 5n, weight: 20 }, // KAITO
+            { address: "0x1111111111166b7FE7bd91427724B487980aFc69", chainId: base.id, units: 1000n, weight: 3449 }, // ZORA
+            { address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b", chainId: base.id, units: 5n, weight: 3354 }, // VIRTUAL
+            { address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553", chainId: base.id, units: 5n, weight: 3198 }, // KAITO
         ],
         symbol: "EKSS",
     },
