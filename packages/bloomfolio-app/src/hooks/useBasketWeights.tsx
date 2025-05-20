@@ -5,9 +5,11 @@ import { useGetTokenValues } from "./useGetTokenValues.js";
 export function useBasketWeights({
     chainId,
     basketDetails,
+    quoteCurrency = zeroAddress,
 }: {
     chainId: number;
     basketDetails: readonly { addr: Address; units: bigint }[];
+    quoteCurrency?: Address;
 }) {
     const {
         data: tokenValues,
@@ -16,7 +18,7 @@ export function useBasketWeights({
     } = useGetTokenValues({
         chainId,
         basketDetails,
-        quoteCurrency: zeroAddress,
+        quoteCurrency,
     });
 
     const isError = tokenValues.some((value) => value === 0n);

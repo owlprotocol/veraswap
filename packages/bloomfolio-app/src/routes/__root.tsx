@@ -1,14 +1,24 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Outlet, retainSearchParams } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
-
 import { Button } from "@/components/ui/button.js";
 
+const rootSearchSchema = z.object({
+    referrer: z.string().optional(),
+});
+
 export const Route = createRootRoute({
+    validateSearch: zodValidator(rootSearchSchema),
+    search: {
+        middlewares: [retainSearchParams(["referrer"])],
+    },
     component: RootComponent,
 });
+
 function RootComponent() {
     const [menuOpen, setMenuOpen] = useState(false);
     return (
