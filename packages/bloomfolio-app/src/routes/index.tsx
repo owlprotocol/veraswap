@@ -3,11 +3,12 @@ import { z } from "zod";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { Address } from "viem";
 import { BASKETS } from "@/constants/baskets.js";
 import { BasketCard } from "@/components/BasketCard.js";
-import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { BasketPurchaseConfirmation } from "@/components/BasketPurchaseConfirmation.js";
 import { ShareButton } from "@/components/ShareButton.js";
+import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -62,11 +63,12 @@ export default function SimplifiedPortfolioPage() {
                     <div className="space-y-8">
                         {selectedBasket && (
                             <SelectedBasketPanel
-                                selectedBasket={selectedBasket}
+                                address={BASKETS.find((b) => b.id === selectedBasket)?.address as `0x${string}`}
+                                chainId={BASKETS.find((b) => b.id === selectedBasket)?.allocations[0].chainId as number}
                                 amount={amount}
                                 setAmount={setAmount}
                                 sendTransaction={sendTransaction}
-                                referrer={referrer}
+                                referrer={referrer as Address | undefined}
                             />
                         )}
 

@@ -41,81 +41,6 @@ export const MAINNET_BASKETS = [
         symbol: "CB.ETH/BTC.50",
     },
     {
-        id: "balanced",
-        address: zeroAddress,
-        title: "Balanced",
-        description: "Mix of BTCB, and established DeFi tokens.",
-        gradient: "from-yellow-400 to-orange-500",
-        icon: Globe,
-        allocations: [
-            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 30 }, // WBNB
-            { address: BSC_TOKENS[7].address, chainId: bsc.id, units: 1n, weight: 30 }, // BTCB
-            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 50n, weight: 20 }, // UNI
-            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 50n, weight: 20 }, // AAVE
-        ],
-        symbol: "",
-    },
-    {
-        id: "growth",
-        address: zeroAddress,
-        title: "Growth",
-        description: "Higher risk, mix of established and emerging tokens.",
-        gradient: "from-pink-500 to-purple-600",
-        icon: Bitcoin,
-        allocations: [
-            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 1n, weight: 25 }, // SOL
-            { address: BSC_TOKENS[1].address, chainId: bsc.id, units: 20n, weight: 25 }, // LINK
-            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 500n, weight: 20 }, // 1INCH
-            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 50n, weight: 15 }, // CAKE
-            // { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 15 }, // DOGE
-        ],
-        symbol: "",
-    },
-    {
-        id: "meme",
-        address: zeroAddress,
-        title: "Meme Mania",
-        description: "High risk, meme coins and viral tokens.",
-        gradient: "from-red-500 to-pink-500",
-        icon: Dog,
-        allocations: [
-            { address: BSC_TOKENS[8].address, chainId: bsc.id, units: 10n, weight: 40 }, // PEPE
-            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 40 }, // DOGE
-            // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 20 }, // WBNB
-        ],
-        symbol: "",
-    },
-    {
-        id: "defi",
-        address: zeroAddress,
-        title: "DeFi Focus",
-        description: "Concentrated in DeFi protocols and governance tokens.",
-        gradient: "from-blue-500 to-indigo-600",
-        icon: Coins,
-        allocations: [
-            { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 30 }, // UNI
-            { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 50n, weight: 30 }, // AAVE
-            { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 5n, weight: 25 }, // 1INCH
-            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 5n, weight: 15 }, // CAKE
-        ],
-        symbol: "",
-    },
-    {
-        id: "moon",
-        address: zeroAddress,
-        title: "Moon Shot",
-        description: "Maximum risk, high potential tokens.",
-        gradient: "from-purple-600 to-pink-600",
-        icon: Rocket,
-        allocations: [
-            { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n, weight: 30 }, // SOL
-            // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: 10n, weight: 30 }, // PEPE
-            { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 20 }, // DOGE
-            { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 10n, weight: 20 }, // CAKE
-        ],
-        symbol: "",
-    },
-    {
         id: "khan",
         address: "0xd6dc30f62e6ddf44f890e6bc9be48ddc9302f685",
         title: "Emperor Khan Super Special",
@@ -129,13 +54,89 @@ export const MAINNET_BASKETS = [
         ],
         symbol: "EKSS",
     },
+    // {
+    //     id: "balanced",
+    //     address: zeroAddress,
+    //     title: "Balanced",
+    //     description: "Mix of BTCB, and established DeFi tokens.",
+    //     gradient: "from-yellow-400 to-orange-500",
+    //     icon: Globe,
+    //     allocations: [
+    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 30 }, // WBNB
+    //         { address: BSC_TOKENS[7].address, chainId: bsc.id, units: 1n, weight: 30 }, // BTCB
+    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 20 }, // UNI
+    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 20 }, // AAVE
+    //     ],
+    //     symbol: "",
+    // },
+    // {
+    //     id: "growth",
+    //     address: zeroAddress,
+    //     title: "Growth",
+    //     description: "Higher risk, mix of established and emerging tokens.",
+    //     gradient: "from-pink-500 to-purple-600",
+    //     icon: Bitcoin,
+    //     allocations: [
+    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 1n, weight: 25 }, // SOL
+    //         { address: BSC_TOKENS[1].address, chainId: bsc.id, units: 20n, weight: 25 }, // LINK
+    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 500n, weight: 20 }, // 1INCH
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 50n, weight: 15 }, // CAKE
+    //         // { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 15 }, // DOGE
+    //     ],
+    //     symbol: "",
+    // },
+    // {
+    //     id: "meme",
+    //     address: zeroAddress,
+    //     title: "Meme Mania",
+    //     description: "High risk, meme coins and viral tokens.",
+    //     gradient: "from-red-500 to-pink-500",
+    //     icon: Dog,
+    //     allocations: [
+    //         { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 40 }, // PEPE
+    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 40 }, // DOGE
+    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 20 }, // WBNB
+    //     ],
+    //     symbol: "",
+    // },
+    // {
+    //     id: "defi",
+    //     address: zeroAddress,
+    //     title: "DeFi Focus",
+    //     description: "Concentrated in DeFi protocols and governance tokens.",
+    //     gradient: "from-blue-500 to-indigo-600",
+    //     icon: Coins,
+    //     allocations: [
+    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 30 }, // UNI
+    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 30 }, // AAVE
+    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 5n, weight: 25 }, // 1INCH
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 5n, weight: 15 }, // CAKE
+    //     ],
+    //     symbol: "",
+    // },
+    // {
+    //     id: "moon",
+    //     address: zeroAddress,
+    //     title: "Moon Shot",
+    //     description: "Maximum risk, high potential tokens.",
+    //     gradient: "from-purple-600 to-pink-600",
+    //     icon: Rocket,
+    //     allocations: [
+    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n, weight: 30 }, // SOL
+
+    //         // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 30 }, // PEPE
+    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 20 }, // DOGE
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 20 }, // CAKE
+    //     ],
+    //     symbol: "",
+    // },
 ] satisfies Basket[];
 
 const basketAddr0 = tokenAAddress < tokenBAddress ? tokenAAddress : tokenBAddress;
 const basketAddr1 = tokenAAddress > tokenBAddress ? tokenAAddress : tokenBAddress;
 const basket = [
-    { addr: basketAddr0, units: 10n ** 18n },
-    { addr: basketAddr1, units: 10n ** 18n },
+    { addr: basketAddr0, units: 1n },
+    { addr: basketAddr1, units: 1n },
 ];
 
 const indexAB50NoFeeAddress = getDeployDeterministicAddress({
@@ -179,8 +180,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 With Fee",
         description: "Index AB50 With Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n },
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 2n },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 2n },
         ],
         symbol: "AB50.WF",
     },
