@@ -99,7 +99,11 @@ export function SelectedBasketPanel({
     const isAmountValid = amountParsed > 0;
 
     // TODO: fix
-    const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData!);
+    const {
+        totalValue,
+        tokenValues,
+        isLoading: isTokenValuesLoading,
+    } = useBasketWeights({ chainId: basketChainId, basketDetails: basketDetails ?? [] });
 
     const shares = totalValue > 0n && amountParsed > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
     const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;

@@ -3,26 +3,33 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/r
 import { Separator } from "@radix-ui/react-separator";
 import { ChevronDown } from "lucide-react";
 import { zeroAddress } from "viem";
+import { useReadContract } from "wagmi";
+import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { CardContent, CardHeader, CardDescription, Card, CardTitle } from "./ui/card.js";
 import { Button } from "./ui/button.js";
 import { Badge } from "./ui/badge.js";
 import { Skeleton } from "./ui/skeleton.js";
 import { Token } from "@/constants/tokens.js";
-import { BasketAllocation } from "@/constants/baskets.js";
+import { Basket, BasketAllocation } from "@/constants/baskets.js";
 import { getTokenDetailsForAllocation, TokenCategory } from "@/constants/tokens.js";
 import { TOKENS } from "@/constants/tokens.js";
 import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 
-export function BasketCard({ basket, isSelected, onSelect }) {
+// TODO: fix type
+export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; isSelected: any; onSelect: any }) {
+    const basketChainId = basket.allocations[0].chainId;
+    const { data: basketDetails } = useReadContract({
+        chainId: basketChainId,
+        address: basket.address,
+        abi: [getBasket],
+        functionName: "getBasket",
+    });
+
     const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
-        basket,
-        quoteCurrency: basket
-            ? {
-                  address: zeroAddress,
-                  chainId: basket.allocations[0].chainId,
-              }
-            : undefined,
+        chainId: basketChainId,
+        basketDetails: basketDetails ?? [],
+        quoteCurrency: zeroAddress,
     });
 
     const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
@@ -106,7 +113,7 @@ export function BasketCard({ basket, isSelected, onSelect }) {
 }
 
 function CategorySection({ category, items, totalValue, isLoading, tokenValues }) {
-    const categoryValue = items.reduce((sum, { index }) => {
+    const categoryValue = items.reduce((sum: bigint, { index }) => {
         const tokenValue = tokenValues?.[index] ?? 0n;
         return sum + tokenValue;
     }, 0n);
