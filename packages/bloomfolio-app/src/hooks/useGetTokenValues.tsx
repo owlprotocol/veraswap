@@ -29,7 +29,9 @@ export function useGetTokenValues({
         queries:
             basket && v4MetaQuoter && quoteCurrency
                 ? basket.allocations.map((allocation) =>
+                      // TODO: cast return type
                       readContractQueryOptions(config, {
+                          chainId: allocation.chainId,
                           abi: [metaQuoteExactOutputBest],
                           address: v4MetaQuoter,
                           functionName: "metaQuoteExactOutputBest",
@@ -53,6 +55,8 @@ export function useGetTokenValues({
                 const data = result.data as V4MetaQuoteExactBestReturnType;
 
                 const bestSwap = data[2];
+                if (bestSwap === 0) return 0n;
+
                 return data[(bestSwap - 1) as 0 | 1].variableAmount;
             }),
             pending: results.some((result) => result.isPending),
