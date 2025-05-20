@@ -10,44 +10,42 @@ import { useQueries } from "@tanstack/react-query";
 import { metaQuoteExactOutputBest } from "@owlprotocol/veraswap-sdk/artifacts/IV4MetaQuoter";
 import { readContractQueryOptions } from "wagmi/query";
 import { config } from "@/config.js";
-import { Basket } from "@/constants/baskets.js";
 import { getCurrencyHops } from "@/constants/tokens.js";
 
 export const unitsToQuote = 10n ** 16n;
 
 export function useGetTokenValues({
-    basket,
+    chainId,
+    basketDetails,
     quoteCurrency,
 }: {
-    basket?: Basket;
-    quoteCurrency?: { address: Address; chainId: number };
+    chainId: number;
+    basketDetails: readonly { addr: Address; units: bigint }[];
+    quoteCurrency: Address;
 }) {
-    const v4MetaQuoter = basket ? UNISWAP_CONTRACTS[basket.allocations[0].chainId]!.v4MetaQuoter : undefined;
-    const hopCurrencies = basket ? getCurrencyHops(basket.allocations[0].chainId) : [];
+    const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter!;
+    const hopCurrencies = getCurrencyHops(chainId);
 
     return useQueries({
-        queries:
-            basket && v4MetaQuoter && quoteCurrency
-                ? basket.allocations.map((allocation) =>
-                      // TODO: cast return type
-                      readContractQueryOptions(config, {
-                          chainId: allocation.chainId,
-                          abi: [metaQuoteExactOutputBest],
-                          address: v4MetaQuoter,
-                          functionName: "metaQuoteExactOutputBest",
-                          // @ts-expect-error wrong type since query key can't have a bigint
-                          args: [
-                              {
-                                  exactAmount: numberToHex(allocation.units * unitsToQuote),
-                                  exactCurrency: allocation.address,
-                                  variableCurrency: quoteCurrency.address,
-                                  hopCurrencies,
-                                  poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                              },
-                          ] as V4MetaQuoteExactBestParams,
-                      }),
-                  )
-                : [],
+        queries: basketDetails.map((allocation) =>
+            // TODO: cast return type
+            readContractQueryOptions(config, {
+                chainId,
+                abi: [metaQuoteExactOutputBest],
+                address: v4MetaQuoter,
+                functionName: "metaQuoteExactOutputBest",
+                // @ts-expect-error wrong type since query key can't have a bigint
+                args: [
+                    {
+                        exactAmount: numberToHex(allocation.units * unitsToQuote),
+                        exactCurrency: allocation.addr,
+                        variableCurrency: quoteCurrency,
+                        hopCurrencies,
+                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                    },
+                ] as V4MetaQuoteExactBestParams,
+            }),
+        ),
         combine: (results) => ({
             data: results.map((result) => {
                 if (!result.data) return 0n;

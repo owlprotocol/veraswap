@@ -1,21 +1,22 @@
 import { useMemo } from "react";
-import { formatUnits, zeroAddress } from "viem";
+import { Address, formatUnits, zeroAddress } from "viem";
 import { useGetTokenValues } from "./useGetTokenValues.js";
-import { Basket } from "@/constants/baskets.js";
 
-export function useBasketWeights(basket: Basket) {
+export function useBasketWeights({
+    chainId,
+    basketDetails,
+}: {
+    chainId: number;
+    basketDetails: readonly { addr: Address; units: bigint }[];
+}) {
     const {
         data: tokenValues,
         pending: isLoading,
         // isError,
     } = useGetTokenValues({
-        basket,
-        quoteCurrency: basket
-            ? {
-                  address: zeroAddress,
-                  chainId: basket.allocations[0].chainId,
-              }
-            : undefined,
+        chainId,
+        basketDetails,
+        quoteCurrency: zeroAddress,
     });
 
     const isError = tokenValues.some((value) => value === 0n);
