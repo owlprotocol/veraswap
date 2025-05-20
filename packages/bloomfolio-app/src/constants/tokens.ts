@@ -1,8 +1,14 @@
 import { Address, zeroAddress } from "viem";
 import { base, bsc } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
-import { getMockERC20Address, USDC_BASE, USDC_BSC, USDT_BSC } from "@owlprotocol/veraswap-sdk";
-import { BasketAllocation } from "./baskets.js";
+import {
+    getMockERC20Address,
+    USDC_BASE,
+    USDC_BSC,
+    USDT_BSC,
+    WBTC_POLYGON,
+    WETH_POLYGON,
+} from "@owlprotocol/veraswap-sdk";
 
 export type TokenCategory = "native" | "stable" | "alt" | "commodity" | "basket";
 
@@ -16,7 +22,7 @@ export interface Token {
     chainId: number;
 }
 
-export const BASE_TOKENS = [
+export const MAINNET_TOKENS = [
     {
         category: "stable",
         address: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
@@ -75,9 +81,6 @@ export const BASE_TOKENS = [
         category: "alt",
         chainId: base.id,
     },
-] as const satisfies Token[];
-
-export const BSC_TOKENS = [
     {
         address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
         symbol: "SOL",
@@ -168,6 +171,8 @@ export const BSC_TOKENS = [
         category: "alt",
         chainId: bsc.id,
     },
+    { ...WETH_POLYGON, name: WETH_POLYGON.name!, symbol: WETH_POLYGON.symbol!, category: "native" },
+    { ...WBTC_POLYGON, name: WBTC_POLYGON.name!, symbol: WBTC_POLYGON.symbol!, category: "native" },
 ] as const satisfies Token[];
 
 export const tokenAAddress = getMockERC20Address({ name: "Token A", symbol: "A", decimals: 18 });
@@ -192,10 +197,7 @@ export const LOCAL_TOKENS = [
     },
 ] as const satisfies Token[];
 
-export const TOKENS =
-    import.meta.env.MODE === "development"
-        ? [...BASE_TOKENS, ...BSC_TOKENS, ...LOCAL_TOKENS]
-        : [...BASE_TOKENS, ...BSC_TOKENS];
+export const TOKENS = import.meta.env.MODE === "development" ? [...MAINNET_TOKENS, ...LOCAL_TOKENS] : MAINNET_TOKENS;
 
 export function getCurrencyHops(chainId: number) {
     if (chainId === bsc.id) return [USDC_BSC.address, USDT_BSC.address, zeroAddress];
