@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
-import { Badge } from "./ui/badge.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
@@ -107,15 +106,12 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
         });
     };
 
-    const renderAllocationDetails = (allocation: BasketAllocation, idx: number) => {
+    const renderAllocationDetails = (allocation: BasketAllocation) => {
         const token = getTokenDetailsForAllocation(allocation, TOKENS);
         if (!token) return null;
 
-        const tokenValue = tokenValues?.[idx] ?? 0n;
-
         // Assume it's ETH TODO: change decimals
         const value = formatUnits(shares * allocation.units, token.decimals ?? 18);
-        // totalValue > 0n && tokenValue > 0n ? formatUnits((tokenValue * amountParsed) / totalValue, 18) : "";
 
         return (
             <div key={token.address} className="flex justify-between text-sm">
@@ -222,8 +218,8 @@ export function SelectedBasketPanel({ selectedBasket, amount, setAmount, sendTra
                         <Separator />
                         <h3 className="font-medium">Breakdown</h3>
                         <div className="space-y-1 text-sm">
-                            {selectedBasketData.allocations.map((all: BasketAllocation, idx: number) =>
-                                renderAllocationDetails(all, idx),
+                            {selectedBasketData.allocations.map((all: BasketAllocation) =>
+                                renderAllocationDetails(all),
                             )}
                         </div>
 
