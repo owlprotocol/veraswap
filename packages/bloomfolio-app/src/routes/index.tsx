@@ -54,7 +54,7 @@ export default function SimplifiedPortfolioPage() {
                         </h1>
                         <p className="text-muted-foreground mt-2">Select a basket and start investing in minutes</p>
                     </div>
-                    <ShareButton address={address} />
+                    <ShareButton />
                 </header>
 
                 {showConfirmation ? (

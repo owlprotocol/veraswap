@@ -269,7 +269,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                 )}
                             </div>
                         </div>
-                        <ShareButton address={address} />
+                        <ShareButton />
                     </div>
                 </div>
 
