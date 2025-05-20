@@ -51,7 +51,7 @@ export default function SimplifiedPortfolioPage() {
                         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
                             Quick Invest
                         </h1>
-                        <p className="text-muted-foreground mt-2">Select a strategy and start investing in minutes</p>
+                        <p className="text-muted-foreground mt-2">Select a basket and start investing in minutes</p>
                     </div>
                     <ShareButton address={address} />
                 </header>
@@ -95,7 +95,7 @@ function BasketSelection({ selectedBasket, handleSelectBasket }) {
     return (
         <div>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Choose an Investment Strategy</h2>
+                <h2 className="text-2xl font-bold">Choose a Basket</h2>
                 {selectedBasket && (
                     <div className="flex items-center text-sm text-muted-foreground">
                         <span>Selected: {BASKETS.find((b) => b.id === selectedBasket)?.title}</span>

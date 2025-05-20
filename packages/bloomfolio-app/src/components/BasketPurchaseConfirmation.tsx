@@ -47,7 +47,7 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
                     </div>
                     <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
                     <CardDescription>
-                        You've successfully invested {amount} {inputSymbol} in the {selectedBasketData?.title} strategy
+                        You've successfully invested {amount} {inputSymbol} in the {selectedBasketData?.title} basket
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
