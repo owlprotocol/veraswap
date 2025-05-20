@@ -22,7 +22,8 @@ library DeployPolygon {
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane =
+            HyperlaneDeployParams({mailbox: 0x5d934f4e2f797775e53561bB72aca21ba36B96BB});
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
