@@ -8,7 +8,15 @@ import { zeroAddress, formatUnits, Address } from "viem";
 import * as chains from "viem/chains";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
+import {
+    tokenDataQueryOptions,
+    USDC_BSC,
+    USDC_MAINNET,
+    USDC_OPTIMISM,
+    USDC_BASE,
+    USDC_POLYGON,
+    USDC_ARBITRUM,
+} from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
@@ -23,6 +31,7 @@ import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { ShareButton } from "@/components/ShareButton.js";
+import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
 
 interface BasketPageProps {
     referrer?: Address;
@@ -34,6 +43,20 @@ interface BasketPageProps {
         icon?: LucideIcon;
     };
 }
+// TODO: fix, temporary
+const USDC_ADDRESSES = {
+    1: USDC_MAINNET.address,
+    56: USDC_BSC.address,
+    10: USDC_OPTIMISM.address,
+    8453: USDC_BASE.address,
+    137: USDC_POLYGON.address,
+    42161: USDC_ARBITRUM.address,
+} as const;
+
+const getUSDCForChain = (chainId: number) => {
+    const address = USDC_ADDRESSES[chainId];
+    return address ?? undefined;
+};
 
 export const BasketPage = ({ chainId, address, details, referrer }: BasketPageProps) => {
     const [showPurchasePanel, setShowPurchasePanel] = useState(false);
@@ -78,12 +101,20 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
           })
         : [];
 
+    const { percentages, weights, totalValue } = useBasketWeights({
+        chainId,
+        basketDetails: basketDetails ?? [],
+        quoteCurrency: getUSDCForChain(chainId),
+    });
+
+    const totalDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
+
+    const formattedDollarValue = formatUnits(totalDollarValue, 18);
+
     const handleSellAll = () => {
         // TODO: implement
         console.log("sell all");
     };
-
-    const { percentages, weights } = useBasketWeights({ chainId, basketDetails: basketDetails ?? [] });
 
     if (!basketDetails || !percentages) {
         return (
@@ -409,6 +440,12 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                     <div className="space-y-1">
                                         <div className="text-sm text-muted-foreground">Total Assets</div>
                                         <div className="text-2xl font-bold">{basketAllocations.length}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-muted-foreground">Total Value</div>
+                                        <div className="text-2xl font-bold">
+                                            ${Number(formattedDollarValue).toFixed(2)}
+                                        </div>
                                     </div>
                                 </div>
                                 <Separator />
