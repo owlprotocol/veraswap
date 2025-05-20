@@ -1,5 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { z } from "zod";
+import { Address } from "viem";
 import { BasketPage } from "@/pages/BasketPage.js";
 import { BASKETS } from "@/constants/baskets.js";
 
@@ -29,5 +30,7 @@ function BasketDetailsPage() {
     const address = basket?.address;
     console.log({ chainId, address });
 
-    return <BasketPage chainId={chainId} address={address} details={details} referrer={referrer} />;
+    return (
+        <BasketPage chainId={chainId} address={address} details={details} referrer={referrer as Address | undefined} />
+    );
 }

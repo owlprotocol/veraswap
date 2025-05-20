@@ -4,6 +4,7 @@ import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, 
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useMemo } from "react";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
 import React from "react";
@@ -16,6 +17,9 @@ import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
+import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
+
+const maxFeeCentiBips = 1_000_000n;
 
 interface SelectedBasketPanel2Props {
     address: Address;
@@ -60,7 +64,7 @@ export function SelectedBasketPanel({
         const allocations = basketDetails.map((token) => ({
             address: token.addr,
             chainId: basketChainId,
-            weight: Number((token.units * 100n) / totalUnits),
+            weight: 0,
             units: token.units,
         }));
 
@@ -83,6 +87,13 @@ export function SelectedBasketPanel({
         return getChainById(basketChainId);
     }, [basketChainId, selectedBasketData]);
 
+    const { data: mintFeeCentiBips } = useReadContract({
+        chainId: basketChainId,
+        abi: BasketFixedUnits.abi,
+        address: basketAddress,
+        functionName: "mintFeeCentiBips",
+    });
+
     const balanceFormatted = formatEther(balance?.value ?? 0n);
     const amountParsed = parseUnits(amount, 18);
 
@@ -92,24 +103,11 @@ export function SelectedBasketPanel({
     // TODO: fix
     const { totalValue, tokenValues, isLoading: isTokenValuesLoading } = useBasketWeights(selectedBasketData!);
 
-    // TODO: fix
-    // const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
-    //     basket: selectedBasketData,
-    //     quoteCurrency: {
-    //         address: inputCurrency,
-    //         chainId: basketChain.id,
-    //     },
-    // });
-    // const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
-
-    // const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
-    // const sharesFormatted =
-    //     totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
-    //         ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
-    //         : "";
-
-    const shares = totalValue > 0n ? (amountParsed * 10n ** 16n) / totalValue : 0n;
-    const sharesFormatted = totalValue > 0n && amountParsed > 0n ? formatUnits(shares, 18) : "";
+    const shares = totalValue > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
+    const sharesFormatted =
+        totalValue > 0n && amountParsed > 0n && mintFeeCentiBips
+            ? formatUnits((shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips, 18)
+            : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9.]/g, "");

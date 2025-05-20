@@ -23,7 +23,7 @@ import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 
 interface BasketPageProps {
-    referrer?: string;
+    referrer?: Address;
     chainId: number;
     address: Address;
     details?: {
