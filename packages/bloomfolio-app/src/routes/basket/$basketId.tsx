@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { z } from "zod";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, ExternalLink } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useAccount, useBalance } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
 import { zeroAddress, formatUnits } from "viem";
+import * as chains from "viem/chains";
 import { BASKETS } from "@/constants/baskets.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
@@ -174,6 +175,10 @@ function BasketDetailsPage() {
 
     const stats = calculateStats(performanceData);
 
+    const chainId = basket?.allocations[0].chainId;
+    const chain = chainId ? Object.values(chains).find((c) => c.id === chainId) : undefined;
+    const explorerUrl = chain?.blockExplorers?.default?.url;
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
             <div className="container mx-auto px-4 py-8">
@@ -196,9 +201,23 @@ function BasketDetailsPage() {
                         <div className={`p-3 rounded-full bg-gradient-to-r ${basket.gradient} text-white`}>
                             <basket.icon className="h-8 w-8" />
                         </div>
-                        <div>
+                        <div className="space-y-1">
                             <h1 className="text-4xl font-bold">{basket.title}</h1>
-                            <p className="text-muted-foreground mt-2 text-lg">{basket.description}</p>{" "}
+                            <p className="text-muted-foreground text-lg">{basket.description}</p>
+                            {basket.address !== zeroAddress && explorerUrl && (
+                                <div className="pt-1">
+                                    <span className="text-xs text-muted-foreground/70">Contract Address:</span>
+                                    <a
+                                        href={`${explorerUrl}/address/${basket.address}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ml-2 text-sm font-mono bg-muted/50 px-2 py-0.5 rounded hover:bg-muted/70 transition-colors inline-flex items-center gap-2"
+                                    >
+                                        {basket.address}
+                                        <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -394,7 +413,7 @@ function BasketDetailsPage() {
                                                     </Button>
                                                 )}
                                             </div>
-                                            <div className="text-2xl font-bold">
+                                            <div className="text-xl font-bold">
                                                 {balance
                                                     ? `${formatUnits(balance.value, balance.decimals)} ${balance.symbol}`
                                                     : "0"}
