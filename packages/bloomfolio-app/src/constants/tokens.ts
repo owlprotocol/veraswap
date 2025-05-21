@@ -22,7 +22,7 @@ export interface Token {
     chainId: number;
 }
 
-export const MAINNET_TOKENS = [
+export const BASE_TOKENS = [
     {
         category: "stable",
         address: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
@@ -81,6 +81,9 @@ export const MAINNET_TOKENS = [
         category: "alt",
         chainId: base.id,
     },
+] as const satisfies Token[];
+
+export const BSC_TOKENS = [
     {
         address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
         symbol: "SOL",
@@ -171,6 +174,11 @@ export const MAINNET_TOKENS = [
         category: "alt",
         chainId: bsc.id,
     },
+] as const satisfies Token[];
+
+const MAINNET_TOKENS = [
+    ...BASE_TOKENS,
+    ...BSC_TOKENS,
     { ...WETH_POLYGON, name: WETH_POLYGON.name!, symbol: WETH_POLYGON.symbol!, category: "native" },
     { ...WBTC_POLYGON, name: WBTC_POLYGON.name!, symbol: WBTC_POLYGON.symbol!, category: "native" },
 ] as const satisfies Token[];
