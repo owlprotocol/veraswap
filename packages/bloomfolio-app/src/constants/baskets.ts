@@ -73,7 +73,7 @@ export const MAINNET_BASKETS = [
     {
         id: "polygon-infra-market-cap",
         address: "0x5516234F75f184205396F2cA854ee7c2Ae367252",
-        title: "Polyong Infra Basket Market Cap",
+        title: "Polygon Infra Basket Market Cap",
         description: "Polygon infrastructure basket allocated with market cap weights.",
         gradient: "from-purple-400 to-red-500",
         icon: DollarSign,
