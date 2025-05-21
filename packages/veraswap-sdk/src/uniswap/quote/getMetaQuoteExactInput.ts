@@ -5,7 +5,7 @@ import { Address, numberToHex } from "viem";
 
 import { metaQuoteExactInputBest } from "../../artifacts/IV4MetaQuoter.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { V4MetaQuoteExactBestReturnType } from "../V4MetaQuoter.js";
+import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../V4MetaQuoter.js";
 
 export interface GetMetaQuoteExactInputParams {
     chainId: number;
@@ -47,4 +47,22 @@ export async function getMetaQuoteExactInput(
     );
 
     return quote;
+}
+
+export async function getMetaQuoteExactInputAmount(
+    queryClient: QueryClient,
+    wagmiConfig: Config,
+    params: GetMetaQuoteExactInputParams,
+): Promise<bigint> {
+    const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = await getMetaQuoteExactInput(
+        queryClient,
+        wagmiConfig,
+        params,
+    );
+    if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.None) {
+        return 0n;
+    } else if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+        return bestQuoteSingle.variableAmount;
+    }
+    return bestQuoteMultihop.variableAmount;
 }
