@@ -30,7 +30,7 @@ contract DeployPolygon is Script {
         // Create conservative basket
         BasketFixedUnits.BasketToken[] memory conservativeBasket = new BasketFixedUnits.BasketToken[](2);
         conservativeBasket[0] = BasketFixedUnits.BasketToken({addr: WBTC, units: 1});
-        conservativeBasket[1] = BasketFixedUnits.BasketToken({addr: WETH, units: 40});
+        conservativeBasket[1] = BasketFixedUnits.BasketToken({addr: WETH, units: 400_000_000_000});
         (address conservativeBasketAddr,) = BasketFixedUnitsUtils.getOrCreate2(
             "Conservative Basket ETH/BTC 50",
             "CB.ETH/BTC.50",

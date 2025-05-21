@@ -56,20 +56,20 @@ export const MAINNET_BASKETS = [
         ],
         symbol: "CB.ETH/BTC.50",
     },
-    {
-        id: "conservative-polygon",
-        address: "0xeDb81715d649D07852f9C10B05aAC7e87b898c32",
-        title: "Conservative Polygon",
-        description: "Conservative 50/50 allocation to BTC and ETH on Polygon.",
-        gradient: "from-green-400 to-blue-500",
-        icon: DollarSign,
-        allocations: [
-            { address: WETH_POLYGON.address, chainId: polygon.id, weight: 50, units: 40n }, // WETH
-
-            { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 1n }, // WBTC
-        ],
-        symbol: "CB.ETH/BTC.50",
-    },
+    // {
+    //     id: "conservative-polygon",
+    //     address: "0xa573145Daab36057E296C73BD81dC5b2782B9389",
+    //     title: "Conservative Polygon",
+    //     description: "Conservative 50/50 allocation to BTC and ETH on Polygon.",
+    //     gradient: "from-green-400 to-blue-500",
+    //     icon: DollarSign,
+    //     allocations: [
+    //         { address: WETH_POLYGON.address, chainId: polygon.id, weight: 50, units: 400_000_000_000n }, // WETH
+    //
+    //         { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 1n }, // WBTC
+    //     ],
+    //     symbol: "CB.ETH/BTC.50",
+    // },
     {
         id: "polygon-infra-market-cap",
         address: "0x5516234F75f184205396F2cA854ee7c2Ae367252",
