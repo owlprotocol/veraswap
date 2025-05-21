@@ -234,6 +234,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             setAmount={setAmount}
                             sendTransaction={sendTransaction}
                             referrer={referrer}
+                            onClose={() => setShowPurchasePanel(false)}
                         />
                     ) : null}
                     <div className="flex items-start justify-between space-x-4">

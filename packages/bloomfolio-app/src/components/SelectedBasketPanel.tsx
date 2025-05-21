@@ -5,12 +5,12 @@ import {
     USD_CURRENCIES,
     getUniswapV4RouteExactIn,
 } from "@owlprotocol/veraswap-sdk";
-import { AlertCircle, ShoppingCart } from "lucide-react";
+import { AlertCircle, ShoppingCart, X } from "lucide-react";
 import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address, numberToHex } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useMemo } from "react";
-import { decimals, getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { getCurrencyHops, tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
@@ -35,6 +35,7 @@ interface SelectedBasketPanel2Props {
     amount: string;
     setAmount: (value: string) => void;
     sendTransaction: any;
+    onClose?: () => void;
 }
 
 export function SelectedBasketPanel({
@@ -44,6 +45,7 @@ export function SelectedBasketPanel({
     amount,
     setAmount,
     sendTransaction,
+    onClose,
 }: SelectedBasketPanel2Props) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -218,7 +220,13 @@ export function SelectedBasketPanel({
 
     if (!basketDetails || !selectedBasketData) {
         return (
-            <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300">
+            <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300 relative">
+                {onClose && (
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={onClose}>
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                    </Button>
+                )}
                 <div className="p-6">
                     <div className="text-center">Loading basket details...</div>
                 </div>
@@ -227,7 +235,13 @@ export function SelectedBasketPanel({
     }
 
     return (
-        <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300">
+        <Card className="border-none shadow-lg overflow-hidden mb-8 animate-in fade-in-50 duration-300 relative">
+            {onClose && (
+                <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10" onClick={onClose}>
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close</span>
+                </Button>
+            )}
             <div className={`bg-gradient-to-r ${selectedBasketData.gradient} h-2`} />
             <div className="p-6 grid grid-cols-1 lg:grid-cols-9 gap-6">
                 <div className="lg:col-span-3">
