@@ -25,8 +25,8 @@ export function WelcomeModal() {
             description: "The onchain crypto basket platform",
             content: (
                 <div className="flex flex-col items-center justify-center py-8">
-                    <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4">
-                        <span className="text-white text-3xl font-bold">V</span>
+                    <div className="w-32 h-32 mb-4">
+                        <img src="/logo_rounded.png" alt="Verabloom Logo" className="w-full h-full object-contain" />
                     </div>
                     <p className="text-center max-w-md text-muted-foreground">
                         Simplify your crypto investments with curated baskets for specific ecosystems and sectors.
