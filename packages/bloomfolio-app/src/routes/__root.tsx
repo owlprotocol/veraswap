@@ -30,7 +30,7 @@ function RootComponent() {
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
                         <ThemeSwitcher />
-                        <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
+                        <ConnectButton showBalance={true} accountStatus="full" chainStatus="icon" />
                     </div>
                     <div className="md:hidden flex-1 flex justify-end">
                         <Button variant="ghost" size="icon" onClick={() => setMenuOpen((prev) => !prev)}>
@@ -45,7 +45,7 @@ function RootComponent() {
                         }`}
                     >
                         <div className="px-4 flex flex-col items-center space-y-3">
-                            <ConnectButton showBalance={false} accountStatus="address" chainStatus="full" />
+                            <ConnectButton showBalance={true} accountStatus="full" chainStatus="full" />
                         </div>
                     </div>
                 </div>
