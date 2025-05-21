@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet, retainSearchParams } from "@tanstack/react-router";
+import { createRootRoute, Outlet, retainSearchParams, Link } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu } from "lucide-react";
 import { useState } from "react";
@@ -27,7 +27,9 @@ function RootComponent() {
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b header-background">
                 <nav className="mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="hidden md:flex flex-1" />
-                    <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraBloom</h1>
+                    <Link to="/" className="hover:opacity-80 transition-opacity">
+                        <h1 className="text-2xl font-bold logo-gradient bg-clip-text text-transparent">VeraBloom</h1>
+                    </Link>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
                         <ThemeSwitcher />
