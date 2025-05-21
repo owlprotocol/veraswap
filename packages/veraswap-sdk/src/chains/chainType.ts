@@ -8,6 +8,7 @@ import { inkSepolia } from "./inkSepolia.js";
 import { interopDevnet0, interopDevnet1 } from "./interopDevnet.js";
 import { optimism } from "./optimism.js";
 import { optimismSepolia } from "./optimismSepolia.js";
+import { polygon } from "./polygon.js";
 import { sepolia } from "./sepolia.js";
 import { superseed } from "./superseed.js";
 import { opChainA, opChainB, opChainL1 } from "./supersim.js";
@@ -17,7 +18,7 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed];
+export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed, polygon];
 
 export const testnetChains = [
     sepolia,
