@@ -7,20 +7,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { shareLink } from "@/utils/shareLink.js";
 
 interface ShareButtonProps {
-    address?: string;
     variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
     size?: "default" | "sm" | "lg" | "icon";
     className?: string;
 }
 
-export function ShareButton({ address, variant = "default", size = "default", className }: ShareButtonProps) {
-    const { isConnected } = useAccount();
+export function ShareButton({ variant = "default", size = "default", className }: ShareButtonProps) {
+    const { isConnected, address: walletAddress } = useAccount();
     const { openConnectModal } = useConnectModal();
     const [isOpen, setIsOpen] = useState(false);
 
     const handleShare = () => {
         shareLink({
-            address,
+            address: walletAddress,
         });
     };
 
