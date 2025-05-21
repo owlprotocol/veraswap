@@ -110,11 +110,18 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
           })
         : [];
 
-    const { percentages, weights, totalValue } = useBasketWeights({
+    const {
+        percentages,
+        weights,
+        totalValue,
+        isError: isErrorBasketWeights,
+    } = useBasketWeights({
         chainId,
         basketDetails: basketDetails ?? [],
         quoteCurrency: getUSDCForChain(chainId),
     });
+
+    console.log({ isErrorBasketWeights });
 
     const userDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
     const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / unitsToQuote : 0n;
@@ -152,12 +159,8 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
     const userShareOfSupply =
         balance && totalSupply ? ((Number(balance.value) / Number(totalSupply)) * 100).toFixed(4) : "0";
 
-    const pricePerShare =
-        totalSupply && totalValue
-            ? (
-                  Number(formattedGlobalDollarValue) / Number(formatUnits(totalSupply, tokenMetadata?.decimals ?? 18))
-              ).toFixed(4)
-            : "0.00";
+    // TODO: use Quoter, using this to align with values in graph
+    const pricePerShare = stats.current.toFixed(4);
 
     const formattedTotalSupply = totalSupply ? formatUnits(totalSupply, tokenMetadata?.decimals ?? 18) : "0";
 
