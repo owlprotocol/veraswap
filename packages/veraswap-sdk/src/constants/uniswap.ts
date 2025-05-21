@@ -1,6 +1,6 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
-import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, sepolia } from "viem/chains";
+import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { PoolManager } from "../artifacts/PoolManager.js";
@@ -201,5 +201,13 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0x97337d1C732FC10C809Ac28C6d2D787c8cA2dFC9",
         v4Quoter: "0xCDe42b22b921554558f2257a7D519E27b4140ac1",
         universalRouter: "0x0ad4F5c45F4ad1BcB1c0284dFe9bAb22dC08Dccc",
+    },
+    [polygon.id]: {
+        v4PoolManager: "0x67366782805870060151383F4BbFF9daB53e5cD6",
+        v4PositionManager: "0x1Ec2eBf4F37E7363FDfe3551602425af0B3ceef9",
+        v4StateView: "0x425BbF3cF4df231Da3F29555f72dD8F29465E4ee",
+        v4Quoter: "0x5bBD5339998c060d421Db3c48194B2aDDa3BAc30",
+        universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
+        v4MetaQuoter: "0x3e0878e6c9ca920b83a8c5d51a7a32ba18cf4449",
     },
 } as const;
