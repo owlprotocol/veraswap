@@ -42,10 +42,10 @@ export interface Basket {
 
 export const MAINNET_BASKETS = [
     {
-        id: "conservative-old",
+        id: "conservative",
         address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
-        title: "Conservative",
-        description: "Conservative 50/50 allocation to BTC and ETH.",
+        title: "Conservative BSC",
+        description: "Conservative 50/50 allocation to BTC and ETH on BSC.",
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
@@ -57,10 +57,10 @@ export const MAINNET_BASKETS = [
         symbol: "CB.ETH/BTC.50",
     },
     {
-        id: "conservative",
+        id: "conservative-polygon",
         address: "0xeDb81715d649D07852f9C10B05aAC7e87b898c32",
-        title: "Conservative",
-        description: "Conservative 50/50 allocation to BTC and ETH.",
+        title: "Conservative Polygon",
+        description: "Conservative 50/50 allocation to BTC and ETH on Polygon.",
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
