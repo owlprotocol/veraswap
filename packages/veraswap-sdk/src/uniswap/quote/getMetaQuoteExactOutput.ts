@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, queryOptions } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { Address, numberToHex } from "viem";
@@ -44,6 +44,23 @@ export function getMetaQuoteExactOutputQueryOptions(wagmiConfig: Config, params:
                 poolKeyOptions,
             } as const,
         ],
+    });
+}
+
+export function getMetaQuoteExactOutputAmountQueryOptions(wagmiConfig: Config, params: GetMetaQuoteExactOutputParams) {
+    return queryOptions({
+        ...getMetaQuoteExactOutputQueryOptions(wagmiConfig, params),
+        select: (data) => {
+            if (!data) return null;
+
+            const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = data;
+            if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.None) {
+                return 0n;
+            } else if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+                return bestQuoteSingle.variableAmount;
+            }
+            return bestQuoteMultihop.variableAmount;
+        },
     });
 }
 
