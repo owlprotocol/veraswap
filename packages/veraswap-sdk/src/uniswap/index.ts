@@ -1,4 +1,5 @@
 export * from "./constants/index.js";
+export * from "./quote/index.js";
 export * from "./routing/index.js";
 
 export * from "./getRouteMultichain.js";
