@@ -33,7 +33,8 @@ import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
 
-import { getBasketMint, getBasketMintQuote } from "./getBasketMint.js";
+import { getBasketMint } from "./getBasketMint.js";
+import { getBasketMintQuote } from "./getBasketMintQuote.js";
 
 describe("basket/getBasketMint.test.ts", function () {
     const config = createConfig({
