@@ -43,7 +43,8 @@ export function SelectedBasketPanel({
 }: SelectedBasketPanel2Props) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
-    const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
+
+    const { data: balance, isLoading: isBalanceLoading } = useBalance({ address, chainId: basketChainId });
     const { switchChain } = useSwitchChain();
     const { openConnectModal } = useConnectModal();
 
