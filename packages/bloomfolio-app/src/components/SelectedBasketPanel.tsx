@@ -292,7 +292,7 @@ export function SelectedBasketPanel({
 
                         <div className="pt-2 flex items-center justify-between gap-2">
                             <Button
-                                className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                                className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white"
                                 size="sm"
                                 onClick={
                                     !isConnected
@@ -311,16 +311,21 @@ export function SelectedBasketPanel({
                                             !selectedBasketData))
                                 }
                             >
-                                <ShoppingCart className="mr-1 h-4 w-4" />
-                                {!isAmountValid
-                                    ? "Enter Amount"
-                                    : !isConnected
-                                      ? "Connect Wallet"
-                                      : !basketChain || chainId !== basketChain.id
-                                        ? "Switch Network"
-                                        : hasInsufficientBalance
-                                          ? "Insufficient Balance"
-                                          : "Buy Now"}
+                                {!isAmountValid ? (
+                                    "Enter Amount"
+                                ) : !isConnected ? (
+                                    "Connect Wallet"
+                                ) : !basketChain || chainId !== basketChain.id ? (
+                                    "Switch Network"
+                                ) : hasInsufficientBalance ? (
+                                    "Insufficient Balance"
+                                ) : (
+                                    <>
+                                        {" "}
+                                        <ShoppingCart className="mr-1 h-4 w-4" />
+                                        Buy Now{" "}
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>
