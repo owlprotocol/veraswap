@@ -1,11 +1,19 @@
-import { DollarSign, Globe, Bitcoin, Rocket, Dog, Coins } from "lucide-react";
-import { Address, encodeDeployData, parseUnits, zeroAddress, zeroHash } from "viem";
+import { DollarSign, Rocket, Dog } from "lucide-react";
+import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { base, bsc, polygon } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { BSC_TOKENS, tokenBAddress, tokenAAddress } from "./tokens.js";
 import { WBTC_POLYGON, WETH_POLYGON } from "@owlprotocol/veraswap-sdk";
+import {
+    tokenBAddress,
+    tokenAAddress,
+    aavePolygonAddress,
+    ldoPolygonAddress,
+    linkPolygonAddress,
+    uniPolygonAddress,
+    BSC_TOKENS,
+} from "./tokens.js";
 
 export interface BasketAllocation {
     address: Address;
@@ -33,21 +41,21 @@ export interface Basket {
 }
 
 export const MAINNET_BASKETS = [
-    // {
-    //     id: "conservative",
-    //     address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
-    //     title: "Conservative",
-    //     description: "Conservative 50/50 allocation to BTC and ETH.",
-    //     gradient: "from-green-400 to-blue-500",
-    //     icon: DollarSign,
-    //     allocations: [
-    //         { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: 40n }, // WETH
-    //
-    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: 5n }, // WBNB
-    //         { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: 1n }, // BTCB
-    //     ],
-    //     symbol: "CB.ETH/BTC.50",
-    // },
+    {
+        id: "conservative-old",
+        address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
+        title: "Conservative",
+        description: "Conservative 50/50 allocation to BTC and ETH.",
+        gradient: "from-green-400 to-blue-500",
+        icon: DollarSign,
+        allocations: [
+            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: 40n }, // WETH
+
+            // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: 5n }, // WBNB
+            { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: 1n }, // BTCB
+        ],
+        symbol: "CB.ETH/BTC.50",
+    },
     {
         id: "conservative",
         address: "0xeDb81715d649D07852f9C10B05aAC7e87b898c32",
@@ -61,6 +69,21 @@ export const MAINNET_BASKETS = [
             { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 1n }, // WBTC
         ],
         symbol: "CB.ETH/BTC.50",
+    },
+    {
+        id: "polygon-infra-market-cap",
+        address: "0x5516234F75f184205396F2cA854ee7c2Ae367252",
+        title: "Polyong Infra Basket Market Cap",
+        description: "Polygon infrastructure basket allocated with market cap weights.",
+        gradient: "from-purple-400 to-red-500",
+        icon: DollarSign,
+        allocations: [
+            { address: linkPolygonAddress, chainId: polygon.id, weight: 55, units: 1000n },
+            { address: uniPolygonAddress, chainId: polygon.id, weight: 20, units: 1000n },
+            { address: ldoPolygonAddress, chainId: polygon.id, weight: 20, units: 7000n },
+            { address: aavePolygonAddress, chainId: polygon.id, weight: 5, units: 6n },
+        ],
+        symbol: "PIB.MC",
     },
     {
         id: "khan",
