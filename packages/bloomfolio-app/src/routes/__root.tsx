@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
 import { Button } from "@/components/ui/button.js";
+import { WelcomeModal } from "@/components/WelcomeModal.js";
 
 const rootSearchSchema = z.object({
     referrer: z.string().optional(),
@@ -54,6 +55,7 @@ function RootComponent() {
             <main className="pt-10 pb-8">
                 <Outlet />
             </main>
+            <WelcomeModal />
         </div>
     );
 }
