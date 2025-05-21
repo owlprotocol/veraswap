@@ -5,7 +5,7 @@ import { useAccount, useBalance, useReadContract } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
 import { zeroAddress, formatUnits, Address, erc20Abi } from "viem";
-import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { decimals, getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
     tokenDataQueryOptions,
@@ -17,6 +17,8 @@ import {
     USDC_ARBITRUM,
     USDC,
     getChainById,
+    USDT_BSC,
+    USDT,
 } from "@owlprotocol/veraswap-sdk";
 import { arbitrum, bsc, optimism, mainnet, base, polygon } from "viem/chains";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
@@ -46,19 +48,14 @@ interface BasketPageProps {
     };
 }
 // TODO: fix, temporary
-const USDC_ADDRESSES = {
-    [mainnet.id]: USDC_MAINNET.address,
-    [bsc.id]: USDC_BSC.address,
-    [optimism.id]: USDC_OPTIMISM.address,
-    [base.id]: USDC_BASE.address,
-    [polygon.id]: USDC_POLYGON.address,
-    [arbitrum.id]: USDC_ARBITRUM.address,
-} as const;
-
-const getUSDCForChain = (chainId: number): Address | undefined => {
-    const address = USDC_ADDRESSES[chainId];
-    return address ?? undefined;
-};
+const USD_CURRENCIES = {
+    [mainnet.id]: { address: USDC_MAINNET.address, decimals: USDC.decimals },
+    [bsc.id]: { address: USDT_BSC.address, decimals: USDT.decimals },
+    [optimism.id]: { address: USDC_OPTIMISM.address, decimals: USDC.decimals },
+    [base.id]: { address: USDC_BASE.address, decimals: USDC.decimals },
+    [polygon.id]: { address: USDC_POLYGON.address, decimals: USDC.decimals },
+    [arbitrum.id]: { address: USDC_ARBITRUM.address, decimals: USDC.decimals },
+} as const as Record<number, { address: Address; decimals: number } | undefined>;
 
 export const BasketPage = ({ chainId, address, details, referrer }: BasketPageProps) => {
     const [showPurchasePanel, setShowPurchasePanel] = useState(false);
@@ -93,8 +90,6 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
 
     const { data: tokenMetadata } = useSuspenseQuery(tokenDataQueryOptions(config, { chainId, address }));
 
-    console.log({ tokenMetadata, basketDetails });
-
     const performanceData = tokenPrices
         ? tokenPrices?.map(({ timestamp, prices }) => {
               const value =
@@ -113,7 +108,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
     const { percentages, weights, totalValue } = useBasketWeights({
         chainId,
         basketDetails: basketDetails ?? [],
-        quoteCurrency: getUSDCForChain(chainId),
+        quoteCurrency: USD_CURRENCIES[chainId],
     });
 
     const userDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;

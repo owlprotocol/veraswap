@@ -5,11 +5,11 @@ import { useGetTokenValues } from "./useGetTokenValues.js";
 export function useBasketWeights({
     chainId,
     basketDetails,
-    quoteCurrency = zeroAddress,
+    quoteCurrency = { address: zeroAddress, decimals: 18 },
 }: {
     chainId: number;
     basketDetails: readonly { addr: Address; units: bigint }[];
-    quoteCurrency?: Address;
+    quoteCurrency?: { address: Address; decimals: number };
 }) {
     const {
         data: tokenValues,

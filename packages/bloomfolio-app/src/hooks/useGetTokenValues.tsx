@@ -9,6 +9,7 @@ import { useQueries } from "@tanstack/react-query";
 
 import { metaQuoteExactOutputBest } from "@owlprotocol/veraswap-sdk/artifacts/IV4MetaQuoter";
 import { readContractQueryOptions } from "wagmi/query";
+import { BigNumber } from "@ethersproject/bignumber";
 import { config } from "@/config.js";
 import { getCurrencyHops } from "@/constants/tokens.js";
 
@@ -21,7 +22,7 @@ export function useGetTokenValues({
 }: {
     chainId: number;
     basketDetails: readonly { addr: Address; units: bigint }[];
-    quoteCurrency: Address;
+    quoteCurrency: { address: Address; decimals: number };
 }) {
     const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter!;
     const hopCurrencies = getCurrencyHops(chainId);
@@ -37,17 +38,22 @@ export function useGetTokenValues({
                 // @ts-expect-error wrong type since query key can't have a bigint
                 args: [
                     {
-                        exactAmount: numberToHex(allocation.units * unitsToQuote),
-                        exactCurrency: allocation.addr,
-                        variableCurrency: quoteCurrency,
-                        hopCurrencies,
+                        // exactAmount: numberToHex(allocation.units * unitsToQuote),
+                        exactAmount: numberToHex(10n ** BigInt(quoteCurrency.decimals)),
+                        // exactCurrency: allocation.addr,
+                        // variableCurrency: quoteCurrency,
+                        exactCurrency: quoteCurrency.address,
+                        variableCurrency: allocation.addr,
+                        hopCurrencies: hopCurrencies.filter(
+                            (c) => c !== quoteCurrency.address && c !== allocation.addr,
+                        ),
                         poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
                     },
                 ] as V4MetaQuoteExactBestParams,
             }),
         ),
         combine: (results) => ({
-            data: results.map((result) => {
+            data: results.map((result, idx) => {
                 if (!result.data) return 0n;
                 // @ts-ignore result.data does exist
                 const data = result.data as V4MetaQuoteExactBestReturnType;
@@ -55,7 +61,12 @@ export function useGetTokenValues({
                 const bestSwap = data[2];
                 if (bestSwap === 0) return 0n;
 
-                return data[(bestSwap - 1) as 0 | 1].variableAmount;
+                const variableAmount = data[(bestSwap - 1) as 0 | 1].variableAmount;
+                const units = basketDetails[idx].units;
+
+                return BigNumber.from(variableAmount as unknown as number)
+                    .div(units as unknown as number)
+                    .toBigInt();
             }),
             pending: results.some((result) => result.isPending),
         }),
