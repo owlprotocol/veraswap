@@ -251,22 +251,6 @@ export function SelectedBasketPanel({
                                 <span className="text-sm">Connect wallet to proceed with purchase</span>
                             </div>
                         )}
-                        {isConnected && basketChain && chainId !== basketChain.id && (
-                            <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <span className="text-sm">Please switch to {basketChain.name}</span>
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => switchChain({ chainId: basketChain.id })}
-                                    className="ml-2"
-                                >
-                                    Switch Network
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 </div>
 
