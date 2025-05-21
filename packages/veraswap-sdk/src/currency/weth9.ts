@@ -4,7 +4,7 @@ const wETHData = {
     decimals: 18,
     symbol: "WETH",
     name: "Wrapped Ether",
-    logoURI: "https://assets.coingecko.com/coins/images/2518/standard/weth.png",
+    logoURI: "https://coin-images.coingecko.com/coins/images/39708/large/WETH.PNG",
 };
 
 /**

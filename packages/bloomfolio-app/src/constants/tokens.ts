@@ -1,11 +1,13 @@
 import { Address, zeroAddress } from "viem";
-import { base, bsc } from "viem/chains";
+import { base, bsc, polygon } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import {
     getMockERC20Address,
     USDC_BASE,
     USDC_BSC,
+    USDC_POLYGON,
     USDT_BSC,
+    USDT_POLYGON,
     WBTC_POLYGON,
     WETH_POLYGON,
 } from "@owlprotocol/veraswap-sdk";
@@ -21,6 +23,11 @@ export interface Token {
     decimals?: number;
     chainId: number;
 }
+
+export const linkPolygonAddress = "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39" as const;
+export const uniPolygonAddress = "0xb33EaAd8d922B1083446DC23f610c2567fB5180f" as const;
+export const ldoPolygonAddress = "0xC3C7d422809852031b44ab29EEC9F1EfF2A58756" as const;
+export const aavePolygonAddress = "0xD6DF932A45C0f255f85145f286eA0b292B21C90B" as const;
 
 export const BASE_TOKENS = [
     {
@@ -121,7 +128,7 @@ export const BSC_TOKENS = [
         address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
         symbol: "WETH",
         name: "Wrapped Ether",
-        logoURI: "https://token-icons.s3.amazonaws.com/eth.png",
+        logoURI: "https://coin-images.coingecko.com/coins/images/39708/large/WETH.PNG",
         category: "native",
         chainId: bsc.id,
     },
@@ -174,12 +181,51 @@ export const BSC_TOKENS = [
         category: "alt",
         chainId: bsc.id,
     },
+    {
+        address: linkPolygonAddress,
+        symbol: "LINK",
+        name: "Chainlink",
+        logoURI: "https://coin-images.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
+        category: "alt",
+        chainId: polygon.id,
+    },
+    {
+        address: uniPolygonAddress,
+        symbol: "UNI",
+        name: "Uniswap",
+        logoURI:
+            "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png",
+        category: "alt",
+        chainId: polygon.id,
+    },
+    {
+        address: ldoPolygonAddress,
+        symbol: "LDO",
+        name: "Lido DAO Token (PoS)",
+        logoURI: "https://coin-images.coingecko.com/coins/images/13573/large/Lido_DAO.png",
+        category: "alt",
+        chainId: polygon.id,
+    },
+    {
+        address: aavePolygonAddress,
+        symbol: "AAVE",
+        name: "Aave (PoS)",
+        logoURI: "https://coin-images.coingecko.com/coins/images/12645/large/aave-token-round.png",
+        category: "alt",
+        chainId: polygon.id,
+    },
 ] as const satisfies Token[];
 
 const MAINNET_TOKENS = [
     ...BASE_TOKENS,
     ...BSC_TOKENS,
-    { ...WETH_POLYGON, name: WETH_POLYGON.name!, symbol: WETH_POLYGON.symbol!, category: "native" },
+    {
+        ...WETH_POLYGON,
+        name: WETH_POLYGON.name!,
+        symbol: WETH_POLYGON.symbol!,
+        category: "native",
+        logoURI: "https://coin-images.coingecko.com/coins/images/39708/large/WETH.PNG",
+    },
     { ...WBTC_POLYGON, name: WBTC_POLYGON.name!, symbol: WBTC_POLYGON.symbol!, category: "native" },
 ] as const satisfies Token[];
 
@@ -210,6 +256,7 @@ export const TOKENS = import.meta.env.MODE === "development" ? [...MAINNET_TOKEN
 export function getCurrencyHops(chainId: number) {
     if (chainId === bsc.id) return [USDC_BSC.address, USDT_BSC.address, zeroAddress];
     if (chainId === base.id) return [USDC_BASE.address, zeroAddress];
+    if (chainId === polygon.id) return [USDC_POLYGON.address, USDT_POLYGON.address, zeroAddress];
 
     return [zeroAddress];
 }

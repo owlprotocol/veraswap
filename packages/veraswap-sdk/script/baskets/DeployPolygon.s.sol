@@ -19,6 +19,7 @@ contract DeployPolygon is Script {
 
         (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
 
+        // Conservative Basket
         address WBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
         address WETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
 
@@ -55,6 +56,47 @@ contract DeployPolygon is Script {
                 ExecuteSweep(payable(executeSweep)).approveAll(token, conservativeBasketAddr);
             }
         }
+
+        // Polygon Infra Basket By Market Cap
+        address LINK = 0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39;
+        address UNI = 0xb33EaAd8d922B1083446DC23f610c2567fB5180f;
+        address LDO = 0xC3C7d422809852031b44ab29EEC9F1EfF2A58756;
+        address AAVE = 0xD6DF932A45C0f255f85145f286eA0b292B21C90B;
+
+        address[] memory infraTokens = new address[](4);
+        infraTokens[0] = LINK;
+        infraTokens[1] = UNI;
+        infraTokens[2] = LDO;
+        infraTokens[3] = AAVE;
+
+        // Create infra basket
+        BasketFixedUnits.BasketToken[] memory infraBasket = new BasketFixedUnits.BasketToken[](4);
+        infraBasket[0] = BasketFixedUnits.BasketToken({addr: LINK, units: 1000});
+        infraBasket[1] = BasketFixedUnits.BasketToken({addr: UNI, units: 1000});
+        infraBasket[2] = BasketFixedUnits.BasketToken({addr: LDO, units: 7000});
+        infraBasket[3] = BasketFixedUnits.BasketToken({addr: AAVE, units: 6});
+        (address infraBasketAddr,) = BasketFixedUnitsUtils.getOrCreate2(
+            "Polyong Infra Basket Market Cap", "PIB.MC", 0xAAb6f44B46f19d061582727B66C9a0c84C97a2F6, 5_000, infraBasket
+        );
+
+        console2.log("Infra basket on bsc:", infraBasketAddr);
+
+        for (uint256 i = 0; i < infraTokens.length; i++) {
+            address token = infraTokens[i];
+
+            uint256 allowancePermit2 = IERC20(token).allowance(executeSweep, Permit2Utils.permit2);
+            if (allowancePermit2 == 0) {
+                ExecuteSweep(payable(executeSweep)).approveAll(token, Permit2Utils.permit2);
+            }
+
+            (uint160 allowance,,) =
+                IAllowanceTransfer(Permit2Utils.permit2).allowance(executeSweep, token, infraBasketAddr);
+
+            if (allowance == 0) {
+                ExecuteSweep(payable(executeSweep)).approveAll(token, infraBasketAddr);
+            }
+        }
+
         vm.stopBroadcast();
     }
 }
