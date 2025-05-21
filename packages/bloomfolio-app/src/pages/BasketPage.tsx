@@ -4,8 +4,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaCh
 import { useAccount, useBalance, useReadContract } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
-import { zeroAddress, formatUnits, Address } from "viem";
-import * as chains from "viem/chains";
+import { zeroAddress, formatUnits, Address, erc20Abi } from "viem";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -16,7 +15,10 @@ import {
     USDC_BASE,
     USDC_POLYGON,
     USDC_ARBITRUM,
+    USDC,
+    getChainById,
 } from "@owlprotocol/veraswap-sdk";
+import { arbitrum, bsc, optimism, mainnet, base, polygon } from "viem/chains";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
@@ -45,12 +47,12 @@ interface BasketPageProps {
 }
 // TODO: fix, temporary
 const USDC_ADDRESSES = {
-    1: USDC_MAINNET.address,
-    56: USDC_BSC.address,
-    10: USDC_OPTIMISM.address,
-    8453: USDC_BASE.address,
-    137: USDC_POLYGON.address,
-    42161: USDC_ARBITRUM.address,
+    [mainnet.id]: USDC_MAINNET.address,
+    [bsc.id]: USDC_BSC.address,
+    [optimism.id]: USDC_OPTIMISM.address,
+    [base.id]: USDC_BASE.address,
+    [polygon.id]: USDC_POLYGON.address,
+    [arbitrum.id]: USDC_ARBITRUM.address,
 } as const;
 
 const getUSDCForChain = (chainId: number): Address | undefined => {
@@ -67,6 +69,13 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         address: userAddress,
         token: address,
         chainId,
+    });
+
+    const { data: totalSupply } = useReadContract({
+        chainId,
+        address,
+        abi: erc20Abi,
+        functionName: "totalSupply",
     });
 
     const { data: basketDetails } = useReadContract({
@@ -107,9 +116,50 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         quoteCurrency: getUSDCForChain(chainId),
     });
 
-    const totalDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
+    const userDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
+    const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / unitsToQuote : 0n;
 
-    const formattedDollarValue = formatUnits(totalDollarValue, 18);
+    const formattedDollarValue = formatUnits(userDollarValue, USDC.decimals);
+    const formattedGlobalDollarValue = formatUnits(globalDollarValue, USDC.decimals);
+
+    const calculateStats = (data: typeof performanceData) => {
+        if (!data.length) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
+
+        const firstValue = data[0].value;
+        const lastValue = data[data.length - 1].value;
+
+        if (!firstValue || !lastValue) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
+
+        return {
+            current: lastValue,
+            start: firstValue,
+        };
+    };
+
+    const stats = calculateStats(performanceData);
+    const chain = getChainById(chainId);
+    const explorerUrl = chain?.blockExplorers?.default?.url;
+
+    const basketAllocations =
+        basketDetails?.map((token, idx) => ({
+            address: token.addr,
+            units: token.units,
+            percentage: percentages?.[idx] ?? 0,
+            weight: weights?.[idx] ?? 0,
+            chainId,
+        })) ?? [];
+
+    const userShareOfSupply =
+        balance && totalSupply ? ((Number(balance.value) / Number(totalSupply)) * 100).toFixed(4) : "0";
+
+    const pricePerShare =
+        totalSupply && totalValue
+            ? (
+                  Number(formattedGlobalDollarValue) / Number(formatUnits(totalSupply, tokenMetadata?.decimals ?? 18))
+              ).toFixed(4)
+            : "0.00";
+
+    const formattedTotalSupply = totalSupply ? formatUnits(totalSupply, tokenMetadata?.decimals ?? 18) : "0";
 
     const handleSellAll = () => {
         // TODO: implement
@@ -131,14 +181,6 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
             </div>
         );
     }
-
-    const basketAllocations = basketDetails.map((token, idx) => ({
-        address: token.addr,
-        units: token.units,
-        percentage: percentages[idx],
-        weight: weights[idx],
-        chainId,
-    }));
 
     const groupAllocationsByCategory = (allocations: BasketPercentageAllocation[]) => {
         const grouped = allocations.reduce(
@@ -175,7 +217,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                         <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                         <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                         <Badge variant="secondary" className="ml-2">
-                            {categoryPercentage.toFixed(3)}%
+                            {categoryPercentage.toFixed(4)}%
                         </Badge>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform duration-200" />
@@ -201,25 +243,6 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
             </Collapsible>
         );
     };
-
-    const calculateStats = (data: typeof performanceData) => {
-        if (!data.length) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
-
-        const firstValue = data[0].value;
-        const lastValue = data[data.length - 1].value;
-
-        if (!firstValue || !lastValue) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
-
-        return {
-            current: lastValue,
-            start: firstValue,
-        };
-    };
-
-    const stats = calculateStats(performanceData);
-
-    const chain = chainId ? Object.values(chains).find((c) => c.id === chainId) : undefined;
-    const explorerUrl = chain?.blockExplorers?.default?.url;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-background/50">
@@ -349,7 +372,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                                                                 Value:
                                                                             </span>
                                                                             <span className="font-medium">
-                                                                                ${value.toFixed(2)}
+                                                                                ${value.toFixed(4)}
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -377,7 +400,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                         {isLoading ? (
                                             <Skeleton className="h-6 w-24" />
                                         ) : (
-                                            <div className="text-lg font-semibold">${stats.current.toFixed(2)}</div>
+                                            <div className="text-lg font-semibold">${stats.current.toFixed(4)}</div>
                                         )}
                                     </div>
                                     <div className="space-y-1">
@@ -385,7 +408,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                         {isLoading ? (
                                             <Skeleton className="h-6 w-24" />
                                         ) : (
-                                            <div className="text-lg font-semibold">${stats.start.toFixed(2)}</div>
+                                            <div className="text-lg font-semibold">${stats.start.toFixed(4)}</div>
                                         )}
                                     </div>
                                 </div>
@@ -406,51 +429,122 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                     </div>
 
                     <div className="space-y-6">
+                        {userAddress && address !== zeroAddress && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Your Position</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm text-muted-foreground">Your Balance</div>
+                                            {balance && balance.value > 0n && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handleSellAll}
+                                                    size="sm"
+                                                    className="h-7"
+                                                >
+                                                    Sell All
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="text-xl font-bold">
+                                            {balance
+                                                ? `${formatUnits(balance.value, balance.decimals)} ${balance.symbol}`
+                                                : "0"}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-muted-foreground">Your Value</div>
+                                        <div className="text-xl font-bold">
+                                            ${Number(formattedDollarValue).toFixed(4)}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-muted-foreground">Share of Supply</div>
+                                        <div className="text-xl font-bold">{userShareOfSupply}%</div>
+                                    </div>
+                                    {balance && balance.value > 0n && (
+                                        <>
+                                            <Separator />
+                                            <div className="space-y-2">
+                                                <div className="text-sm font-medium">Your Token Allocations</div>
+                                                <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-1">
+                                                    <div>Token</div>
+                                                    <div className="text-right">Allocation</div>
+                                                    <div className="text-right">Your Value</div>
+                                                </div>
+                                                {basketAllocations
+                                                    .sort((a, b) => b.weight - a.weight)
+                                                    .map((allocation: BasketPercentageAllocation) => {
+                                                        const token = getTokenDetailsForAllocation(allocation, TOKENS);
+                                                        if (!token) return null;
+                                                        const userTokenValue =
+                                                            Number(formattedDollarValue) * (allocation.weight / 100);
+                                                        return (
+                                                            <div
+                                                                key={token.address}
+                                                                className="grid grid-cols-3 gap-2 items-center"
+                                                            >
+                                                                <div className="flex items-center space-x-2">
+                                                                    <img
+                                                                        src={token.logoURI}
+                                                                        alt={token.symbol}
+                                                                        className="w-6 h-6 rounded-full"
+                                                                    />
+                                                                    <span className="font-medium">{token.symbol}</span>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <Badge variant="outline">
+                                                                        {allocation.percentage}%
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="text-right font-medium">
+                                                                    ${userTokenValue.toFixed(4)}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                            </div>
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Quick Stats</CardTitle>
+                                <CardTitle>Basket Stats</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {userAddress && address !== zeroAddress && (
-                                    <>
-                                        <div className="space-y-1">
-                                            <div className="flex items-center justify-between">
-                                                <div className="text-sm text-muted-foreground">Your Balance</div>
-                                                {balance && balance.value > 0n && (
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={handleSellAll}
-                                                        size="sm"
-                                                        className="h-7"
-                                                    >
-                                                        Sell All
-                                                    </Button>
-                                                )}
-                                            </div>
-                                            <div className="text-xl font-bold">
-                                                {balance
-                                                    ? `${formatUnits(balance.value, balance.decimals)} ${balance.symbol}`
-                                                    : "0"}
-                                            </div>
-                                        </div>
-                                        <Separator />
-                                    </>
-                                )}
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-3">
                                     <div className="space-y-1">
                                         <div className="text-sm text-muted-foreground">Total Assets</div>
                                         <div className="text-2xl font-bold">{basketAllocations.length}</div>
                                     </div>
                                     <div className="space-y-1">
-                                        <div className="text-sm text-muted-foreground">Total Value</div>
+                                        <div className="text-sm text-muted-foreground">Total Supply</div>
+                                        <div className="text-2xl font-bold">{formattedTotalSupply}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-muted-foreground">Price Per Share</div>
+                                        <div className="text-2xl font-bold">${pricePerShare}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-muted-foreground">Total Value Locked (TVL)</div>
                                         <div className="text-2xl font-bold">
-                                            ${Number(formattedDollarValue).toFixed(2)}
+                                            ${Number(formattedGlobalDollarValue).toFixed(4)}
                                         </div>
                                     </div>
                                 </div>
                                 <Separator />
                                 <div className="space-y-2">
                                     <div className="text-sm font-medium">Top Holdings</div>
+                                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-1">
+                                        <div>Token</div>
+                                        <div className="text-right">Allocation</div>
+                                        <div className="text-right">Value Locked</div>
+                                    </div>
                                     {basketAllocations
                                         .sort((a, b) => b.weight - a.weight)
                                         .slice(0, 3)
@@ -458,7 +552,10 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                             const token = getTokenDetailsForAllocation(allocation, TOKENS);
                                             if (!token) return null;
                                             return (
-                                                <div key={token.address} className="flex items-center justify-between">
+                                                <div
+                                                    key={token.address}
+                                                    className="grid grid-cols-3 gap-2 items-center"
+                                                >
                                                     <div className="flex items-center space-x-2">
                                                         <img
                                                             src={token.logoURI}
@@ -467,7 +564,16 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                                                         />
                                                         <span className="font-medium">{token.symbol}</span>
                                                     </div>
-                                                    <Badge variant="outline">{allocation.percentage}%</Badge>
+                                                    <div className="text-right">
+                                                        <Badge variant="outline">{allocation.percentage}%</Badge>
+                                                    </div>
+                                                    <div className="text-right font-medium">
+                                                        $
+                                                        {(
+                                                            Number(formattedGlobalDollarValue) *
+                                                            (allocation.weight / 100)
+                                                        ).toFixed(4)}
+                                                    </div>
                                                 </div>
                                             );
                                         })}

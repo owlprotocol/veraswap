@@ -24,7 +24,7 @@ export function useBasketWeights({
     const isError = tokenValues.some((value) => value === 0n);
 
     const calculatedData = useMemo(() => {
-        if (!tokenValues || tokenValues.length === 0) {
+        if (!tokenValues || tokenValues.length === 0 || isError) {
             return {
                 totalValue: 0n,
                 weights: [],
@@ -52,7 +52,7 @@ export function useBasketWeights({
             percentages,
             isReady: true,
         };
-    }, [tokenValues]);
+    }, [tokenValues, isError]);
 
     return {
         ...calculatedData,
