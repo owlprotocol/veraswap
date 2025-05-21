@@ -5,11 +5,11 @@ import { useGetTokenValues } from "./useGetTokenValues.js";
 export function useBasketWeights({
     chainId,
     basketDetails,
-    quoteCurrency = zeroAddress,
+    quoteCurrency = { address: zeroAddress, decimals: 18 },
 }: {
     chainId: number;
     basketDetails: readonly { addr: Address; units: bigint }[];
-    quoteCurrency?: Address;
+    quoteCurrency?: { address: Address; decimals: number };
 }) {
     const {
         data: tokenValues,
@@ -24,7 +24,7 @@ export function useBasketWeights({
     const isError = tokenValues.some((value) => value === 0n);
 
     const calculatedData = useMemo(() => {
-        if (!tokenValues || tokenValues.length === 0) {
+        if (!tokenValues || tokenValues.length === 0 || isError) {
             return {
                 totalValue: 0n,
                 weights: [],
@@ -33,6 +33,7 @@ export function useBasketWeights({
             };
         }
 
+        // Total value for units quoted (unitsToQuote)
         const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n);
 
         const weights =
@@ -52,7 +53,7 @@ export function useBasketWeights({
             percentages,
             isReady: true,
         };
-    }, [tokenValues]);
+    }, [tokenValues, isError]);
 
     return {
         ...calculatedData,

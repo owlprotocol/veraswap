@@ -39,6 +39,7 @@
   "dependencies": {
     "@codex-data/sdk": "^1.0.7",
     "@coinbase/onchainkit": "^0.37.4",
+    "@ethersproject/bignumber": "^5.8.0",
     "@hookform/resolvers": "^3.3.4",
     "@hyperlane-xyz/registry": "^10.2.0",
     "@owlprotocol/contracts-hyperlane": "latest",

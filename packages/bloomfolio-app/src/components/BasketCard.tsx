@@ -29,7 +29,7 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
     const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
         chainId: basketChainId,
         basketDetails: basketDetails ?? [],
-        quoteCurrency: zeroAddress,
+        quoteCurrency: { address: zeroAddress, decimals: 18 },
     });
 
     const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
