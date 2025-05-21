@@ -3,9 +3,8 @@ import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import { Address, numberToHex } from "viem";
 
-import { metaQuoteExactInputBest } from "../../artifacts/IV4MetaQuoter.js";
-import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../V4MetaQuoter.js";
+import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../../types/PoolKey.js";
+import { metaQuoteExactInputBest, V4MetaQuoteBestType } from "../V4MetaQuoter.js";
 
 export interface GetMetaQuoteExactInputParams {
     chainId: number;
@@ -19,34 +18,41 @@ export interface GetMetaQuoteExactInputParams {
     poolKeyOptions?: PoolKeyOptions[];
 }
 
+export function getMetaQuoteExactInputQueryOptions(wagmiConfig: Config, params: GetMetaQuoteExactInputParams) {
+    const {
+        chainId,
+        currencyOut,
+        amountIn,
+        currencyIn,
+        contracts,
+        currencyHops,
+        poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),
+    } = params;
+
+    return readContractQueryOptions(wagmiConfig, {
+        chainId,
+        address: contracts.v4MetaQuoter,
+        abi: [metaQuoteExactInputBest],
+        functionName: "metaQuoteExactInputBest",
+        args: [
+            {
+                exactCurrency: currencyOut,
+                variableCurrency: currencyIn,
+                hopCurrencies: currencyHops.filter((hopToken) => hopToken !== currencyOut && hopToken !== currencyIn),
+                exactAmount: numberToHex(amountIn) as unknown as bigint,
+                // @ts-expect-error Viem type inference issue
+                poolKeyOptions,
+            } as const,
+        ],
+    });
+}
+
 export async function getMetaQuoteExactInput(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetMetaQuoteExactInputParams,
-): Promise<V4MetaQuoteExactBestReturnType> {
-    const { chainId, currencyOut, amountIn, currencyIn, contracts, currencyHops, poolKeyOptions } = params;
-
-    const quote = await queryClient.fetchQuery(
-        readContractQueryOptions(wagmiConfig, {
-            chainId,
-            address: contracts.v4MetaQuoter,
-            abi: [metaQuoteExactInputBest],
-            functionName: "metaQuoteExactInputBest",
-            args: [
-                {
-                    exactCurrency: currencyOut,
-                    variableCurrency: currencyIn,
-                    hopCurrencies: currencyHops.filter(
-                        (hopToken) => hopToken !== currencyOut && hopToken !== currencyIn,
-                    ),
-                    exactAmount: numberToHex(amountIn),
-                    poolKeyOptions,
-                } as const,
-            ],
-        }),
-    );
-
-    return quote;
+) {
+    return queryClient.fetchQuery(getMetaQuoteExactInputQueryOptions(wagmiConfig, params));
 }
 
 export async function getMetaQuoteExactInputAmount(

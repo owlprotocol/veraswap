@@ -4,14 +4,6 @@ import { createWalletClient, Hex, http, parseAbi, parseUnits, zeroAddress } from
 import { describe, expect, test } from "vitest";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import {
-    metaQuoteExactInput,
-    metaQuoteExactInputBest,
-    metaQuoteExactInputSingle,
-    metaQuoteExactOutput,
-    metaQuoteExactOutputBest,
-    metaQuoteExactOutputSingle,
-} from "../artifacts/IV4MetaQuoter.js";
 import { opChainL1Client } from "../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { MAX_UINT_256 } from "../constants/uint256.js";
@@ -21,10 +13,13 @@ import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 
 import { CommandType, RoutePlanner } from "./routerCommands.js";
 import {
+    metaQuoteExactInput,
+    metaQuoteExactInputBest,
+    metaQuoteExactInputSingle,
+    metaQuoteExactOutput,
+    metaQuoteExactOutputBest,
+    metaQuoteExactOutputSingle,
     V4MetaQuoteBestType,
-    V4MetaQuoteExactBestReturnType,
-    V4MetaQuoteExactReturnType,
-    V4MetaQuoteExactSingleReturnType,
 } from "./V4MetaQuoter.js";
 
 describe("uniswap/V4MetaQuoter.test.ts", function () {
@@ -53,7 +48,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
         const exactCurrency = tokenAAddress;
         const exactAmount = parseUnits("0.1", tokenA.decimals);
         const variableCurrency = zeroAddress;
-        const quotes: V4MetaQuoteExactSingleReturnType = await opChainL1Client.readContract({
+        const quotes = await opChainL1Client.readContract({
             address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
             abi: [metaQuoteExactInputSingle],
             functionName: "metaQuoteExactInputSingle",
@@ -100,7 +95,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
         const exactCurrency = zeroAddress;
         const exactAmount = parseUnits("0.1", 18);
         const variableCurrency = tokenAAddress;
-        const quotes: V4MetaQuoteExactSingleReturnType = await opChainL1Client.readContract({
+        const quotes = await opChainL1Client.readContract({
             address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
             abi: [metaQuoteExactOutputSingle],
             functionName: "metaQuoteExactOutputSingle",
@@ -147,7 +142,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
         const exactCurrency = tokenAAddress;
         const exactAmount = parseUnits("0.1", tokenA.decimals);
         const variableCurrency = tokenBAddress;
-        const quotes: V4MetaQuoteExactReturnType = await opChainL1Client.readContract({
+        const quotes = await opChainL1Client.readContract({
             address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
             abi: [metaQuoteExactInput],
             functionName: "metaQuoteExactInput",
@@ -194,7 +189,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
         const exactCurrency = tokenBAddress;
         const exactAmount = parseUnits("0.1", tokenB.decimals);
         const variableCurrency = tokenAAddress;
-        const quotes: V4MetaQuoteExactReturnType = await opChainL1Client.readContract({
+        const quotes = await opChainL1Client.readContract({
             address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
             abi: [metaQuoteExactOutput],
             functionName: "metaQuoteExactOutput",
@@ -242,7 +237,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = tokenAAddress;
             const exactAmount = parseUnits("0.1", tokenA.decimals);
             const variableCurrency = zeroAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactInputBest],
                 functionName: "metaQuoteExactInputBest",
@@ -263,7 +258,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = zeroAddress;
             const exactAmount = parseUnits("0.1", 18);
             const variableCurrency = tokenAAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactOutputBest],
                 functionName: "metaQuoteExactOutputBest",
@@ -284,7 +279,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = tokenAAddress;
             const exactAmount = parseUnits("0.1", tokenA.decimals);
             const variableCurrency = tokenBAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactInputBest],
                 functionName: "metaQuoteExactInputBest",
@@ -305,7 +300,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = tokenBAddress;
             const exactAmount = parseUnits("0.1", tokenB.decimals);
             const variableCurrency = tokenAAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactOutputBest],
                 functionName: "metaQuoteExactOutputBest",
@@ -326,7 +321,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = tokenAAddress;
             const exactAmount = parseUnits("0.1", tokenA.decimals);
             const variableCurrency = tokenBAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactInputBest],
                 functionName: "metaQuoteExactInputBest",
@@ -347,7 +342,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
             const exactCurrency = tokenBAddress;
             const exactAmount = parseUnits("0.1", tokenB.decimals);
             const variableCurrency = tokenAAddress;
-            const [, , bestType]: V4MetaQuoteExactBestReturnType = await opChainL1Client.readContract({
+            const [, , bestType] = await opChainL1Client.readContract({
                 address: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
                 abi: [metaQuoteExactOutputBest],
                 functionName: "metaQuoteExactOutputBest",
