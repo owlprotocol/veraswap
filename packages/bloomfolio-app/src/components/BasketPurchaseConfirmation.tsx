@@ -108,8 +108,8 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-center">
-                    <Link to="/portfolio">
-                        <Button className="w-full">See Portfolio</Button>
+                    <Link to="/basket/$basketId" params={{ basketId: selectedBasket }}>
+                        <Button className="w-full">View Basket Details</Button>
                     </Link>
                 </CardFooter>
             </Card>
