@@ -1,14 +1,28 @@
-import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
+import {
+    getChainById,
+    UNISWAP_CONTRACTS,
+    getBasketMint,
+    DEFAULT_POOL_PARAMS,
+    V4MetaQuoteExactBestParams,
+    V4MetaQuoteExactBestReturnType,
+    V4MetaQuoteExactSingleReturnType,
+    getUniswapV4RouteExactIn,
+    UNI,
+} from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, LucideIcon, ShoppingCart } from "lucide-react";
-import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
+import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address, numberToHex } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useMemo } from "react";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
 import React from "react";
+import {
+    metaQuoteExactOutputBest,
+    metaQuoteExactOutputSingle,
+} from "@owlprotocol/veraswap-sdk/artifacts/IV4MetaQuoter";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
@@ -18,7 +32,8 @@ import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
-import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
+import { USD_CURRENCIES } from "@/pages/BasketPage.js";
+import { BigNumber } from "@ethersproject/bignumber";
 
 const maxFeeCentiBips = 1_000_000n;
 
@@ -66,7 +81,7 @@ export function SelectedBasketPanel({
             address: token.addr,
             chainId: basketChainId,
             weight: 0,
-            units: token.units,
+            units: token.units / 10n ** 18n,
         }));
 
         return {
@@ -106,9 +121,34 @@ export function SelectedBasketPanel({
         totalValue,
         tokenValues,
         isLoading: isTokenValuesLoading,
-    } = useBasketWeights({ chainId: basketChainId, basketDetails: basketDetails ?? [] });
+    } = useBasketWeights({
+        chainId: basketChainId,
+        basketDetails: basketDetails ?? [],
+    });
 
-    const shares = totalValue > 0n && amountParsed > 0n ? (amountParsed * unitsToQuote) / totalValue : 0n;
+    // const { data: ethToUsdQuote } = useQuery({
+    //     queryKey: ["ethToUsdQuote", basketChainId],
+    //     queryFn: () =>
+    //         getUniswapV4RouteExactIn(queryClient, config, {
+    //             chainId: basketChainId,
+    //             contracts: UNISWAP_CONTRACTS[basketChainId]!,
+    //             currencyIn: zeroAddress,
+    //             currencyOut: USD_CURRENCIES[basketChainId]!.address,
+    //             currencyHops: getCurrencyHops(basketChainId),
+    //             exactAmount: 10n ** 18n,
+    //         }),
+    // });
+    //
+    // const ethToUsd = ethToUsdQuote?.amountOut ?? 0n;
+
+    // why is this 10^10?
+    const shares =
+        totalValue > 0n && amountParsed > 0n
+            ? BigNumber.from((amountParsed * 10n ** 16n) as unknown as number)
+                  .div(totalValue)
+                  .toBigInt()
+            : 0n;
+    console.log({ amountParsed, totalValue, totalValueF: formatEther(totalValue), shares });
     const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;
     const sharesMinusFeeFormatted = sharesMinusFee > 0n ? formatUnits(sharesMinusFee, 18) : "";
 

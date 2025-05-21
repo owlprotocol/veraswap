@@ -48,7 +48,7 @@ interface BasketPageProps {
     };
 }
 // TODO: fix, temporary
-const USD_CURRENCIES = {
+export const USD_CURRENCIES = {
     [mainnet.id]: { address: USDC_MAINNET.address, decimals: USDC.decimals },
     [bsc.id]: { address: USDT_BSC.address, decimals: USDT.decimals },
     [optimism.id]: { address: USDC_OPTIMISM.address, decimals: USDC.decimals },
@@ -94,7 +94,8 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         ? tokenPrices?.map(({ timestamp, prices }) => {
               const value =
                   basketDetails?.reduce(
-                      (sum, token, idx) => sum + Number(token.units) * (prices[idx]?.price ?? 0),
+                      // TODO: fix 1 ether values in units
+                      (sum, token, idx) => sum + Number(token.units / 10n ** 18n) * (prices[idx]?.price ?? 0),
                       0,
                   ) ?? 0;
               return {
@@ -111,8 +112,9 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
         quoteCurrency: USD_CURRENCIES[chainId],
     });
 
-    const userDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
-    const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / unitsToQuote : 0n;
+    // TODO: fix / explain magic number
+    const userDollarValue = balance && totalValue ? (balance.value * totalValue) / 10n ** 28n : 0n;
+    const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / 10n ** 28n : 0n;
 
     const formattedDollarValue = formatUnits(userDollarValue, tokenMetadata?.decimals ?? 18);
     const formattedGlobalDollarValue = formatUnits(globalDollarValue, tokenMetadata?.decimals ?? 18);
