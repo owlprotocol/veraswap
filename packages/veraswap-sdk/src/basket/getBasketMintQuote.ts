@@ -1,12 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, numberToHex } from "viem";
+import { Address } from "viem";
 
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
-import { metaQuoteExactOutputBest } from "../artifacts/IV4MetaQuoter.js";
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
-import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
+import { getMetaQuoteExactOutput } from "../uniswap/index.js";
+import { V4MetaQuoteBestType } from "../uniswap/V4MetaQuoter.js";
 
 export interface GetBasketMintQuoteParams {
     chainId: number;
@@ -54,34 +54,24 @@ export async function getBasketMintQuote(
     );
 
     // Quote exactOut for each token
-    const quotes = (await Promise.all(
+    const quotes = await Promise.all(
         mintUnits.map(async (mintUnit) => {
             const token = mintUnit.addr;
             const units = mintUnit.units;
 
-            const quote = await queryClient.fetchQuery(
-                readContractQueryOptions(wagmiConfig, {
-                    chainId,
-                    address: contracts.v4MetaQuoter,
-                    abi: [metaQuoteExactOutputBest],
-                    functionName: "metaQuoteExactOutputBest",
-                    args: [
-                        {
-                            exactCurrency: token,
-                            variableCurrency: currencyIn,
-                            hopCurrencies: currencyHops.filter(
-                                (hopToken) => hopToken !== token && hopToken !== currencyIn,
-                            ),
-                            exactAmount: numberToHex(units),
-                            poolKeyOptions,
-                        } as const,
-                    ],
-                }),
-            );
+            const quote = await getMetaQuoteExactOutput(queryClient, wagmiConfig, {
+                chainId,
+                currencyIn,
+                currencyOut: token,
+                amountOut: units,
+                currencyHops,
+                poolKeyOptions,
+                contracts,
+            });
 
             return { quote, currencyOut: token, amountOut: units };
         }),
-    )) as { quote: V4MetaQuoteExactBestReturnType; currencyOut: Address; amountOut: bigint }[];
+    );
 
     const currencyInAmount = quotes.reduce((acc, swap) => {
         const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
