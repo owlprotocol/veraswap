@@ -6,8 +6,8 @@ export const polygon = {
     ...polygonChain,
     rpcUrls: {
         default: {
-            http: ["https://lb.drpc.org/ogrpc?network=polygon&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            webSocket: ["wss://lb.drpc.org/ogws?network=polygon&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            http: ["https://polygon-mainnet.g.alchemy.com/v2/Gv_RTNzlyImHduWcD2cFjA-UilBLO-gX"],
+            webSocket: ["wss://polygon-mainnet.g.alchemy.com/v2/Gv_RTNzlyImHduWcD2cFjA-UilBLO-gX"],
         },
     },
     custom: {
