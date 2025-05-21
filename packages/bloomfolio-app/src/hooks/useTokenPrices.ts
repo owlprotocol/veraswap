@@ -8,6 +8,16 @@ const CODEX_API_KEY = import.meta.env.VITE_CODEX_API_KEY;
 
 const codexSdk = new Codex(CODEX_API_KEY);
 
+const fakePrices = (timestamps: number[], tokens: { chainId: number; address: Address }[], nowSeconds: number) =>
+    timestamps.map((timestamp) => ({
+        timestamp,
+        prices: tokens.map(({ chainId, address }, j) => ({
+            chainId,
+            address,
+            price: ((Math.random() * nowSeconds) % timestamp) / nowSeconds + 1,
+        })),
+    }));
+
 async function fetchTokenData(
     tokens: { address: Address; chainId: number }[],
     days: number = 7,
@@ -15,11 +25,12 @@ async function fetchTokenData(
     const daySeconds = 86_400;
     const timestamps: number[] = [];
     const nowSeconds = Math.floor(Date.now() / 1000);
+
     for (let i = days - 1; i >= 0; i--) {
         timestamps.push(nowSeconds - i * daySeconds);
     }
 
-    const inputs: GetPriceInput[] = timestamps.flatMap((timestamp) =>
+    const inputsByTimestamp: GetPriceInput[][] = timestamps.map((timestamp) =>
         tokens.map(
             (token) =>
                 ({
@@ -31,24 +42,22 @@ async function fetchTokenData(
     );
 
     if (tokens[0].chainId === opChainL1.id) {
-        return timestamps.map((timestamp, i) => ({
-            timestamp,
-            prices: tokens.map(({ chainId, address }, j) => ({
-                chainId,
-                address,
-                price: ((Math.random() * nowSeconds) % timestamp) / nowSeconds + 1,
-            })),
-        }));
+        return fakePrices(timestamps, tokens, nowSeconds);
     }
-    const query = await codexSdk.queries.getTokenPrices({ inputs });
-    if (!query.getTokenPrices) return null;
+
+    const queryByTimestamp = await Promise.all(
+        inputsByTimestamp.map((inputs) => codexSdk.queries.getTokenPrices({ inputs })),
+    );
+
+    const query = queryByTimestamp.flatMap((a) => a.getTokenPrices);
+    if (query.some((q) => !q)) return null;
 
     return timestamps.map((timestamp, i) => ({
         timestamp,
         prices: tokens.map(({ chainId, address }, j) => ({
             chainId,
             address,
-            price: query.getTokenPrices![i * tokens.length + j]?.priceUsd,
+            price: query[i * tokens.length + j]!.priceUsd,
         })),
     }));
 }
