@@ -110,24 +110,17 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
           })
         : [];
 
-    const {
-        percentages,
-        weights,
-        totalValue,
-        isError: isErrorBasketWeights,
-    } = useBasketWeights({
+    const { percentages, weights, totalValue } = useBasketWeights({
         chainId,
         basketDetails: basketDetails ?? [],
         quoteCurrency: getUSDCForChain(chainId),
     });
 
-    console.log({ isErrorBasketWeights });
-
     const userDollarValue = balance && totalValue ? (balance.value * totalValue) / unitsToQuote : 0n;
     const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / unitsToQuote : 0n;
 
-    const formattedDollarValue = formatUnits(userDollarValue, USDC.decimals);
-    const formattedGlobalDollarValue = formatUnits(globalDollarValue, USDC.decimals);
+    const formattedDollarValue = formatUnits(userDollarValue, tokenMetadata?.decimals ?? 18);
+    const formattedGlobalDollarValue = formatUnits(globalDollarValue, tokenMetadata?.decimals ?? 18);
 
     const calculateStats = (data: typeof performanceData) => {
         if (!data.length) return { change: 0, high: 0, low: 0, current: 0, start: 0 };

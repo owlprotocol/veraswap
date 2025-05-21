@@ -33,6 +33,7 @@ export function useBasketWeights({
             };
         }
 
+        // Total value for units quoted (unitsToQuote)
         const totalValue = tokenValues.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n);
 
         const weights =
