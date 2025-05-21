@@ -11,6 +11,7 @@ import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 
+import { getBasketBurnQuote } from "./getBasketBurnQuote.js";
 import { getBasketMintQuote } from "./getBasketMintQuote.js";
 
 describe("basket/getBasketMintQuote.test.ts", function () {
@@ -59,15 +60,28 @@ describe("basket/getBasketMintQuote.test.ts", function () {
             mintAmount,
             receiver,
             currencyIn: zeroAddress,
-            slippageCentiBps: 0n, //TODO: Ignored for now
-            deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
             currencyHops: [],
             contracts: {
                 v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
-                universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
         };
         const basketMintQuote = await getBasketMintQuote(queryClient, config, basketMintParams);
         expect(basketMintQuote).toBeDefined();
+    });
+
+    test("getBasketBurnQuote 0.01 share", async () => {
+        const amount = parseEther("0.01");
+        const basketBurnParams = {
+            chainId: opChainL1.id,
+            basket: basket0,
+            amount,
+            currencyOut: zeroAddress,
+            currencyHops: [],
+            contracts: {
+                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
+            },
+        };
+        const basketBurnQuote = await getBasketBurnQuote(queryClient, config, basketBurnParams);
+        expect(basketBurnQuote).toBeDefined();
     });
 });
