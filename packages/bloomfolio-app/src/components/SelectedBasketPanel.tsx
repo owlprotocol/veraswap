@@ -2,6 +2,7 @@ import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/ver
 import { AlertCircle, LucideIcon, ShoppingCart } from "lucide-react";
 import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useMemo } from "react";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -44,6 +45,7 @@ export function SelectedBasketPanel({
     const chainId = useChainId();
     const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
     const { switchChain } = useSwitchChain();
+    const { openConnectModal } = useConnectModal();
 
     const { data: basketDetails } = useReadContract({
         chainId: basketChainId,
@@ -221,7 +223,6 @@ export function SelectedBasketPanel({
                                 value={amount}
                                 onChange={handleAmountChange}
                                 className="text-base"
-                                disabled={!isConnected}
                             />
                             <span className="text-base font-medium">{inputSymbol}</span>
                         </div>
@@ -244,10 +245,10 @@ export function SelectedBasketPanel({
                                 <VeraFundButton />
                             </div>
                         )} */}
-                        {!isConnected && (
-                            <div className="mt-2 p-3 bg-red-100 text-red-700 rounded-md flex items-center space-x-2">
+                        {!isConnected && isAmountValid && (
+                            <div className="mt-2 p-3 bg-yellow-50 text-yellow-700 rounded-md flex items-center space-x-2">
                                 <AlertCircle className="h-4 w-4" />
-                                <span className="text-sm">Please connect your wallet to proceed</span>
+                                <span className="text-sm">Connect wallet to proceed with purchase</span>
                             </div>
                         )}
                         {isConnected && basketChain && chainId !== basketChain.id && (
@@ -294,26 +295,29 @@ export function SelectedBasketPanel({
                                 className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                                 size="sm"
                                 onClick={
-                                    !basketChain || chainId !== basketChain.id
-                                        ? () => basketChain && switchChain?.({ chainId: basketChain.id })
-                                        : handlePurchase
+                                    !isConnected
+                                        ? () => openConnectModal?.()
+                                        : !basketChain || chainId !== basketChain.id
+                                          ? () => basketChain && switchChain?.({ chainId: basketChain.id })
+                                          : handlePurchase
                                 }
                                 disabled={
-                                    !isConnected ||
-                                    hasInsufficientBalance ||
-                                    isBalanceLoading ||
-                                    !isAmountValid ||
-                                    isTokenValuesLoading ||
-                                    !selectedBasketData
+                                    (!isConnected && !isAmountValid) ||
+                                    (isConnected &&
+                                        (hasInsufficientBalance ||
+                                            isBalanceLoading ||
+                                            !isAmountValid ||
+                                            isTokenValuesLoading ||
+                                            !selectedBasketData))
                                 }
                             >
                                 <ShoppingCart className="mr-1 h-4 w-4" />
-                                {!isConnected
-                                    ? "Connect Wallet"
-                                    : !basketChain || chainId !== basketChain.id
-                                      ? "Switch Network"
-                                      : !isAmountValid
-                                        ? "Enter Amount"
+                                {!isAmountValid
+                                    ? "Enter Amount"
+                                    : !isConnected
+                                      ? "Connect Wallet"
+                                      : !basketChain || chainId !== basketChain.id
+                                        ? "Switch Network"
                                         : hasInsufficientBalance
                                           ? "Insufficient Balance"
                                           : "Buy Now"}
