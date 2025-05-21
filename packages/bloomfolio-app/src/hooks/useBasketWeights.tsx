@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 import { Address, formatUnits, zeroAddress } from "viem";
 import { useGetTokenValues } from "./useGetTokenValues.js";
+import { useQuery } from "@tanstack/react-query";
+import { USD_CURRENCIES } from "@/pages/BasketPage.js";
+import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { queryClient } from "@/queryClient.js";
+import { config } from "@/config.js";
+import { getCurrencyHops } from "@/constants/tokens.js";
 
 export function useBasketWeights({
     chainId,
@@ -12,18 +18,49 @@ export function useBasketWeights({
     quoteCurrency?: { address: Address; decimals: number };
 }) {
     const {
-        data: tokenValues,
+        data: tokenValuesUsd,
         pending: isLoading,
         // isError,
     } = useGetTokenValues({
         chainId,
-        basketDetails,
-        quoteCurrency,
+        basketDetails: basketDetails.map(({ addr, units }) => ({ addr, units: units / 10n ** 18n })),
     });
 
-    const isError = tokenValues.some((value) => value === 0n);
+    const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
+
+    const { data: currencyConversionQuote } = useQuery({
+        queryKey: ["currencyConversion", chainId, quoteCurrency.address],
+        queryFn: async () =>
+            getUniswapV4RouteExactIn(queryClient, config, {
+                chainId,
+                contracts: UNISWAP_CONTRACTS[chainId]!,
+                currencyIn: usdCurrency.address,
+                currencyOut: quoteCurrency.address,
+                currencyHops: getCurrencyHops(chainId).filter(
+                    (c) => c !== usdCurrency.address && c !== quoteCurrency.address,
+                ),
+                exactAmount: 10n ** BigInt(usdCurrency.decimals),
+            }),
+        enabled: quoteCurrency.address !== (USD_CURRENCIES[chainId]?.address ?? zeroAddress),
+    });
+
+    //  an amount in eth wei. Divide by 10^18 to get the amount in eth unit
+    const currencyConversion = currencyConversionQuote?.amountOut ?? 10n ** 18n;
+    // NOTE: token values are off by 10n ** 10n
+    console.log({
+        currencyConversion,
+        fmrat: formatUnits(currencyConversion, 18),
+        tokenValuesUsd: tokenValuesUsd.map((v) => formatUnits(v, usdCurrency.decimals)),
+    });
+
+    const isError = tokenValuesUsd.some((value) => value === 0n);
 
     const calculatedData = useMemo(() => {
+        // In wei units of the quote currency
+        const tokenValues = tokenValuesUsd.map(
+            (value) => (value * currencyConversion) / 10n ** BigInt(quoteCurrency.decimals),
+        );
+
         if (!tokenValues || tokenValues.length === 0 || isError) {
             return {
                 totalValue: 0n,
@@ -53,7 +90,7 @@ export function useBasketWeights({
             percentages,
             isReady: true,
         };
-    }, [tokenValues, isError]);
+    }, [tokenValuesUsd, isError, currencyConversion]);
 
     return {
         ...calculatedData,

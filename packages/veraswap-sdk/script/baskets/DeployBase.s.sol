@@ -29,22 +29,17 @@ contract DeployBase is Script {
 
         // Create conservative basket
         BasketFixedUnits.BasketToken[] memory basketImran = new BasketFixedUnits.BasketToken[](3);
-        basketImran[0] = BasketFixedUnits.BasketToken({addr: VIRTUAL, units: 5});
-        basketImran[1] = BasketFixedUnits.BasketToken({addr: ZORA, units: 1000});
-        basketImran[2] = BasketFixedUnits.BasketToken({addr: KAITO, units: 5});
+        basketImran[0] = BasketFixedUnits.BasketToken({addr: VIRTUAL, units: 5 ether});
+        basketImran[1] = BasketFixedUnits.BasketToken({addr: ZORA, units: 1000 ether});
+        basketImran[2] = BasketFixedUnits.BasketToken({addr: KAITO, units: 5 ether});
 
-        (address basketImranAddr, ) = BasketFixedUnitsUtils.getOrCreate2(
-            "Emperor Khan Super Special",
-            "EKSS",
-            ALLIANCE,
-            5_000,
-            basketImran
-        );
+        (address basketImranAddr,) =
+            BasketFixedUnitsUtils.getOrCreate2("Emperor Khan Super Special", "EKSS", ALLIANCE, 5_000, basketImran);
 
         console2.log("Basket Imran", basketImranAddr);
 
         // Set ExecuteSweep approvals
-        (address executeSweep, ) = ExecuteSweepUtils.getOrCreate2();
+        (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
         for (uint256 i = 0; i < tokensImran.length; i++) {
             address token = tokensImran[i];
 
@@ -55,11 +50,8 @@ contract DeployBase is Script {
             }
 
             // Approve basket
-            (uint160 allowance, , ) = IAllowanceTransfer(Permit2Utils.permit2).allowance(
-                executeSweep,
-                token,
-                basketImranAddr
-            );
+            (uint160 allowance,,) =
+                IAllowanceTransfer(Permit2Utils.permit2).allowance(executeSweep, token, basketImranAddr);
             if (allowance == 0) {
                 ExecuteSweep(payable(executeSweep)).approveAll(token, basketImranAddr);
             }

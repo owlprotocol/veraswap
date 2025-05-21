@@ -43,7 +43,7 @@ export interface Basket {
 export const MAINNET_BASKETS = [
     {
         id: "conservative",
-        address: "0x9066f3d5202181d5838a74ff468d88a6b473d99a",
+        address: "0x7e1228f7113c2F4127D4cC66622578850Fb538F7",
         title: "Conservative BSC",
         description: "Conservative 50/50 allocation to BTC and ETH on BSC.",
         gradient: "from-green-400 to-blue-500",
@@ -72,7 +72,7 @@ export const MAINNET_BASKETS = [
     // },
     {
         id: "polygon-infra-market-cap",
-        address: "0x5516234F75f184205396F2cA854ee7c2Ae367252",
+        address: "0x15C82107170f048D56DFF7831c564389b7501fc8",
         title: "Polygon Infra Basket Market Cap",
         description: "Polygon infrastructure basket allocated by market cap.",
         gradient: "from-purple-400 to-red-500",
@@ -87,7 +87,7 @@ export const MAINNET_BASKETS = [
     },
     {
         id: "khan",
-        address: "0xd6dc30f62e6ddf44f890e6bc9be48ddc9302f685",
+        address: "0xa38A81F01096Bf94FB7D3CAC20Bb479B06e5F17D",
         title: "Emperor Khan Super Special",
         description: "",
         gradient: "from-red-700 to-green-400",
@@ -180,8 +180,8 @@ export const MAINNET_BASKETS = [
 const basketAddr0 = tokenAAddress < tokenBAddress ? tokenAAddress : tokenBAddress;
 const basketAddr1 = tokenAAddress > tokenBAddress ? tokenAAddress : tokenBAddress;
 const basket = [
-    { addr: basketAddr0, units: 1n },
-    { addr: basketAddr1, units: 1n },
+    { addr: basketAddr0, units: 10n ** 18n },
+    { addr: basketAddr1, units: 10n ** 18n },
 ];
 
 const indexAB50NoFeeAddress = getDeployDeterministicAddress({
