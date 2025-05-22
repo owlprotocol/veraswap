@@ -5,14 +5,14 @@ import { Address } from "viem";
 
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
-import { getMetaQuoteExactOutput } from "../uniswap/index.js";
+import { getMetaQuoteExactInput } from "../uniswap/index.js";
 import { V4MetaQuoteBestType } from "../uniswap/V4MetaQuoter.js";
 
-export interface GetBasketMintQuoteParams {
+export interface GetBasketBurnQuoteParams {
     chainId: number;
     basket: Address;
-    mintAmount: bigint;
-    currencyIn: Address;
+    amount: bigint;
+    currencyOut: Address;
     currencyHops: Address[];
     contracts: {
         v4MetaQuoter: Address;
@@ -27,43 +27,43 @@ export interface GetBasketMintQuoteParams {
  * @param params
  * @returns list of quotes
  */
-export async function getBasketMintQuote(
+export async function getBasketBurnQuote(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetBasketMintQuoteParams,
+    params: GetBasketBurnQuoteParams,
 ) {
     const {
         chainId,
         basket,
-        mintAmount,
-        currencyIn,
+        amount,
+        currencyOut,
         contracts,
         currencyHops,
         poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),
     } = params;
 
     // Get required underlying tokens and their raw units
-    const mintUnits = await queryClient.fetchQuery(
+    const basketUnits = await queryClient.fetchQuery(
         readContractQueryOptions(wagmiConfig, {
             chainId,
             address: basket,
             abi: BasketFixedUnits.abi,
             functionName: "getMintUnits",
-            args: [mintAmount],
+            args: [amount],
         }),
     );
 
     // Quote exactOut for each token
     const quotes = await Promise.all(
-        mintUnits.map(async (mintUnit) => {
-            const token = mintUnit.addr;
-            const units = mintUnit.units;
+        basketUnits.map(async (tokenUnits) => {
+            const token = tokenUnits.addr;
+            const units = tokenUnits.units;
 
-            const quote = await getMetaQuoteExactOutput(queryClient, wagmiConfig, {
+            const quote = await getMetaQuoteExactInput(queryClient, wagmiConfig, {
                 chainId,
-                currencyIn,
-                currencyOut: token,
-                amountOut: units,
+                currencyIn: token,
+                currencyOut,
+                amountIn: units,
                 currencyHops,
                 poolKeyOptions,
                 contracts,
@@ -73,7 +73,7 @@ export async function getBasketMintQuote(
         }),
     );
 
-    const currencyInAmount = quotes.reduce((acc, swap) => {
+    const currencyOutAmount = quotes.reduce((acc, swap) => {
         const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
         if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
             // Cheapest swap is single hop
@@ -86,5 +86,5 @@ export async function getBasketMintQuote(
             throw new Error("no liquidity");
         }
     }, 0n);
-    return { mintUnits, quotes, currencyInAmount };
+    return { burnUnits: basketUnits, quotes, currencyOutAmount };
 }
