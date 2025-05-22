@@ -62,6 +62,3 @@
 [submodule "tools/scoutup"]
 	path = tools/scoutup
 	url = https://github.com/owlprotocol/scoutup.git
-[submodule "packages/veraswap-sdk/lib/v3-core"]
-	path = packages/veraswap-sdk/lib/v3-core
-	url = https://github.com/veraswap-io/v3-core
