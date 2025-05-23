@@ -2,18 +2,11 @@
 pragma solidity ^0.8.26;
 
 import {Test} from "forge-std/Test.sol";
-import {Script} from "forge-std/Script.sol";
 import "forge-std/console2.sol";
 
 import {LibClone} from "solady/utils/LibClone.sol";
 
-contract LibCloneTest is Test, Script {
-    function run() public pure {
-        // testInitCodeERC1967();
-        // testInitCodeHashERC1967();
-        testPredictDeterministicAddressERC1967();
-    }
-
+contract LibCloneTest is Test {
     function testInitCodeERC1967() public pure {
         address implementation = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
         bytes memory initCode = LibClone.initCodeERC1967(implementation);
