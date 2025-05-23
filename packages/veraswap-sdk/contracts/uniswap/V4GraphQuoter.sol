@@ -15,37 +15,23 @@ import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol
 import {BaseV4Quoter} from "@uniswap/v4-periphery/src/base/BaseV4Quoter.sol";
 
 import {IV4MetaQuoter} from "./IV4MetaQuoter.sol";
-import {V4MetaQuoterBase} from "./V4MetaQuoterBase.sol";
+import {V4MetaQuoter} from "./V4MetaQuoter.sol";
 
-/// @title V4MetaQuoter
+/// @title V4GraphQuoter
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes
-/// similar to how V4Quoter
+/// similar to how V4MetaQuoter but using graph search algorithm for multihop swaps
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
-contract V4MetaQuoter is IV4MetaQuoter, V4MetaQuoterBase {
+contract V4GraphQuoter is V4MetaQuoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
-    constructor(IPoolManager _poolManager) V4MetaQuoterBase(_poolManager) {}
-
-    /// @inheritdoc IV4MetaQuoter
-    function metaQuoteExactInputSingle(
-        MetaQuoteExactSingleParams memory params
-    ) external returns (MetaQuoteExactSingleResult[] memory) {
-        return _metaQuoteExactInputSingle(params);
-    }
-
-    /// @inheritdoc IV4MetaQuoter
-    function metaQuoteExactOutputSingle(
-        MetaQuoteExactSingleParams memory params
-    ) external returns (MetaQuoteExactSingleResult[] memory) {
-        return _metaQuoteExactOutputSingle(params);
-    }
+    constructor(IPoolManager _poolManager) V4MetaQuoter(_poolManager) {}
 
     /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactInput(
         MetaQuoteExactParams memory params
-    ) public virtual returns (MetaQuoteExactResult[] memory swaps) {
+    ) public override returns (MetaQuoteExactResult[] memory swaps) {
         // Try all poolKeyOption permutations with all hop currencies
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
             params.poolKeyOptions.length *
@@ -123,7 +109,7 @@ contract V4MetaQuoter is IV4MetaQuoter, V4MetaQuoterBase {
     /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactOutput(
         MetaQuoteExactParams memory params
-    ) public virtual returns (MetaQuoteExactResult[] memory swaps) {
+    ) public override returns (MetaQuoteExactResult[] memory swaps) {
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
             params.poolKeyOptions.length *
             params.hopCurrencies.length;
@@ -195,19 +181,5 @@ contract V4MetaQuoter is IV4MetaQuoter, V4MetaQuoterBase {
                 swapsIndex++;
             }
         }
-    }
-
-    /// @inheritdoc IV4MetaQuoter
-    function metaQuoteExactInputBest(
-        MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactSingleResult memory, MetaQuoteExactResult memory, BestSwap) {
-        return _metaQuoteExactInputBest(params);
-    }
-
-    /// @inheritdoc IV4MetaQuoter
-    function metaQuoteExactOutputBest(
-        MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactSingleResult memory, MetaQuoteExactResult memory, BestSwap) {
-        return _metaQuoteExactOutputBest(params);
     }
 }
