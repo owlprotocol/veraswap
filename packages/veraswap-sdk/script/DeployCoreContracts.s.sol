@@ -6,6 +6,10 @@ import "forge-std/console2.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Create2Utils} from "./utils/Create2Utils.sol";
 
+// Uniswap V3
+import {UniswapV3FactoryUtils} from "./utils/UniswapV3FactoryUtils.sol";
+import {V3QuoterUtils} from "./utils/V3QuoterUtils.sol";
+// Uniswap V4
 import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
 import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
 import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
@@ -13,6 +17,7 @@ import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
 import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
 import {V4MetaQuoterUtils} from "./utils/V4MetaQuoterUtils.sol";
+// Uniswap Universal Router
 import {UniversalRouterUtils} from "./utils/UniversalRouterUtils.sol";
 // Permit2
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
@@ -107,6 +112,11 @@ contract DeployCoreContracts is DeployParameters {
 
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
+            // Uniswap V3
+            (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
+            V3QuoterUtils.getOrCreate2(v3Factory, bytes32(0), address(0)); //TODO: Add WETH9 address, add poolInitCodeHash
+
+            // Uniswap V4
             // Core Uniswap Contracts
             RouterParameters memory routerParams = deployUniswapRouterParams();
             contracts.uniswap.weth9 = routerParams.weth9;

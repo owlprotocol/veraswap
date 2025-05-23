@@ -154,7 +154,7 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
     /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactInput(
         MetaQuoteExactParams memory params
-    ) public returns (MetaQuoteExactResult[] memory swaps) {
+    ) public virtual returns (MetaQuoteExactResult[] memory swaps) {
         // Try all poolKeyOption permutations with all hop currencies
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
             params.poolKeyOptions.length *
@@ -232,7 +232,7 @@ contract V4MetaQuoter is IV4Quoter, IV4MetaQuoter, BaseV4Quoter {
     /// @inheritdoc IV4MetaQuoter
     function metaQuoteExactOutput(
         MetaQuoteExactParams memory params
-    ) public returns (MetaQuoteExactResult[] memory swaps) {
+    ) public virtual returns (MetaQuoteExactResult[] memory swaps) {
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length *
             params.poolKeyOptions.length *
             params.hopCurrencies.length;
