@@ -22,7 +22,7 @@ import {IV4MetaQuoter} from "../contracts/uniswap/IV4MetaQuoter.sol";
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 import {StateViewUtils} from "../script/utils/StateViewUtils.sol";
-import {V4MetaQuoterUtils} from "../script/utils/V4MetaQuoterUtils.sol";
+import {V4GraphQuoterUtils} from "../script/utils/V4GraphQuoterUtils.sol";
 // Uniswap Universal Router
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
@@ -32,7 +32,7 @@ import {UniversalRouterUtils} from "../script/utils/UniversalRouterUtils.sol";
 // Liquidity Pools
 import {PoolUtils} from "../script/utils/PoolUtils.sol";
 
-contract V4MetaQuoterTest is Test {
+contract V4GraphQuoterTest is Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     uint128 constant amount = 0.01 ether;
 
@@ -69,7 +69,7 @@ contract V4MetaQuoterTest is Test {
         // Uniswap V4 Periphery
         (address _v4StateView, ) = StateViewUtils.getOrCreate2(_v4PoolManager);
         v4StateView = IStateView(_v4StateView);
-        (address _v4MetaQuoter, ) = V4MetaQuoterUtils.getOrCreate2(_v4PoolManager);
+        (address _v4MetaQuoter, ) = V4GraphQuoterUtils.getOrCreate2(_v4PoolManager);
         v4MetaQuoter = IV4MetaQuoter(_v4MetaQuoter);
 
         // Uniswap Universal Router
