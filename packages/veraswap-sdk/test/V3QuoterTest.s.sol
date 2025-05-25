@@ -1,0 +1,269 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.26;
+
+import {Test} from "forge-std/Test.sol";
+import "forge-std/console2.sol";
+
+// ERC20
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
+import {MockERC20Utils} from "../script/utils/MockERC20Utils.sol";
+// Permit2
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
+// Uniswap V3 Core
+import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
+import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
+// Uniswap V3 Periphery
+import {IQuoterV2} from "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
+import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
+import {V3Quoter} from "../contracts/uniswap/v3/V3Quoter.sol";
+import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
+// import {V3Quoter2} from "../contracts/uniswap/v3/V3Quoter2.sol";
+import {V3PoolKey, V3PoolKeyLibrary} from "../contracts/uniswap/v3/V3PoolKey.sol";
+
+// Uniswap V4 Core
+import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
+import {Constants} from "@uniswap/v4-core/test/utils/Constants.sol";
+import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
+import {LiquidityAmounts} from "@uniswap/v4-core/test/utils/LiquidityAmounts.sol";
+// Uniswap V4 Periphery
+import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
+// Uniswap Universal Router
+import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
+import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
+import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {UnsupportedProtocolUtils} from "../script/utils/UnsupportedProtocolUtils.sol";
+import {UniversalRouterUtils} from "../script/utils/UniversalRouterUtils.sol";
+// Liquidity Pools
+import {PoolUtils} from "../script/utils/PoolUtils.sol";
+
+//TODO: Write V3Quoter that matches V4Quoter interface?
+contract V3QuoterTest is Test {
+    bytes32 constant BYTES32_ZERO = bytes32(0);
+    uint128 constant amount = 0.01 ether;
+
+    uint24 internal fee = 3000;
+    int24 internal tickSpacing = 60;
+
+    // Tokens
+    IERC20 internal tokenA;
+    IERC20 internal tokenB;
+    // Uniswap V3 Core
+    IUniswapV3Factory internal v3Factory;
+    // Uniswap V3 Periphery
+    V3Quoter internal v3Quoter;
+    // V3Quoter2 internal v3Quoter2;
+    // Uniswap Universal Router
+    IUniversalRouter internal router;
+
+    function setUp() public {
+        // Sets proper address for Create2 & transaction sender
+        vm.startBroadcast();
+        // Tokens
+        (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
+        (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
+        tokenA = IERC20(_tokenA);
+        tokenB = IERC20(_tokenB);
+
+        // Permit2
+        (address permit2, ) = Permit2Utils.getOrCreate2();
+
+        // Uniswap V3 Core
+        (address _v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
+        v3Factory = IUniswapV3Factory(_v3Factory);
+
+        // Uniswap V3 Periphery
+        bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
+        address weth9 = address(0x4200000000000000000000000000000000000006); //TODO: Add WETH9 address
+        (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash, weth9);
+        v3Quoter = V3Quoter(_v3Quoter);
+        // v3Quoter2 = new V3Quoter2(address(v3Factory), poolInitCodeHash);
+
+        // Uniswap Universal Router
+        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
+        RouterParameters memory routerParams = RouterParameters({
+            permit2: permit2,
+            weth9: weth9,
+            v2Factory: unsupported,
+            v3Factory: address(v3Factory),
+            pairInitCodeHash: BYTES32_ZERO,
+            poolInitCodeHash: poolInitCodeHash,
+            v4PoolManager: unsupported,
+            v3NFTPositionManager: unsupported,
+            v4PositionManager: unsupported
+        });
+        (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+        router = IUniversalRouter(_router);
+
+        // Setup approvals
+        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
+        tokenA.approve(permit2, type(uint256).max);
+        IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
+        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
+        tokenB.approve(permit2, type(uint256).max);
+        IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
+
+        // Create Pool
+        IUniswapV3Pool pool = IUniswapV3Pool(v3Factory.createPool(address(tokenA), address(tokenB), fee));
+        // Initialize Pool (sets unlocked = true)
+        uint160 startingPrice = Constants.SQRT_PRICE_1_1;
+        pool.initialize(startingPrice); // Initialize with zero price (0.0001)
+        // Setup Position Manager
+        V3PositionManagerMock v3Posm = new V3PositionManagerMock(address(v3Factory), poolInitCodeHash);
+        IAllowanceTransfer(permit2).approve(address(tokenA), address(v3Posm), type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(tokenB), address(v3Posm), type(uint160).max, type(uint48).max);
+        // Pool Add Liquidity
+        (address token0, address token1) = tokenA < tokenB
+            ? (address(tokenA), address(tokenB))
+            : (address(tokenB), address(tokenA));
+
+        int24 tickLower = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_1_2) / tickSpacing) * tickSpacing;
+        int24 tickUpper = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_2_1) / tickSpacing) * tickSpacing;
+        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
+            startingPrice,
+            TickMath.getSqrtPriceAtTick(tickLower),
+            TickMath.getSqrtPriceAtTick(tickUpper),
+            100 ether,
+            100 ether
+        );
+
+        V3PoolKey memory poolKey = V3PoolKeyLibrary.getPoolKey(
+            Currency.wrap(address(tokenA)),
+            Currency.wrap(address(tokenB)),
+            fee
+        );
+        v3Posm.addLiquidity(poolKey, tickLower, tickUpper, uint128(liquidity), msg.sender);
+    }
+
+    // A (exact) -> ETH (variable)
+    function testExactInputSingle() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        // PoolKey
+        (Currency currency0, Currency currency1) = currencyIn < currencyOut
+            ? (currencyIn, currencyOut)
+            : (currencyOut, currencyIn);
+        V3PoolKey memory poolKey = V3PoolKey({currency0: currency0, currency1: currency1, fee: fee});
+
+        // V3 Quote
+        bool zeroForOne = currency0 == currencyIn;
+        // assertFalse(zeroForOne); // A->B so it's different
+
+        // TODO: Replace with V4 types, use min/max amounts instead of price limit
+        uint256 amountIn = 1 ether / 10; // 0.1 A
+        IQuoterV2.QuoteExactInputSingleParams memory v3QuoteParams = IQuoterV2.QuoteExactInputSingleParams({
+            tokenIn: Currency.unwrap(currencyIn),
+            tokenOut: Currency.unwrap(currencyOut),
+            amountIn: amountIn,
+            fee: poolKey.fee,
+            sqrtPriceLimitX96: Constants.SQRT_PRICE_1_2
+        });
+        (uint256 amountOut, , , ) = v3Quoter.quoteExactInputSingle(v3QuoteParams);
+        assertGt(amountOut, 0);
+        console2.log("quoteExactInputSingle", amountOut);
+
+        // V3 Swap
+        // Encode V3 Swap
+        // equivalent: abi.decode(inputs, (address, uint256, uint256, bytes, bool))
+        address recipient = msg.sender;
+        uint256 amountOutMin = 0; //TODO: Add quote
+        bytes memory path = abi.encodePacked(Currency.unwrap(currency0), poolKey.fee, Currency.unwrap(currency1));
+        bytes memory v3Swap = abi.encode(
+            recipient,
+            amountIn,
+            amountOutMin,
+            path,
+            true // payerIsUser
+        );
+
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V3_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v3Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3QuoteParams.amountIn); // Input balance decreased by exact amount
+        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+    }
+
+    // A (variable) -> ETH (exact)
+    /*
+    function testExactOutputSingle() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(0)));
+        // PoolKey
+        (Currency currency0, Currency currency1) = currencyIn < currencyOut
+            ? (currencyIn, currencyOut)
+            : (currencyOut, currencyIn);
+        PoolKey memory poolKey = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            fee: poolKeyOptions.fee,
+            tickSpacing: poolKeyOptions.tickSpacing,
+            hooks: poolKeyOptions.hooks
+        });
+
+        // V3 Quote
+        bool zeroForOne = currency0 == currencyIn;
+        assertFalse(zeroForOne);
+    }
+
+    // A (exact) -> ETH -> B (variable)
+    function testExactInput() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        // V4 Quote
+        PathKey[] memory path = new PathKey[](2);
+        PathKey memory pathKeyIntermediate = PathKey({
+            intermediateCurrency: Currency.wrap(address(0)),
+            fee: poolKeyOptions.fee,
+            tickSpacing: poolKeyOptions.tickSpacing,
+            hooks: poolKeyOptions.hooks,
+            hookData: ""
+        });
+        PathKey memory pathKeyOutput = PathKey({
+            intermediateCurrency: currencyOut,
+            fee: poolKeyOptions.fee,
+            tickSpacing: poolKeyOptions.tickSpacing,
+            hooks: poolKeyOptions.hooks,
+            hookData: ""
+        });
+        path[0] = pathKeyIntermediate;
+        path[1] = pathKeyOutput;
+    }
+
+    // A (variable) -> ETH -> B (exact)
+    function testExactOutput() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        // V4 Quote
+        PathKey[] memory path = new PathKey[](2);
+        PathKey memory pathKeyInput = PathKey({
+            intermediateCurrency: currencyIn,
+            fee: poolKeyOptions.fee,
+            tickSpacing: poolKeyOptions.tickSpacing,
+            hooks: poolKeyOptions.hooks,
+            hookData: ""
+        });
+        PathKey memory pathKeyIntermediate = PathKey({
+            intermediateCurrency: Currency.wrap(address(0)),
+            fee: poolKeyOptions.fee,
+            tickSpacing: poolKeyOptions.tickSpacing,
+            hooks: poolKeyOptions.hooks,
+            hookData: ""
+        });
+        path[0] = pathKeyInput;
+        path[1] = pathKeyIntermediate;
+    }
+    */
+}
