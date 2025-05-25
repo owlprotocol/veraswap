@@ -10,9 +10,10 @@ import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.so
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
 import "./V3PeripheryImmutableState.sol";
 import "./V3Path.sol";
-import "./V3PoolAddress.sol";
 import "./V3CallbackValidation.sol";
 import "./V3PoolTicksCounter.sol";
+import {V3PoolKey, V3PoolKeyLibrary} from "./V3PoolKey.sol";
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 
 /// @title Provides quotes for swaps
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
@@ -35,7 +36,10 @@ contract V3Quoter is IQuoterV2, IUniswapV3SwapCallback, PeripheryImmutableState 
     function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IUniswapV3Pool) {
         return
             IUniswapV3Pool(
-                V3PoolAddress.computeAddress(factory, poolInitCodeHash, V3PoolAddress.getPoolKey(tokenA, tokenB, fee))
+                V3PoolKeyLibrary.getPoolKey(Currency.wrap(tokenA), Currency.wrap(tokenB), fee).computeAddress(
+                    factory,
+                    poolInitCodeHash
+                )
             );
     }
 
@@ -47,7 +51,8 @@ contract V3Quoter is IQuoterV2, IUniswapV3SwapCallback, PeripheryImmutableState 
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, uint24 fee, address tokenOut) = path.decodeFirstPool();
-        CallbackValidation.verifyCallback(factory, poolInitCodeHash, tokenIn, tokenOut, fee);
+        V3PoolKey memory poolKey = V3PoolKeyLibrary.getPoolKey(Currency.wrap(tokenIn), Currency.wrap(tokenOut), fee);
+        V3CallbackValidation.verifyCallback(poolKey, factory, poolInitCodeHash);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta), uint256(-amount1Delta))

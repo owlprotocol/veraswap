@@ -18,14 +18,7 @@ interface IV3MetaQuoter {
         Currency exactCurrency;
         Currency variableCurrency;
         uint128 exactAmount;
-        uint24[] feeOptions;
-    }
-
-    struct MetaQuoteExactSingleResult {
-        V3PoolKey poolKey;
-        bool zeroForOne;
-        uint256 variableAmount;
-        uint256 gasEstimate;
+        uint24[] poolKeyOptions;
     }
 
     struct MetaQuoteExactParams {
@@ -33,7 +26,14 @@ interface IV3MetaQuoter {
         Currency variableCurrency;
         Currency[] hopCurrencies;
         uint128 exactAmount;
-        uint24[] feeOptions;
+        uint24[] poolKeyOptions;
+    }
+
+    struct MetaQuoteExactSingleResult {
+        V3PoolKey poolKey;
+        bool zeroForOne;
+        uint256 variableAmount; // variable amountIn or amountOut from quoteExactSingle
+        uint256 gasEstimate; // gas estimate from quoteExact
     }
 
     struct MetaQuoteExactResult {
