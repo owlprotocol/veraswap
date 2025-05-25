@@ -4,22 +4,11 @@ pragma solidity ^0.8.0;
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {V3PoolKey} from "./V3PoolKey.sol";
 import {V3PathKey} from "./V3PathKey.sol";
+import {IV3QuoterBase} from "./IV3QuoterBase.sol";
 
 /// @title IV3Quoter
 /// @notice Interface for the V3Quoter contract
-interface IV3Quoter {
-    struct QuoteExactSingleParams {
-        V3PoolKey poolKey;
-        bool zeroForOne;
-        uint128 exactAmount;
-    }
-
-    struct QuoteExactParams {
-        Currency exactCurrency;
-        V3PathKey[] path;
-        uint128 exactAmount;
-    }
-
+interface IV3Quoter is IV3QuoterBase {
     /// @notice Returns the delta amounts for a given exact input swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactSingleParams`
     /// poolKey The key for identifying a V3 pool

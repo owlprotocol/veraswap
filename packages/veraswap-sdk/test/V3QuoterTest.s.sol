@@ -17,6 +17,7 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
 // Uniswap V3 Periphery
+import {IV3QuoterBase} from "../contracts/uniswap/v3/IV3QuoterBase.sol";
 import {IV3Quoter} from "../contracts/uniswap/v3/IV3Quoter.sol";
 import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
 import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
@@ -159,7 +160,7 @@ contract V3QuoterTest is Test {
 
         // V3 Quote
         bool zeroForOne = currency0 == currencyIn;
-        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams = IV3Quoter.QuoteExactSingleParams({
+        IV3QuoterBase.QuoteExactSingleParams memory v3QuoteParams = IV3QuoterBase.QuoteExactSingleParams({
             poolKey: poolKey,
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
@@ -205,7 +206,7 @@ contract V3QuoterTest is Test {
 
         // V3 Quote
         bool zeroForOne = currency0 == currencyIn;
-        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams = IV3Quoter.QuoteExactSingleParams({
+        IV3QuoterBase.QuoteExactSingleParams memory v3QuoteParams = IV3QuoterBase.QuoteExactSingleParams({
             poolKey: poolKey,
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
@@ -253,7 +254,7 @@ contract V3QuoterTest is Test {
         pathQuote[0] = pathKeyIntermediate;
         pathQuote[1] = pathKeyOutput;
 
-        IV3Quoter.QuoteExactParams memory v3QuoteParams = IV3Quoter.QuoteExactParams({
+        IV3QuoterBase.QuoteExactParams memory v3QuoteParams = IV3QuoterBase.QuoteExactParams({
             exactCurrency: currencyIn,
             path: pathQuote,
             exactAmount: amount
@@ -308,7 +309,7 @@ contract V3QuoterTest is Test {
         pathQuote[0] = pathKeyInput;
         pathQuote[1] = pathKeyIntermediate;
 
-        IV3Quoter.QuoteExactParams memory v3QuoteParams = IV3Quoter.QuoteExactParams({
+        IV3QuoterBase.QuoteExactParams memory v3QuoteParams = IV3QuoterBase.QuoteExactParams({
             exactCurrency: currencyOut,
             path: pathQuote,
             exactAmount: amount

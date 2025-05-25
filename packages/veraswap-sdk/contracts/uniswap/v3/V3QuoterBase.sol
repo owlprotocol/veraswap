@@ -11,9 +11,9 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {V3CallbackValidation} from "./V3CallbackValidation.sol";
 import {V3PoolKey} from "./V3PoolKey.sol";
 import {V3PathKey} from "./V3PathKey.sol";
-import {IV3Quoter} from "./IV3Quoter.sol";
+import {IV3QuoterBase} from "./IV3QuoterBase.sol";
 
-abstract contract V3QuoterBase is IUniswapV3SwapCallback {
+abstract contract V3QuoterBase is IV3QuoterBase, IUniswapV3SwapCallback {
     using QuoterRevert for *;
 
     /// @notice The address of the Uniswap V3 factory contract
@@ -52,7 +52,7 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     }
 
     function _quoteExactInputSingleReason(
-        IV3Quoter.QuoteExactSingleParams memory params
+        QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
         if (address(pool).code.length == 0) {
@@ -80,7 +80,7 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     }
 
     function _quoteExactOutputSingleReason(
-        IV3Quoter.QuoteExactSingleParams memory params
+        QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
         if (address(pool).code.length == 0) {
