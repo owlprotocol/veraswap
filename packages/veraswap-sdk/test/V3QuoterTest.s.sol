@@ -17,12 +17,10 @@ import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Po
 import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
 // Uniswap V3 Periphery
-import {IQuoterV2} from "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
-import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
-// import {V3Quoter} from "../contracts/uniswap/v3/V3Quoter.sol";
-// import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
 import {IV3Quoter} from "../contracts/uniswap/v3/IV3Quoter.sol";
-import {V3Quoter2} from "../contracts/uniswap/v3/V3Quoter2.sol";
+import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
+import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
+import {V3PositionManagerMockUtils} from "../script/utils/V3PositionManagerMockUtils.sol";
 import {V3PoolKey, V3PoolKeyLibrary} from "../contracts/uniswap/v3/V3PoolKey.sol";
 import {V3PathKey} from "../contracts/uniswap/v3/V3PathKey.sol";
 
@@ -57,7 +55,7 @@ contract V3QuoterTest is Test {
     // Uniswap V3 Core
     IUniswapV3Factory internal v3Factory;
     // Uniswap V3 Periphery
-    V3Quoter2 internal v3Quoter2;
+    IV3Quoter internal v3Quoter;
     // Uniswap Universal Router
     IUniversalRouter internal router;
 
@@ -82,8 +80,8 @@ contract V3QuoterTest is Test {
         // Uniswap V3 Periphery
         bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         address weth9 = address(0x4200000000000000000000000000000000000006); //TODO: Add WETH9 address
-        // (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash, weth9);
-        v3Quoter2 = new V3Quoter2(address(v3Factory), poolInitCodeHash);
+        (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
+        v3Quoter = IV3Quoter(_v3Quoter);
 
         // Uniswap Universal Router
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
@@ -119,7 +117,8 @@ contract V3QuoterTest is Test {
         poolAB.initialize(startingPrice);
         poolBC.initialize(startingPrice);
         // Setup Position Manager
-        V3PositionManagerMock v3Posm = new V3PositionManagerMock(address(v3Factory), poolInitCodeHash);
+        (address _v3Posm, ) = V3PositionManagerMockUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
+        V3PositionManagerMock v3Posm = V3PositionManagerMock(_v3Posm);
         IAllowanceTransfer(permit2).approve(address(tokenA), address(v3Posm), type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokenB), address(v3Posm), type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokenC), address(v3Posm), type(uint160).max, type(uint48).max);
@@ -165,7 +164,7 @@ contract V3QuoterTest is Test {
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
-        (uint256 amountOut, ) = v3Quoter2.quoteExactInputSingle(v3QuoteParams);
+        (uint256 amountOut, ) = v3Quoter.quoteExactInputSingle(v3QuoteParams);
         assertGt(amountOut, 0);
 
         // V3 Swap
@@ -211,7 +210,7 @@ contract V3QuoterTest is Test {
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
-        (uint256 amountIn, ) = v3Quoter2.quoteExactOutputSingle(v3QuoteParams);
+        (uint256 amountIn, ) = v3Quoter.quoteExactOutputSingle(v3QuoteParams);
         assertGt(amountIn, 0);
 
         // V3 Swap
@@ -260,7 +259,7 @@ contract V3QuoterTest is Test {
             exactAmount: amount
         });
 
-        (uint256 amountOut, ) = v3Quoter2.quoteExactInput(v3QuoteParams);
+        (uint256 amountOut, ) = v3Quoter.quoteExactInput(v3QuoteParams);
         assertGt(amountOut, 0);
 
         // V3 Swap
@@ -315,7 +314,7 @@ contract V3QuoterTest is Test {
             exactAmount: amount
         });
 
-        (uint256 amountIn, ) = v3Quoter2.quoteExactOutput(v3QuoteParams);
+        (uint256 amountIn, ) = v3Quoter.quoteExactOutput(v3QuoteParams);
         assertGt(amountIn, 0);
 
         // V3 Swap
