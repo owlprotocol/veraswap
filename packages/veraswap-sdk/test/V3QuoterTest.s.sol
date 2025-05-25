@@ -70,16 +70,25 @@ contract V3QuoterTest is Test {
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
         tokenC = IERC20(_tokenC);
-
+        // Mint tokens
+        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(tokenC)).mint(msg.sender, 100_000 ether);
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();
+        // Approve Permit2
+        tokenA.approve(permit2, type(uint256).max);
+        tokenB.approve(permit2, type(uint256).max);
+        tokenC.approve(permit2, type(uint256).max);
 
         // Uniswap V3 Core
+        bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         (address _v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
         v3Factory = IUniswapV3Factory(_v3Factory);
+        (address _v3Posm, ) = V3PositionManagerMockUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
+        V3PositionManagerMock v3Posm = V3PositionManagerMock(_v3Posm);
 
         // Uniswap V3 Periphery
-        bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         address weth9 = address(0x4200000000000000000000000000000000000006); //TODO: Add WETH9 address
         (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
         v3Quoter = IV3Quoter(_v3Quoter);
@@ -99,53 +108,25 @@ contract V3QuoterTest is Test {
         });
         (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
         router = IUniversalRouter(_router);
-
-        // Setup approvals
-        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
-        tokenA.approve(permit2, type(uint256).max);
         IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
-        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
-        tokenB.approve(permit2, type(uint256).max);
         IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
-        MockERC20(address(tokenC)).mint(msg.sender, 100_000 ether);
-        tokenC.approve(permit2, type(uint256).max);
         IAllowanceTransfer(permit2).approve(address(tokenC), address(router), type(uint160).max, type(uint48).max);
 
-        // Create & Initialize Pools
-        uint160 startingPrice = Constants.SQRT_PRICE_1_1;
-        IUniswapV3Pool poolAB = IUniswapV3Pool(v3Factory.createPool(address(tokenA), address(tokenB), fee));
-        IUniswapV3Pool poolBC = IUniswapV3Pool(v3Factory.createPool(address(tokenB), address(tokenC), fee));
-        poolAB.initialize(startingPrice);
-        poolBC.initialize(startingPrice);
-        // Setup Position Manager
-        (address _v3Posm, ) = V3PositionManagerMockUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
-        V3PositionManagerMock v3Posm = V3PositionManagerMock(_v3Posm);
-        IAllowanceTransfer(permit2).approve(address(tokenA), address(v3Posm), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenB), address(v3Posm), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenC), address(v3Posm), type(uint160).max, type(uint48).max);
-        // Pool Add Liquidity
-        int24 tickLower = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_1_2) / tickSpacing) * tickSpacing;
-        int24 tickUpper = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_2_1) / tickSpacing) * tickSpacing;
-        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
-            startingPrice,
-            TickMath.getSqrtPriceAtTick(tickLower),
-            TickMath.getSqrtPriceAtTick(tickUpper),
-            100 ether,
-            100 ether
-        );
-
-        V3PoolKey memory poolKeyAB = V3PoolKeyLibrary.getPoolKey(
+        // Create V3 Pools
+        PoolUtils.createV3Pool(
             Currency.wrap(address(tokenA)),
             Currency.wrap(address(tokenB)),
-            fee
+            v3Factory,
+            v3Posm,
+            10 ether
         );
-        v3Posm.addLiquidity(poolKeyAB, tickLower, tickUpper, uint128(liquidity), msg.sender);
-        V3PoolKey memory poolKeyBC = V3PoolKeyLibrary.getPoolKey(
+        PoolUtils.createV3Pool(
             Currency.wrap(address(tokenB)),
             Currency.wrap(address(tokenC)),
-            fee
+            v3Factory,
+            v3Posm,
+            10 ether
         );
-        v3Posm.addLiquidity(poolKeyBC, tickLower, tickUpper, uint128(liquidity), msg.sender);
     }
 
     // A (exact) -> B (variable)

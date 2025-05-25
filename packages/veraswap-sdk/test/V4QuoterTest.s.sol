@@ -6,8 +6,10 @@ import "forge-std/console2.sol";
 
 // ERC20
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {MockERC20Utils} from "../script/utils/MockERC20Utils.sol";
 // Permit2
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
 // Uniswap V4 Core
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -67,9 +69,14 @@ contract V4QuoterTest is Test {
         (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
-
+        // Mint tokens
+        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();
+        // Approve Permit2
+        tokenA.approve(permit2, type(uint256).max);
+        tokenB.approve(permit2, type(uint256).max);
 
         // Uniswap V4 Core
         (address _v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
@@ -98,12 +105,12 @@ contract V4QuoterTest is Test {
         });
         (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
         router = IUniversalRouter(_router);
+        IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
 
-        // Setup Liquidity Pools
-        PoolUtils.setupToken(tokenA, v4PositionManager, router);
-        PoolUtils.setupToken(tokenB, v4PositionManager, router);
-        PoolUtils.deployPool(address(tokenA), address(0), v4PositionManager, v4StateView);
-        PoolUtils.deployPool(address(tokenB), address(0), v4PositionManager, v4StateView);
+        // Create V4 Pools
+        PoolUtils.createV4Pool(Currency.wrap(address(tokenA)), Currency.wrap(address(0)), v4PositionManager, 10 ether);
+        PoolUtils.createV4Pool(Currency.wrap(address(tokenB)), Currency.wrap(address(0)), v4PositionManager, 10 ether);
     }
 
     // A (exact) -> ETH (variable)
