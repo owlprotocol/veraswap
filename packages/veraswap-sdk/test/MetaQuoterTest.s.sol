@@ -23,6 +23,7 @@ import {V3PositionManagerMockUtils} from "../script/utils/V3PositionManagerMockU
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {PoolManagerUtils} from "../script/utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "../script/utils/PositionManagerUtils.sol";
@@ -148,11 +149,14 @@ contract MetaQuoterTest is Test {
         // V4-only paths
         // A -> liq4
         // A -> liq4 -> B
+        // Mixed route paths
+        // A -> liq4 -> liq34
+        // A -> liq3 -> liq34
 
         // Create V4 Pools
         PoolUtils.createV4Pool(
-            Currency.wrap(address(tokenA)),
             Currency.wrap(address(liq34)),
+            Currency.wrap(address(tokenA)),
             v4PositionManager,
             10 ether
         );
@@ -163,21 +167,27 @@ contract MetaQuoterTest is Test {
             10 ether
         );
         PoolUtils.createV4Pool(
-            Currency.wrap(address(tokenA)),
             Currency.wrap(address(liq4)),
+            Currency.wrap(address(tokenA)),
             v4PositionManager,
             10 ether
         );
         PoolUtils.createV4Pool(
             Currency.wrap(address(liq4)),
             Currency.wrap(address(tokenB)),
+            v4PositionManager,
+            10 ether
+        );
+        PoolUtils.createV4Pool(
+            Currency.wrap(address(liq34)),
+            Currency.wrap(address(liq3)), //for mixed route test A -> liq3 -> liq34
             v4PositionManager,
             10 ether
         );
         // Create V3 Pools
         PoolUtils.createV3Pool(
-            Currency.wrap(address(tokenA)),
             Currency.wrap(address(liq34)),
+            Currency.wrap(address(tokenA)),
             v3Factory,
             v3Posm,
             10 ether
@@ -190,8 +200,8 @@ contract MetaQuoterTest is Test {
             10 ether
         );
         PoolUtils.createV3Pool(
-            Currency.wrap(address(tokenA)),
             Currency.wrap(address(liq3)),
+            Currency.wrap(address(tokenA)),
             v3Factory,
             v3Posm,
             10 ether
@@ -199,6 +209,13 @@ contract MetaQuoterTest is Test {
         PoolUtils.createV3Pool(
             Currency.wrap(address(liq3)),
             Currency.wrap(address(tokenB)),
+            v3Factory,
+            v3Posm,
+            10 ether
+        );
+        PoolUtils.createV3Pool(
+            Currency.wrap(address(liq34)),
+            Currency.wrap(address(liq4)), //for mixed route test A -> liq4 -> liq34
             v3Factory,
             v3Posm,
             10 ether
@@ -263,7 +280,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
     // A (exact) -> L4 (variable)
@@ -316,7 +333,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
     // A (exact) -> L34 (variable)
@@ -370,7 +387,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
     // A (variable) -> L3 (exact)
@@ -418,7 +435,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
     // A (variable) -> L4 (exact)
@@ -471,7 +488,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
     // A (variable) -> L34 (exact)
@@ -525,7 +542,7 @@ contract MetaQuoterTest is Test {
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
     /***** Exact Quotes *****/
@@ -544,7 +561,7 @@ contract MetaQuoterTest is Test {
             poolKeyOptions: getDefaultPoolKeyOptions()
         });
         IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInput(metaQuoteParams);
-        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> B -> C path
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L34 -> B path
 
         IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
@@ -599,7 +616,7 @@ contract MetaQuoterTest is Test {
             poolKeyOptions: getDefaultPoolKeyOptions()
         });
         IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutput(metaQuoteParams);
-        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> B -> C path
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L34 -> B path
         IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
 
         assertGt(quote.variableAmount, 0);
@@ -637,5 +654,115 @@ contract MetaQuoterTest is Test {
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
+    }
+
+    /***** Mixed Routes *****/
+    // V3 -> V4
+    // A (exact) -> L3 -> L34 (variable)
+    function testExactInputAL3L34C() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        // Quote
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(liq3));
+        IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
+            exactCurrency: currencyIn,
+            variableCurrency: currencyOut,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInput(metaQuoteParams);
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L3 -> L34 path
+
+        IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        assertEq(address(quote.path[0].hooks), address(3)); // V3 Pool
+        assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
+
+        /*
+        // V3 Swap
+        // Encode V3 Swap
+        bytes memory path = abi.encodePacked(
+            Currency.unwrap(currencyIn),
+            quote.path[0].fee,
+            Currency.unwrap(quote.path[0].intermediateCurrency) // L3
+        );
+        bytes memory v3Swap = abi.encode(
+            address(router), // recipient
+            amount,
+            0, // amountOutMinimum ignored for intermediate swap
+            path,
+            true // payerIsUser
+        );
+        // V4 Swap
+        // Encode V4 Swap Actions
+        bytes memory v4Actions = abi.encodePacked(
+            uint8(Actions.SWAP_EXACT_IN_SINGLE),
+            uint8(Actions.SETTLE_ALL),
+            uint8(Actions.TAKE_ALL)
+        );
+        bytes[] memory v4ActionParams = new bytes[](3);
+        (Currency v4Currency0, Currency v4Currency1) = quote.path[0].intermediateCurrency <
+            quote.path[1].intermediateCurrency
+            ? (quote.path[0].intermediateCurrency, quote.path[1].intermediateCurrency)
+            : (quote.path[1].intermediateCurrency, quote.path[0].intermediateCurrency);
+
+        v4ActionParams[0] = abi.encode(
+            IV4Router.ExactInputSingleParams({
+                poolKey: PoolKey({
+                    currency0: v4Currency0,
+                    currency1: v4Currency1,
+                    fee: quote.path[1].fee,
+                    tickSpacing: quote.path[1].tickSpacing,
+                    hooks: quote.path[1].hooks
+                }), // convert last path to PoolKey
+                zeroForOne: v4Currency0 == quote.path[0].intermediateCurrency, // L3 is intermediate currency
+                amountIn: metaQuoteParams.exactAmount,
+                amountOutMinimum: uint128(quote.variableAmount),
+                hookData: quote.path[1].hookData
+            })
+        );
+        v4ActionParams[1] = abi.encode(currencyIn, metaQuoteParams.exactAmount); // Settle input
+        v4ActionParams[2] = abi.encode(currencyOut, quote.variableAmount); // Take output
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V3_SWAP_EXACT_IN), uint8(Commands.V4_SWAP));
+        bytes[] memory routerCommandInputs = new bytes[](2);
+        routerCommandInputs[0] = v3Swap;
+        routerCommandInputs[1] = abi.encode(v4Actions, v4ActionParams);
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
+        */
+    }
+
+    // V3 -> V4
+    // A (variable) -> L3 -> L34 (exact)
+    function testExactOutputAL3L34C() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        // Quote
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(liq3));
+        IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
+            exactCurrency: currencyOut,
+            variableCurrency: currencyIn,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutput(metaQuoteParams);
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L3 -> L34 path
+        IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
+
+        assertGt(quote.variableAmount, 0);
+        assertEq(address(quote.path[0].hooks), address(3)); // V3 Pool
+        assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
     }
 }
