@@ -27,20 +27,20 @@ interface IV4MetaQuoter {
         PoolKeyOptions[] poolKeyOptions;
     }
 
+    struct MetaQuoteExactSingleResult {
+        PoolKey poolKey;
+        bool zeroForOne;
+        bytes hookData;
+        uint256 variableAmount;
+        uint256 gasEstimate;
+    }
+
     struct MetaQuoteExactParams {
         Currency exactCurrency;
         Currency variableCurrency;
         Currency[] hopCurrencies;
         uint128 exactAmount;
         PoolKeyOptions[] poolKeyOptions;
-    }
-
-    struct MetaQuoteExactSingleResult {
-        PoolKey poolKey;
-        bool zeroForOne;
-        bytes hookData;
-        uint256 variableAmount; // variable amountIn or amountOut from quoteExactSingle
-        uint256 gasEstimate; // gas estimate from quoteExact
     }
 
     struct MetaQuoteExactResult {
