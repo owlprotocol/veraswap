@@ -24,6 +24,7 @@ import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
 import {IV3Quoter} from "../contracts/uniswap/v3/IV3Quoter.sol";
 import {V3Quoter2} from "../contracts/uniswap/v3/V3Quoter2.sol";
 import {V3PoolKey, V3PoolKeyLibrary} from "../contracts/uniswap/v3/V3PoolKey.sol";
+import {V3PathKey} from "../contracts/uniswap/v3/V3PathKey.sol";
 
 // Uniswap V4 Core
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
@@ -53,6 +54,7 @@ contract V3QuoterTest is Test {
     // Tokens
     IERC20 internal tokenA;
     IERC20 internal tokenB;
+    IERC20 internal tokenC;
     // Uniswap V3 Core
     IUniswapV3Factory internal v3Factory;
     // Uniswap V3 Periphery
@@ -67,8 +69,10 @@ contract V3QuoterTest is Test {
         // Tokens
         (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
         (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
+        (address _tokenC, ) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
+        tokenC = IERC20(_tokenC);
 
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();
@@ -107,21 +111,22 @@ contract V3QuoterTest is Test {
         MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
         tokenB.approve(permit2, type(uint256).max);
         IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
+        MockERC20(address(tokenC)).mint(msg.sender, 100_000 ether);
+        tokenC.approve(permit2, type(uint256).max);
+        IAllowanceTransfer(permit2).approve(address(tokenC), address(router), type(uint160).max, type(uint48).max);
 
-        // Create Pool
-        IUniswapV3Pool pool = IUniswapV3Pool(v3Factory.createPool(address(tokenA), address(tokenB), fee));
-        // Initialize Pool (sets unlocked = true)
+        // Create & Initialize Pools
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
-        pool.initialize(startingPrice); // Initialize with zero price (0.0001)
+        IUniswapV3Pool poolAB = IUniswapV3Pool(v3Factory.createPool(address(tokenA), address(tokenB), fee));
+        IUniswapV3Pool poolBC = IUniswapV3Pool(v3Factory.createPool(address(tokenB), address(tokenC), fee));
+        poolAB.initialize(startingPrice);
+        poolBC.initialize(startingPrice);
         // Setup Position Manager
         V3PositionManagerMock v3Posm = new V3PositionManagerMock(address(v3Factory), poolInitCodeHash);
         IAllowanceTransfer(permit2).approve(address(tokenA), address(v3Posm), type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokenB), address(v3Posm), type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(tokenC), address(v3Posm), type(uint160).max, type(uint48).max);
         // Pool Add Liquidity
-        (address token0, address token1) = tokenA < tokenB
-            ? (address(tokenA), address(tokenB))
-            : (address(tokenB), address(tokenA));
-
         int24 tickLower = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_1_2) / tickSpacing) * tickSpacing;
         int24 tickUpper = (TickMath.getTickAtSqrtPrice(Constants.SQRT_PRICE_2_1) / tickSpacing) * tickSpacing;
         uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
@@ -132,12 +137,18 @@ contract V3QuoterTest is Test {
             100 ether
         );
 
-        V3PoolKey memory poolKey = V3PoolKeyLibrary.getPoolKey(
+        V3PoolKey memory poolKeyAB = V3PoolKeyLibrary.getPoolKey(
             Currency.wrap(address(tokenA)),
             Currency.wrap(address(tokenB)),
             fee
         );
-        v3Posm.addLiquidity(poolKey, tickLower, tickUpper, uint128(liquidity), msg.sender);
+        v3Posm.addLiquidity(poolKeyAB, tickLower, tickUpper, uint128(liquidity), msg.sender);
+        V3PoolKey memory poolKeyBC = V3PoolKeyLibrary.getPoolKey(
+            Currency.wrap(address(tokenB)),
+            Currency.wrap(address(tokenC)),
+            fee
+        );
+        v3Posm.addLiquidity(poolKeyBC, tickLower, tickUpper, uint128(liquidity), msg.sender);
     }
 
     // A (exact) -> B (variable)
@@ -154,11 +165,10 @@ contract V3QuoterTest is Test {
         bool zeroForOne = currency0 == currencyIn;
 
         // TODO: Replace with V4 types, use min/max amounts instead of price limit
-        uint256 amountIn = 1 ether / 10; // 0.1 A
         IQuoterV2.QuoteExactInputSingleParams memory v3QuoteParams = IQuoterV2.QuoteExactInputSingleParams({
             tokenIn: Currency.unwrap(currencyIn),
             tokenOut: Currency.unwrap(currencyOut),
-            amountIn: amountIn,
+            amountIn: amount,
             fee: poolKey.fee,
             sqrtPriceLimitX96: 0
         });
@@ -167,7 +177,7 @@ contract V3QuoterTest is Test {
 
         IV3Quoter.QuoteExactSingleParams memory v3QuoteParams2 = IV3Quoter.QuoteExactSingleParams({
             poolKey: poolKey,
-            exactAmount: uint128(amountIn),
+            exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
         (uint256 amountOut2, ) = v3Quoter2.quoteExactInputSingle(v3QuoteParams2);
@@ -178,7 +188,7 @@ contract V3QuoterTest is Test {
         bytes memory path = abi.encodePacked(Currency.unwrap(currencyIn), poolKey.fee, Currency.unwrap(currencyOut));
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
-            amountIn,
+            amount,
             amountOut2, // amountOutMinimum
             path,
             true // payerIsUser
@@ -212,11 +222,10 @@ contract V3QuoterTest is Test {
         // V3 Quote
         bool zeroForOne = currency0 == currencyIn;
 
-        uint256 amountOut = 1 ether / 10; // 0.1 B
         IQuoterV2.QuoteExactOutputSingleParams memory v3QuoteParams = IQuoterV2.QuoteExactOutputSingleParams({
             tokenIn: Currency.unwrap(currencyIn),
             tokenOut: Currency.unwrap(currencyOut),
-            amount: amountOut,
+            amount: amount,
             fee: poolKey.fee,
             sqrtPriceLimitX96: 0
         });
@@ -225,7 +234,7 @@ contract V3QuoterTest is Test {
 
         IV3Quoter.QuoteExactSingleParams memory v3QuoteParams2 = IV3Quoter.QuoteExactSingleParams({
             poolKey: poolKey,
-            exactAmount: uint128(amountOut),
+            exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
         (uint256 amountIn2, ) = v3Quoter2.quoteExactOutputSingle(v3QuoteParams2);
@@ -236,7 +245,7 @@ contract V3QuoterTest is Test {
         bytes memory path = abi.encodePacked(Currency.unwrap(currencyOut), poolKey.fee, Currency.unwrap(currencyIn));
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
-            amountOut,
+            amount,
             amountIn2, // amountInMaximum
             path,
             true // payerIsUser
@@ -257,53 +266,113 @@ contract V3QuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3QuoteParams2.exactAmount); // Output balance increased by exact amount
     }
 
-    /*
-    // A (exact) -> ETH -> B (variable)
+    // A (exact) -> B -> C (variable)
     function testExactInput() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
-        // V4 Quote
-        PathKey[] memory path = new PathKey[](2);
-        PathKey memory pathKeyIntermediate = PathKey({
-            intermediateCurrency: Currency.wrap(address(0)),
-            fee: poolKeyOptions.fee,
-            tickSpacing: poolKeyOptions.tickSpacing,
-            hooks: poolKeyOptions.hooks,
-            hookData: ""
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+        // V3 Quote
+        V3PathKey[] memory pathQuote = new V3PathKey[](2);
+        V3PathKey memory pathKeyIntermediate = V3PathKey({
+            intermediateCurrency: Currency.wrap(address(tokenB)),
+            fee: fee
         });
-        PathKey memory pathKeyOutput = PathKey({
-            intermediateCurrency: currencyOut,
-            fee: poolKeyOptions.fee,
-            tickSpacing: poolKeyOptions.tickSpacing,
-            hooks: poolKeyOptions.hooks,
-            hookData: ""
+        V3PathKey memory pathKeyOutput = V3PathKey({intermediateCurrency: currencyOut, fee: fee});
+        pathQuote[0] = pathKeyIntermediate;
+        pathQuote[1] = pathKeyOutput;
+
+        IV3Quoter.QuoteExactParams memory v3QuoteParams = IV3Quoter.QuoteExactParams({
+            exactCurrency: currencyIn,
+            path: pathQuote,
+            exactAmount: amount
         });
-        path[0] = pathKeyIntermediate;
-        path[1] = pathKeyOutput;
+
+        (uint256 amountOut, ) = v3Quoter2.quoteExactInput(v3QuoteParams);
+        assertGt(amountOut, 0);
+
+        // V3 Swap
+        // Encode V3 Swap
+        bytes memory path = abi.encodePacked(
+            Currency.unwrap(currencyIn),
+            fee,
+            address(tokenB),
+            fee,
+            Currency.unwrap(currencyOut)
+        );
+        bytes memory v3Swap = abi.encode(
+            msg.sender, // recipient
+            amount,
+            amountOut, // amountOutMinimum
+            path,
+            true // payerIsUser
+        );
+
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V3_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v3Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3QuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
     }
 
-    // A (variable) -> ETH -> B (exact)
+    // A (variable) -> B -> C (exact)
     function testExactOutput() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
-        // V4 Quote
-        PathKey[] memory path = new PathKey[](2);
-        PathKey memory pathKeyInput = PathKey({
-            intermediateCurrency: currencyIn,
-            fee: poolKeyOptions.fee,
-            tickSpacing: poolKeyOptions.tickSpacing,
-            hooks: poolKeyOptions.hooks,
-            hookData: ""
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+        // V3 Quote
+        V3PathKey[] memory pathQuote = new V3PathKey[](2);
+        V3PathKey memory pathKeyInput = V3PathKey({intermediateCurrency: currencyIn, fee: fee});
+        V3PathKey memory pathKeyIntermediate = V3PathKey({
+            intermediateCurrency: Currency.wrap(address(tokenB)),
+            fee: fee
         });
-        PathKey memory pathKeyIntermediate = PathKey({
-            intermediateCurrency: Currency.wrap(address(0)),
-            fee: poolKeyOptions.fee,
-            tickSpacing: poolKeyOptions.tickSpacing,
-            hooks: poolKeyOptions.hooks,
-            hookData: ""
+        pathQuote[0] = pathKeyInput;
+        pathQuote[1] = pathKeyIntermediate;
+
+        IV3Quoter.QuoteExactParams memory v3QuoteParams = IV3Quoter.QuoteExactParams({
+            exactCurrency: currencyOut,
+            path: pathQuote,
+            exactAmount: amount
         });
-        path[0] = pathKeyInput;
-        path[1] = pathKeyIntermediate;
+
+        (uint256 amountIn, ) = v3Quoter2.quoteExactOutput(v3QuoteParams);
+        assertGt(amountIn, 0);
+
+        // V3 Swap
+        // Encode V3 Swap
+        bytes memory path = abi.encodePacked(
+            Currency.unwrap(currencyOut),
+            fee,
+            address(tokenB),
+            fee,
+            Currency.unwrap(currencyIn)
+        );
+        bytes memory v3Swap = abi.encode(
+            msg.sender, // recipient
+            amount,
+            amountIn, // amountInMaximum
+            path,
+            true // payerIsUser
+        );
+
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V3_SWAP_EXACT_OUT));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v3Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3QuoteParams.exactAmount); // Output balance increased by exact amount
     }
-    */
 }
