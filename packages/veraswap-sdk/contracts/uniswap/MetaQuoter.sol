@@ -14,17 +14,18 @@ import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol
 
 // Base quoters
 import {V3MetaQuoterBase} from "./v3/V3MetaQuoterBase.sol";
-import {V4MetaQuoterBase} from "./V4MetaQuoterBase.sol";
+import {V4MetaQuoter} from "./V4MetaQuoter.sol";
 
 import {IV3MetaQuoter} from "./v3/IV3MetaQuoter.sol";
 import {IV4MetaQuoter} from "./IV4MetaQuoter.sol";
-import {IMetaQuoter} from "./IMetaQuoter.sol";
+
+//TODO: Handle address(0) => WETH for V3 quotes
 
 /// @title MetaQuoter
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes for v3/v4 pools
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
-contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
+contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
@@ -35,16 +36,18 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
         address _factory,
         bytes32 _poolInitCodeHash,
         IPoolManager _poolManager
-    ) V3MetaQuoterBase(_factory, _poolInitCodeHash) V4MetaQuoterBase(_poolManager) {}
+    ) V3MetaQuoterBase(_factory, _poolInitCodeHash) V4MetaQuoter(_poolManager) {}
 
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactInputSingle(
-        IV4MetaQuoter.MetaQuoteExactSingleParams memory params,
-        uint24[] memory v3FeeOptions
-    ) public returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quotes) {
+    function _metaQuoteExactInputSingle(
+        MetaQuoteExactSingleParams memory params
+    ) internal override returns (MetaQuoteExactSingleResult[] memory quotes) {
         // V4 Quotes
-        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory v4Quotes = _metaQuoteExactInputSingle(params);
+        MetaQuoteExactSingleResult[] memory v4Quotes = super._metaQuoteExactInputSingle(params);
         // V3 Quotes
+        uint24[] memory v3FeeOptions = new uint24[](params.poolKeyOptions.length);
+        for (uint256 i = 0; i < params.poolKeyOptions.length; i++) {
+            v3FeeOptions[i] = params.poolKeyOptions[i].fee;
+        }
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: params.exactCurrency,
             variableCurrency: params.variableCurrency,
@@ -54,12 +57,12 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactInputSingle(v3Params);
 
         // Combine results, set hook to address(3) for V3 quotes
-        quotes = new IV4MetaQuoter.MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        quotes = new MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
         for (uint256 i = 0; i < v4Quotes.length; i++) {
             quotes[i] = v4Quotes[i];
         }
         for (uint256 i = 0; i < v3Quotes.length; i++) {
-            quotes[i] = IV4MetaQuoter.MetaQuoteExactSingleResult({
+            quotes[i] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: v3Quotes[i].poolKey.currency0,
                     currency1: v3Quotes[i].poolKey.currency1,
@@ -75,14 +78,16 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
         }
     }
 
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactOutputSingle(
-        IV4MetaQuoter.MetaQuoteExactSingleParams memory params,
-        uint24[] memory v3FeeOptions
-    ) public returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quotes) {
+    function _metaQuoteExactOutputSingle(
+        MetaQuoteExactSingleParams memory params
+    ) internal override returns (MetaQuoteExactSingleResult[] memory quotes) {
         // V4 Quotes
-        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory v4Quotes = _metaQuoteExactOutputSingle(params);
+        MetaQuoteExactSingleResult[] memory v4Quotes = super._metaQuoteExactOutputSingle(params);
         // V3 Quotes
+        uint24[] memory v3FeeOptions = new uint24[](params.poolKeyOptions.length);
+        for (uint256 i = 0; i < params.poolKeyOptions.length; i++) {
+            v3FeeOptions[i] = params.poolKeyOptions[i].fee;
+        }
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: params.exactCurrency,
             variableCurrency: params.variableCurrency,
@@ -92,12 +97,12 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactOutputSingle(v3Params);
 
         // Combine results, set hook to address(3) for V3 quotes
-        quotes = new IV4MetaQuoter.MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        quotes = new MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
         for (uint256 i = 0; i < v4Quotes.length; i++) {
             quotes[i] = v4Quotes[i];
         }
         for (uint256 i = 0; i < v3Quotes.length; i++) {
-            quotes[i] = IV4MetaQuoter.MetaQuoteExactSingleResult({
+            quotes[i] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: v3Quotes[i].poolKey.currency0,
                     currency1: v3Quotes[i].poolKey.currency1,
@@ -112,42 +117,4 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
             });
         }
     }
-
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactInput(
-        IV4MetaQuoter.MetaQuoteExactParams memory params,
-        uint24[] memory v3FeeOptions
-    ) external returns (IV4MetaQuoter.MetaQuoteExactResult[] memory quotes) {}
-
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactOutput(
-        IV4MetaQuoter.MetaQuoteExactParams memory params,
-        uint24[] memory v3FeeOptions
-    ) external returns (IV4MetaQuoter.MetaQuoteExactResult[] memory quotes) {}
-
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactInputBest(
-        IV4MetaQuoter.MetaQuoteExactParams memory params,
-        uint24[] memory v3FeeOptions
-    )
-        external
-        returns (
-            IV4MetaQuoter.MetaQuoteExactSingleResult memory bestSingleSwap,
-            IV4MetaQuoter.MetaQuoteExactResult memory bestMultihopSwap,
-            IV4MetaQuoter.BestSwap bestSwapType
-        )
-    {}
-
-    /// @inheritdoc IMetaQuoter
-    function metaQuoteExactOutputBest(
-        IV4MetaQuoter.MetaQuoteExactParams memory params,
-        uint24[] memory v3FeeOptions
-    )
-        external
-        returns (
-            IV4MetaQuoter.MetaQuoteExactSingleResult memory bestSingleSwap,
-            IV4MetaQuoter.MetaQuoteExactResult memory bestMultihopSwap,
-            IV4MetaQuoter.BestSwap bestSwapType
-        )
-    {}
 }

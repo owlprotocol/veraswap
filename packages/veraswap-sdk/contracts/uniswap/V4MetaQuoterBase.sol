@@ -26,7 +26,7 @@ contract V4MetaQuoterBase is V4QuoterBase {
 
     function _metaQuoteExactInputSingle(
         IV4MetaQuoter.MetaQuoteExactSingleParams memory params
-    ) internal returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory swaps) {
+    ) internal virtual returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory swaps) {
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length;
         uint256 quoteResultsCount = 0;
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactSingleResult[](
@@ -89,7 +89,7 @@ contract V4MetaQuoterBase is V4QuoterBase {
 
     function _metaQuoteExactOutputSingle(
         IV4MetaQuoter.MetaQuoteExactSingleParams memory params
-    ) internal returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory swaps) {
+    ) internal virtual returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory swaps) {
         uint256 quoteResultsMaxLen = params.poolKeyOptions.length;
         uint256 quoteResultsCount = 0;
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactSingleResult[](
