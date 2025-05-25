@@ -46,10 +46,17 @@ contract MetaQuoterTest is Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     uint128 constant amount = 0.01 ether;
 
+    // Liquid tokens
+    // liq34: Has V3 and V4 pools with all tokens
+    // liq3: Has V3 pools with all tokens
+    // liq4: Has V4 pools with all tokens
+    IERC20 internal liq34;
+    IERC20 internal liq3;
+    IERC20 internal liq4;
+
     // Tokens
     IERC20 internal tokenA;
     IERC20 internal tokenB;
-    IERC20 internal tokenC;
     // Uniswap V3 Core
     IUniswapV3Factory internal v3Factory;
     // Uniswap V4 Core
@@ -65,22 +72,30 @@ contract MetaQuoterTest is Test {
         // Sets proper address for Create2 & transaction sender
         vm.startBroadcast();
         // Tokens
+        (address _liq34, ) = MockERC20Utils.getOrCreate2("Liquid V34", "L34", 18);
+        (address _liq3, ) = MockERC20Utils.getOrCreate2("Liquid V3", "L3", 18);
+        (address _liq4, ) = MockERC20Utils.getOrCreate2("Liquid V4", "L4", 18);
         (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
-        (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
-        (address _tokenC, ) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
+        (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
+        liq34 = IERC20(_liq34);
+        liq3 = IERC20(_liq3);
+        liq4 = IERC20(_liq4);
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
-        tokenC = IERC20(_tokenC);
         // Mint tokens
+        MockERC20(address(liq34)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(liq3)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(liq4)).mint(msg.sender, 100_000 ether);
         MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
         MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(tokenC)).mint(msg.sender, 100_000 ether);
         // Permit2
         (address permit2, ) = Permit2Utils.getOrCreate2();
         // Approve Permit2
+        liq34.approve(permit2, type(uint256).max);
+        liq3.approve(permit2, type(uint256).max);
+        liq4.approve(permit2, type(uint256).max);
         tokenA.approve(permit2, type(uint256).max);
         tokenB.approve(permit2, type(uint256).max);
-        tokenC.approve(permit2, type(uint256).max);
 
         //TODO: Add WETH9
 
@@ -118,34 +133,46 @@ contract MetaQuoterTest is Test {
         });
         (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
         router = IUniversalRouter(_router);
+        IAllowanceTransfer(permit2).approve(address(liq34), address(router), type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(liq3), address(router), type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(liq4), address(router), type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenC), address(router), type(uint160).max, type(uint48).max);
+
+        // V3/V4 paths
+        // A -> liq34
+        // A -> liq34 -> B
+        // V3-only paths
+        // A -> liq3
+        // A -> liq3 -> B
+        // V4-only paths
+        // A -> liq4
+        // A -> liq4 -> B
 
         // Create V4 Pools
         PoolUtils.createV4Pool(
             Currency.wrap(address(tokenA)),
-            Currency.wrap(address(tokenB)),
+            Currency.wrap(address(liq34)),
             v4PositionManager,
             10 ether
         );
         PoolUtils.createV4Pool(
+            Currency.wrap(address(liq34)),
             Currency.wrap(address(tokenB)),
-            Currency.wrap(address(tokenC)),
             v4PositionManager,
             10 ether
         );
         // Create V3 Pools
         PoolUtils.createV3Pool(
             Currency.wrap(address(tokenA)),
-            Currency.wrap(address(tokenB)),
+            Currency.wrap(address(liq34)),
             v3Factory,
             v3Posm,
             10 ether
         );
         PoolUtils.createV3Pool(
+            Currency.wrap(address(liq34)),
             Currency.wrap(address(tokenB)),
-            Currency.wrap(address(tokenC)),
             v3Factory,
             v3Posm,
             10 ether
@@ -164,10 +191,10 @@ contract MetaQuoterTest is Test {
         defaultPoolKeyOptions[3] = IV4MetaQuoter.PoolKeyOptions({fee: 10_000, tickSpacing: 200, hooks: address(0)});
     }
 
-    // A (exact) -> B (variable)
-    function testExactInputSingleAB() public {
+    // A (exact) -> L34 (variable)
+    function testExactInputSingleAL34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
         // V4 Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -218,10 +245,10 @@ contract MetaQuoterTest is Test {
         assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
     }
 
-    // A (variable) -> B (exact)
-    function testExactOutputSingleAB() public {
+    // A (variable) -> L34 (exact)
+    function testExactOutputSingleAL34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
         // V4 Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
@@ -272,13 +299,13 @@ contract MetaQuoterTest is Test {
         assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased (can't check amount due to gas cost)
     }
 
-    // A (exact) -> B -> C (variable)
-    function testExactInputABC() public {
+    // A (exact) -> L34 -> B (variable)
+    function testExactInputAL34C() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
         // V4 Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(tokenB));
+        hopCurrencies[0] = Currency.wrap(address(liq34));
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -327,13 +354,13 @@ contract MetaQuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
-    // A (variable) -> B -> C (exact)
-    function testExactOutputABC() public {
+    // A (variable) -> L34 -> B (exact)
+    function testExactOutputAL34C() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
         // V4 Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(tokenB));
+        hopCurrencies[0] = Currency.wrap(address(liq34));
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyOut,
             variableCurrency: currencyIn,
