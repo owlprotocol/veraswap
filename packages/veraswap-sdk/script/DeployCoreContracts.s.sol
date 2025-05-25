@@ -114,7 +114,7 @@ contract DeployCoreContracts is DeployParameters {
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
             (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
-            V3QuoterUtils.getOrCreate2(v3Factory, bytes32(0), address(0)); //TODO: Add WETH9 address, add poolInitCodeHash
+            V3QuoterUtils.getOrCreate2(v3Factory, bytes32(0)); //TODO: Add WETH9 address, add poolInitCodeHash
 
             // Uniswap V4
             // Core Uniswap Contracts
