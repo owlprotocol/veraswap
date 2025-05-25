@@ -57,12 +57,12 @@ contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactInputSingle(v3Params);
 
         // Combine results, set hook to address(3) for V3 quotes
-        quotes = new MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        quotes = new MetaQuoteExactSingleResult[](v4Quotes.length + v3Quotes.length);
         for (uint256 i = 0; i < v4Quotes.length; i++) {
             quotes[i] = v4Quotes[i];
         }
         for (uint256 i = 0; i < v3Quotes.length; i++) {
-            quotes[i] = MetaQuoteExactSingleResult({
+            quotes[v4Quotes.length + i] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: v3Quotes[i].poolKey.currency0,
                     currency1: v3Quotes[i].poolKey.currency1,
@@ -97,12 +97,12 @@ contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactOutputSingle(v3Params);
 
         // Combine results, set hook to address(3) for V3 quotes
-        quotes = new MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        quotes = new MetaQuoteExactSingleResult[](v4Quotes.length + v3Quotes.length);
         for (uint256 i = 0; i < v4Quotes.length; i++) {
             quotes[i] = v4Quotes[i];
         }
         for (uint256 i = 0; i < v3Quotes.length; i++) {
-            quotes[i] = MetaQuoteExactSingleResult({
+            quotes[v4Quotes.length + i] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: v3Quotes[i].poolKey.currency0,
                     currency1: v3Quotes[i].poolKey.currency1,
