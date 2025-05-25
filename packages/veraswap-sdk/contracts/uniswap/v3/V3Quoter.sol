@@ -48,10 +48,9 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
         }
     }
 
-    /// @inheritdoc IV3Quoter
-    function quoteExactInputSingle(
+    function _quoteExactInputSingleReason(
         QuoteExactSingleParams memory params
-    ) public returns (uint256 amountOut, uint256 gasEstimate) {
+    ) internal returns (bytes memory reason, uint256 gasEstimate) {
         bool zeroForOne = params.zeroForOne;
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
 
@@ -66,10 +65,19 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
                 sqrtPriceLimitX96,
                 abi.encode(params.poolKey, true)
             )
-        {} catch (bytes memory reason) {
+        {} catch (bytes memory reasonCatch) {
             gasEstimate = gasBefore - gasleft();
-            amountOut = reason.parseQuoteAmount();
+            reason = reasonCatch;
         }
+    }
+
+    /// @inheritdoc IV3Quoter
+    function quoteExactInputSingle(
+        QuoteExactSingleParams memory params
+    ) public returns (uint256 amountOut, uint256 gasEstimate) {
+        (bytes memory reason, uint256 gasEstimateCatch) = _quoteExactInputSingleReason(params);
+        gasEstimate = gasEstimateCatch;
+        amountOut = reason.parseQuoteAmount();
     }
 
     /// @inheritdoc IV3Quoter
@@ -105,10 +113,9 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
         }
     }
 
-    /// @inheritdoc IV3Quoter
-    function quoteExactOutputSingle(
+    function _quoteExactOutputSingleReason(
         QuoteExactSingleParams memory params
-    ) public returns (uint256 amountIn, uint256 gasEstimate) {
+    ) internal returns (bytes memory reason, uint256 gasEstimate) {
         bool zeroForOne = params.zeroForOne;
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
 
@@ -123,10 +130,19 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
                 sqrtPriceLimitX96,
                 abi.encode(params.poolKey, false)
             )
-        {} catch (bytes memory reason) {
+        {} catch (bytes memory reasonCatch) {
             gasEstimate = gasBefore - gasleft();
-            amountIn = reason.parseQuoteAmount();
+            reason = reasonCatch;
         }
+    }
+
+    /// @inheritdoc IV3Quoter
+    function quoteExactOutputSingle(
+        QuoteExactSingleParams memory params
+    ) public returns (uint256 amountIn, uint256 gasEstimate) {
+        (bytes memory reason, uint256 gasEstimateCatch) = _quoteExactOutputSingleReason(params);
+        gasEstimate = gasEstimateCatch;
+        amountIn = reason.parseQuoteAmount();
     }
 
     /// @inheritdoc IV3Quoter
