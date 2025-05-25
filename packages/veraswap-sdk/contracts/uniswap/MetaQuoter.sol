@@ -13,8 +13,8 @@ import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
 import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol";
 
 // Base quoters
-import {V3QuoterBase} from "./v3/V3QuoterBase.sol";
-import {BaseV4Quoter} from "@uniswap/v4-periphery/src/base/BaseV4Quoter.sol";
+import {V3MetaQuoterBase} from "./v3/V3MetaQuoterBase.sol";
+import {V4MetaQuoterBase} from "./V4MetaQuoterBase.sol";
 
 import {IMetaQuoter} from "./IMetaQuoter.sol";
 
@@ -22,7 +22,7 @@ import {IMetaQuoter} from "./IMetaQuoter.sol";
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes for v3/v4 pools
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
-contract MetaQuoter is IMetaQuoter, V3QuoterBase, BaseV4Quoter {
+contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
@@ -33,7 +33,7 @@ contract MetaQuoter is IMetaQuoter, V3QuoterBase, BaseV4Quoter {
         address _factory,
         bytes32 _poolInitCodeHash,
         IPoolManager _poolManager
-    ) V3QuoterBase(_factory, _poolInitCodeHash) BaseV4Quoter(_poolManager) {}
+    ) V3MetaQuoterBase(_factory, _poolInitCodeHash) V4MetaQuoterBase(_poolManager) {}
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactInputSingle(
