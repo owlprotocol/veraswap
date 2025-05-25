@@ -156,6 +156,7 @@ contract V3QuoterTest is Test {
     function testExactInputSingle() public {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+
         // V3 Quote
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -169,6 +170,7 @@ contract V3QuoterTest is Test {
         assertEq(v3MetaQuoteResults.length, 1); // Only active pool
         IV3MetaQuoter.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
+
         // V3 Swap
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(
@@ -203,7 +205,8 @@ contract V3QuoterTest is Test {
     function testExactOutputSingle() public {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
-        // V4 Quote
+
+        // V3 Quote
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
             variableCurrency: currencyIn,
@@ -216,6 +219,7 @@ contract V3QuoterTest is Test {
         assertEq(v3MetaQuoteResults.length, 1); // Only active pool
         IV3MetaQuoter.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
+
         // V3 Swap
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(
@@ -246,43 +250,41 @@ contract V3QuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3MetaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
-    /*
     // A (exact) -> B -> C (variable)
     function testExactInput() public {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+
         // V3 Quote
-        V3PathKey[] memory pathQuote = new V3PathKey[](2);
-        V3PathKey memory pathKeyIntermediate = V3PathKey({
-            intermediateCurrency: Currency.wrap(address(tokenB)),
-            fee: fee
-        });
-        V3PathKey memory pathKeyOutput = V3PathKey({intermediateCurrency: currencyOut, fee: fee});
-        pathQuote[0] = pathKeyIntermediate;
-        pathQuote[1] = pathKeyOutput;
-
-        IV3MetaQuoter.QuoteExactParams memory v3QuoteParams = IV3MetaQuoter.QuoteExactParams({
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(tokenB));
+        IV3MetaQuoter.MetaQuoteExactParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
-            path: pathQuote,
-            exactAmount: amount
+            variableCurrency: currencyOut,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            feeOptions: getDefaultFeeOptions()
         });
-
-        (uint256 amountOut, ) = v3Quoter.quoteExactInput(v3QuoteParams);
-        assertGt(amountOut, 0);
+        IV3MetaQuoter.MetaQuoteExactResult[] memory v3MetaQuoteResults = v3MetaQuoter.metaQuoteExactInput(
+            v3MetaQuoteParams
+        );
+        assertEq(v3MetaQuoteResults.length, 1); // Only active pool
+        IV3MetaQuoter.MetaQuoteExactResult memory quote = v3MetaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
 
         // V3 Swap
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(
             Currency.unwrap(currencyIn),
-            fee,
-            address(tokenB),
-            fee,
-            Currency.unwrap(currencyOut)
+            quote.path[0].fee,
+            Currency.unwrap(quote.path[0].intermediateCurrency),
+            quote.path[1].fee,
+            Currency.unwrap(quote.path[1].intermediateCurrency)
         );
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
             amount,
-            amountOut, // amountOutMinimum
+            uint256(quote.variableAmount), // amountOutMinimum
             path,
             true // payerIsUser
         );
@@ -298,46 +300,45 @@ contract V3QuoterTest is Test {
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
-        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3QuoteParams.exactAmount); // Input balance decreased by exact amount
-        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3MetaQuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
     // A (variable) -> B -> C (exact)
     function testExactOutput() public {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenC)));
+
         // V3 Quote
-        V3PathKey[] memory pathQuote = new V3PathKey[](2);
-        V3PathKey memory pathKeyInput = V3PathKey({intermediateCurrency: currencyIn, fee: fee});
-        V3PathKey memory pathKeyIntermediate = V3PathKey({
-            intermediateCurrency: Currency.wrap(address(tokenB)),
-            fee: fee
-        });
-        pathQuote[0] = pathKeyInput;
-        pathQuote[1] = pathKeyIntermediate;
-
-        IV3MetaQuoter.QuoteExactParams memory v3QuoteParams = IV3MetaQuoter.QuoteExactParams({
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(tokenB));
+        IV3MetaQuoter.MetaQuoteExactParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyOut,
-            path: pathQuote,
-            exactAmount: amount
+            variableCurrency: currencyIn,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            feeOptions: getDefaultFeeOptions()
         });
-
-        (uint256 amountIn, ) = v3Quoter.quoteExactOutput(v3QuoteParams);
-        assertGt(amountIn, 0);
+        IV3MetaQuoter.MetaQuoteExactResult[] memory v3MetaQuoteResults = v3MetaQuoter.metaQuoteExactOutput(
+            v3MetaQuoteParams
+        );
+        assertEq(v3MetaQuoteResults.length, 1); // Only active pool
+        IV3MetaQuoter.MetaQuoteExactResult memory quote = v3MetaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
 
         // V3 Swap
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(
             Currency.unwrap(currencyOut),
-            fee,
-            address(tokenB),
-            fee,
-            Currency.unwrap(currencyIn)
+            quote.path[1].fee,
+            Currency.unwrap(quote.path[1].intermediateCurrency),
+            quote.path[0].fee,
+            Currency.unwrap(quote.path[0].intermediateCurrency)
         );
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
             amount,
-            amountIn, // amountInMaximum
+            uint256(quote.variableAmount), // amountInMaximum
             path,
             true // payerIsUser
         );
@@ -353,8 +354,7 @@ contract V3QuoterTest is Test {
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
-        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by variable amount
-        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3QuoteParams.exactAmount); // Output balance increased by exact amount
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3MetaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
-    */
 }
