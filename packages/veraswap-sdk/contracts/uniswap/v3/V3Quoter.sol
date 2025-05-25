@@ -20,6 +20,8 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
     /// @notice The init code hash of the V3 pool
     bytes32 public immutable poolInitCodeHash;
 
+    error PoolDoesNotExist(address pool);
+
     /// @param _factory The address of the Uniswap V3 factory contract
     /// @param _poolInitCodeHash The init code hash of the V3 pool
     constructor(address _factory, bytes32 _poolInitCodeHash) {
@@ -51,9 +53,14 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
     function _quoteExactInputSingleReason(
         QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        bool zeroForOne = params.zeroForOne;
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
+        if (address(pool).code.length == 0) {
+            // Pool does not exist, revert early
+            reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));
+            return (reason, 0);
+        }
 
+        bool zeroForOne = params.zeroForOne;
         uint256 gasBefore = gasleft();
         // limit priced param removed, we set it to the max/min sqrt ratio depending on the swap direction
         uint160 sqrtPriceLimitX96 = zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1;
@@ -116,9 +123,14 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
     function _quoteExactOutputSingleReason(
         QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        bool zeroForOne = params.zeroForOne;
         IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
+        if (address(pool).code.length == 0) {
+            // Pool does not exist, revert early
+            reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));
+            return (reason, 0);
+        }
 
+        bool zeroForOne = params.zeroForOne;
         uint256 gasBefore = gasleft();
         // limit priced param removed, we set it to the max/min sqrt ratio depending on the swap direction
         uint160 sqrtPriceLimitX96 = zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1;
