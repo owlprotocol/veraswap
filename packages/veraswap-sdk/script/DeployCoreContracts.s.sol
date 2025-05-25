@@ -281,10 +281,7 @@ contract DeployCoreContracts is DeployParameters {
         contracts.orbiterBridgeSweep = orbiterBridgeSweep;
 
         // Custom Contracts
-        (address v4MetaQuoter, ) = V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
-        console2.log("v4MetaQuoter:", v4MetaQuoter);
-
-        (address executeSweep, ) = ExecuteSweepUtils.getOrCreate2();
-        console2.log("executeSweep:", executeSweep);
+        // V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+        ExecuteSweepUtils.getOrCreate2();
     }
 }
