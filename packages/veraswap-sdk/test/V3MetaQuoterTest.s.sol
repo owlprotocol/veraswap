@@ -18,6 +18,7 @@ import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
 // Uniswap V3 Periphery
 import {IV3MetaQuoter} from "../contracts/uniswap/v3/IV3MetaQuoter.sol";
+import {IV3MetaQuoterBase} from "../contracts/uniswap/v3/IV3MetaQuoterBase.sol";
 import {V3MetaQuoterUtils} from "../script/utils/V3MetaQuoterUtils.sol";
 import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
 import {V3PositionManagerMockUtils} from "../script/utils/V3PositionManagerMockUtils.sol";
@@ -158,17 +159,17 @@ contract V3QuoterTest is Test {
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
 
         // V3 Quote
-        IV3MetaQuoter.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactSingleParams({
-            exactCurrency: currencyIn,
-            variableCurrency: currencyOut,
-            exactAmount: uint128(amount),
-            feeOptions: getDefaultFeeOptions()
-        });
-        IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3MetaQuoteResults = v3MetaQuoter.metaQuoteExactInputSingle(
-            v3MetaQuoteParams
-        );
+        IV3MetaQuoterBase.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoterBase
+            .MetaQuoteExactSingleParams({
+                exactCurrency: currencyIn,
+                variableCurrency: currencyOut,
+                exactAmount: uint128(amount),
+                feeOptions: getDefaultFeeOptions()
+            });
+        IV3MetaQuoterBase.MetaQuoteExactSingleResult[] memory v3MetaQuoteResults = v3MetaQuoter
+            .metaQuoteExactInputSingle(v3MetaQuoteParams);
         assertEq(v3MetaQuoteResults.length, 1); // Only active pool
-        IV3MetaQuoter.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
+        IV3MetaQuoterBase.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
 
         // V3 Swap
@@ -207,17 +208,17 @@ contract V3QuoterTest is Test {
         (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
 
         // V3 Quote
-        IV3MetaQuoter.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoter.MetaQuoteExactSingleParams({
-            exactCurrency: currencyOut,
-            variableCurrency: currencyIn,
-            exactAmount: amount,
-            feeOptions: getDefaultFeeOptions()
-        });
-        IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3MetaQuoteResults = v3MetaQuoter.metaQuoteExactOutputSingle(
-            v3MetaQuoteParams
-        );
+        IV3MetaQuoterBase.MetaQuoteExactSingleParams memory v3MetaQuoteParams = IV3MetaQuoterBase
+            .MetaQuoteExactSingleParams({
+                exactCurrency: currencyOut,
+                variableCurrency: currencyIn,
+                exactAmount: amount,
+                feeOptions: getDefaultFeeOptions()
+            });
+        IV3MetaQuoterBase.MetaQuoteExactSingleResult[] memory v3MetaQuoteResults = v3MetaQuoter
+            .metaQuoteExactOutputSingle(v3MetaQuoteParams);
         assertEq(v3MetaQuoteResults.length, 1); // Only active pool
-        IV3MetaQuoter.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
+        IV3MetaQuoterBase.MetaQuoteExactSingleResult memory quote = v3MetaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
 
         // V3 Swap

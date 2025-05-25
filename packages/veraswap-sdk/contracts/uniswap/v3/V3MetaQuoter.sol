@@ -6,7 +6,7 @@ import {ParseBytes} from "@uniswap/v4-core/src/libraries/ParseBytes.sol";
 import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol";
 
 import {IV3MetaQuoter} from "./IV3MetaQuoter.sol";
-import {V3Quoter} from "./V3Quoter.sol";
+import {V3MetaQuoterBase} from "./V3MetaQuoterBase.sol";
 import {V3PoolKey} from "./V3PoolKey.sol";
 import {V3PathKey} from "./V3PathKey.sol";
 
@@ -14,124 +14,30 @@ import {V3PathKey} from "./V3PathKey.sol";
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
-contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
+contract V3MetaQuoter is V3MetaQuoterBase, IV3MetaQuoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
-    constructor(address _factory, bytes32 _poolInitCodeHash) V3Quoter(_factory, _poolInitCodeHash) {}
+    constructor(address _factory, bytes32 _poolInitCodeHash) V3MetaQuoterBase(_factory, _poolInitCodeHash) {}
 
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactInputSingle(
         MetaQuoteExactSingleParams memory params
-    ) public returns (MetaQuoteExactSingleResult[] memory swaps) {
-        uint256 quoteResultsMaxLen = params.feeOptions.length;
-        uint256 quoteResultsCount = 0;
-        MetaQuoteExactSingleResult[] memory quoteResults = new MetaQuoteExactSingleResult[](quoteResultsMaxLen);
-
-        (Currency currency0, Currency currency1) = params.exactCurrency < params.variableCurrency
-            ? (params.exactCurrency, params.variableCurrency)
-            : (params.variableCurrency, params.exactCurrency);
-        bool zeroForOne = params.exactCurrency == currency0;
-
-        // Loop through the poolKeyOptions and create a PoolKey for each
-        // Quote using quoteExactInputSingle
-        for (uint256 i = 0; i < params.feeOptions.length; i++) {
-            uint24 fee = params.feeOptions[i];
-
-            V3PoolKey memory poolKey = V3PoolKey({currency0: currency0, currency1: currency1, fee: fee});
-
-            QuoteExactSingleParams memory quoteParams = QuoteExactSingleParams({
-                poolKey: poolKey,
-                zeroForOne: zeroForOne,
-                exactAmount: params.exactAmount
-            });
-
-            (bytes memory reason, uint256 gasEstimate) = _quoteExactInputSingleReason(quoteParams);
-            if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
-                // Quote failed (eg. insufficient liquidity), skip this pool
-                continue;
-            }
-            quoteResultsCount++;
-            uint256 variableAmount = reason.parseQuoteAmount();
-
-            MetaQuoteExactSingleResult memory quote = MetaQuoteExactSingleResult({
-                poolKey: poolKey,
-                zeroForOne: zeroForOne,
-                variableAmount: variableAmount,
-                gasEstimate: gasEstimate
-            });
-            quoteResults[i] = quote;
-        }
-
-        // Filter out empty results
-        swaps = new MetaQuoteExactSingleResult[](quoteResultsCount);
-        uint256 swapsIndex = 0;
-        for (uint256 i = 0; i < quoteResults.length; i++) {
-            if (quoteResults[i].gasEstimate != 0) {
-                swaps[swapsIndex] = quoteResults[i]; //non-zero quote
-                swapsIndex++;
-            }
-        }
+    ) external returns (MetaQuoteExactSingleResult[] memory) {
+        return _metaQuoteExactInputSingle(params);
     }
 
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactOutputSingle(
         MetaQuoteExactSingleParams memory params
-    ) public returns (MetaQuoteExactSingleResult[] memory swaps) {
-        uint256 quoteResultsMaxLen = params.feeOptions.length;
-        uint256 quoteResultsCount = 0;
-        MetaQuoteExactSingleResult[] memory quoteResults = new MetaQuoteExactSingleResult[](quoteResultsMaxLen);
-
-        (Currency currency0, Currency currency1) = params.exactCurrency < params.variableCurrency
-            ? (params.exactCurrency, params.variableCurrency)
-            : (params.variableCurrency, params.exactCurrency);
-        bool zeroForOne = params.exactCurrency == currency1;
-
-        // Loop through the poolKeyOptions and create a PoolKey for each
-        // Quote using quoteExactInputSingle
-        for (uint256 i = 0; i < params.feeOptions.length; i++) {
-            uint24 fee = params.feeOptions[i];
-
-            V3PoolKey memory poolKey = V3PoolKey({currency0: currency0, currency1: currency1, fee: fee});
-
-            QuoteExactSingleParams memory quoteParams = QuoteExactSingleParams({
-                poolKey: poolKey,
-                zeroForOne: zeroForOne,
-                exactAmount: params.exactAmount
-            });
-
-            (bytes memory reason, uint256 gasEstimate) = _quoteExactOutputSingleReason(quoteParams);
-            if (reason.parseSelector() != QuoterRevert.QuoteSwap.selector) {
-                // Quote failed (eg. insufficient liquidity), skip this pool
-                continue;
-            }
-            quoteResultsCount++;
-            uint256 variableAmount = reason.parseQuoteAmount();
-
-            MetaQuoteExactSingleResult memory quote = MetaQuoteExactSingleResult({
-                poolKey: poolKey,
-                zeroForOne: zeroForOne,
-                variableAmount: variableAmount,
-                gasEstimate: gasEstimate
-            });
-            quoteResults[i] = quote;
-        }
-
-        // Filter out empty results
-        swaps = new MetaQuoteExactSingleResult[](quoteResultsCount);
-        uint256 swapsIndex = 0;
-        for (uint256 i = 0; i < quoteResults.length; i++) {
-            if (quoteResults[i].gasEstimate != 0) {
-                swaps[swapsIndex] = quoteResults[i]; //non-zero quote
-                swapsIndex++;
-            }
-        }
+    ) external returns (MetaQuoteExactSingleResult[] memory) {
+        return _metaQuoteExactOutputSingle(params);
     }
 
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactInput(
         MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactResult[] memory swaps) {
+    ) public returns (MetaQuoteExactResult[] memory swaps) {
         // Find best swap route for each hop currency
         uint256 quoteResultsCount = 0; // Count of non-reverting quotes
         MetaQuoteExactResult[] memory quoteResults = new MetaQuoteExactResult[](params.hopCurrencies.length);
@@ -144,7 +50,7 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
                 exactAmount: params.exactAmount,
                 feeOptions: params.feeOptions
             });
-            MetaQuoteExactSingleResult[] memory quoteInputToIntermediate = metaQuoteExactInputSingle(
+            MetaQuoteExactSingleResult[] memory quoteInputToIntermediate = _metaQuoteExactInputSingle(
                 quoteInputToIntermediateParams
             );
             if (quoteInputToIntermediate.length == 0) {
@@ -166,7 +72,7 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
                 exactAmount: uint128(quoteInputToIntermediateBest.variableAmount), // assume < 2^128
                 feeOptions: params.feeOptions
             });
-            MetaQuoteExactSingleResult[] memory quoteIntermediateToOutput = metaQuoteExactInputSingle(
+            MetaQuoteExactSingleResult[] memory quoteIntermediateToOutput = _metaQuoteExactInputSingle(
                 quoteIntermediateToOutputParams
             );
             if (quoteIntermediateToOutput.length == 0) {
@@ -217,7 +123,7 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactOutput(
         MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactResult[] memory swaps) {
+    ) public returns (MetaQuoteExactResult[] memory swaps) {
         // Find best swap route for each hop currency
         uint256 quoteResultsCount = 0; // Count of non-reverting quotes
         MetaQuoteExactResult[] memory quoteResults = new MetaQuoteExactResult[](params.hopCurrencies.length);
@@ -230,7 +136,7 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
                 exactAmount: params.exactAmount,
                 feeOptions: params.feeOptions
             });
-            MetaQuoteExactSingleResult[] memory quoteOutputToIntermediate = metaQuoteExactOutputSingle(
+            MetaQuoteExactSingleResult[] memory quoteOutputToIntermediate = _metaQuoteExactOutputSingle(
                 quoteOutputToIntermediateParams
             );
             if (quoteOutputToIntermediate.length == 0) {
@@ -252,7 +158,7 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
                 exactAmount: uint128(quoteOutputToIntermediateBest.variableAmount), // assume < 2^128
                 feeOptions: params.feeOptions
             });
-            MetaQuoteExactSingleResult[] memory quoteIntermediateToInput = metaQuoteExactOutputSingle(
+            MetaQuoteExactSingleResult[] memory quoteIntermediateToInput = _metaQuoteExactOutputSingle(
                 quoteIntermediateToInputParams
             );
             if (quoteIntermediateToInput.length == 0) {
@@ -310,7 +216,51 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
             MetaQuoteExactResult memory bestMultihopSwap,
             BestSwap bestSwapType
         )
-    {}
+    {
+        MetaQuoteExactSingleResult[] memory singleResults = _metaQuoteExactInputSingle(
+            MetaQuoteExactSingleParams({
+                exactCurrency: params.exactCurrency,
+                variableCurrency: params.variableCurrency,
+                feeOptions: params.feeOptions,
+                exactAmount: params.exactAmount
+            })
+        );
+        MetaQuoteExactResult[] memory multihopResults = metaQuoteExactInput(params);
+
+        if (singleResults.length == 0 && multihopResults.length == 0) {
+            return (bestSingleSwap, bestMultihopSwap, bestSwapType); //BestSwap.None
+        } else if (singleResults.length == 0) {
+            bestSwapType = BestSwap.Multihop;
+            bestMultihopSwap = multihopResults[0]; //multihopResults.length > 0
+        } else if (multihopResults.length == 0) {
+            bestSwapType = BestSwap.Single;
+            bestSingleSwap = singleResults[0]; //singleResults.length > 0
+        } else {
+            bestSingleSwap = singleResults[0]; //singleResults.length > 0
+            bestMultihopSwap = multihopResults[0]; //multihopResults.length > 0
+        }
+
+        // Find swap with largest output amount (will get skipped if length is 0 or 1)
+        for (uint256 i = 1; i < singleResults.length; i++) {
+            if (singleResults[i].variableAmount > bestSingleSwap.variableAmount) {
+                bestSingleSwap = singleResults[i];
+            }
+        }
+        // Find swap with largest output amount (will get skipped if length is 0 or 1)
+        for (uint256 i = 1; i < multihopResults.length; i++) {
+            if (multihopResults[i].variableAmount > bestMultihopSwap.variableAmount) {
+                bestMultihopSwap = multihopResults[i];
+            }
+        }
+        // Both arrays have length > 0, compare bestSingleSwap and bestMultihopSwap
+        if (bestSwapType == BestSwap.None) {
+            if (bestSingleSwap.variableAmount >= bestMultihopSwap.variableAmount) {
+                bestSwapType = BestSwap.Single;
+            } else {
+                bestSwapType = BestSwap.Multihop;
+            }
+        }
+    }
 
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactOutputBest(
@@ -322,5 +272,50 @@ contract V3MetaQuoter is V3Quoter, IV3MetaQuoter {
             MetaQuoteExactResult memory bestMultihopSwap,
             BestSwap bestSwapType
         )
-    {}
+    {
+        // Single Quotes
+        MetaQuoteExactSingleResult[] memory singleResults = _metaQuoteExactOutputSingle(
+            MetaQuoteExactSingleParams({
+                exactCurrency: params.exactCurrency,
+                variableCurrency: params.variableCurrency,
+                feeOptions: params.feeOptions,
+                exactAmount: params.exactAmount
+            })
+        );
+        MetaQuoteExactResult[] memory multihopResults = metaQuoteExactOutput(params);
+
+        if (singleResults.length == 0 && multihopResults.length == 0) {
+            return (bestSingleSwap, bestMultihopSwap, bestSwapType); //BestSwap.None
+        } else if (singleResults.length == 0) {
+            bestSwapType = BestSwap.Multihop;
+            bestMultihopSwap = multihopResults[0]; //multihopResults.length > 0
+        } else if (multihopResults.length == 0) {
+            bestSwapType = BestSwap.Single;
+            bestSingleSwap = singleResults[0]; //singleResults.length > 0
+        } else {
+            bestSingleSwap = singleResults[0]; //singleResults.length > 0
+            bestMultihopSwap = multihopResults[0]; //multihopResults.length > 0
+        }
+
+        // Find swap with smallest input amount (will get skipped if length is 0 or 1)
+        for (uint256 i = 1; i < singleResults.length; i++) {
+            if (singleResults[i].variableAmount < bestSingleSwap.variableAmount) {
+                bestSingleSwap = singleResults[i];
+            }
+        }
+        // Find swap with smallest input amount (will get skipped if length is 0 or 1)
+        for (uint256 i = 1; i < multihopResults.length; i++) {
+            if (multihopResults[i].variableAmount < bestMultihopSwap.variableAmount) {
+                bestMultihopSwap = multihopResults[i];
+            }
+        }
+        // Both arrays have length > 0, compare bestSingleSwap and bestMultihopSwap
+        if (bestSwapType == BestSwap.None) {
+            if (bestSingleSwap.variableAmount <= bestMultihopSwap.variableAmount) {
+                bestSwapType = BestSwap.Single;
+            } else {
+                bestSwapType = BestSwap.Multihop;
+            }
+        }
+    }
 }
