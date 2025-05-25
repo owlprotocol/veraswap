@@ -2,81 +2,21 @@
 pragma solidity ^0.8.0;
 
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {IUniswapV3SwapCallback} from "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
 import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 
 import {V3CallbackValidation} from "./V3CallbackValidation.sol";
 import {IV3Quoter} from "./IV3Quoter.sol";
 import {V3PoolKey, V3PoolKeyLibrary} from "./V3PoolKey.sol";
+import {V3QuoterBase} from "./V3QuoterBase.sol";
 
-contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
+contract V3Quoter is IV3Quoter, V3QuoterBase {
     using QuoterRevert for *;
-
-    /// @notice The address of the Uniswap V3 factory contract
-    address public immutable factory;
-    /// @notice The init code hash of the V3 pool
-    bytes32 public immutable poolInitCodeHash;
-
-    error PoolDoesNotExist(address pool);
 
     /// @param _factory The address of the Uniswap V3 factory contract
     /// @param _poolInitCodeHash The init code hash of the V3 pool
-    constructor(address _factory, bytes32 _poolInitCodeHash) {
-        factory = _factory;
-        poolInitCodeHash = _poolInitCodeHash;
-    }
-
-    /// @inheritdoc IUniswapV3SwapCallback
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external view override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
-        (V3PoolKey memory poolKey, bool isExactInput) = abi.decode(data, (V3PoolKey, bool));
-        V3CallbackValidation.verifyCallback(poolKey, factory, poolInitCodeHash);
-
-        (uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
-            ? (uint256(amount0Delta), uint256(-amount1Delta))
-            : (uint256(amount1Delta), uint256(-amount0Delta));
-
-        if (isExactInput) {
-            amountReceived.revertQuote();
-        } else {
-            amountToPay.revertQuote();
-        }
-    }
-
-    function _quoteExactInputSingleReason(
-        QuoteExactSingleParams memory params
-    ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
-        if (address(pool).code.length == 0) {
-            // Pool does not exist, revert early
-            reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));
-            return (reason, 0);
-        }
-
-        bool zeroForOne = params.zeroForOne;
-        uint256 gasBefore = gasleft();
-        // limit priced param removed, we set it to the max/min sqrt ratio depending on the swap direction
-        uint160 sqrtPriceLimitX96 = zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1;
-        try
-            pool.swap(
-                address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
-                int256(uint256(params.exactAmount)),
-                sqrtPriceLimitX96,
-                abi.encode(params.poolKey, true)
-            )
-        {} catch (bytes memory reasonCatch) {
-            gasEstimate = gasBefore - gasleft();
-            reason = reasonCatch;
-        }
-    }
+    constructor(address _factory, bytes32 _poolInitCodeHash) V3QuoterBase(_factory, _poolInitCodeHash) {}
 
     /// @inheritdoc IV3Quoter
     function quoteExactInputSingle(
@@ -117,34 +57,6 @@ contract V3Quoter is IV3Quoter, IUniswapV3SwapCallback {
                 exactAmount = uint128(amount);
                 idx++;
             }
-        }
-    }
-
-    function _quoteExactOutputSingleReason(
-        QuoteExactSingleParams memory params
-    ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
-        if (address(pool).code.length == 0) {
-            // Pool does not exist, revert early
-            reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));
-            return (reason, 0);
-        }
-
-        bool zeroForOne = params.zeroForOne;
-        uint256 gasBefore = gasleft();
-        // limit priced param removed, we set it to the max/min sqrt ratio depending on the swap direction
-        uint160 sqrtPriceLimitX96 = zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1;
-        try
-            pool.swap(
-                address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
-                -int256(uint256(params.exactAmount)),
-                sqrtPriceLimitX96,
-                abi.encode(params.poolKey, false)
-            )
-        {} catch (bytes memory reasonCatch) {
-            gasEstimate = gasBefore - gasleft();
-            reason = reasonCatch;
         }
     }
 
