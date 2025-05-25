@@ -16,6 +16,8 @@ import {QuoterRevert} from "@uniswap/v4-periphery/src/libraries/QuoterRevert.sol
 import {V3MetaQuoterBase} from "./v3/V3MetaQuoterBase.sol";
 import {V4MetaQuoterBase} from "./V4MetaQuoterBase.sol";
 
+import {IV3MetaQuoter} from "./v3/IV3MetaQuoter.sol";
+import {IV4MetaQuoter} from "./IV4MetaQuoter.sol";
 import {IMetaQuoter} from "./IMetaQuoter.sol";
 
 /// @title MetaQuoter
@@ -37,45 +39,115 @@ contract MetaQuoter is IMetaQuoter, V3MetaQuoterBase, V4MetaQuoterBase {
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactInputSingle(
-        MetaQuoteExactSingleParams memory params
-    ) public returns (MetaQuoteExactSingleResult[] memory swaps) {}
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory params,
+        uint24[] memory v3FeeOptions
+    ) public returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quotes) {
+        // V4 Quotes
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory v4Quotes = _metaQuoteExactInputSingle(params);
+        // V3 Quotes
+        IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: params.exactCurrency,
+            variableCurrency: params.variableCurrency,
+            exactAmount: params.exactAmount,
+            feeOptions: v3FeeOptions
+        });
+        IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactInputSingle(v3Params);
+
+        // Combine results, set hook to address(3) for V3 quotes
+        quotes = new IV4MetaQuoter.MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        for (uint256 i = 0; i < v4Quotes.length; i++) {
+            quotes[i] = v4Quotes[i];
+        }
+        for (uint256 i = 0; i < v3Quotes.length; i++) {
+            quotes[i] = IV4MetaQuoter.MetaQuoteExactSingleResult({
+                poolKey: PoolKey({
+                    currency0: v3Quotes[i].poolKey.currency0,
+                    currency1: v3Quotes[i].poolKey.currency1,
+                    fee: v3Quotes[i].poolKey.fee,
+                    tickSpacing: 0, //ignored for V3
+                    hooks: IHooks(address(3)) // Set to address(3) for V3 quotes
+                }),
+                zeroForOne: v3Quotes[i].zeroForOne,
+                hookData: "",
+                variableAmount: v3Quotes[i].variableAmount,
+                gasEstimate: v3Quotes[i].gasEstimate
+            });
+        }
+    }
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactOutputSingle(
-        MetaQuoteExactSingleParams memory params
-    ) public returns (MetaQuoteExactSingleResult[] memory swaps) {}
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory params,
+        uint24[] memory v3FeeOptions
+    ) public returns (IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quotes) {
+        // V4 Quotes
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory v4Quotes = _metaQuoteExactOutputSingle(params);
+        // V3 Quotes
+        IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: params.exactCurrency,
+            variableCurrency: params.variableCurrency,
+            exactAmount: params.exactAmount,
+            feeOptions: v3FeeOptions
+        });
+        IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes = _metaQuoteExactOutputSingle(v3Params);
+
+        // Combine results, set hook to address(3) for V3 quotes
+        quotes = new IV4MetaQuoter.MetaQuoteExactSingleResult[](v3Quotes.length + v4Quotes.length);
+        for (uint256 i = 0; i < v4Quotes.length; i++) {
+            quotes[i] = v4Quotes[i];
+        }
+        for (uint256 i = 0; i < v3Quotes.length; i++) {
+            quotes[i] = IV4MetaQuoter.MetaQuoteExactSingleResult({
+                poolKey: PoolKey({
+                    currency0: v3Quotes[i].poolKey.currency0,
+                    currency1: v3Quotes[i].poolKey.currency1,
+                    fee: v3Quotes[i].poolKey.fee,
+                    tickSpacing: 0, //ignored for V3
+                    hooks: IHooks(address(3)) // Set to address(3) for V3 quotes
+                }),
+                zeroForOne: v3Quotes[i].zeroForOne,
+                hookData: "",
+                variableAmount: v3Quotes[i].variableAmount,
+                gasEstimate: v3Quotes[i].gasEstimate
+            });
+        }
+    }
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactInput(
-        MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactResult[] memory swaps) {}
+        IV4MetaQuoter.MetaQuoteExactParams memory params,
+        uint24[] memory v3FeeOptions
+    ) external returns (IV4MetaQuoter.MetaQuoteExactResult[] memory quotes) {}
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactOutput(
-        MetaQuoteExactParams memory params
-    ) external returns (MetaQuoteExactResult[] memory swaps) {}
+        IV4MetaQuoter.MetaQuoteExactParams memory params,
+        uint24[] memory v3FeeOptions
+    ) external returns (IV4MetaQuoter.MetaQuoteExactResult[] memory quotes) {}
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactInputBest(
-        MetaQuoteExactParams memory params
+        IV4MetaQuoter.MetaQuoteExactParams memory params,
+        uint24[] memory v3FeeOptions
     )
         external
         returns (
-            MetaQuoteExactSingleResult memory bestSingleSwap,
-            MetaQuoteExactResult memory bestMultihopSwap,
-            BestSwap bestSwapType
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory bestSingleSwap,
+            IV4MetaQuoter.MetaQuoteExactResult memory bestMultihopSwap,
+            IV4MetaQuoter.BestSwap bestSwapType
         )
     {}
 
     /// @inheritdoc IMetaQuoter
     function metaQuoteExactOutputBest(
-        MetaQuoteExactParams memory params
+        IV4MetaQuoter.MetaQuoteExactParams memory params,
+        uint24[] memory v3FeeOptions
     )
         external
         returns (
-            MetaQuoteExactSingleResult memory bestSingleSwap,
-            MetaQuoteExactResult memory bestMultihopSwap,
-            BestSwap bestSwapType
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory bestSingleSwap,
+            IV4MetaQuoter.MetaQuoteExactResult memory bestMultihopSwap,
+            IV4MetaQuoter.BestSwap bestSwapType
         )
     {}
 }
