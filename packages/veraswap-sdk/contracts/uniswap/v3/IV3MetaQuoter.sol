@@ -4,15 +4,28 @@ pragma solidity ^0.8.0;
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {V3PoolKey} from "./V3PoolKey.sol";
 import {V3PathKey} from "./V3PathKey.sol";
-import {IV3MetaQuoterBase} from "./IV3MetaQuoterBase.sol";
 
 /// @title IV3MetaQuoter
 /// @notice Interface for MetaQuoter, a contract that searches for multiple quotes
-interface IV3MetaQuoter is IV3MetaQuoterBase {
+interface IV3MetaQuoter {
     enum BestSwap {
         None,
         Single,
         Multihop
+    }
+
+    struct MetaQuoteExactSingleParams {
+        Currency exactCurrency;
+        Currency variableCurrency;
+        uint128 exactAmount;
+        uint24[] feeOptions;
+    }
+
+    struct MetaQuoteExactSingleResult {
+        V3PoolKey poolKey;
+        bool zeroForOne;
+        uint256 variableAmount;
+        uint256 gasEstimate;
     }
 
     struct MetaQuoteExactParams {
