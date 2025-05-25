@@ -19,8 +19,8 @@ import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
 // Uniswap V3 Periphery
 import {IQuoterV2} from "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.sol";
 import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
-import {V3Quoter} from "../contracts/uniswap/v3/V3Quoter.sol";
-import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
+// import {V3Quoter} from "../contracts/uniswap/v3/V3Quoter.sol";
+// import {V3QuoterUtils} from "../script/utils/V3QuoterUtils.sol";
 import {IV3Quoter} from "../contracts/uniswap/v3/IV3Quoter.sol";
 import {V3Quoter2} from "../contracts/uniswap/v3/V3Quoter2.sol";
 import {V3PoolKey, V3PoolKeyLibrary} from "../contracts/uniswap/v3/V3PoolKey.sol";
@@ -43,7 +43,6 @@ import {UniversalRouterUtils} from "../script/utils/UniversalRouterUtils.sol";
 // Liquidity Pools
 import {PoolUtils} from "../script/utils/PoolUtils.sol";
 
-//TODO: Write V3Quoter that matches V4Quoter interface?
 contract V3QuoterTest is Test {
     bytes32 constant BYTES32_ZERO = bytes32(0);
     uint128 constant amount = 0.01 ether;
@@ -58,7 +57,6 @@ contract V3QuoterTest is Test {
     // Uniswap V3 Core
     IUniswapV3Factory internal v3Factory;
     // Uniswap V3 Periphery
-    V3Quoter internal v3Quoter;
     V3Quoter2 internal v3Quoter2;
     // Uniswap Universal Router
     IUniversalRouter internal router;
@@ -84,8 +82,7 @@ contract V3QuoterTest is Test {
         // Uniswap V3 Periphery
         bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         address weth9 = address(0x4200000000000000000000000000000000000006); //TODO: Add WETH9 address
-        (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash, weth9);
-        v3Quoter = V3Quoter(_v3Quoter);
+        // (address _v3Quoter, ) = V3QuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash, weth9);
         v3Quoter2 = new V3Quoter2(address(v3Factory), poolInitCodeHash);
 
         // Uniswap Universal Router
@@ -163,25 +160,13 @@ contract V3QuoterTest is Test {
 
         // V3 Quote
         bool zeroForOne = currency0 == currencyIn;
-
-        // TODO: Replace with V4 types, use min/max amounts instead of price limit
-        IQuoterV2.QuoteExactInputSingleParams memory v3QuoteParams = IQuoterV2.QuoteExactInputSingleParams({
-            tokenIn: Currency.unwrap(currencyIn),
-            tokenOut: Currency.unwrap(currencyOut),
-            amountIn: amount,
-            fee: poolKey.fee,
-            sqrtPriceLimitX96: 0
-        });
-        (uint256 amountOut, , , ) = v3Quoter.quoteExactInputSingle(v3QuoteParams);
-        assertGt(amountOut, 0);
-
-        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams2 = IV3Quoter.QuoteExactSingleParams({
+        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams = IV3Quoter.QuoteExactSingleParams({
             poolKey: poolKey,
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
-        (uint256 amountOut2, ) = v3Quoter2.quoteExactInputSingle(v3QuoteParams2);
-        assertEq(amountOut2, amountOut);
+        (uint256 amountOut, ) = v3Quoter2.quoteExactInputSingle(v3QuoteParams);
+        assertGt(amountOut, 0);
 
         // V3 Swap
         // Encode V3 Swap
@@ -189,7 +174,7 @@ contract V3QuoterTest is Test {
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
             amount,
-            amountOut2, // amountOutMinimum
+            amountOut, // amountOutMinimum
             path,
             true // payerIsUser
         );
@@ -205,8 +190,8 @@ contract V3QuoterTest is Test {
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
-        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3QuoteParams2.exactAmount); // Input balance decreased by exact amount
-        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut2); // Output balance increased by variable amount
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - v3QuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
     }
 
     // A (variable) -> B (exact)
@@ -221,24 +206,13 @@ contract V3QuoterTest is Test {
 
         // V3 Quote
         bool zeroForOne = currency0 == currencyIn;
-
-        IQuoterV2.QuoteExactOutputSingleParams memory v3QuoteParams = IQuoterV2.QuoteExactOutputSingleParams({
-            tokenIn: Currency.unwrap(currencyIn),
-            tokenOut: Currency.unwrap(currencyOut),
-            amount: amount,
-            fee: poolKey.fee,
-            sqrtPriceLimitX96: 0
-        });
-        (uint256 amountIn, , , ) = v3Quoter.quoteExactOutputSingle(v3QuoteParams);
-        assertGt(amountIn, 0);
-
-        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams2 = IV3Quoter.QuoteExactSingleParams({
+        IV3Quoter.QuoteExactSingleParams memory v3QuoteParams = IV3Quoter.QuoteExactSingleParams({
             poolKey: poolKey,
             exactAmount: uint128(amount),
             zeroForOne: zeroForOne
         });
-        (uint256 amountIn2, ) = v3Quoter2.quoteExactOutputSingle(v3QuoteParams2);
-        assertEq(amountIn2, amountIn);
+        (uint256 amountIn, ) = v3Quoter2.quoteExactOutputSingle(v3QuoteParams);
+        assertGt(amountIn, 0);
 
         // V3 Swap
         // Encode V3 Swap
@@ -246,7 +220,7 @@ contract V3QuoterTest is Test {
         bytes memory v3Swap = abi.encode(
             msg.sender, // recipient
             amount,
-            amountIn2, // amountInMaximum
+            amountIn, // amountInMaximum
             path,
             true // payerIsUser
         );
@@ -262,8 +236,8 @@ contract V3QuoterTest is Test {
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
-        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn2); // Input balance decreased by variable amount
-        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3QuoteParams2.exactAmount); // Output balance increased by exact amount
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + v3QuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
     // A (exact) -> B -> C (variable)
