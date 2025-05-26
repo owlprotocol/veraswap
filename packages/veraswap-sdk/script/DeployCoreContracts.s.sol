@@ -7,6 +7,7 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Create2Utils} from "./utils/Create2Utils.sol";
 
 // Uniswap V3
+import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "./utils/UniswapV3FactoryUtils.sol";
 import {V3QuoterUtils} from "./utils/V3QuoterUtils.sol";
 // Uniswap V4
@@ -114,7 +115,8 @@ contract DeployCoreContracts is DeployParameters {
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
             (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
-            V3QuoterUtils.getOrCreate2(v3Factory, bytes32(0)); //TODO: Add WETH9 address, add poolInitCodeHash
+            bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
+            V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash);
 
             // Uniswap V4
             // Core Uniswap Contracts
