@@ -263,7 +263,7 @@ contract MetaQuoterTest is Test {
             Currency.unwrap(currencyOut)
         );
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             uint256(quote.variableAmount), // amountOutMinimum
             path,
@@ -418,7 +418,7 @@ contract MetaQuoterTest is Test {
             Currency.unwrap(currencyIn)
         );
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             uint256(quote.variableAmount), // amountInMaximum
             path,

@@ -32,6 +32,7 @@ import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
 import {LiquidityAmounts} from "@uniswap/v4-core/test/utils/LiquidityAmounts.sol";
 // Uniswap V4 Periphery
 import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
+import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
 // Uniswap Universal Router
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
@@ -152,7 +153,7 @@ contract V3QuoterTest is Test {
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(Currency.unwrap(currencyIn), poolKey.fee, Currency.unwrap(currencyOut));
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             amountOut, // amountOutMinimum
             path,
@@ -198,7 +199,7 @@ contract V3QuoterTest is Test {
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(Currency.unwrap(currencyOut), poolKey.fee, Currency.unwrap(currencyIn));
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             amountIn, // amountInMaximum
             path,
@@ -253,7 +254,7 @@ contract V3QuoterTest is Test {
             Currency.unwrap(currencyOut)
         );
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             amountOut, // amountOutMinimum
             path,
@@ -308,7 +309,7 @@ contract V3QuoterTest is Test {
             Currency.unwrap(currencyIn)
         );
         bytes memory v3Swap = abi.encode(
-            msg.sender, // recipient
+            ActionConstants.MSG_SENDER, // recipient
             amount,
             amountIn, // amountInMaximum
             path,
