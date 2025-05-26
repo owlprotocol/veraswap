@@ -18,11 +18,8 @@
 	url = https://github.com/uniswap/v2-core
 [submodule "lib/v2-core"]
 	branch = master
-[submodule "packages/veraswap-sdk/lib/v3-core"]
-	path = packages/veraswap-sdk/lib/v3-core
-	url = https://github.com/uniswap/v3-core
 [submodule "lib/v3-core"]
-	branch = main
+	branch = solc-upgrade
 [submodule "lib/v3-periphery"]
 	branch = main
 [submodule "packages/veraswap-sdk/lib/v4-core"]
@@ -65,3 +62,6 @@
 [submodule "tools/scoutup"]
 	path = tools/scoutup
 	url = https://github.com/owlprotocol/scoutup.git
+[submodule "packages/veraswap-sdk/lib/v3-core"]
+	path = packages/veraswap-sdk/lib/v3-core
+	url = https://github.com/veraswap-io/v3-core
