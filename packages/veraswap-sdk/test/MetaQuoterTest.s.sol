@@ -656,7 +656,7 @@ contract MetaQuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
-    /***** Mixed Routes *****/
+    /***** Mixed Routes V3 -> V4 *****/
     // V3 -> V4
     // A (exact) -> L3 -> L34 (variable)
     function testExactInputAL3L34C() public {
@@ -764,5 +764,54 @@ contract MetaQuoterTest is Test {
         assertGt(quote.variableAmount, 0);
         assertEq(address(quote.path[0].hooks), address(3)); // V3 Pool
         assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
+    }
+
+    /***** Mixed Routes V4 -> V3 *****/
+    // V3 -> V4
+    // A (exact) -> L4 -> L34 (variable)
+    function testExactInputAL4L34C() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        // Quote
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(liq4));
+        IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
+            exactCurrency: currencyIn,
+            variableCurrency: currencyOut,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInput(metaQuoteParams);
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L4 -> L34 path
+
+        IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
+        assertEq(address(quote.path[1].hooks), address(3)); // V3 Pool
+    }
+
+    // V3 -> V4
+    // A (variable) -> L4 -> L34 (exact)
+    function testExactOutputAL4L34C() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        // Quote
+        Currency[] memory hopCurrencies = new Currency[](1);
+        hopCurrencies[0] = Currency.wrap(address(liq4));
+        IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
+            exactCurrency: currencyOut,
+            variableCurrency: currencyIn,
+            hopCurrencies: hopCurrencies,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutput(metaQuoteParams);
+        assertEq(metaQuoteResults.length, 1); // Finds optimal A -> L4 -> L34 path
+        IV4MetaQuoter.MetaQuoteExactResult memory quote = metaQuoteResults[0];
+
+        assertGt(quote.variableAmount, 0);
+        assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
+        assertEq(address(quote.path[1].hooks), address(3)); // V3 Pool
     }
 }
