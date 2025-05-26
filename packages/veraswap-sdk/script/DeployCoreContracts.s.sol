@@ -117,14 +117,9 @@ contract DeployCoreContracts is DeployParameters {
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
-            // TODO: stop using an env var after the deploy core contracts refactor
-            bool isSuperchain = vm.envOr("SUPERSIM", false);
-            if (!isSuperchain) {
-                // Only deploy if using regular anvil
-                (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
-                bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
-                V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash, address(0)); //TODO: Add WETH9 address, add poolInitCodeHash
-            }
+            (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
+            bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
+            V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash);
 
             // Uniswap V4
             // Core Uniswap Contracts
