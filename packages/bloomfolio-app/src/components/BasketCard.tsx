@@ -28,9 +28,7 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
 
     const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
         chainId: basketChainId,
-        basketDetails: basketDetails
-            ? basketDetails.map(({ addr, units }) => ({ addr, units: units / 10n ** 18n }))
-            : [],
+        basketDetails: basketDetails ? basketDetails.map(({ addr, units }) => ({ addr, units })) : [],
     });
 
     const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
