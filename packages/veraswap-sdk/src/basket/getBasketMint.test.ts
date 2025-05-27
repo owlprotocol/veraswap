@@ -103,7 +103,7 @@ describe("basket/getBasketMint.test.ts", function () {
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
         const currencyHops = [] as Address[];
         const contracts = {
-            v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
+            v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
         };
         const poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS);
@@ -289,7 +289,7 @@ describe("basket/getBasketMint.test.ts", function () {
             deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
             currencyHops: [],
             contracts: {
-                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
+                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                 universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
         };

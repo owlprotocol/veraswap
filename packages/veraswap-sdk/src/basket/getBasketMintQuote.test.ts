@@ -62,7 +62,7 @@ describe("basket/getBasketMintQuote.test.ts", function () {
             currencyIn: zeroAddress,
             currencyHops: [],
             contracts: {
-                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
+                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             },
         };
         const basketMintQuote = await getBasketMintQuote(queryClient, config, basketMintParams);
@@ -78,7 +78,7 @@ describe("basket/getBasketMintQuote.test.ts", function () {
             currencyOut: zeroAddress,
             currencyHops: [],
             contracts: {
-                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.v4MetaQuoter,
+                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             },
         };
         const basketBurnQuote = await getBasketBurnQuote(queryClient, config, basketBurnParams);

@@ -31,7 +31,7 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
  * @param params deploy params such as owner, fee_rate
  * @returns Uniswap contract addresses
  */
-export function getUniswapContracts(params?: { owner?: Address }): UniswapContracts {
+export function getUniswapContracts(params?: { owner?: Address }) {
     const permit2: Address = PERMIT2_ADDRESS;
 
     // Uniswap V3 Core
@@ -223,6 +223,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4Quoter: "0x613DB448fd6980dc84416B95380a8eaeC581DbE1",
         universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
         v4MetaQuoter: "0x9016fBc773B7309E80C2CF41EBd52EE58CBD4238",
+        metaQuoter: "0x8EEF9d75c396e4EeF76EDb51A828805b5BeE8c1A",
     },
     [bsc.id]: {
         v4PoolManager: "0x28e2Ea090877bF75740558f6BFB36A5ffeE9e9dF",
@@ -231,6 +232,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4Quoter: "0xa889Eca9eDfa9d6048055098D1E8d0C5eC9676d8",
         universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
         v4MetaQuoter: "0x63A7c63E83d74f4E609d4E15d75fd155A9699C69",
+        metaQuoter: "0xab49293ff734f0615dfa67fdb3b4625fca0747e2",
     },
     [optimism.id]: {
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
@@ -247,5 +249,6 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4Quoter: "0x2829D6f74c1ddaD51e528a270E8e8038AD56b59A",
         universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
         v4MetaQuoter: "0x3e0878e6c9ca0xA5C386eb2EaAe433fa925A74Ba19aad4eA8311de",
+        metaQuoter: "0x3e0878e6c9ca920b83a8c5d51a7a32ba18cf4449",
     },
 } as const;
