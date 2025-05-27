@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet, retainSearchParams, Link } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Menu } from "lucide-react";
-import { useState } from "react";
+import { Menu, HelpCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
@@ -22,6 +22,16 @@ export const Route = createRootRoute({
 
 function RootComponent() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+    useEffect(() => {
+        const hasVisited = localStorage.getItem("hasVisitedVerabloomBefore");
+        if (!hasVisited) {
+            setShowWelcomeModal(true);
+            localStorage.setItem("hasVisitedVerabloomBefore", "true");
+        }
+    }, []);
+
     return (
         <div className="min-h-screen page-gradient">
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b header-background">
@@ -33,10 +43,26 @@ function RootComponent() {
                     </Link>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowWelcomeModal(true)}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <HelpCircle className="w-5 h-5" />
+                        </Button>
                         <ThemeSwitcher />
                         <ConnectButton showBalance={true} accountStatus="full" chainStatus="icon" />
                     </div>
-                    <div className="md:hidden flex-1 flex justify-end">
+                    <div className="md:hidden flex-1 flex justify-end items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowWelcomeModal(true)}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <HelpCircle className="w-5 h-5" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => setMenuOpen((prev) => !prev)}>
                             <Menu className="w-6 h-6" />
                         </Button>
@@ -58,7 +84,7 @@ function RootComponent() {
             <main className="pt-10 pb-8">
                 <Outlet />
             </main>
-            <WelcomeModal />
+            <WelcomeModal open={showWelcomeModal} onOpenChange={setShowWelcomeModal} />
         </div>
     );
 }
