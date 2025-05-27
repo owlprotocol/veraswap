@@ -9,21 +9,28 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IAllowanceTransfer.sol/*.json",
     "out/ISignatureTransfer.sol/*.json",
     "out/IPermit2.sol/*.json",
-    // Uniswap
+    // Uniswap V3
+    "out/IUniswapV3Factory.sol/*.json",
+    "out/UniswapV3Factory.sol/*.json",
+    "out/IUniswapV3Pool.sol/*.json",
+    "out/UniswapV3Pool.sol/*.json",
+    // Uniswap V4
     "out/IPositionManager.sol/*.json",
     "out/IPoolManager.sol/*.json",
-    "out/UnsupportedProtocol.sol/*.json",
     "out/PoolManager.sol/*.json",
     "out/PositionManager.sol/*.json",
-    "out/IUniversalRouter.sol/*.json",
-    "out/UniversalRouter.sol/*.json",
+    // Uniswap V4 Periphery
     "out/IV4Quoter.sol/*.json",
     "out/V4Quoter.sol/*.json",
     "out/IStateView.sol/*.json",
     "out/StateView.sol/*.json",
-    // Uniswap (custom)
     "out/IV4MetaQuoter.sol/*.json",
     "out/V4MetaQuoter.sol/*.json",
+    // Universal Router
+    "out/UnsupportedProtocol.sol/*.json",
+    "out/IUniversalRouter.sol/*.json",
+    "out/UniversalRouter.sol/*.json",
+    "out/MetaQuoter.sol/*.json",
     // Hyperlane
     "out/HypERC20.sol/*.json",
     "out/HypERC20Collateral.sol/*.json",

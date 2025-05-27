@@ -121,7 +121,7 @@ contract DeployCoreContracts is DeployParameters {
 
     function deployCoreContracts() internal returns (CoreContracts memory contracts) {
         uint256 chainId = block.chainid;
-        bool isLocalChain = chainId == 900 || chainId == 901 || chainId == 902;
+        bool isLocalChain = chainId == 900 || chainId == 901 || chainId == 902 || chainId == 31337;
 
         // Uniswap contracts
         if (isLocalChain) {
@@ -173,13 +173,23 @@ contract DeployCoreContracts is DeployParameters {
         }
 
         // Check if required Uniswap contracts are deployed (will be true for local chains / chains configured in deployParams folder)
-        bool uniswapEnabled = contracts.uniswap.weth9 != address(0) && contracts.uniswap.permit2 != address(0)
-            && contracts.uniswap.v4PoolManager != address(0) && contracts.uniswap.v4PositionManager != address(0);
+        // Core token infra for WETH9 and Permit2
+        bool tokenInfraEnabled = contracts.uniswap.weth9 != address(0) && contracts.uniswap.permit2 != address(0);
+        // Uniswap V3
+        bool v3Enabled = tokenInfraEnabled && contracts.uniswap.v3Factory != address(0)
+            && contracts.uniswap.poolInitCodeHash != bytes32(0);
+        // Uniswap V4
+        bool v4Enabled = tokenInfraEnabled && contracts.uniswap.v4PoolManager != address(0)
+            && contracts.uniswap.v4PositionManager != address(0);
 
-        if (!uniswapEnabled) {
-            console2.log(
-                "Core Uniswap contracts (eg. Permit2, WETH9, V4PoolManager), not deployed, skipping Uniswap deployment"
-            );
+        if (!tokenInfraEnabled) {
+            console2.log("Core Uniswap Infra (eg. Permit2, WETH9), not deployed, skipping Uniswap deployment");
+        }
+
+        // Deploy additional Uniswap periphery contracts that are not yet set in deploy parameters or not yet deployed locally
+        // Uniswap V3 Periphery
+        if (!v3Enabled) {
+            console2.log("Uniswap V3 not enabled/deployed");
         } else {
             // Deploy additional Uniswap periphery contracts that are not yet set in deploy parameters or not yet deployed locally
             // Uniswap V3 Periphery
@@ -191,7 +201,11 @@ contract DeployCoreContracts is DeployParameters {
                     contracts.uniswap.v3Quoter = v3Quoter;
                 }
             }
-            // Uniswap V4 Periphery
+        }
+        // Uniswap V4 Periphery
+        if (!v4Enabled) {
+            console2.log("Uniswap V4 not enabled/deployed");
+        } else {
             if (contracts.uniswap.v4StateView == address(0)) {
                 (address v4StateView,) = StateViewUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
                 contracts.uniswap.v4StateView = v4StateView;
@@ -200,7 +214,11 @@ contract DeployCoreContracts is DeployParameters {
                 (address v4Quoter,) = V4QuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
                 contracts.uniswap.v4Quoter = v4Quoter;
             }
-            // Meta Quoter
+        }
+
+        if (!v3Enabled && !v4Enabled) {
+            console2.log("Uniswap V3 and V4 not enabled/deployed, skipping MetaQuoter/UniversalRouter deployment");
+        } else {
             if (contracts.uniswap.metaQuoter == address(0)) {
                 //TODO: Is it ok to deploy this if only V4 is enabled? (Note: if v3 is enabled, v4 is assumed to be enabled)
                 // => Seems fine as contract just skips not existant pools though there is a slight gas penalty

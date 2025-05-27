@@ -1,11 +1,14 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { Address, encodeDeployData, Hash, keccak256, zeroAddress, zeroHash } from "viem";
 import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
+import { MetaQuoter } from "../artifacts/MetaQuoter.js";
 import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
+import { UniswapV3Factory } from "../artifacts/UniswapV3Factory.js";
+import { UniswapV3Pool } from "../artifacts/UniswapV3Pool.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4MetaQuoter } from "../artifacts/V4MetaQuoter.js";
@@ -28,12 +31,17 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
  * @param params deploy params such as owner, fee_rate
  * @returns Uniswap contract addresses
  */
-export function getUniswapContracts(params?: { owner?: Address }) {
+export function getUniswapContracts(params?: { owner?: Address }): UniswapContracts {
     const permit2: Address = PERMIT2_ADDRESS;
-    const unsupported = getDeployDeterministicAddress({
-        bytecode: UnsupportedProtocol.bytecode,
+
+    // Uniswap V3 Core
+    const v3Factory = getDeployDeterministicAddress({
+        bytecode: UniswapV3Factory.bytecode,
         salt: zeroHash,
     });
+    const v3PoolInitCodeHash = keccak256(UniswapV3Pool.bytecode);
+
+    // Uniswap V4 Core
     const v4PoolManager = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: PoolManager.abi,
@@ -44,15 +52,16 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     });
 
     const positionDescriptor = zeroAddress;
-    const weth9 = zeroAddress;
     const v4PositionManager = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: PositionManager.abi,
             bytecode: PositionManager.bytecode,
-            args: [v4PoolManager, permit2, 300_000n, positionDescriptor, weth9],
+            // Note: In DeployCoreContracts, weth9 is ignored for postion manager
+            args: [v4PoolManager, permit2, 300_000n, positionDescriptor, zeroAddress],
         }),
         salt: zeroHash,
     });
+    // Uniswap V4 Periphery
     const v4StateView = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: StateView.abi,
@@ -69,6 +78,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+
     const v4MetaQuoter = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: V4MetaQuoter.abi,
@@ -79,13 +89,20 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     });
 
     // Universal Router
+    const unsupported = getDeployDeterministicAddress({
+        bytecode: UnsupportedProtocol.bytecode,
+        salt: zeroHash,
+    });
+    // TODO: Actually deploy this with setCode when using anvil (supersim has pre-deploy)
+    const weth9 = "0x4200000000000000000000000000000000000006";
+    // Universal Router
     const routerParams = {
         permit2,
-        weth9: "0x4200000000000000000000000000000000000006",
+        weth9,
         v2Factory: unsupported,
-        v3Factory: unsupported,
+        v3Factory,
         pairInitCodeHash: zeroHash,
-        poolInitCodeHash: zeroHash,
+        poolInitCodeHash: v3PoolInitCodeHash,
         v4PoolManager,
         v3NFTPositionManager: unsupported,
         v4PositionManager,
@@ -98,13 +115,24 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+    const metaQuoter = getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            abi: MetaQuoter.abi,
+            bytecode: MetaQuoter.bytecode,
+            args: [v3Factory, v3PoolInitCodeHash, v4PoolManager],
+        }),
+        salt: zeroHash,
+    });
 
     return {
+        v3Factory,
+        v3PoolInitCodeHash,
         v4PoolManager,
         v4PositionManager,
         v4StateView,
         v4Quoter,
         v4MetaQuoter,
+        metaQuoter,
         universalRouter,
     };
 }
@@ -113,19 +141,20 @@ export function getUniswapContracts(params?: { owner?: Address }) {
 export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
 //TODO: Add metaquoter address (compute using poolManager address)
+export interface UniswapContracts {
+    v3Factory?: Address;
+    v3PoolInitCodeHash?: Hash;
+    v4PoolManager: Address;
+    v4PositionManager: Address;
+    v4StateView: Address;
+    v4Quoter: Address;
+    v4MetaQuoter: Address;
+    metaQuoter?: Address;
+    universalRouter: Address;
+}
+
 /** Uniswap contracts by chain */
-export const UNISWAP_CONTRACTS: Record<
-    number,
-    | {
-          v4PoolManager: `0x${string}`;
-          v4PositionManager: `0x${string}`;
-          v4StateView: `0x${string}`;
-          v4Quoter: `0x${string}`;
-          v4MetaQuoter: `0x${string}`;
-          universalRouter: `0x${string}`;
-      }
-    | undefined
-> = {
+export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainA.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainB.id]: LOCAL_UNISWAP_CONTRACTS,
