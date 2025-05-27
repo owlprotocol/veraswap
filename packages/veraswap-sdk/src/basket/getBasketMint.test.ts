@@ -3,13 +3,11 @@ import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import {
-    Address,
     createWalletClient,
     encodeDeployData,
     encodeFunctionData,
     Hex,
     http,
-    numberToHex,
     parseAbi,
     parseEther,
     zeroAddress,
@@ -23,14 +21,13 @@ import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { metaQuoteExactOutputBest } from "../artifacts/IV4MetaQuoter.js";
 import { opChainL1, opChainL1Client } from "../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../constants/tokens.js";
 import { MAX_UINT_256 } from "../constants/uint256.js";
 import { EXECUTE_SWEEP, LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
-import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
-import { MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/quote/MetaQuoter.js";
+import { getMetaQuoteExactOutputQueryOptions } from "../uniswap/quote/getMetaQuoteExactOutput.js";
+import { MetaQuoteBestType } from "../uniswap/quote/MetaQuoter.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getBasketMint } from "./getBasketMint.js";
@@ -102,12 +99,10 @@ describe.skip("basket/getBasketMint.test.ts", function () {
         const referrer = zeroAddress;
         const currencyIn = zeroAddress;
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const currencyHops = [] as Address[];
         const contracts = {
             v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
         };
-        const poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS);
         // Get required underlying tokens and their raw units
         const mintUnits = await queryClient.fetchQuery(
             readContractQueryOptions(config, {
@@ -120,34 +115,24 @@ describe.skip("basket/getBasketMint.test.ts", function () {
         );
 
         // Quote exactOut for each token
-        const quotes = (await Promise.all(
+        const quotes = await Promise.all(
             mintUnits.map(async (mintUnit) => {
                 const token = mintUnit.addr;
                 const units = mintUnit.units;
 
                 const quote = await queryClient.fetchQuery(
-                    readContractQueryOptions(config, {
+                    getMetaQuoteExactOutputQueryOptions(config, {
                         chainId,
-                        address: contracts.v4MetaQuoter,
-                        abi: [metaQuoteExactOutputBest],
-                        functionName: "metaQuoteExactOutputBest",
-                        args: [
-                            {
-                                exactCurrency: token,
-                                variableCurrency: currencyIn,
-                                hopCurrencies: currencyHops.filter(
-                                    (hopToken) => hopToken !== token && hopToken !== currencyIn,
-                                ),
-                                exactAmount: numberToHex(units),
-                                poolKeyOptions,
-                            } as const,
-                        ],
+                        currencyIn,
+                        currencyOut: token,
+                        amountOut: units,
+                        contracts: { v4MetaQuoter: contracts.v4MetaQuoter },
                     }),
                 );
 
                 return { quote, currencyOut: token, amountOut: units };
             }),
-        )) as { quote: V4MetaQuoteExactBestReturnType; currencyOut: Address; amountOut: bigint }[];
+        );
 
         // Encode swaps
         const tradePlan = new V4Planner();
