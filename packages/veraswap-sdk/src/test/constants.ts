@@ -1,13 +1,33 @@
+import { getAnvilAccount } from "@veraswap/anvil-account";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { encodeDeployData, numberToHex, zeroAddress, zeroHash } from "viem";
+import {
+    Account,
+    Chain,
+    createWalletClient,
+    encodeDeployData,
+    HDAccount,
+    http,
+    numberToHex,
+    Transport,
+    WalletClient,
+    zeroAddress,
+    zeroHash,
+} from "viem";
 
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { opChainA, opChainL1 } from "../chains/supersim.js";
+import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
 import { getHypERC7579RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { createMockERC20ConnectedTokens } from "../constants/tokens.js";
+
+export const anvilAccount: HDAccount = getAnvilAccount();
+export const anvilClientL1: WalletClient<Transport, Chain, Account> = createWalletClient({
+    account: anvilAccount,
+    chain: opChainL1Client.chain,
+    transport: http(),
+});
 
 export function getMockMailboxAddress({ chainId }: { chainId: number }) {
     return getDeployDeterministicAddress({

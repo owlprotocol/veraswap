@@ -30,8 +30,8 @@ import { MAX_UINT_256 } from "../constants/uint256.js";
 import { EXECUTE_SWEEP, LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
+import { MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/quote/MetaQuoter.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/V4MetaQuoter.js";
 
 import { getBasketMint } from "./getBasketMint.js";
 import { getBasketMintQuote } from "./getBasketMintQuote.js";
@@ -158,7 +158,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
             const currencyOut = swap.currencyOut;
             const amountOut = swap.amountOut;
 
-            if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+            if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
                 // Cheapest swap is single hop
                 tradePlan.addAction(Actions.SWAP_EXACT_OUT_SINGLE, [
                     {
@@ -171,7 +171,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
                 ]);
                 // Increase input settlement
                 currencyInAmount += bestSingleSwap.variableAmount;
-            } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
+            } else if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
                 // Cheapest swap is multihop
                 tradePlan.addAction(Actions.SWAP_EXACT_OUT, [
                     {

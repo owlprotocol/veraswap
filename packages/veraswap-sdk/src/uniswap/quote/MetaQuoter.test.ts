@@ -1,26 +1,26 @@
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
-import { getAnvilAccount } from "@veraswap/anvil-account";
-import { createWalletClient, Hex, http, parseAbi, parseUnits, zeroAddress } from "viem";
+import { Hex, parseAbi, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
-import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { opChainL1Client } from "../chains/supersim.js";
-import { LOCAL_CURRENCIES } from "../constants/tokens.js";
-import { MAX_UINT_256 } from "../constants/uint256.js";
-import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
-import { getUniswapV4Address } from "../currency/currency.js";
-import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
+import { IUniversalRouter } from "../../artifacts/IUniversalRouter.js";
+import { opChainL1Client } from "../../chains/supersim.js";
+import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
+import { MAX_UINT_256 } from "../../constants/uint256.js";
+import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
+import { getUniswapV4Address } from "../../currency/currency.js";
+import { anvilClientL1 } from "../../test/constants.js";
+import { DEFAULT_POOL_PARAMS } from "../../types/PoolKey.js";
+import { CommandType, RoutePlanner } from "../routerCommands.js";
 
-import { CommandType, RoutePlanner } from "./routerCommands.js";
 import {
+    MetaQuoteBestType,
     metaQuoteExactInput,
     metaQuoteExactInputBest,
     metaQuoteExactInputSingle,
     metaQuoteExactOutput,
     metaQuoteExactOutputBest,
     metaQuoteExactOutputSingle,
-    V4MetaQuoteBestType,
-} from "./V4MetaQuoter.js";
+} from "./MetaQuoter.js";
 
 describe("uniswap/V4MetaQuoter.test.ts", function () {
     // Uniswap Error Abi
@@ -29,13 +29,6 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
         "error DeltaNotPositive(address)",
         "error CurrencyNotSettled()",
     ]);
-
-    const anvilAccount = getAnvilAccount();
-    const anvilClientL1 = createWalletClient({
-        account: anvilAccount,
-        chain: opChainL1Client.chain,
-        transport: http(),
-    });
 
     // A/ETH, B/ETH Pools Exist
     // A/B Pool Does Not Exist
@@ -251,7 +244,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.Single);
+            expect(bestType).toBe(MetaQuoteBestType.Single);
         });
 
         test("metaQuoteExactOutputBest - single", async () => {
@@ -272,7 +265,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.Single);
+            expect(bestType).toBe(MetaQuoteBestType.Single);
         });
 
         test("metaQuoteExactInputBest - multihop", async () => {
@@ -293,7 +286,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.Multihop);
+            expect(bestType).toBe(MetaQuoteBestType.Multihop);
         });
 
         test("metaQuoteExactOutputBest - multihop", async () => {
@@ -314,7 +307,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.Multihop);
+            expect(bestType).toBe(MetaQuoteBestType.Multihop);
         });
 
         test("metaQuoteExactInputBest - none", async () => {
@@ -335,7 +328,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.None);
+            expect(bestType).toBe(MetaQuoteBestType.None);
         });
 
         test("metaQuoteExactOutputBest - none", async () => {
@@ -356,7 +349,7 @@ describe("uniswap/V4MetaQuoter.test.ts", function () {
                     } as const,
                 ],
             });
-            expect(bestType).toBe(V4MetaQuoteBestType.None);
+            expect(bestType).toBe(MetaQuoteBestType.None);
         });
     });
 });
