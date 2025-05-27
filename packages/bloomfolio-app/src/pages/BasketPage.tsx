@@ -226,17 +226,6 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             Back to Baskets
                         </Button>
                     </Link>
-                    {showPurchasePanel ? (
-                        <SelectedBasketPanel
-                            address={address}
-                            chainId={chainId}
-                            amount={amount}
-                            setAmount={setAmount}
-                            sendTransaction={sendTransaction}
-                            referrer={referrer}
-                            onClose={() => setShowPurchasePanel(false)}
-                        />
-                    ) : null}
                     <div className="flex items-start justify-between space-x-4">
                         <div className="flex items-start space-x-4">
                             <div className={`p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white`}>
@@ -554,13 +543,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                             </CardContent>
                         </Card>
                         <div className="flex flex-col gap-2">
-                            <Button
-                                onClick={() => {
-                                    setShowPurchasePanel(true);
-                                    window.scrollTo({ top: 0, behavior: "smooth" });
-                                }}
-                                className="w-full"
-                            >
+                            <Button onClick={() => setShowPurchasePanel(true)} className="w-full">
                                 Buy this Basket
                             </Button>
                             <Link to="/" className="w-full">
@@ -571,6 +554,19 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                         </div>
                     </div>
                 </div>
+
+                {showPurchasePanel && (
+                    <div className="mt-8" ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+                        <SelectedBasketPanel
+                            address={address}
+                            chainId={chainId}
+                            amount={amount}
+                            setAmount={setAmount}
+                            sendTransaction={sendTransaction}
+                            referrer={referrer}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

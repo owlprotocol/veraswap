@@ -25,7 +25,6 @@ export default function SimplifiedPortfolioPage() {
 
     const handleSelectBasket = (basketId: string) => {
         setSelectedBasket(basketId);
-        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const { sendTransaction, data: hash, isPending: isTransactionPending } = useSendTransaction();
@@ -54,19 +53,22 @@ export default function SimplifiedPortfolioPage() {
                     <BasketPurchaseConfirmation selectedBasket={selectedBasket} amount={amount} hash={hash} />
                 ) : (
                     <div className="space-y-8">
-                        {selectedBasket && (
-                            <SelectedBasketPanel
-                                address={BASKETS.find((b) => b.id === selectedBasket)?.address as `0x${string}`}
-                                chainId={BASKETS.find((b) => b.id === selectedBasket)?.allocations[0].chainId as number}
-                                amount={amount}
-                                setAmount={setAmount}
-                                sendTransaction={sendTransaction}
-                                referrer={referrer as Address | undefined}
-                                onClose={() => setSelectedBasket(null)}
-                            />
-                        )}
-
                         <BasketSelection selectedBasket={selectedBasket} handleSelectBasket={handleSelectBasket} />
+
+                        {selectedBasket && (
+                            <div ref={(el) => el?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+                                <SelectedBasketPanel
+                                    address={BASKETS.find((b) => b.id === selectedBasket)?.address as `0x${string}`}
+                                    chainId={
+                                        BASKETS.find((b) => b.id === selectedBasket)?.allocations[0].chainId as number
+                                    }
+                                    amount={amount}
+                                    setAmount={setAmount}
+                                    sendTransaction={sendTransaction}
+                                    referrer={referrer as Address | undefined}
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
