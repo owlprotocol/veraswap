@@ -119,7 +119,7 @@ export function getUniswapContracts(params?: { owner?: Address }): UniswapContra
         bytecode: encodeDeployData({
             abi: MetaQuoter.abi,
             bytecode: MetaQuoter.bytecode,
-            args: [v3Factory, v3PoolInitCodeHash, v4PoolManager],
+            args: [v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9],
         }),
         salt: zeroHash,
     });

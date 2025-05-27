@@ -100,6 +100,7 @@ contract MetaQuoterTest is Test {
         tokenB.approve(permit2, type(uint256).max);
 
         //TODO: Add WETH9
+        address weth9 = 0x4200000000000000000000000000000000000006;
 
         // Uniswap V3 Core
         bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
@@ -117,14 +118,19 @@ contract MetaQuoterTest is Test {
         // Uniswap V4 Periphery
         (address _v4StateView, ) = StateViewUtils.getOrCreate2(_v4PoolManager);
         v4StateView = IStateView(_v4StateView);
-        (address _metaQuoter, ) = MetaQuoterUtils.getOrCreate2(address(v3Factory), poolInitCodeHash, _v4PoolManager);
+        (address _metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
+            address(v3Factory),
+            poolInitCodeHash,
+            _v4PoolManager,
+            weth9
+        );
         metaQuoter = IV4MetaQuoter(_metaQuoter);
 
         // Uniswap Universal Router
         (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
-            weth9: 0x4200000000000000000000000000000000000006,
+            weth9: weth9,
             v2Factory: unsupported,
             v3Factory: address(v3Factory),
             pairInitCodeHash: BYTES32_ZERO,

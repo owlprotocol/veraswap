@@ -2271,6 +2271,13 @@ export const functions = [
     },
     {
         type: "function",
+        name: "weth9",
+        inputs: [],
+        outputs: [{ name: "", type: "address", internalType: "address" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
         name: "PACKAGE_VERSION",
         inputs: [],
         outputs: [{ name: "", type: "string", internalType: "string" }],

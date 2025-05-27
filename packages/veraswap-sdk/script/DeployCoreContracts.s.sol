@@ -223,7 +223,10 @@ contract DeployCoreContracts is DeployParameters {
                 //TODO: Is it ok to deploy this if only V4 is enabled? (Note: if v3 is enabled, v4 is assumed to be enabled)
                 // => Seems fine as contract just skips not existant pools though there is a slight gas penalty
                 (address metaQuoter,) = MetaQuoterUtils.getOrCreate2(
-                    contracts.uniswap.v3Factory, contracts.uniswap.poolInitCodeHash, contracts.uniswap.v4PoolManager
+                    contracts.uniswap.v3Factory,
+                    contracts.uniswap.poolInitCodeHash,
+                    contracts.uniswap.v4PoolManager,
+                    contracts.uniswap.weth9
                 );
                 contracts.uniswap.metaQuoter = metaQuoter;
             }
