@@ -1,16 +1,11 @@
-import { Actions, V4Planner } from "@uniswap/v4-sdk";
-import { Hex, parseAbi, parseUnits, zeroAddress } from "viem";
+import { Address, padHex, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
-import { IUniversalRouter } from "../../artifacts/IUniversalRouter.js";
 import { opChainL1Client } from "../../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
-import { MAX_UINT_256 } from "../../constants/uint256.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
-import { anvilClientL1 } from "../../test/constants.js";
 import { DEFAULT_POOL_PARAMS } from "../../types/PoolKey.js";
-import { CommandType, RoutePlanner } from "../routerCommands.js";
 
 import {
     MetaQuoteBestType,
@@ -22,334 +17,535 @@ import {
     metaQuoteExactOutputSingle,
 } from "./MetaQuoter.js";
 
-describe("uniswap/V4MetaQuoter.test.ts", function () {
-    // Uniswap Error Abi
-    const UniswapV4ErrorAbi = parseAbi([
-        "error DeltaNotNegative(address)",
-        "error DeltaNotPositive(address)",
-        "error CurrencyNotSettled()",
-    ]);
+const address3: Address = padHex("0x3", { size: 20 });
+// Replicate tests from test/MetaQuoter.test.sol in Typescript but without execution (just quotes)
+describe("uniswap/MetaQuoter.test.ts", function () {
+    const exactAmount = parseUnits("0.01", 18);
 
     // A/ETH, B/ETH Pools Exist
     // A/B Pool Does Not Exist
-    const tokenA = LOCAL_CURRENCIES[0];
-    const tokenAAddress = getUniswapV4Address(tokenA);
-    const tokenB = LOCAL_CURRENCIES[3];
-    const tokenBAddress = getUniswapV4Address(tokenB);
+    const tokenA = getUniswapV4Address(LOCAL_CURRENCIES[0]); // 2 A tokens after this (Hyperlane)
+    const tokenB = getUniswapV4Address(LOCAL_CURRENCIES[3]); // 2 B tokens after this (Hyperlane)
+    const tokenL34 = getUniswapV4Address(LOCAL_CURRENCIES[6]);
+    const tokenL3 = getUniswapV4Address(LOCAL_CURRENCIES[7]);
+    const tokenL4 = getUniswapV4Address(LOCAL_CURRENCIES[8]);
 
-    test("metaQuoteExactInputSingle", async () => {
-        const exactCurrency = tokenAAddress;
-        const exactAmount = parseUnits("0.1", tokenA.decimals);
-        const variableCurrency = zeroAddress;
-        const quotes = await opChainL1Client.readContract({
-            address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-            abi: [metaQuoteExactInputSingle],
-            functionName: "metaQuoteExactInputSingle",
-            args: [
-                {
-                    exactCurrency,
-                    variableCurrency,
-                    exactAmount,
-                    poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                } as const,
-            ],
+    // TODO: With WETH9 pools, A -> ETH should return 2 results (V4 and V3)
+    describe("Single Quotes", () => {
+        describe("exactInputSingle", () => {
+            const currencyIn = tokenA;
+            const exactCurrency = currencyIn;
+            test("A (exact) -> L3 (variable)", async () => {
+                const currencyOut = tokenL3;
+                const variableCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputSingle],
+                    functionName: "metaQuoteExactInputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(address3); // V3 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (exact) -> L4 (variable)", async () => {
+                const currencyOut = tokenL4;
+                const variableCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputSingle],
+                    functionName: "metaQuoteExactInputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (exact) -> L34 (variable)", async () => {
+                const currencyOut = tokenL34;
+                const variableCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputSingle],
+                    functionName: "metaQuoteExactInputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(2); // 2 pools
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(quotes[1].poolKey.hooks).toBe(address3); // V3 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (exact) -> ETH (variable)", async () => {
+                const currencyOut = zeroAddress;
+                const variableCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputSingle],
+                    functionName: "metaQuoteExactInputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
         });
-        expect(quotes.length).toBe(1);
-        const quote = quotes[0];
-        // V4 Trade Plan
-        const tradePlan = new V4Planner();
-        tradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [
-            {
-                poolKey: quote.poolKey,
-                zeroForOne: quote.zeroForOne,
-                amountIn: exactAmount,
-                amountOutMinimum: quote.variableAmount,
-                hookData: quote.hookData,
-            },
-        ]);
-        tradePlan.addAction(Actions.SETTLE_ALL, [exactCurrency, MAX_UINT_256]); //pay exact input
-        tradePlan.addAction(Actions.TAKE_ALL, [variableCurrency, 0n]); //receive variable output
-        // Universal Router Plan
-        const routePlanner = new RoutePlanner();
-        routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-        // Execute
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const hash = await anvilClientL1.writeContract({
-            abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
-            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: 0n,
-            functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, deadline],
+        describe("exactOutputSingle", () => {
+            const currencyIn = tokenA;
+            const variableCurrency = currencyIn;
+            test("A (variable) -> L3 (exact)", async () => {
+                const currencyOut = tokenL3;
+                const exactCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputSingle],
+                    functionName: "metaQuoteExactOutputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(address3); // V3 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (variable) -> L4 (exact)", async () => {
+                const currencyOut = tokenL4;
+                const exactCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputSingle],
+                    functionName: "metaQuoteExactOutputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (variable) -> L34 (exact)", async () => {
+                const currencyOut = tokenL34;
+                const exactCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputSingle],
+                    functionName: "metaQuoteExactOutputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(2); // 2 pools
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(quotes[1].poolKey.hooks).toBe(address3); // V3 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
+            test("A (variable) -> ETH (exact)", async () => {
+                const currencyOut = zeroAddress;
+                const exactCurrency = currencyOut;
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputSingle],
+                    functionName: "metaQuoteExactOutputSingle",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+            });
         });
-        await opChainL1Client.waitForTransactionReceipt({ hash });
     });
 
-    test("metaQuoteExactOutputSingle", async () => {
-        const exactCurrency = zeroAddress;
-        const exactAmount = parseUnits("0.1", 18);
-        const variableCurrency = tokenAAddress;
-        const quotes = await opChainL1Client.readContract({
-            address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-            abi: [metaQuoteExactOutputSingle],
-            functionName: "metaQuoteExactOutputSingle",
-            args: [
-                {
-                    exactCurrency,
-                    variableCurrency,
-                    exactAmount,
-                    poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                } as const,
-            ],
+    describe("Multihop Quotes", () => {
+        describe("exactInput", () => {
+            const currencyIn = tokenA;
+            const exactCurrency = currencyIn;
+            test("A (exact) -> L34 -> B (variable)", async () => {
+                const currencyOut = tokenB;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [tokenL34];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInput],
+                    functionName: "metaQuoteExactInput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (exact) -> ETH -> B (variable)", async () => {
+                const currencyOut = tokenB;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [zeroAddress];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInput],
+                    functionName: "metaQuoteExactInput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (exact) -> L3 -> L34 (variable): Mixed V3 -> V4", async () => {
+                const currencyOut = tokenL34;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [tokenL3];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInput],
+                    functionName: "metaQuoteExactInput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(address3); // V3 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (exact) -> L4 -> L34 (variable): Mixed V4 -> V3", async () => {
+                const currencyOut = tokenL34;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [tokenL4];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInput],
+                    functionName: "metaQuoteExactInput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(address3); // V3 Pool
+            });
         });
-        expect(quotes.length).toBe(1);
-        const quote = quotes[0];
-        // V4 Trade Plan
-        const tradePlan = new V4Planner();
-        tradePlan.addAction(Actions.SWAP_EXACT_OUT_SINGLE, [
-            {
-                poolKey: quote.poolKey,
-                zeroForOne: quote.zeroForOne,
-                amountOut: exactAmount,
-                amountInMaximum: quote.variableAmount,
-                hookData: quote.hookData,
-            },
-        ]);
-        tradePlan.addAction(Actions.SETTLE_ALL, [variableCurrency, MAX_UINT_256]); //pay variable input
-        tradePlan.addAction(Actions.TAKE_ALL, [exactCurrency, 0n]); //receive exact output
-        // Universal Router Plan
-        const routePlanner = new RoutePlanner();
-        routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-        // Execute
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const hash = await anvilClientL1.writeContract({
-            abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
-            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: 0n,
-            functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, deadline],
+        describe("exactOutput", () => {
+            const currencyIn = tokenA;
+            const variableCurrency = currencyIn;
+            test("A (variable) -> L34 -> B (exact)", async () => {
+                const currencyOut = tokenB;
+                const exactCurrency = currencyOut;
+                const hopCurrencies = [tokenL34];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutput],
+                    functionName: "metaQuoteExactOutput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (variable) -> ETH -> B (exact)", async () => {
+                const currencyOut = tokenB;
+                const exactCurrency = currencyOut;
+                const hopCurrencies = [zeroAddress];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutput],
+                    functionName: "metaQuoteExactOutput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (variable) -> L3 -> L34 (exact): Mixed V3 -> V4", async () => {
+                const currencyOut = tokenL34;
+                const exactCurrency = currencyOut;
+                const hopCurrencies = [tokenL3];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutput],
+                    functionName: "metaQuoteExactOutput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(address3); // V3 Pool
+                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("A (variable) -> L4 -> L34 (exact): Mixed V4 -> V3", async () => {
+                const currencyOut = tokenL34;
+                const exactCurrency = currencyOut;
+                const hopCurrencies = [tokenL4];
+                const quotes = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutput],
+                    functionName: "metaQuoteExactOutput",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(quotes.length).toBe(1);
+                const quote = quotes[0];
+                expect(quote.variableAmount).toBeGreaterThan(0n);
+                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[1].hooks).toBe(address3); // V3 Pool
+            });
         });
-        await opChainL1Client.waitForTransactionReceipt({ hash });
     });
 
-    test("metaQuoteExactInput", async () => {
-        const exactCurrency = tokenAAddress;
-        const exactAmount = parseUnits("0.1", tokenA.decimals);
-        const variableCurrency = tokenBAddress;
-        const quotes = await opChainL1Client.readContract({
-            address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-            abi: [metaQuoteExactInput],
-            functionName: "metaQuoteExactInput",
-            args: [
-                {
-                    exactCurrency,
-                    variableCurrency,
-                    hopCurrencies: [zeroAddress],
-                    exactAmount,
-                    poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                } as const,
-            ],
-        });
-        expect(quotes.length).toBe(1);
-        const quote = quotes[0];
-        // V4 Trade Plan
-        const tradePlan = new V4Planner();
-        tradePlan.addAction(Actions.SWAP_EXACT_IN, [
-            {
-                currencyIn: exactCurrency,
-                path: quote.path,
-                amountIn: exactAmount,
-                amountOutMinimum: quote.variableAmount,
-            },
-        ]);
-        tradePlan.addAction(Actions.SETTLE_ALL, [exactCurrency, MAX_UINT_256]); //pay exact input
-        tradePlan.addAction(Actions.TAKE_ALL, [variableCurrency, 0n]); //receive variable output
-        // Universal Router Plan
-        const routePlanner = new RoutePlanner();
-        routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-        // Execute
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const hash = await anvilClientL1.writeContract({
-            abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
-            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: 0n,
-            functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, deadline],
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash });
-    });
-
-    test("metaQuoteExactOutput", async () => {
-        const exactCurrency = tokenBAddress;
-        const exactAmount = parseUnits("0.1", tokenB.decimals);
-        const variableCurrency = tokenAAddress;
-        const quotes = await opChainL1Client.readContract({
-            address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-            abi: [metaQuoteExactOutput],
-            functionName: "metaQuoteExactOutput",
-            args: [
-                {
-                    exactCurrency,
-                    variableCurrency,
-                    hopCurrencies: [zeroAddress],
-                    exactAmount,
-                    poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                } as const,
-            ],
-        });
-        expect(quotes.length).toBe(1);
-        const quote = quotes[0];
-        // V4 Trade Plan
-        const tradePlan = new V4Planner();
-        tradePlan.addAction(Actions.SWAP_EXACT_OUT, [
-            {
-                currencyOut: exactCurrency,
-                path: quote.path,
-                amountOut: exactAmount,
-                amountInMaximum: quote.variableAmount,
-            },
-        ]);
-        tradePlan.addAction(Actions.SETTLE_ALL, [variableCurrency, MAX_UINT_256]); //pay variable input
-        tradePlan.addAction(Actions.TAKE_ALL, [exactCurrency, 0n]); //receive exact output
-        // Universal Router Plan
-        const routePlanner = new RoutePlanner();
-        routePlanner.addCommand(CommandType.V4_SWAP, [tradePlan.finalize() as Hex]);
-        // Execute
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const hash = await anvilClientL1.writeContract({
-            abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
-            address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: 0n,
-            functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, deadline],
-        });
-        await opChainL1Client.waitForTransactionReceipt({ hash });
-    });
-
-    describe("metaQuoteBest", () => {
-        test("metaQuoteExactInputBest - single", async () => {
-            const exactCurrency = tokenAAddress;
-            const exactAmount = parseUnits("0.1", tokenA.decimals);
-            const variableCurrency = zeroAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactInputBest],
-                functionName: "metaQuoteExactInputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
+    describe("Best Quotes", () => {
+        describe("exactInput", () => {
+            const currencyIn = tokenA;
+            const exactCurrency = currencyIn;
+            test("A (exact) -> ETH (variable)", async () => {
+                const currencyOut = zeroAddress;
+                const variableCurrency = currencyOut;
+                const hopCurrencies: Address[] = [];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputBest],
+                    functionName: "metaQuoteExactInputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Single);
             });
-            expect(bestType).toBe(MetaQuoteBestType.Single);
+            test("A (exact) -> ETH -> B (variable)", async () => {
+                const currencyOut = tokenB;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [zeroAddress];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputBest],
+                    functionName: "metaQuoteExactInputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Multihop);
+            });
+            test("A (exact) -> ETH -> B (variable): none (no hop currencies)", async () => {
+                const currencyOut = tokenB;
+                const variableCurrency = currencyOut;
+                const hopCurrencies: Address[] = [];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputBest],
+                    functionName: "metaQuoteExactInputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.None);
+            });
         });
 
-        test("metaQuoteExactOutputBest - single", async () => {
-            const exactCurrency = zeroAddress;
-            const exactAmount = parseUnits("0.1", 18);
-            const variableCurrency = tokenAAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactOutputBest],
-                functionName: "metaQuoteExactOutputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
+        describe("exactOutput", () => {
+            const currencyIn = tokenA;
+            const variableCurrency = currencyIn;
+            test("A (variable) -> ETH (exact)", async () => {
+                const currencyOut = zeroAddress;
+                const exactCurrency = currencyOut;
+                const hopCurrencies: Address[] = [];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputBest],
+                    functionName: "metaQuoteExactOutputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Single);
             });
-            expect(bestType).toBe(MetaQuoteBestType.Single);
-        });
 
-        test("metaQuoteExactInputBest - multihop", async () => {
-            const exactCurrency = tokenAAddress;
-            const exactAmount = parseUnits("0.1", tokenA.decimals);
-            const variableCurrency = tokenBAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactInputBest],
-                functionName: "metaQuoteExactInputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [zeroAddress],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
+            test("A (variable) -> ETH -> B (exact)", async () => {
+                const currencyOut = tokenB;
+                const exactCurrency = currencyOut;
+                const hopCurrencies = [zeroAddress];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputBest],
+                    functionName: "metaQuoteExactOutputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Multihop);
             });
-            expect(bestType).toBe(MetaQuoteBestType.Multihop);
-        });
 
-        test("metaQuoteExactOutputBest - multihop", async () => {
-            const exactCurrency = tokenBAddress;
-            const exactAmount = parseUnits("0.1", tokenB.decimals);
-            const variableCurrency = tokenAAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactOutputBest],
-                functionName: "metaQuoteExactOutputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [zeroAddress],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
+            test("A (variable) -> ETH -> B (exact): none (no hop currencies)", async () => {
+                const currencyOut = tokenB;
+                const exactCurrency = currencyOut;
+                const hopCurrencies: Address[] = [];
+                const [, , bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactOutputBest],
+                    functionName: "metaQuoteExactOutputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.None);
             });
-            expect(bestType).toBe(MetaQuoteBestType.Multihop);
-        });
-
-        test("metaQuoteExactInputBest - none", async () => {
-            const exactCurrency = tokenAAddress;
-            const exactAmount = parseUnits("0.1", tokenA.decimals);
-            const variableCurrency = tokenBAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactInputBest],
-                functionName: "metaQuoteExactInputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
-            });
-            expect(bestType).toBe(MetaQuoteBestType.None);
-        });
-
-        test("metaQuoteExactOutputBest - none", async () => {
-            const exactCurrency = tokenBAddress;
-            const exactAmount = parseUnits("0.1", tokenB.decimals);
-            const variableCurrency = tokenAAddress;
-            const [, , bestType] = await opChainL1Client.readContract({
-                address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                abi: [metaQuoteExactOutputBest],
-                functionName: "metaQuoteExactOutputBest",
-                args: [
-                    {
-                        exactCurrency,
-                        variableCurrency,
-                        hopCurrencies: [],
-                        exactAmount,
-                        poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
-                    } as const,
-                ],
-            });
-            expect(bestType).toBe(MetaQuoteBestType.None);
         });
     });
 });
