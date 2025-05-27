@@ -18,8 +18,9 @@ import {
 } from "./MetaQuoter.js";
 
 const address3: Address = padHex("0x3", { size: 20 });
+// TODO: With WETH9 pools, A -> ETH should return 2 results (V4 and V3)
 // Replicate tests from test/MetaQuoter.test.sol in Typescript but without execution (just quotes)
-describe("uniswap/MetaQuoter.test.ts", function () {
+describe("uniswap/quote/MetaQuoter.test.ts", function () {
     const exactAmount = parseUnits("0.01", 18);
 
     // A/ETH, B/ETH Pools Exist
@@ -30,7 +31,6 @@ describe("uniswap/MetaQuoter.test.ts", function () {
     const tokenL3 = getUniswapV4Address(LOCAL_CURRENCIES[7]);
     const tokenL4 = getUniswapV4Address(LOCAL_CURRENCIES[8]);
 
-    // TODO: With WETH9 pools, A -> ETH should return 2 results (V4 and V3)
     describe("Single Quotes", () => {
         describe("exactInputSingle", () => {
             const currencyIn = tokenA;
@@ -504,7 +504,6 @@ describe("uniswap/MetaQuoter.test.ts", function () {
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Single);
             });
-
             test("A (variable) -> ETH -> B (exact)", async () => {
                 const currencyOut = tokenB;
                 const exactCurrency = currencyOut;
@@ -525,7 +524,6 @@ describe("uniswap/MetaQuoter.test.ts", function () {
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Multihop);
             });
-
             test("A (variable) -> ETH -> B (exact): none (no hop currencies)", async () => {
                 const currencyOut = tokenB;
                 const exactCurrency = currencyOut;
