@@ -23,12 +23,12 @@ if [ $? != 0 ]; then
     # tmux new-window -t $session -n scoutup;
     # Start blockchains
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --interop.autorelay --l1.port 8547" ENTER
-    tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900" ENTER
-    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 901" ENTER
-    tmux send-keys -t $session:anvil.2 "cd $VERASWAP && anvil -p 9546 --chain-id 902" ENTER
+    tmux send-keys -t $session:anvil.0 "cd $VERASWAP && anvil -p 8547 --chain-id 900 --code-size-limit 693216" ENTER
+    tmux send-keys -t $session:anvil.1 "cd $VERASWAP && anvil -p 9545 --chain-id 901 --code-size-limit 693216" ENTER
+    tmux send-keys -t $session:anvil.2 "cd $VERASWAP && anvil -p 9546 --chain-id 902 --code-size-limit 693216" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
-forge script ./script/DeployLocal.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
+forge script ./script/DeployLocal.s.sol --private-key ${privateKeyAnvil0} --broadcast --code-size-limit 693216 && \
 HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,opchaina,opchainb" ENTER
 
     # Start auth dev mode
