@@ -18,8 +18,10 @@ library DeployCelo {
             v4PoolManager: UNSUPPORTED_PROTOCOL,
             v3NFTPositionManager: 0x3d79EdAaBC0EaB6F08ED885C05Fc0B014290D95A,
             v4PositionManager: UNSUPPORTED_PROTOCOL,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

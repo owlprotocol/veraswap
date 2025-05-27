@@ -18,12 +18,16 @@ library DeployUnichain {
             v4PoolManager: 0x1F98400000000000000000000000000000000004,
             v3NFTPositionManager: 0x943e6e07a7E8E791dAFC44083e54041D743C46E9,
             v4PositionManager: 0x4529A01c7A0410167c5740C487A8DE60232617bf,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: 0x3a464f746D23Ab22155710f44dB16dcA53e0775E});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0x3a464f746D23Ab22155710f44dB16dcA53e0775E
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

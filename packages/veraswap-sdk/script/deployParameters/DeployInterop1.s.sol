@@ -17,11 +17,13 @@ library DeployInterop1 {
             v3Factory: UNSUPPORTED_PROTOCOL,
             pairInitCodeHash: BYTES32_ZERO,
             poolInitCodeHash: BYTES32_ZERO,
-            v4PoolManager: 	0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96,
+            v4PoolManager: 0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96,
             v3NFTPositionManager: address(0),
             v4PositionManager: 0x4498FE0b1DF6B476453440664A16E269B7587D0F,
+            v3Quoter: address(0),
             v4StateView: 0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375,
             v4Quoter: 0x7C594D9B533ac43D3595dd4117549111Ec48F8B2,
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

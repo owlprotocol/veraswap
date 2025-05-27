@@ -20,8 +20,10 @@ struct UniswapContracts {
     address v4PoolManager;
     address v3NFTPositionManager;
     address v4PositionManager;
+    address v3Quoter;
     address v4StateView;
     address v4Quoter;
+    address metaQuoter;
     address universalRouter;
 }
 

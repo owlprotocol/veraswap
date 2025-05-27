@@ -18,8 +18,10 @@ library DeployZora {
             v4PoolManager: 0x0575338e4C17006aE181B47900A84404247CA30f,
             v3NFTPositionManager: 0xbC91e8DfA3fF18De43853372A3d7dfe585137D78,
             v4PositionManager: 0xf66C7b99e2040f0D9b326B3b7c152E9663543D63,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

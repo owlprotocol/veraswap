@@ -3,25 +3,29 @@ pragma solidity ^0.8.26;
 
 import "forge-std/console2.sol";
 
+// Create2
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Create2Utils} from "./utils/Create2Utils.sol";
-
-// Uniswap V3
+// Permit2
+import {Permit2Utils} from "./utils/Permit2Utils.sol";
+// Uniswap V3 Core
 import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "./utils/UniswapV3FactoryUtils.sol";
+// Uniswap V3 Periphery
+import {V3PositionManagerMockUtils} from "./utils/V3PositionManagerMockUtils.sol";
 import {V3QuoterUtils} from "./utils/V3QuoterUtils.sol";
-// Uniswap V4
-import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
+// Uniswap V4 Core
 import {PoolManagerUtils} from "./utils/PoolManagerUtils.sol";
 import {PositionManagerUtils} from "./utils/PositionManagerUtils.sol";
+// Uniswap V4 Periphery
 import {StateViewUtils} from "./utils/StateViewUtils.sol";
 import {V4QuoterUtils} from "./utils/V4QuoterUtils.sol";
 import {V4MetaQuoterUtils} from "./utils/V4MetaQuoterUtils.sol";
 // Uniswap Universal Router
+import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
+import {UnsupportedProtocolUtils} from "./utils/UnsupportedProtocolUtils.sol";
 import {UniversalRouterUtils} from "./utils/UniversalRouterUtils.sol";
-// Permit2
-import {Permit2Utils} from "./utils/Permit2Utils.sol";
+import {MetaQuoterUtils} from "./utils/MetaQuoterUtils.sol";
 // Hyperlane
 import {HyperlanePausableHookUtils} from "./utils/HyperlanePausableHookUtils.sol";
 import {HyperlaneNoopIsmUtils} from "./utils/HyperlaneNoopIsmUtils.sol";
@@ -46,7 +50,7 @@ import {ERC7579ExecutorRouterUtils} from "./utils/ERC7579ExecutorRouterUtils.sol
 import {ExecuteUtils} from "./utils/ExecuteUtils.sol";
 // Custom
 import {ExecuteSweepUtils} from "./utils/ExecuteSweepUtils.sol";
-
+// Contract Structs
 import {HyperlaneDeployParams, UniswapContracts, HyperlaneContracts, CoreContracts} from "./Structs.sol";
 import {DeployParameters} from "./DeployParameters.s.sol";
 
@@ -78,18 +82,25 @@ contract DeployCoreContracts is DeployParameters {
     function deployUniswapRouterParams() internal returns (RouterParameters memory) {
         // Permit2
         (address permit2,) = Permit2Utils.getOrCreate2();
-        // UNISWAP CONTRACTS
+        // Unsupported Revert Contract
         (address unsupported,) = UnsupportedProtocolUtils.getOrCreate2();
+        // Uniswap V3
+        (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
+        bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
+        // Uniswap V4
         (address v4PoolManager,) = PoolManagerUtils.getOrCreate2(address(0));
         (address v4PositionManager,) = PositionManagerUtils.getOrCreate2(v4PoolManager);
 
+        // TODO: Set weth9 code for anvil local chains (used by Uniswap V3)
+        address weth9 = 0x4200000000000000000000000000000000000006; // Optimism pre-deploy WETH9
+
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
-            weth9: 0x4200000000000000000000000000000000000006,
+            weth9: weth9,
             v2Factory: unsupported,
-            v3Factory: unsupported,
+            v3Factory: v3Factory,
             pairInitCodeHash: BYTES32_ZERO,
-            poolInitCodeHash: BYTES32_ZERO,
+            poolInitCodeHash: poolInitCodeHash,
             v4PoolManager: v4PoolManager,
             v3NFTPositionManager: unsupported,
             v4PositionManager: v4PositionManager
@@ -110,9 +121,10 @@ contract DeployCoreContracts is DeployParameters {
 
     function deployCoreContracts() internal returns (CoreContracts memory contracts) {
         uint256 chainId = block.chainid;
+        bool isLocalChain = chainId == 900 || chainId == 901 || chainId == 902;
 
         // Uniswap contracts
-        if (chainId == 900 || chainId == 901 || chainId == 902) {
+        if (isLocalChain) {
             // Uniswap V3
             (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
             bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
@@ -123,6 +135,8 @@ contract DeployCoreContracts is DeployParameters {
             RouterParameters memory routerParams = deployUniswapRouterParams();
             contracts.uniswap.weth9 = routerParams.weth9;
             contracts.uniswap.permit2 = routerParams.permit2;
+            contracts.uniswap.v3Factory = routerParams.v3Factory;
+            contracts.uniswap.poolInitCodeHash = routerParams.poolInitCodeHash;
             contracts.uniswap.v4PoolManager = routerParams.v4PoolManager;
             contracts.uniswap.v4PositionManager = routerParams.v4PositionManager;
 
@@ -135,49 +149,80 @@ contract DeployCoreContracts is DeployParameters {
             // Universal Router
             (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
             contracts.uniswap.universalRouter = universalRouter;
+            // "Mock Position Manager" for Uniswap V3 (set this after deploying the Universal Router)
+            (address v3PositionManagerMock,) =
+                V3PositionManagerMockUtils.getOrCreate2(contracts.uniswap.v3Factory, contracts.uniswap.poolInitCodeHash);
+            contracts.uniswap.v3NFTPositionManager = v3PositionManagerMock;
         } else {
-            // Skip Uniswap Deployment if any required param is address(0)
-            UniswapContracts memory uniswapParams = deployParams[chainId].uniswap;
-            if (uniswapParams.permit2 == address(0)) {
-                console2.log("Permit2 == address(0), skipping Uniswap deployment");
-            } else if (uniswapParams.weth9 == address(0)) {
-                console2.log("WETH9 == address(0), skipping Uniswap deployment");
-            } else if (uniswapParams.v4PoolManager == address(0)) {
-                console2.log("v4PoolManager == address(0), skipping Uniswap deployment");
-            } else if (uniswapParams.v4PositionManager == address(0)) {
-                console2.log("v4PositionManager == address(0), skipping Uniswap deployment");
-            } else {
-                // Core Uniswap Contracts
-                contracts.uniswap.weth9 = uniswapParams.weth9;
-                contracts.uniswap.permit2 = uniswapParams.permit2;
-                contracts.uniswap.v4PoolManager = uniswapParams.v4PoolManager;
-                contracts.uniswap.v4PositionManager = uniswapParams.v4PositionManager;
+            contracts.uniswap = deployParams[chainId].uniswap;
+        }
 
-                // View Uniswap Contracts
-                if (uniswapParams.v4StateView == address(0)) {
-                    (address v4StateView,) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
-                    contracts.uniswap.v4StateView = v4StateView;
-                } else {
-                    contracts.uniswap.v4StateView = uniswapParams.v4StateView;
-                }
-                if (uniswapParams.v4Quoter == address(0)) {
-                    (address v4Quoter,) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
-                    contracts.uniswap.v4Quoter = v4Quoter;
-                } else {
-                    contracts.uniswap.v4Quoter = uniswapParams.v4Quoter;
-                }
+        // View Uniswap Contracts
+        UniswapContracts memory uniswapParams = deployParams[chainId].uniswap;
+        if (uniswapParams.v4StateView == address(0)) {
+            (address v4StateView,) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
+            contracts.uniswap.v4StateView = v4StateView;
+        } else {
+            contracts.uniswap.v4StateView = uniswapParams.v4StateView;
+        }
+        if (uniswapParams.v4Quoter == address(0)) {
+            (address v4Quoter,) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
+            contracts.uniswap.v4Quoter = v4Quoter;
+        } else {
+            contracts.uniswap.v4Quoter = uniswapParams.v4Quoter;
+        }
 
-                // Universal Router
+        // Check if required Uniswap contracts are deployed (will be true for local chains / chains configured in deployParams folder)
+        bool uniswapEnabled = contracts.uniswap.weth9 != address(0) && contracts.uniswap.permit2 != address(0)
+            && contracts.uniswap.v4PoolManager != address(0) && contracts.uniswap.v4PositionManager != address(0);
+
+        if (!uniswapEnabled) {
+            console2.log(
+                "Core Uniswap contracts (eg. Permit2, WETH9, V4PoolManager), not deployed, skipping Uniswap deployment"
+            );
+        } else {
+            // Deploy additional Uniswap periphery contracts that are not yet set in deploy parameters or not yet deployed locally
+            // Uniswap V3 Periphery
+            if (contracts.uniswap.v3Factory != address(0)) {
+                // Uniswap V3 Enabled
+                if (contracts.uniswap.v3Quoter == address(0)) {
+                    (address v3Quoter,) =
+                        V3QuoterUtils.getOrCreate2(contracts.uniswap.v3Factory, contracts.uniswap.poolInitCodeHash);
+                    contracts.uniswap.v3Quoter = v3Quoter;
+                }
+            }
+            // Uniswap V4 Periphery
+            if (contracts.uniswap.v4StateView == address(0)) {
+                (address v4StateView,) = StateViewUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+                contracts.uniswap.v4StateView = v4StateView;
+            }
+            if (contracts.uniswap.v4Quoter == address(0)) {
+                (address v4Quoter,) = V4QuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+                contracts.uniswap.v4Quoter = v4Quoter;
+            }
+            // Meta Quoter
+            if (contracts.uniswap.metaQuoter == address(0)) {
+                //TODO: Is it ok to deploy this if only V4 is enabled? (Note: if v3 is enabled, v4 is assumed to be enabled)
+                // => Seems fine as contract just skips not existant pools though there is a slight gas penalty
+                (address metaQuoter,) = MetaQuoterUtils.getOrCreate2(
+                    contracts.uniswap.v3Factory, contracts.uniswap.poolInitCodeHash, contracts.uniswap.v4PoolManager
+                );
+                contracts.uniswap.metaQuoter = metaQuoter;
+            }
+
+            // Universal Router
+            if (contracts.uniswap.universalRouter == address(0)) {
+                // Note: For local chains, this is already set above (such to avoid set v3NFTPositionManager to zero address)
                 RouterParameters memory routerParams = RouterParameters({
-                    permit2: uniswapParams.permit2,
-                    weth9: uniswapParams.weth9,
-                    v2Factory: uniswapParams.v2Factory,
-                    v3Factory: uniswapParams.v3Factory,
-                    pairInitCodeHash: uniswapParams.pairInitCodeHash,
-                    poolInitCodeHash: uniswapParams.poolInitCodeHash,
-                    v4PoolManager: uniswapParams.v4PoolManager,
-                    v3NFTPositionManager: uniswapParams.v3NFTPositionManager,
-                    v4PositionManager: uniswapParams.v4PositionManager
+                    permit2: contracts.uniswap.permit2,
+                    weth9: contracts.uniswap.weth9,
+                    v2Factory: contracts.uniswap.v2Factory,
+                    v3Factory: contracts.uniswap.v3Factory,
+                    pairInitCodeHash: contracts.uniswap.pairInitCodeHash,
+                    poolInitCodeHash: contracts.uniswap.poolInitCodeHash,
+                    v4PoolManager: contracts.uniswap.v4PoolManager,
+                    v3NFTPositionManager: contracts.uniswap.v3NFTPositionManager,
+                    v4PositionManager: contracts.uniswap.v4PositionManager
                 });
                 (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
                 contracts.uniswap.universalRouter = universalRouter;
@@ -185,7 +230,7 @@ contract DeployCoreContracts is DeployParameters {
         }
 
         // Hyperlane contracts
-        if (chainId == 900 || chainId == 901 || chainId == 902) {
+        if (isLocalChain) {
             HyperlaneDeployParams memory hyperlaneParams = deployHyperlaneParams();
             // (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
             (address hypTokenRouterSweep,) = HypTokenRouterSweepUtils.getOrCreate2();
