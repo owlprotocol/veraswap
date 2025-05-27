@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { Address, formatUnits, zeroAddress } from "viem";
-import { useGetTokenValues } from "./useGetTokenValues.js";
-import { useQuery } from "@tanstack/react-query";
-import { USD_CURRENCIES } from "@/pages/BasketPage.js";
 import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { useQuery } from "@tanstack/react-query";
+import { useGetTokenValues } from "./useGetTokenValues.js";
+import { USD_CURRENCIES } from "@/pages/BasketPage.js";
 import { queryClient } from "@/queryClient.js";
 import { config } from "@/config.js";
 import { getCurrencyHops } from "@/constants/tokens.js";
@@ -23,7 +23,7 @@ export function useBasketWeights({
         // isError,
     } = useGetTokenValues({
         chainId,
-        basketDetails: basketDetails.map(({ addr, units }) => ({ addr, units: units / 10n ** 18n })),
+        basketDetails: basketDetails.map(({ addr, units }) => ({ addr, units })),
     });
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
@@ -81,6 +81,8 @@ export function useBasketWeights({
                           Number(formatUnits(((value ?? 0n) * 10n ** 18n) / totalValue, 18)) * 100,
                   )
                 : [];
+
+        console.log({ totalValue, tokenValues, weights, basketDetails });
         const percentages = weights.map((w) => w.toFixed(3));
 
         return {

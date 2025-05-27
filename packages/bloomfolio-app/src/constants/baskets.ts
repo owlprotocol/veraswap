@@ -1,5 +1,5 @@
 import { DollarSign, Rocket, Dog } from "lucide-react";
-import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { Address, encodeDeployData, parseEther, zeroAddress, zeroHash } from "viem";
 import { base, bsc, polygon } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -40,6 +40,8 @@ export interface Basket {
     symbol: string;
 }
 
+// TODO: remove weight and units from allocations
+
 export const MAINNET_BASKETS = [
     {
         id: "conservative",
@@ -49,24 +51,25 @@ export const MAINNET_BASKETS = [
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
-            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: 40n }, // WETH
+            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: parseEther("49") }, // WETH
 
             // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: 5n }, // WBNB
-            { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: 1n }, // BTCB
+            { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: parseEther("1") }, // BTCB
         ],
         symbol: "CB.ETH/BTC.50",
     },
+    // TODO: enable again once quoting uses V3. Seems to have issues because of liquidity
     // {
     //     id: "conservative-polygon",
-    //     address: "0xa573145Daab36057E296C73BD81dC5b2782B9389",
+    //     address: "0xEe78aEC0596010a55F3e7f4c8Ad377E5ea5bFA80",
     //     title: "Conservative Polygon",
     //     description: "Conservative 50/50 allocation to BTC and ETH on Polygon.",
     //     gradient: "from-green-400 to-blue-500",
     //     icon: DollarSign,
     //     allocations: [
-    //         { address: WETH_POLYGON.address, chainId: polygon.id, weight: 50, units: 400_000_000_000n }, // WETH
+    //         { address: WETH_POLYGON.address, chainId: polygon.id, weight: 50, units: parseEther("0.04") }, // WETH
     //
-    //         { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 1n }, // WBTC
+    //         { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 10n ** 5n }, // WBTC
     //     ],
     //     symbol: "CB.ETH/BTC.50",
     // },
@@ -78,10 +81,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-purple-400 to-red-500",
         icon: DollarSign,
         allocations: [
-            { address: linkPolygonAddress, chainId: polygon.id, weight: 55, units: 1000n },
-            { address: uniPolygonAddress, chainId: polygon.id, weight: 20, units: 1000n },
-            { address: ldoPolygonAddress, chainId: polygon.id, weight: 20, units: 7000n },
-            { address: aavePolygonAddress, chainId: polygon.id, weight: 5, units: 6n },
+            { address: linkPolygonAddress, chainId: polygon.id, weight: 55, units: 1000n * 10n ** 18n },
+            { address: uniPolygonAddress, chainId: polygon.id, weight: 20, units: 1000n * 10n ** 18n },
+            { address: ldoPolygonAddress, chainId: polygon.id, weight: 20, units: 7000n * 10n ** 18n },
+            { address: aavePolygonAddress, chainId: polygon.id, weight: 5, units: 6n * 10n ** 18n },
         ],
         symbol: "PIB.MC",
     },
@@ -93,9 +96,24 @@ export const MAINNET_BASKETS = [
         gradient: "from-red-700 to-green-400",
         icon: Rocket,
         allocations: [
-            { address: "0x1111111111166b7FE7bd91427724B487980aFc69", chainId: base.id, units: 1000n, weight: 3449 }, // ZORA
-            { address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b", chainId: base.id, units: 5n, weight: 3354 }, // VIRTUAL
-            { address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553", chainId: base.id, units: 5n, weight: 3198 }, // KAITO
+            {
+                address: "0x1111111111166b7FE7bd91427724B487980aFc69",
+                chainId: base.id,
+                units: 1000n * 10n ** 18n,
+                weight: 3449,
+            }, // ZORA
+            {
+                address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+                chainId: base.id,
+                units: 5n * 10n ** 18n,
+                weight: 3354,
+            }, // VIRTUAL
+            {
+                address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553",
+                chainId: base.id,
+                units: 5n * 10n ** 18n,
+                weight: 3198,
+            }, // KAITO
         ],
         symbol: "EKSS",
     },
@@ -211,8 +229,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 No Fee",
         description: "Index AB50 No Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n },
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n * 10n ** 18n },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n * 10n ** 18n },
         ],
         symbol: "AB50.NF",
     },
@@ -225,8 +243,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 With Fee",
         description: "Index AB50 With Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 2n },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 2n },
+            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 2n * 10n ** 18n },
+            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 2n * 10n ** 18n },
         ],
         symbol: "AB50.WF",
     },

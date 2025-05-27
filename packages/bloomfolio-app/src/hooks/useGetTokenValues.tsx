@@ -63,9 +63,13 @@ export function useGetTokenValues({
                 const variableAmount = data[(bestSwap - 1) as 0 | 1].variableAmount;
                 const units = basketDetails[idx].units;
 
-                return BigNumber.from(variableAmount as unknown as number)
-                    .div(units as unknown as number)
-                    .toBigInt();
+                return (
+                    BigNumber.from(variableAmount as unknown as number)
+                        .mul(unitsToQuote as unknown as number)
+                        .div(units as unknown as number)
+                        // .div(unitsToQuote)
+                        .toBigInt()
+                );
             }),
             pending: results.some((result) => result.isPending),
         }),
