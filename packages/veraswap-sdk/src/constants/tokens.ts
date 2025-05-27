@@ -25,6 +25,7 @@ import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../ch
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
+import { Token } from "../currency/token.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { nativeOnChain } from "../uniswap/index.js";
 
@@ -196,6 +197,27 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V34", symbol: "L34", decimals: 18 }),
+        name: "Liquid V34",
+        symbol: "L34",
+        decimals: 18,
+    }),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V3", symbol: "L3", decimals: 18 }),
+        name: "Liquid V3",
+        symbol: "L3",
+        decimals: 18,
+    }),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V4", symbol: "L4", decimals: 18 }),
+        name: "Liquid V4",
+        symbol: "L4",
+        decimals: 18,
+    }),
     /*
     // Commented out Super Tokens, (Pools are also commented out below)
     ...(() => {

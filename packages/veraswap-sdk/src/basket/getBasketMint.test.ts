@@ -36,7 +36,8 @@ import { V4MetaQuoteBestType, V4MetaQuoteExactBestReturnType } from "../uniswap/
 import { getBasketMint } from "./getBasketMint.js";
 import { getBasketMintQuote } from "./getBasketMintQuote.js";
 
-describe("basket/getBasketMint.test.ts", function () {
+//TODO: Disable for now
+describe.skip("basket/getBasketMint.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {

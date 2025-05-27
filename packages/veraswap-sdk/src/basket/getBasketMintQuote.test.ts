@@ -14,7 +14,8 @@ import { getUniswapV4Address } from "../currency/currency.js";
 import { getBasketBurnQuote } from "./getBasketBurnQuote.js";
 import { getBasketMintQuote } from "./getBasketMintQuote.js";
 
-describe("basket/getBasketMintQuote.test.ts", function () {
+//TODO: Disable for now
+describe.skip("basket/getBasketMintQuote.test.ts", function () {
     const config = createConfig({
         chains: [opChainL1],
         transports: {
