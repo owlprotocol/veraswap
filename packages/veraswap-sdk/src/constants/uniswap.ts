@@ -33,6 +33,8 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
  */
 export function getUniswapContracts(params?: { owner?: Address }) {
     const permit2: Address = PERMIT2_ADDRESS;
+    // Deployed with vm.rpc setCode when using anvil (supersim has pre-deploy)
+    const weth9 = "0x4200000000000000000000000000000000000006";
 
     // Uniswap V3 Core
     const v3Factory = getDeployDeterministicAddress({
@@ -56,8 +58,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         bytecode: encodeDeployData({
             abi: PositionManager.abi,
             bytecode: PositionManager.bytecode,
-            // Note: In DeployCoreContracts, weth9 is ignored for postion manager
-            args: [v4PoolManager, permit2, 300_000n, positionDescriptor, zeroAddress],
+            args: [v4PoolManager, permit2, 300_000n, positionDescriptor, weth9],
         }),
         salt: zeroHash,
     });
@@ -93,8 +94,6 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         bytecode: UnsupportedProtocol.bytecode,
         salt: zeroHash,
     });
-    // TODO: Actually deploy this with setCode when using anvil (supersim has pre-deploy)
-    const weth9 = "0x4200000000000000000000000000000000000006";
     // Universal Router
     const routerParams = {
         permit2,
@@ -125,6 +124,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     });
 
     return {
+        weth9,
         v3Factory,
         v3PoolInitCodeHash,
         v4PoolManager,
@@ -142,6 +142,7 @@ export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
 //TODO: Add metaquoter address (compute using poolManager address)
 export interface UniswapContracts {
+    weth9?: Address;
     v3Factory?: Address;
     v3PoolInitCodeHash?: Hash;
     v4PoolManager: Address;

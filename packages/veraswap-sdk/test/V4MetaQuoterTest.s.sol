@@ -11,6 +11,9 @@ import {MockERC20Utils} from "../script/utils/MockERC20Utils.sol";
 // Permit2
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
+// WETH9
+import {WETH} from "solmate/src/tokens/WETH.sol";
+import {WETHUtils} from "../script/utils/WETHUtils.sol";
 // Uniswap V4 Core
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
@@ -53,6 +56,9 @@ contract V4MetaQuoterTest is Test {
     function setUp() public {
         // Sets proper address for Create2 & transaction sender
         vm.startBroadcast();
+        // WETH9
+        // Set weth9 code to Optimism pre-deploy for anvil local chains that don't have pre-deploy (used by Uniswap V3)
+        (address _weth9, ) = WETHUtils.getOrEtch();
         // Tokens
         (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
         (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
@@ -70,7 +76,7 @@ contract V4MetaQuoterTest is Test {
         // Uniswap V4 Core
         (address _v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
         v4PoolManager = IPoolManager(_v4PoolManager);
-        (address _v4PositionManager, ) = PositionManagerUtils.getOrCreate2(_v4PoolManager);
+        (address _v4PositionManager, ) = PositionManagerUtils.getOrCreate2(address(v4PoolManager), _weth9);
         v4PositionManager = IPositionManager(_v4PositionManager);
 
         // Uniswap V4 Periphery

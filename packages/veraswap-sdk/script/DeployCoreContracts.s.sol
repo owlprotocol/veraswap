@@ -8,6 +8,8 @@ import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {Create2Utils} from "./utils/Create2Utils.sol";
 // Permit2
 import {Permit2Utils} from "./utils/Permit2Utils.sol";
+// WETH9
+import {WETHUtils} from "./utils/WETHUtils.sol";
 // Uniswap V3 Core
 import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 import {UniswapV3FactoryUtils} from "./utils/UniswapV3FactoryUtils.sol";
@@ -79,9 +81,15 @@ contract DeployCoreContracts is DeployParameters {
         vm.stopBroadcast();
     }
 
+    /// @notice Deploys the Uniswap Router parameters, including WETH9, Permit2, and Uniswap V3/V4 contracts.
+    /// @dev This should ONLY be used for local chains (eg. Anvil, Supersim)
     function deployUniswapRouterParams() internal returns (RouterParameters memory) {
         // Permit2
         (address permit2,) = Permit2Utils.getOrCreate2();
+        // WETH9
+        // Set weth9 code to Optimism pre-deploy for anvil local chains that don't have pre-deploy (used by Uniswap V3)
+        // TODO: Might fail because using vm.etch
+        (address weth9,) = WETHUtils.getOrSetCode();
         // Unsupported Revert Contract
         (address unsupported,) = UnsupportedProtocolUtils.getOrCreate2();
         // Uniswap V3
@@ -89,10 +97,7 @@ contract DeployCoreContracts is DeployParameters {
         bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         // Uniswap V4
         (address v4PoolManager,) = PoolManagerUtils.getOrCreate2(address(0));
-        (address v4PositionManager,) = PositionManagerUtils.getOrCreate2(v4PoolManager);
-
-        // TODO: Set weth9 code for anvil local chains (used by Uniswap V3)
-        address weth9 = 0x4200000000000000000000000000000000000006; // Optimism pre-deploy WETH9
+        (address v4PositionManager,) = PositionManagerUtils.getOrCreate2(v4PoolManager, weth9);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
