@@ -66,7 +66,6 @@ export function useBasketWeights({
     //  an amount in eth wei. Divide by 10^18 to get the amount in eth unit
     // const currencyConversion = currencyConversionQuote?.amountOut ?? 10n ** 18n;
     const currencyConversion = currencyConversionQuote?.amountIn ?? 10n ** 18n;
-    console.log({ currencyConversion });
     // NOTE: token values are off by 10n ** 10n
     console.log({
         currencyConversion,
@@ -103,7 +102,6 @@ export function useBasketWeights({
                   )
                 : [];
 
-        console.log({ totalValue, tokenValues, weights, basketDetails });
         const percentages = weights.map((w) => w.toFixed(3));
 
         return {
@@ -113,7 +111,7 @@ export function useBasketWeights({
             percentages,
             isReady: true,
         };
-    }, [tokenValuesUsd, isError, currencyConversion]);
+    }, [tokenValuesUsd, isError, currencyConversion, quoteCurrency.decimals]);
 
     return {
         ...calculatedData,
