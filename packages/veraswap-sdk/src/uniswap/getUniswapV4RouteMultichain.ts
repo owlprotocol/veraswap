@@ -65,18 +65,24 @@ export async function getUniswapV4RouteExactInMultichain(
                         return null;
                     }
 
-                    const orbiterQuoteResult = await orbiterQuote({
-                        amount: exactAmount,
-                        destChainId: currIn.chainId,
-                        destToken: zeroAddress,
-                        sourceChainId: currencyIn.chainId,
-                        sourceToken: zeroAddress,
-                        // User address doesn't matter, but avoid address zero
-                        userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
-                    });
-                    if (!orbiterQuoteResult) return null;
+                    // TODO: handle this better, especially if not using orbiter
+                    try {
+                        const orbiterQuoteResult = await orbiterQuote({
+                            amount: exactAmount,
+                            destChainId: currIn.chainId,
+                            destToken: zeroAddress,
+                            sourceChainId: currencyIn.chainId,
+                            sourceToken: zeroAddress,
+                            // User address doesn't matter, but avoid address zero
+                            userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
+                        });
+                        if (!orbiterQuoteResult) return null;
 
-                    exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                        exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    } catch (_err) {
+                        return null;
+                    }
                 }
 
                 const route = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
