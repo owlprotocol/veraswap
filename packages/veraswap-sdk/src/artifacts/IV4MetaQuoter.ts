@@ -26,7 +26,7 @@ export const metaQuoteExactInput = {
     ],
     outputs: [
         {
-            name: "swaps",
+            name: "quotes",
             type: "tuple[]",
             internalType: "struct IV4MetaQuoter.MetaQuoteExactResult[]",
             components: [
@@ -151,7 +151,7 @@ export const metaQuoteExactInputSingle = {
     ],
     outputs: [
         {
-            name: "swaps",
+            name: "quotes",
             type: "tuple[]",
             internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult[]",
             components: [
@@ -204,7 +204,7 @@ export const metaQuoteExactOutput = {
     ],
     outputs: [
         {
-            name: "swaps",
+            name: "quotes",
             type: "tuple[]",
             internalType: "struct IV4MetaQuoter.MetaQuoteExactResult[]",
             components: [
@@ -329,7 +329,7 @@ export const metaQuoteExactOutputSingle = {
     ],
     outputs: [
         {
-            name: "swaps",
+            name: "quotes",
             type: "tuple[]",
             internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult[]",
             components: [

@@ -5,22 +5,10 @@ import { useAccount, useBalance, useReadContract } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
 import { zeroAddress, formatUnits, Address, erc20Abi } from "viem";
-import { decimals, getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import {
-    tokenDataQueryOptions,
-    USDC_BSC,
-    USDC_MAINNET,
-    USDC_OPTIMISM,
-    USDC_BASE,
-    USDC_POLYGON,
-    USDC_ARBITRUM,
-    USDC,
-    getChainById,
-    USDT_BSC,
-    USDT,
-} from "@owlprotocol/veraswap-sdk";
-import { arbitrum, bsc, optimism, mainnet, base, polygon } from "viem/chains";
+import { USD_CURRENCIES } from "@owlprotocol/veraswap-sdk";
+import { tokenDataQueryOptions, getChainById } from "@owlprotocol/veraswap-sdk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
@@ -35,7 +23,6 @@ import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { ShareButton } from "@/components/ShareButton.js";
-import { unitsToQuote } from "@/hooks/useGetTokenValues.js";
 
 interface BasketPageProps {
     referrer?: Address;
@@ -47,15 +34,6 @@ interface BasketPageProps {
         icon?: LucideIcon;
     };
 }
-// TODO: fix, temporary
-export const USD_CURRENCIES = {
-    [mainnet.id]: { address: USDC_MAINNET.address, decimals: USDC.decimals },
-    [bsc.id]: { address: USDT_BSC.address, decimals: USDT.decimals },
-    [optimism.id]: { address: USDC_OPTIMISM.address, decimals: USDC.decimals },
-    [base.id]: { address: USDC_BASE.address, decimals: USDC.decimals },
-    [polygon.id]: { address: USDC_POLYGON.address, decimals: USDC.decimals },
-    [arbitrum.id]: { address: USDC_ARBITRUM.address, decimals: USDC.decimals },
-} as const as Record<number, { address: Address; decimals: number } | undefined>;
 
 export const BasketPage = ({ chainId, address, details, referrer }: BasketPageProps) => {
     const [showPurchasePanel, setShowPurchasePanel] = useState(false);

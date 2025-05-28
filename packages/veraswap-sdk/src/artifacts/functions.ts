@@ -1603,7 +1603,7 @@ export const functions = [
         ],
         outputs: [
             {
-                name: "swaps",
+                name: "quotes",
                 type: "tuple[]",
                 internalType: "struct IV4MetaQuoter.MetaQuoteExactResult[]",
                 components: [
@@ -1728,7 +1728,7 @@ export const functions = [
         ],
         outputs: [
             {
-                name: "swaps",
+                name: "quotes",
                 type: "tuple[]",
                 internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult[]",
                 components: [
@@ -1781,7 +1781,7 @@ export const functions = [
         ],
         outputs: [
             {
-                name: "swaps",
+                name: "quotes",
                 type: "tuple[]",
                 internalType: "struct IV4MetaQuoter.MetaQuoteExactResult[]",
                 components: [
@@ -1906,7 +1906,7 @@ export const functions = [
         ],
         outputs: [
             {
-                name: "swaps",
+                name: "quotes",
                 type: "tuple[]",
                 internalType: "struct IV4MetaQuoter.MetaQuoteExactSingleResult[]",
                 components: [
