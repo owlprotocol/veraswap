@@ -97,7 +97,8 @@ export async function setup() {
 
     // Forge script
     const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast --code-size-limit 693216`;
-    const { stdout } = await execPromise(templateCommand);
+    // const { stdout } = await execPromise(templateCommand);
+    await execPromise(templateCommand);
 
     // Topup Paymasters
     for (let client of [opChainL1Client, opChainAClient, opChainBClient]) {

@@ -74,6 +74,7 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.stopBroadcast();
 
+            console2.log("v4Quoter:", contracts.uniswap.v4Quoter);
             console2.log("v4PoolManager:", contracts.uniswap.v4PoolManager);
             console2.log("v4PositionManager:", contracts.uniswap.v4PositionManager);
 
