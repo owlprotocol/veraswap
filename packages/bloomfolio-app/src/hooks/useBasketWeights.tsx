@@ -1,12 +1,15 @@
 import { useMemo } from "react";
 import { Address, formatUnits, zeroAddress } from "viem";
-import { getUniswapV4RouteExactIn, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import {
+    getCurrencyHops,
+    USD_CURRENCIES,
+    getUniswapV4RouteExactOut,
+    UNISWAP_CONTRACTS,
+} from "@owlprotocol/veraswap-sdk";
 import { useQuery } from "@tanstack/react-query";
 import { useGetTokenValues } from "./useGetTokenValues.js";
-import { USD_CURRENCIES } from "@/pages/BasketPage.js";
 import { queryClient } from "@/queryClient.js";
 import { config } from "@/config.js";
-import { getCurrencyHops } from "@/constants/tokens.js";
 
 export function useBasketWeights({
     chainId,
@@ -28,10 +31,26 @@ export function useBasketWeights({
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
 
+    // const { data: currencyConversionQuote } = useQuery({
+    //     queryKey: ["currencyConversion", chainId, quoteCurrency.address],
+    //     queryFn: async () =>
+    //         getUniswapV4RouteExactIn(queryClient, config, {
+    //             chainId,
+    //             contracts: UNISWAP_CONTRACTS[chainId]!,
+    //             currencyIn: usdCurrency.address,
+    //             currencyOut: quoteCurrency.address,
+    //             currencyHops: getCurrencyHops(chainId).filter(
+    //                 (c) => c !== usdCurrency.address && c !== quoteCurrency.address,
+    //             ),
+    //             exactAmount: 10n ** BigInt(usdCurrency.decimals),
+    //         }),
+    //     enabled: quoteCurrency.address !== (USD_CURRENCIES[chainId]?.address ?? zeroAddress),
+    // });
+
     const { data: currencyConversionQuote } = useQuery({
         queryKey: ["currencyConversion", chainId, quoteCurrency.address],
         queryFn: async () =>
-            getUniswapV4RouteExactIn(queryClient, config, {
+            getUniswapV4RouteExactOut(queryClient, config, {
                 chainId,
                 contracts: UNISWAP_CONTRACTS[chainId]!,
                 currencyIn: usdCurrency.address,
@@ -39,13 +58,15 @@ export function useBasketWeights({
                 currencyHops: getCurrencyHops(chainId).filter(
                     (c) => c !== usdCurrency.address && c !== quoteCurrency.address,
                 ),
-                exactAmount: 10n ** BigInt(usdCurrency.decimals),
+                exactAmount: 10n ** BigInt(quoteCurrency.decimals),
             }),
         enabled: quoteCurrency.address !== (USD_CURRENCIES[chainId]?.address ?? zeroAddress),
     });
 
     //  an amount in eth wei. Divide by 10^18 to get the amount in eth unit
-    const currencyConversion = currencyConversionQuote?.amountOut ?? 10n ** 18n;
+    // const currencyConversion = currencyConversionQuote?.amountOut ?? 10n ** 18n;
+    const currencyConversion = currencyConversionQuote?.amountIn ?? 10n ** 18n;
+    console.log({ currencyConversion });
     // NOTE: token values are off by 10n ** 10n
     console.log({
         currencyConversion,

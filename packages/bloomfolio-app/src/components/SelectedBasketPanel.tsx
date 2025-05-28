@@ -1,39 +1,24 @@
-import {
-    getChainById,
-    UNISWAP_CONTRACTS,
-    getBasketMint,
-    DEFAULT_POOL_PARAMS,
-    V4MetaQuoteExactBestParams,
-    V4MetaQuoteExactBestReturnType,
-    V4MetaQuoteExactSingleReturnType,
-    getUniswapV4RouteExactIn,
-    UNI,
-} from "@owlprotocol/veraswap-sdk";
+import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, LucideIcon, ShoppingCart } from "lucide-react";
-import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address, numberToHex } from "viem";
+import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useMemo } from "react";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getCurrencyHops, tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
 import React from "react";
-import {
-    metaQuoteExactOutputBest,
-    metaQuoteExactOutputSingle,
-} from "@owlprotocol/veraswap-sdk/artifacts/IV4MetaQuoter";
+import { BigNumber } from "@ethersproject/bignumber";
 import { Card } from "./ui/card.js";
 import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
 import { useBasketWeights } from "@/hooks/useBasketWeights.js";
-import { getCurrencyHops, getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
+import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
 import { BasketAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
-import { USD_CURRENCIES } from "@/pages/BasketPage.js";
-import { BigNumber } from "@ethersproject/bignumber";
 
 const maxFeeCentiBips = 1_000_000n;
 

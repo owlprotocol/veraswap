@@ -253,14 +253,6 @@ export const LOCAL_TOKENS = [
 
 export const TOKENS = import.meta.env.MODE === "development" ? [...MAINNET_TOKENS, ...LOCAL_TOKENS] : MAINNET_TOKENS;
 
-export function getCurrencyHops(chainId: number) {
-    if (chainId === bsc.id) return [USDC_BSC.address, USDT_BSC.address, zeroAddress];
-    if (chainId === base.id) return [USDC_BASE.address, zeroAddress];
-    if (chainId === polygon.id) return [USDC_POLYGON.address, USDT_POLYGON.address, zeroAddress];
-
-    return [zeroAddress];
-}
-
 export function getTokenDetailsForAllocation(allocation: { address: Address; chainId: number }, tokens: Token[]) {
     return tokens.find(
         (t) => t.address.toLowerCase() === allocation.address.toLowerCase() && t.chainId === allocation.chainId,
