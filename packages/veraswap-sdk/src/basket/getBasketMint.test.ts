@@ -100,7 +100,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
         const currencyIn = zeroAddress;
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
         const contracts = {
-            v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
         };
         // Get required underlying tokens and their raw units
@@ -126,7 +126,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
                         currencyIn,
                         currencyOut: token,
                         amountOut: units,
-                        contracts: { v4MetaQuoter: contracts.v4MetaQuoter },
+                        contracts: { metaQuoter: contracts.metaQuoter },
                     }),
                 );
 
@@ -275,7 +275,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
             deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
             currencyHops: [],
             contracts: {
-                v4MetaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                 universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
             },
         };

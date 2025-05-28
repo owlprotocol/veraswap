@@ -22,7 +22,7 @@ export interface GetBasketMintParams extends GetBasketMintQuoteParams {
     slippageCentiBps?: bigint;
     nativeSweepRecipient?: Address; // Native token sweep recipient, defaults to address(1) which sweeps to caller
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
         universalRouter: Address;
     };
 }

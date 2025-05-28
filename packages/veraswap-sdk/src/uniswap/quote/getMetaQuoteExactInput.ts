@@ -15,7 +15,7 @@ export interface GetMetaQuoteExactInputParams {
     /** @default currencyHops [zeroAddress] (native currency) */
     currencyHops?: Address[];
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
 }
@@ -33,7 +33,7 @@ export function getMetaQuoteExactInputQueryOptions(wagmiConfig: Config, params: 
 
     return readContractQueryOptions(wagmiConfig, {
         chainId,
-        address: contracts.v4MetaQuoter,
+        address: contracts.metaQuoter,
         abi: [metaQuoteExactInputBest],
         functionName: "metaQuoteExactInputBest",
         args: [

@@ -15,7 +15,7 @@ export interface GetBasketMintQuoteParams {
     currencyIn: Address;
     currencyHops: Address[];
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
 }

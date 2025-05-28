@@ -1,5 +1,5 @@
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
-import { Address, encodePacked, Hex, hexToBigInt, padHex, parseAbi, parseUnits, zeroAddress } from "viem";
+import { Address, encodePacked, Hex, padHex, parseAbi, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { IERC20 } from "../../artifacts/IERC20.js";
@@ -10,16 +10,9 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
 import { anvilClientL1 } from "../../test/constants.js";
 import { DEFAULT_POOL_PARAMS } from "../../types/PoolKey.js";
-import { CommandType, RoutePlanner } from "../routerCommands.js";
+import { ACTION_CONSTANTS, CommandType, RoutePlanner } from "../routerCommands.js";
 
 import { metaQuoteExactInput } from "./MetaQuoter.js";
-
-export const ACTION_CONSTANTS = {
-    MSG_SENDER: "0x0000000000000000000000000000000000000001",
-    ADDRESS_THIS: "0x0000000000000000000000000000000000000002",
-    CONTRACT_BALANCE: hexToBigInt("0x8000000000000000000000000000000000000000000000000000000000000000"),
-    OPEN_DELTA: 0,
-} as const;
 
 const address3: Address = padHex("0x3", { size: 20 });
 // TODO: With WETH9 pools, add test for wrapping/unwrapping ETH
@@ -119,7 +112,7 @@ describe("uniswap/quote/MixedRoutes.test.ts", function () {
                 hookData: quote.path[1].hookData,
             },
         ]);
-        v4TradePlan.addAction(Actions.TAKE_ALL, [currencyOut, 0n]); //receive variable output
+        v4TradePlan.addAction(Actions.TAKE_ALL, [currencyOut, quote.variableAmount]); //receive variable output
         // Universal Router Plan
         const routePlanner = new RoutePlanner();
         routePlanner.addCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan);

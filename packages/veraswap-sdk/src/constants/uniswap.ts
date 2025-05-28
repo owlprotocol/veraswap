@@ -34,7 +34,7 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 export function getUniswapContracts(params?: { owner?: Address }) {
     const permit2: Address = PERMIT2_ADDRESS;
     // Deployed with vm.rpc setCode when using anvil (supersim has pre-deploy)
-    const weth9 = "0x4200000000000000000000000000000000000006";
+    const weth9: Address = "0x4200000000000000000000000000000000000006";
 
     // Uniswap V3 Core
     const v3Factory = getDeployDeterministicAddress({
