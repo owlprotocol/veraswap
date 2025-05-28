@@ -49,16 +49,19 @@ export async function setup() {
         host,
         port: opChainL1Port,
         chainId: opChainL1.id,
+        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
     });
     chainAInstance = anvil({
         host,
         port: opChainAPort,
         chainId: opChainA.id,
+        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
     });
     chainBInstance = anvil({
         host,
         port: opChainBPort,
         chainId: opChainB.id,
+        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
     });
 
     await chainL1Instance.start();
