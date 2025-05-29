@@ -66,6 +66,7 @@ export default function SimplifiedPortfolioPage() {
                                     setAmount={setAmount}
                                     sendTransaction={sendTransaction}
                                     referrer={referrer as Address | undefined}
+                                    onClose={() => setSelectedBasket(null)}
                                 />
                             </div>
                         )}
