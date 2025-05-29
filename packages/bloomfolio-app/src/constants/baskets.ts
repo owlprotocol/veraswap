@@ -1,10 +1,9 @@
 import { DollarSign, Rocket, Dog } from "lucide-react";
-import { Address, encodeDeployData, parseEther, zeroAddress, zeroHash } from "viem";
+import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
 import { base, bsc, polygon } from "viem/chains";
 import { opChainL1 } from "@owlprotocol/veraswap-sdk/chains";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { WBTC_POLYGON, WETH_POLYGON } from "@owlprotocol/veraswap-sdk";
 import {
     tokenBAddress,
     tokenAAddress,
@@ -18,8 +17,6 @@ import {
 export interface BasketAllocation {
     address: Address;
     chainId: number;
-    weight: number;
-    units: bigint;
 }
 
 export interface BasketPercentageAllocation {
@@ -27,6 +24,7 @@ export interface BasketPercentageAllocation {
     chainId: number;
     percentage: string;
     weight: number;
+    units: bigint;
 }
 
 export interface Basket {
@@ -40,8 +38,6 @@ export interface Basket {
     symbol: string;
 }
 
-// TODO: remove weight and units from allocations
-
 export const MAINNET_BASKETS = [
     {
         id: "conservative",
@@ -51,10 +47,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-green-400 to-blue-500",
         icon: DollarSign,
         allocations: [
-            { address: BSC_TOKENS[4].address, chainId: bsc.id, weight: 50, units: parseEther("49") }, // WETH
+            { address: BSC_TOKENS[4].address, chainId: bsc.id },
 
-            // { address: BSC_TOKENS[5].address, chainId: bsc.id, weight: 40, units: 5n }, // WBNB
-            { address: BSC_TOKENS[7].address, chainId: bsc.id, weight: 50, units: parseEther("1") }, // BTCB
+            // { address: BSC_TOKENS[5].address, chainId: bsc.id},
+            { address: BSC_TOKENS[7].address, chainId: bsc.id },
         ],
         symbol: "CB.ETH/BTC.50",
     },
@@ -67,9 +63,9 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-green-400 to-blue-500",
     //     icon: DollarSign,
     //     allocations: [
-    //         { address: WETH_POLYGON.address, chainId: polygon.id, weight: 50, units: parseEther("0.04") }, // WETH
+    //         { address: WETH_POLYGON.address, chainId: polygon.id},
     //
-    //         { address: WBTC_POLYGON.address, chainId: polygon.id, weight: 50, units: 10n ** 5n }, // WBTC
+    //         { address: WBTC_POLYGON.address, chainId: polygon.id},
     //     ],
     //     symbol: "CB.ETH/BTC.50",
     // },
@@ -81,10 +77,10 @@ export const MAINNET_BASKETS = [
         gradient: "from-purple-400 to-red-500",
         icon: DollarSign,
         allocations: [
-            { address: linkPolygonAddress, chainId: polygon.id, weight: 55, units: 1000n * 10n ** 18n },
-            { address: uniPolygonAddress, chainId: polygon.id, weight: 20, units: 1000n * 10n ** 18n },
-            { address: ldoPolygonAddress, chainId: polygon.id, weight: 20, units: 7000n * 10n ** 18n },
-            { address: aavePolygonAddress, chainId: polygon.id, weight: 5, units: 6n * 10n ** 18n },
+            { address: linkPolygonAddress, chainId: polygon.id },
+            { address: uniPolygonAddress, chainId: polygon.id },
+            { address: ldoPolygonAddress, chainId: polygon.id },
+            { address: aavePolygonAddress, chainId: polygon.id },
         ],
         symbol: "PIB.MC",
     },
@@ -99,20 +95,14 @@ export const MAINNET_BASKETS = [
             {
                 address: "0x1111111111166b7FE7bd91427724B487980aFc69",
                 chainId: base.id,
-                units: 1000n * 10n ** 18n,
-                weight: 3449,
             }, // ZORA
             {
                 address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
                 chainId: base.id,
-                units: 5n * 10n ** 18n,
-                weight: 3354,
             }, // VIRTUAL
             {
                 address: "0x98d0baa52b2D063E780DE12F615f963Fe8537553",
                 chainId: base.id,
-                units: 5n * 10n ** 18n,
-                weight: 3198,
             }, // KAITO
         ],
         symbol: "EKSS",
@@ -125,10 +115,10 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-yellow-400 to-orange-500",
     //     icon: Globe,
     //     allocations: [
-    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 30 }, // WBNB
-    //         { address: BSC_TOKENS[7].address, chainId: bsc.id, units: 1n, weight: 30 }, // BTCB
-    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 20 }, // UNI
-    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 20 }, // AAVE
+    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[7].address, chainId: bsc.id, units: 1n},
+    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n},
     //     ],
     //     symbol: "",
     // },
@@ -140,11 +130,11 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-pink-500 to-purple-600",
     //     icon: Bitcoin,
     //     allocations: [
-    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 1n, weight: 25 }, // SOL
-    //         { address: BSC_TOKENS[1].address, chainId: bsc.id, units: 20n, weight: 25 }, // LINK
-    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 500n, weight: 20 }, // 1INCH
-    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 50n, weight: 15 }, // CAKE
-    //         // { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 15 }, // DOGE
+    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 1n},
+    //         { address: BSC_TOKENS[1].address, chainId: bsc.id, units: 20n},
+    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 500n},
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 50n},
+    //         // { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n},
     //     ],
     //     symbol: "",
     // },
@@ -156,9 +146,9 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-red-500 to-pink-500",
     //     icon: Dog,
     //     allocations: [
-    //         { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 40 }, // PEPE
-    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 40 }, // DOGE
-    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n, weight: 20 }, // WBNB
+    //         { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18)},
+    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n},
+    //         // { address: BSC_TOKENS[5].address, chainId: bsc.id, units: 5n},
     //     ],
     //     symbol: "",
     // },
@@ -170,10 +160,10 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-blue-500 to-indigo-600",
     //     icon: Coins,
     //     allocations: [
-    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n, weight: 30 }, // UNI
-    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n, weight: 30 }, // AAVE
-    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 5n, weight: 25 }, // 1INCH
-    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 5n, weight: 15 }, // CAKE
+    //         { address: BSC_TOKENS[2].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[3].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[6].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: 5n},
     //     ],
     //     symbol: "",
     // },
@@ -185,11 +175,11 @@ export const MAINNET_BASKETS = [
     //     gradient: "from-purple-600 to-pink-600",
     //     icon: Rocket,
     //     allocations: [
-    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n, weight: 30 }, // SOL
+    //         { address: BSC_TOKENS[0].address, chainId: bsc.id, units: 5n},
 
-    //         // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 30 }, // PEPE
-    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n, weight: 20 }, // DOGE
-    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("1", 18), weight: 20 }, // CAKE
+    //         // { address: BSC_TOKENS[8].address, chainId: bsc.id, units: parseUnits("1", 18)},
+    //         { address: BSC_TOKENS[10].address, chainId: bsc.id, units: 5n},
+    //         { address: BSC_TOKENS[9].address, chainId: bsc.id, units: parseUnits("1", 18)},
     //     ],
     //     symbol: "",
     // },
@@ -229,8 +219,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 No Fee",
         description: "Index AB50 No Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 1n * 10n ** 18n },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 1n * 10n ** 18n },
+            { address: tokenAAddress, chainId: opChainL1.id },
+            { address: tokenBAddress, chainId: opChainL1.id },
         ],
         symbol: "AB50.NF",
     },
@@ -243,8 +233,8 @@ export const LOCAL_BASKETS = [
         title: "Index AB50 With Fee",
         description: "Index AB50 With Fee for testing purposes",
         allocations: [
-            { address: tokenAAddress, chainId: opChainL1.id, weight: 50, units: 2n * 10n ** 18n },
-            { address: tokenBAddress, chainId: opChainL1.id, weight: 50, units: 2n * 10n ** 18n },
+            { address: tokenAAddress, chainId: opChainL1.id },
+            { address: tokenBAddress, chainId: opChainL1.id },
         ],
         symbol: "AB50.WF",
     },

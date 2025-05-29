@@ -4,7 +4,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaCh
 import { useAccount, useBalance, useReadContract } from "wagmi";
 import { useState } from "react";
 import { useSendTransaction } from "wagmi";
-import { zeroAddress, formatUnits, Address, erc20Abi } from "viem";
+import { zeroAddress, formatUnits, Address, erc20Abi, formatEther } from "viem";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { USD_CURRENCIES } from "@owlprotocol/veraswap-sdk";
@@ -21,7 +21,7 @@ import { useTokenPrices } from "@/hooks/useTokenPrices.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
 import { config } from "@/config.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
-import { useBasketWeights } from "@/hooks/useBasketWeights.js";
+import { shareDecimals, shareUnits, useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { ShareButton } from "@/components/ShareButton.js";
 
 interface BasketPageProps {
@@ -87,15 +87,16 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
     const { percentages, weights, totalValue } = useBasketWeights({
         chainId,
         basketDetails: basketDetails ?? [],
-        quoteCurrency: USD_CURRENCIES[chainId],
+        // quoteCurrency: USD_CURRENCIES[chainId],
     });
 
-    // TODO: fix / explain magic number
-    const userDollarValue = balance && totalValue ? (balance.value * totalValue) / 10n ** 28n : 0n;
-    const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / 10n ** 28n : 0n;
+    const usdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 18;
 
-    const formattedDollarValue = formatUnits(userDollarValue, tokenMetadata?.decimals ?? 18);
-    const formattedGlobalDollarValue = formatUnits(globalDollarValue, tokenMetadata?.decimals ?? 18);
+    const userDollarValue = balance && totalValue ? (balance.value * totalValue) / shareUnits : 0n;
+    const globalDollarValue = totalSupply && totalValue ? (totalSupply * totalValue) / shareUnits : 0n;
+
+    const formattedDollarValue = formatUnits(userDollarValue, shareDecimals);
+    const formattedGlobalDollarValue = formatUnits(globalDollarValue, shareDecimals);
 
     const calculateStats = (data: typeof performanceData) => {
         if (!data.length) return { change: 0, high: 0, low: 0, current: 0, start: 0 };
@@ -188,7 +189,7 @@ export const BasketPage = ({ chainId, address, details, referrer }: BasketPagePr
                         <span className="text-lg">{CATEGORY_ICONS[category]}</span>
                         <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                         <Badge variant="secondary" className="ml-2">
-                            {categoryPercentage.toFixed(4)}%
+                            {categoryPercentage.toFixed(3)}%
                         </Badge>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform duration-200" />

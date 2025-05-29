@@ -2,10 +2,14 @@ import { Check, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { getChainById } from "@owlprotocol/veraswap-sdk";
+import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { useReadContract } from "wagmi";
+import { zeroAddress } from "viem";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./ui/card.js";
 import { Button } from "./ui/button.js";
 import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
-import { BASKETS, BasketAllocation } from "@/constants/baskets.js";
+import { BASKETS, BasketPercentageAllocation } from "@/constants/baskets.js";
+import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 
 export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
     const selectedBasketData = useMemo(
@@ -18,10 +22,26 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
         [selectedBasketData],
     );
 
+    // TODO: refactor to have it only in one place, and pass it into this component
+    const { data: basketDetails } = useReadContract({
+        chainId: basketChain?.id ?? 0,
+        address: selectedBasketData?.address ?? zeroAddress,
+        abi: [getBasket],
+        functionName: "getBasket",
+        query: {
+            enabled: !!selectedBasketData && !!basketChain,
+        },
+    });
+
+    const { basketPercentageAllocations, isLoading: isBasketLoading } = useBasketWeights({
+        chainId: basketChain?.id,
+        basketDetails: basketDetails ? basketDetails.map(({ addr, units }) => ({ addr, units })) : [],
+    });
+
     // TODO: change native currency to input symbol
     const inputSymbol = selectedBasketData && basketChain ? basketChain.nativeCurrency.symbol : "";
 
-    const renderAllocationDetails = (allocation: BasketAllocation, totalWeight: number) => {
+    const renderAllocationDetails = (allocation: BasketPercentageAllocation) => {
         const token = getTokenDetailsForAllocation(allocation, TOKENS);
         if (!token) return null;
 
@@ -31,7 +51,7 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
                     <img src={token.logoURI} alt={token.symbol} className="w-4 h-4 rounded-full" />
                     <span className="text-muted-foreground">{token.symbol}</span>
                 </div>
-                <span className="font-medium">{((allocation.weight / totalWeight) * 100).toFixed(2)}%</span>
+                <span className="font-medium">{allocation.weight.toFixed(2)}%</span>
             </div>
         );
     };
@@ -79,15 +99,10 @@ export function BasketPurchaseConfirmation({ selectedBasket, amount, hash }) {
 
                     <div>
                         <div className="text-sm font-medium mb-2">Assets Purchased</div>
-                        {selectedBasketData && (
+                        {/* TODO: Add spinner if basket is loading */}
+                        {!isBasketLoading && basketPercentageAllocations && (
                             <div className="space-y-2">
-                                {selectedBasketData.allocations.map((all: BasketAllocation) => {
-                                    const totalWeight = selectedBasketData.allocations.reduce(
-                                        (acc, all) => acc + all.weight,
-                                        0,
-                                    );
-                                    return renderAllocationDetails(all, totalWeight);
-                                })}
+                                {basketPercentageAllocations.map((all) => renderAllocationDetails(all))}
                             </div>
                         )}
                     </div>
