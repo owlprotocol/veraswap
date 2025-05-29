@@ -1,12 +1,18 @@
-import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
+import {
+    getChainById,
+    UNISWAP_CONTRACTS,
+    getBasketMint,
+    USD_CURRENCIES,
+    getUniswapV4RouteExactIn,
+} from "@owlprotocol/veraswap-sdk";
 import { AlertCircle, ShoppingCart } from "lucide-react";
-import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
+import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address, numberToHex } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useMemo } from "react";
-import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
+import { decimals, getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { BasketFixedUnits } from "@owlprotocol/veraswap-sdk/artifacts";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { getCurrencyHops, tokenDataQueryOptions } from "@owlprotocol/veraswap-sdk";
 import React from "react";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -108,28 +114,32 @@ export function SelectedBasketPanel({
         basketDetails: basketDetails ?? [],
     });
 
-    // const { data: ethToUsdQuote } = useQuery({
-    //     queryKey: ["ethToUsdQuote", basketChainId],
-    //     queryFn: () =>
-    //         getUniswapV4RouteExactIn(queryClient, config, {
-    //             chainId: basketChainId,
-    //             contracts: UNISWAP_CONTRACTS[basketChainId]!,
-    //             currencyIn: zeroAddress,
-    //             currencyOut: USD_CURRENCIES[basketChainId]!.address,
-    //             currencyHops: getCurrencyHops(basketChainId),
-    //             exactAmount: 10n ** 18n,
-    //         }),
-    // });
-    //
-    // const ethToUsd = ethToUsdQuote?.amountOut ?? 0n;
+    const usdCurrency = USD_CURRENCIES[basketChainId] ?? { address: zeroAddress, decimals: 18 };
+    // TODO: Add spinner while loading/ useSupsense, amount is passed as prop
+    const { data: ethToUsd } = useQuery({
+        queryKey: ["ethToUsd", basketChainId, numberToHex(amountParsed)],
+        queryFn: () =>
+            usdCurrency.address !== zeroAddress
+                ? getUniswapV4RouteExactIn(queryClient, config, {
+                      chainId: basketChainId,
+                      contracts: UNISWAP_CONTRACTS[basketChainId]!,
+                      currencyIn: zeroAddress,
+                      currencyOut: usdCurrency.address,
+                      currencyHops: getCurrencyHops(basketChainId),
+                      exactAmount: amountParsed,
+                  }).then((res) => res?.amountOut ?? 0n)
+                : 1n,
+        enabled: !!amountParsed && !!basketChainId,
+    });
 
-    // TODO: include ethToUsd conversion rate
     const shares =
-        totalValue > 0n && amountParsed > 0n
-            ? BigNumber.from((amountParsed * shareUnits) as unknown as number)
+        !!totalValue && !!ethToUsd
+            ? BigNumber.from((shareUnits * ethToUsd * shareUnits) as unknown as number)
                   .div(totalValue)
+                  .div(10n ** BigInt(usdCurrency.decimals))
                   .toBigInt()
             : 0n;
+
     const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;
     const sharesMinusFeeFormatted = sharesMinusFee > 0n ? formatUnits(sharesMinusFee, shareDecimals) : "";
 
