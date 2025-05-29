@@ -1,22 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronRight, BarChart3, Users } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.js";
 
-export function WelcomeModal() {
-    const [open, setOpen] = useState(false);
+interface WelcomeModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
     const [step, setStep] = useState(0);
 
-    useEffect(() => {
-        const hasVisited = localStorage.getItem("hasVisitedVerabloomBefore");
-        if (!hasVisited) {
-            setOpen(true);
-            localStorage.setItem("hasVisitedVerabloomBefore", "true");
-        }
-    }, []);
-
     const handleClose = () => {
-        setOpen(false);
+        setStep(0);
+        onOpenChange(false);
     };
 
     const steps = [
