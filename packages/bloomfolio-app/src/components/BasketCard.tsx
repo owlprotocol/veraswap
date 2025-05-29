@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/react-collapsible";
 import { Separator } from "@radix-ui/react-separator";
 import { ChevronDown } from "lucide-react";
-import { zeroAddress } from "viem";
 import { useReadContract } from "wagmi";
 import { getBasket } from "@owlprotocol/veraswap-sdk/artifacts/BasketFixedUnits";
 import { CardContent, CardHeader, CardDescription, Card, CardTitle } from "./ui/card.js";
@@ -10,15 +9,17 @@ import { Button } from "./ui/button.js";
 import { Badge } from "./ui/badge.js";
 import { Skeleton } from "./ui/skeleton.js";
 import { Token } from "@/constants/tokens.js";
-import { Basket, BasketAllocation } from "@/constants/baskets.js";
+import { Basket, BasketAllocation, BasketPercentageAllocation } from "@/constants/baskets.js";
 import { getTokenDetailsForAllocation, TokenCategory } from "@/constants/tokens.js";
 import { TOKENS } from "@/constants/tokens.js";
-import { useGetTokenValues } from "@/hooks/useGetTokenValues.js";
 import { CATEGORY_ICONS, CATEGORY_LABELS } from "@/constants/categories.js";
+import { useBasketWeights } from "@/hooks/useBasketWeights.js";
 
 // TODO: fix type
 export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; isSelected: any; onSelect: any }) {
     const basketChainId = basket.allocations[0].chainId;
+
+    // TODO: refactor to have it only in one place, and pass it into this component
     const { data: basketDetails } = useReadContract({
         chainId: basketChainId,
         address: basket.address,
@@ -26,14 +27,13 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
         functionName: "getBasket",
     });
 
-    const { data: tokenValues, pending: isTokenValuesLoading } = useGetTokenValues({
+    const { basketPercentageAllocations, isLoading: isBasketLoading } = useBasketWeights({
         chainId: basketChainId,
         basketDetails: basketDetails ? basketDetails.map(({ addr, units }) => ({ addr, units })) : [],
     });
 
-    const totalValue = tokenValues?.reduce((sum: bigint, curr) => sum + (curr ?? 0n), 0n) ?? 0n;
-
-    const groupAllocationsByCategory = (allocations: BasketAllocation[]) => {
+    // TODO: clean up this function?
+    const groupAllocationsByCategory = (allocations: BasketPercentageAllocation[]) => {
         const grouped = allocations.reduce(
             (acc, allocation, index) => {
                 const token = getTokenDetailsForAllocation(allocation, TOKENS);
@@ -46,7 +46,7 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
                 acc[category].push({ allocation, token, index });
                 return acc;
             },
-            {} as Record<TokenCategory, { allocation: BasketAllocation; token: Token; index: number }[]>,
+            {} as Record<TokenCategory, { allocation: BasketPercentageAllocation; token: Token; index: number }[]>,
         );
 
         return Object.entries(grouped).sort(([a], [b]) => {
@@ -95,14 +95,12 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
                 <Separator className="my-3" />
 
                 <div className="space-y-2">
-                    {groupAllocationsByCategory(basket.allocations).map(([category, items]) => (
+                    {groupAllocationsByCategory(basketPercentageAllocations).map(([category, items]) => (
                         <CategorySection
                             key={`${basket.id}-${category}`}
                             category={category as TokenCategory}
                             items={items}
-                            totalValue={totalValue}
-                            isLoading={isTokenValuesLoading}
-                            tokenValues={tokenValues}
+                            isLoading={isBasketLoading}
                         />
                     ))}
                 </div>
@@ -111,13 +109,16 @@ export function BasketCard({ basket, isSelected, onSelect }: { basket: Basket; i
     );
 }
 
-function CategorySection({ category, items, totalValue, isLoading, tokenValues }) {
-    const categoryValue = items.reduce((sum: bigint, { index }) => {
-        const tokenValue = tokenValues?.[index] ?? 0n;
-        return sum + tokenValue;
-    }, 0n);
-
-    const categoryPercentage = totalValue > 0n ? (Number(categoryValue) / Number(totalValue)) * 100 : 0;
+function CategorySection({
+    category,
+    items,
+    isLoading,
+}: {
+    category: TokenCategory;
+    items: { allocation: BasketPercentageAllocation; token: Token; index: number }[];
+    isLoading: boolean;
+}) {
+    const categoryPercentage = items.reduce((sum, { allocation }) => sum + allocation.weight, 0);
 
     return (
         <Collapsible className="border rounded-lg overflow-hidden collapsible" onClick={(e) => e.stopPropagation()}>
@@ -136,10 +137,7 @@ function CategorySection({ category, items, totalValue, isLoading, tokenValues }
             </CollapsibleTrigger>
             <CollapsibleContent onClick={(e) => e.stopPropagation()}>
                 <div className="p-3 space-y-2 bg-background">
-                    {items.map(({ token, index }) => {
-                        const tokenValue = tokenValues?.[index] ?? 0n;
-                        const tokenPercentage = totalValue > 0n ? (Number(tokenValue) / Number(totalValue)) * 100 : 0;
-
+                    {items.map(({ allocation, token }) => {
                         return (
                             <div key={token.address} className="flex justify-between text-sm">
                                 <div className="flex items-center space-x-2">
@@ -149,7 +147,7 @@ function CategorySection({ category, items, totalValue, isLoading, tokenValues }
                                 {isLoading ? (
                                     <Skeleton className="h-4 w-12" />
                                 ) : (
-                                    <span className="font-medium">{tokenPercentage.toFixed(2)}%</span>
+                                    <span className="font-medium">{allocation.weight.toFixed(2)}%</span>
                                 )}
                             </div>
                         );

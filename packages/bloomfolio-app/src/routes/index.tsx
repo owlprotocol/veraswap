@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { useSendTransaction, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { Address } from "viem";
 import { BASKETS } from "@/constants/baskets.js";
 import { BasketCard } from "@/components/BasketCard.js";
@@ -21,19 +21,12 @@ export default function SimplifiedPortfolioPage() {
     const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
     const [amount, setAmount] = useState<string>("");
     const [showConfirmation, setShowConfirmation] = useState(false);
-    const { address } = useAccount();
     const { referrer } = Route.useSearch();
 
     const handleSelectBasket = (basketId: string) => {
         setSelectedBasket(basketId);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
-
-    // const usdcAllowance = useReadContract({
-    //     abi: erc20Abi,
-    //     functionName: "allowance",
-    //     args: [address ?? zeroAddress, PERMIT2_ADDRESS],
-    // });
 
     const { sendTransaction, data: hash, isPending: isTransactionPending } = useSendTransaction();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({

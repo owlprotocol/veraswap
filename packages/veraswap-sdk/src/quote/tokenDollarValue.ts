@@ -14,8 +14,10 @@ import {
 
 export async function getTokenDollarValue(
     config: Config,
-    { tokenAddress, chainId }: { tokenAddress: Address; chainId: number },
+    { tokenAddress, chainId }: { tokenAddress?: Address; chainId?: number },
 ) {
+    if (!tokenAddress || !chainId) return 0n;
+
     const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter!;
     const hopCurrencies = getCurrencyHops(chainId);
 
@@ -47,7 +49,7 @@ export async function getTokenDollarValue(
 
 export function getTokenDollarValueQueryOptions(
     config: Config,
-    { tokenAddress, chainId }: { tokenAddress: Address; chainId: number },
+    { tokenAddress, chainId }: { tokenAddress?: Address; chainId?: number },
 ) {
     return queryOptions({
         queryKey: ["getTokenDollarValue", tokenAddress, chainId],

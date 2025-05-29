@@ -1,5 +1,5 @@
 import { getChainById, UNISWAP_CONTRACTS, getBasketMint } from "@owlprotocol/veraswap-sdk";
-import { AlertCircle, LucideIcon, ShoppingCart } from "lucide-react";
+import { AlertCircle, ShoppingCart } from "lucide-react";
 import { formatEther, parseUnits, zeroAddress, formatUnits, encodeFunctionData, Address } from "viem";
 import { useAccount, useChainId, useBalance, useSwitchChain, useReadContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -15,9 +15,9 @@ import { Input } from "./ui/input.js";
 import { Separator } from "./ui/separator.js";
 import { Button } from "./ui/button.js";
 import { queryClient } from "@/queryClient.js";
-import { useBasketWeights } from "@/hooks/useBasketWeights.js";
+import { shareDecimals, shareUnits, useBasketWeights } from "@/hooks/useBasketWeights.js";
 import { getTokenDetailsForAllocation, TOKENS } from "@/constants/tokens.js";
-import { BasketAllocation } from "@/constants/baskets.js";
+import { BasketPercentageAllocation } from "@/constants/baskets.js";
 import { config } from "@/config.js";
 
 const maxFeeCentiBips = 1_000_000n;
@@ -29,7 +29,6 @@ interface SelectedBasketPanel2Props {
     amount: string;
     setAmount: (value: string) => void;
     sendTransaction: any;
-    icon?: LucideIcon;
 }
 
 export function SelectedBasketPanel({
@@ -39,7 +38,6 @@ export function SelectedBasketPanel({
     amount,
     setAmount,
     sendTransaction,
-    icon,
 }: SelectedBasketPanel2Props) {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -55,6 +53,11 @@ export function SelectedBasketPanel({
         functionName: "getBasket",
     });
 
+    const { basketPercentageAllocations } = useBasketWeights({
+        chainId: basketChainId,
+        basketDetails: basketDetails ? basketDetails.map(({ addr, units }) => ({ addr, units })) : [],
+    });
+
     const { data: tokenMetadata } = useSuspenseQuery(
         tokenDataQueryOptions(config, { chainId: basketChainId, address: basketAddress }),
     );
@@ -65,8 +68,7 @@ export function SelectedBasketPanel({
         const allocations = basketDetails.map((token) => ({
             address: token.addr,
             chainId: basketChainId,
-            weight: 0,
-            units: token.units / 10n ** 18n,
+            units: token.units,
         }));
 
         return {
@@ -81,12 +83,7 @@ export function SelectedBasketPanel({
         };
     }, [basketDetails, basketAddress, basketChainId, tokenMetadata]);
 
-    const basketChain = useMemo(() => {
-        if (selectedBasketData && selectedBasketData.allocations.length > 0) {
-            return getChainById(selectedBasketData.allocations[0].chainId);
-        }
-        return getChainById(basketChainId);
-    }, [basketChainId, selectedBasketData]);
+    const basketChain = getChainById(basketChainId);
 
     const { data: mintFeeCentiBips } = useReadContract({
         chainId: basketChainId,
@@ -126,16 +123,15 @@ export function SelectedBasketPanel({
     //
     // const ethToUsd = ethToUsdQuote?.amountOut ?? 0n;
 
-    // why is this 10^10?
+    // TODO: include ethToUsd conversion rate
     const shares =
         totalValue > 0n && amountParsed > 0n
-            ? BigNumber.from((amountParsed * 10n ** 16n) as unknown as number)
+            ? BigNumber.from((amountParsed * shareUnits) as unknown as number)
                   .div(totalValue)
                   .toBigInt()
             : 0n;
-    console.log({ amountParsed, totalValue, totalValueF: formatEther(totalValue), shares });
     const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;
-    const sharesMinusFeeFormatted = sharesMinusFee > 0n ? formatUnits(sharesMinusFee, 18) : "";
+    const sharesMinusFeeFormatted = sharesMinusFee > 0n ? formatUnits(sharesMinusFee, shareDecimals) : "";
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/[^0-9.]/g, "");
@@ -188,12 +184,12 @@ export function SelectedBasketPanel({
         });
     };
 
-    const renderAllocationDetails = (allocation: BasketAllocation) => {
+    const renderAllocationDetails = (allocation: BasketPercentageAllocation) => {
         const token = getTokenDetailsForAllocation(allocation, TOKENS);
         if (!token) return null;
 
-        // Assume it's ETH TODO: change decimals
-        const value = formatUnits(sharesMinusFee * allocation.units, token.decimals ?? 18);
+        // Both sharesMinusFee and allocation.units are for 1 ether of shares, so you need to format twice the decimals
+        const value = formatUnits(sharesMinusFee * allocation.units, shareDecimals + shareDecimals);
 
         return (
             <div key={token.address} className="flex justify-between text-sm">
@@ -227,7 +223,6 @@ export function SelectedBasketPanel({
                 <div className="lg:col-span-3">
                     <div className="flex items-start space-x-3">
                         <div className={`p-2 rounded-full bg-gradient-to-r ${selectedBasketData.gradient} text-white`}>
-                            {/* <selectedBasketData.icon className="h-5 w-5" /> */}
                             {/* TODO: add icon */}
                             <ShoppingCart className="h-5 w-5" />
                         </div>
@@ -295,9 +290,8 @@ export function SelectedBasketPanel({
                         <Separator />
                         <h3 className="font-medium">Breakdown</h3>
                         <div className="space-y-1 text-sm">
-                            {selectedBasketData.allocations.map((all: BasketAllocation) =>
-                                renderAllocationDetails(all),
-                            )}
+                            {/* TODO: Add spinner if basket is loading */}
+                            {basketPercentageAllocations.map((all) => renderAllocationDetails(all))}
                         </div>
 
                         <div className="pt-2 flex items-center justify-between gap-2">
