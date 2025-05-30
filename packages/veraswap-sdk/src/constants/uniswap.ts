@@ -121,7 +121,7 @@ export const UNISWAP_CONTRACTS: Record<
           v4PositionManager: `0x${string}`;
           v4StateView: `0x${string}`;
           v4Quoter: `0x${string}`;
-          v4MetaQuoter?: `0x${string}`;
+          v4MetaQuoter: `0x${string}`;
           universalRouter: `0x${string}`;
       }
     | undefined
@@ -135,20 +135,23 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
         v4Quoter: "0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227",
         universalRouter: "0x6fc36029136a0c9585306190387597d14f4c80a2",
+        v4MetaQuoter: "0x177109CaE87d41fE3c3d2CE7e7cc47D7d436c515",
     },
     [optimismSepolia.id]: {
         v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
-        v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
+        v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
         universalRouter: "0x5fb0c37c53ccf5445ef0bac4eea32da4258d5278",
+        v4MetaQuoter: "0xDdB56165FAd0595418479771aec342f57fded1e1",
     },
     [baseSepolia.id]: {
         v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
-        v4Quoter: "0x5e35454eb1b26dd1ce18668d81eacdcb6c38b7d7",
+        v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
         universalRouter: "0x2a229f4f81d0b9a434584d6ebc2ffa9e30b8d82d",
+        v4MetaQuoter: "0xDdB56165FAd0595418479771aec342f57fded1e1",
     },
     // TODO: add when uniswap supports
     // [superseed.id]: {
@@ -164,6 +167,8 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0x27fCc8497f32B6D046ed433D633535E59Cf02dc7",
         universalRouter: "0x5e654ADc08b75846bCa12a7FB88eD74309776605",
+        // TODO: properly deploy again. We get an error code -32000: already known
+        v4MetaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [interopDevnet1.id]: {
         v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
@@ -171,13 +176,16 @@ export const UNISWAP_CONTRACTS: Record<
         v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
         v4Quoter: "0x27fCc8497f32B6D046ed433D633535E59Cf02dc7",
         universalRouter: "0x5e654ADc08b75846bCa12a7FB88eD74309776605",
+        // TODO: properly deploy again. We get an error code -32000: already known
+        v4MetaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [arbitrum.id]: {
         v4PoolManager: "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32",
         v4PositionManager: "0xd88F38F930b7952f2DB2432Cb002E7abbF3dD869",
         v4StateView: "0xE751D8E8020B9AD1D2bb2CEd95EFA97fbd2F0A45",
-        v4Quoter: "0xF1578672e6C0c17DdfEADFA624f54F9568173dE4",
+        v4Quoter: "0x6e69C93152cFF1229E247CDB2153341cA39FE189",
         universalRouter: "0x5D188c9e6222DA351770bdf93517dCa70419e60A",
+        v4MetaQuoter: "0x55B13561584DCf661f6ab4C6C80a4Be346C47D39",
     },
     [base.id]: {
         v4PoolManager: "0x498581fF718922c3f8e6A244956aF099B2652b2b",
@@ -199,8 +207,9 @@ export const UNISWAP_CONTRACTS: Record<
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
         v4PositionManager: "0x3C3Ea4B57a46241e54610e5f022E5c45859A1017",
         v4StateView: "0x97337d1C732FC10C809Ac28C6d2D787c8cA2dFC9",
-        v4Quoter: "0xCDe42b22b921554558f2257a7D519E27b4140ac1",
+        v4Quoter: "0x4Bf033864D62d35c0513039e3b20995b4D490Cd9",
         universalRouter: "0x0ad4F5c45F4ad1BcB1c0284dFe9bAb22dC08Dccc",
+        v4MetaQuoter: "0x7750F8480Ee52a810C12999e4CDAF5694736543a",
     },
     [polygon.id]: {
         v4PoolManager: "0x67366782805870060151383F4BbFF9daB53e5cD6",
