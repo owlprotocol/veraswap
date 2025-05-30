@@ -227,6 +227,7 @@ contract DeployCoreContracts is DeployParameters {
         if (tokenBridge.code.length > 0) {
             // Contracts only work on Superchain Interop chains
             (address superchainTokenBridgeSweep,) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
         }
 
         // KERNEL CONTRACTS
@@ -241,7 +242,7 @@ contract DeployCoreContracts is DeployParameters {
         if (contracts.hyperlane.mailbox == address(0)) {
             console2.log("mailbox == address(0), skipping ERC7579 Executor deployment");
         } else {
-            (address erc7579ExecutorRouter,) = ERC7579ExecutorRouterUtils.getOrCreate2(
+            (erc7579ExecutorRouter,) = ERC7579ExecutorRouterUtils.getOrCreate2(
                 contracts.hyperlane.mailbox,
                 //TOOD: Use hardcoded ISM (currently this delegates ISM to Mailbox.defaultIsm())
                 address(0),
