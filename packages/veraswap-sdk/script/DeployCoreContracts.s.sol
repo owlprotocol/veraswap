@@ -77,11 +77,11 @@ contract DeployCoreContracts is DeployParameters {
 
     function deployUniswapRouterParams() internal returns (RouterParameters memory) {
         // Permit2
-        (address permit2, ) = Permit2Utils.getOrCreate2();
+        (address permit2,) = Permit2Utils.getOrCreate2();
         // UNISWAP CONTRACTS
-        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
-        (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager);
+        (address unsupported,) = UnsupportedProtocolUtils.getOrCreate2();
+        (address v4PoolManager,) = PoolManagerUtils.getOrCreate2(address(0));
+        (address v4PositionManager,) = PositionManagerUtils.getOrCreate2(v4PoolManager);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
@@ -101,9 +101,9 @@ contract DeployCoreContracts is DeployParameters {
     function deployHyperlaneParams() internal returns (HyperlaneDeployParams memory) {
         uint32 chainId = uint32(block.chainid);
         // HYPERLANE CONTRACTS
-        (address ism, ) = HyperlaneNoopIsmUtils.getOrCreate2();
-        (address hook, ) = HyperlanePausableHookUtils.getOrCreate2();
-        (address mailbox, ) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
+        (address ism,) = HyperlaneNoopIsmUtils.getOrCreate2();
+        (address hook,) = HyperlanePausableHookUtils.getOrCreate2();
+        (address mailbox,) = HyperlaneMailboxUtils.getOrCreate2(chainId, ism, hook);
 
         return HyperlaneDeployParams({mailbox: mailbox});
     }
@@ -114,7 +114,7 @@ contract DeployCoreContracts is DeployParameters {
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
-            (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
+            (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
             bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
             V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash);
 
@@ -127,13 +127,13 @@ contract DeployCoreContracts is DeployParameters {
             contracts.uniswap.v4PositionManager = routerParams.v4PositionManager;
 
             // View Uniswap Contracts
-            (address v4StateView, ) = StateViewUtils.getOrCreate2(routerParams.v4PoolManager);
-            (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(routerParams.v4PoolManager);
+            (address v4StateView,) = StateViewUtils.getOrCreate2(routerParams.v4PoolManager);
+            (address v4Quoter,) = V4QuoterUtils.getOrCreate2(routerParams.v4PoolManager);
             contracts.uniswap.v4StateView = v4StateView;
             contracts.uniswap.v4Quoter = v4Quoter;
 
             // Universal Router
-            (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+            (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
             contracts.uniswap.universalRouter = universalRouter;
         } else {
             // Skip Uniswap Deployment if any required param is address(0)
@@ -155,13 +155,13 @@ contract DeployCoreContracts is DeployParameters {
 
                 // View Uniswap Contracts
                 if (uniswapParams.v4StateView == address(0)) {
-                    (address v4StateView, ) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
+                    (address v4StateView,) = StateViewUtils.getOrCreate2(uniswapParams.v4PoolManager);
                     contracts.uniswap.v4StateView = v4StateView;
                 } else {
                     contracts.uniswap.v4StateView = uniswapParams.v4StateView;
                 }
                 if (uniswapParams.v4Quoter == address(0)) {
-                    (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
+                    (address v4Quoter,) = V4QuoterUtils.getOrCreate2(uniswapParams.v4PoolManager);
                     contracts.uniswap.v4Quoter = v4Quoter;
                 } else {
                     contracts.uniswap.v4Quoter = uniswapParams.v4Quoter;
@@ -179,7 +179,7 @@ contract DeployCoreContracts is DeployParameters {
                     v3NFTPositionManager: uniswapParams.v3NFTPositionManager,
                     v4PositionManager: uniswapParams.v4PositionManager
                 });
-                (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+                (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
                 contracts.uniswap.universalRouter = universalRouter;
             }
         }
@@ -188,7 +188,7 @@ contract DeployCoreContracts is DeployParameters {
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             HyperlaneDeployParams memory hyperlaneParams = deployHyperlaneParams();
             // (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
-            (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+            (address hypTokenRouterSweep,) = HypTokenRouterSweepUtils.getOrCreate2();
             contracts.hyperlane = HyperlaneContracts({
                 mailbox: hyperlaneParams.mailbox,
                 testRecipient: address(0),
@@ -200,7 +200,7 @@ contract DeployCoreContracts is DeployParameters {
                 console2.log("mailbox == address(0), skipping Hyperlane deployment");
             } else {
                 // (address testRecipient, ) = HyperlaneTestRecipientUtils.getOrCreate2();
-                (address hypTokenRouterSweep, ) = HypTokenRouterSweepUtils.getOrCreate2();
+                (address hypTokenRouterSweep,) = HypTokenRouterSweepUtils.getOrCreate2();
                 contracts.hyperlane = HyperlaneContracts({
                     mailbox: hyperlaneParams.mailbox,
                     testRecipient: address(0),
@@ -226,25 +226,32 @@ contract DeployCoreContracts is DeployParameters {
         address tokenBridge = 0x4200000000000000000000000000000000000028;
         if (tokenBridge.code.length > 0) {
             // Contracts only work on Superchain Interop chains
-            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            (address superchainTokenBridgeSweep,) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
         }
 
         // KERNEL CONTRACTS
-        (address kernel, ) = KernelUtils.getOrCreate2(entryPoint);
-        (address kernelFactory, ) = KernelFactoryUtils.getOrCreate2(kernel);
-        (address ecdsaValidator, ) = ECDSAValidatorUtils.getOrCreate2();
+        (address kernel,) = KernelUtils.getOrCreate2(entryPoint);
+        (address kernelFactory,) = KernelFactoryUtils.getOrCreate2(kernel);
+        (address ecdsaValidator,) = ECDSAValidatorUtils.getOrCreate2();
 
-        (address ownableSignatureExecutor, ) = OwnableSignatureExecutorUtils.getOrCreate2();
-        (address erc7579ExecutorRouter, ) = ERC7579ExecutorRouterUtils.getOrCreate2(
-            contracts.hyperlane.mailbox,
-            //TOOD: Use hardcoded ISM (currently this delegates ISM to Mailbox.defaultIsm())
-            address(0),
-            ownableSignatureExecutor,
-            kernelFactory
-        );
-        (address execute, ) = ExecuteUtils.getOrCreate2();
+        (address ownableSignatureExecutor,) = OwnableSignatureExecutorUtils.getOrCreate2();
 
-        (address orbiterBridgeSweep, ) = OrbiterBridgeSweepUtils.getOrCreate2();
+        address erc7579ExecutorRouter = address(0);
+
+        if (contracts.hyperlane.mailbox == address(0)) {
+            console2.log("mailbox == address(0), skipping ERC7579 Executor deployment");
+        } else {
+            (address erc7579ExecutorRouter,) = ERC7579ExecutorRouterUtils.getOrCreate2(
+                contracts.hyperlane.mailbox,
+                //TOOD: Use hardcoded ISM (currently this delegates ISM to Mailbox.defaultIsm())
+                address(0),
+                ownableSignatureExecutor,
+                kernelFactory
+            );
+        }
+        (address execute,) = ExecuteUtils.getOrCreate2();
+
+        (address orbiterBridgeSweep,) = OrbiterBridgeSweepUtils.getOrCreate2();
 
         contracts.kernel = kernel;
         contracts.kernelFactory = kernelFactory;
@@ -255,7 +262,10 @@ contract DeployCoreContracts is DeployParameters {
         contracts.orbiterBridgeSweep = orbiterBridgeSweep;
 
         // Custom Contracts
-        V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
-        ExecuteSweepUtils.getOrCreate2();
+        (address v4MetaQuoter,) = V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+        console2.log("v4MetaQuoter:", v4MetaQuoter);
+
+        (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
+        console2.log("executeSweep:", executeSweep);
     }
 }

@@ -25,9 +25,9 @@ import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
 
 /**
-    * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
-* Similar pattern can be used to configure Testnet and Mainnet deployments
-*/
+ * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
+ * Similar pattern can be used to configure Testnet and Mainnet deployments
+ */
 contract DeployInteropTestnet is DeployCoreContracts {
     // Core contracts
     mapping(uint256 chainId => CoreContracts) public chainContracts;
@@ -47,7 +47,7 @@ contract DeployInteropTestnet is DeployCoreContracts {
 
             vm.startBroadcast();
 
-            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            (address superchainTokenBridgeSweep,) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
             console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
 
             CoreContracts memory contracts = deployCoreContracts();
@@ -69,31 +69,37 @@ contract DeployInteropTestnet is DeployCoreContracts {
             console2.log("erc7579ExecutorRouter:", contracts.erc7579ExecutorRouter);
 
             chainContracts[chainIds[i]] = contracts;
+
+            // Custom Contracts
+            (address v4MetaQuoter,) = V4MetaQuoterUtils.getOrCreate2(contracts.uniswap.v4PoolManager);
+            console2.log("v4MetaQuoter:", v4MetaQuoter);
+
+            (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
+            console2.log("executeSweep:", executeSweep);
         }
 
         // Only deploy superchain erc20 on interop chains
         for (uint256 i = 0; i < 2; i++) {
             vm.selectFork(forks[i]);
             vm.startBroadcast();
-            (address superchainTokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
-            (address superchainTokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+            (address superchainTokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+            (address superchainTokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
             console2.log("Deployed Superchain Token C on %s: %s", chains[i], superchainTokenC);
             console2.log("Deployed Superchain Token D on %s: %s", chains[i], superchainTokenD);
             vm.stopBroadcast();
         }
 
-
-        /***** Main Fork *****/
-            {
+        /**
+         * Main Fork ****
+         */
+        {
             vm.selectFork(forks[0]);
             vm.startBroadcast();
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             deployTokensAndPools(
-                contracts.uniswap.universalRouter,
-                contracts.uniswap.v4PositionManager,
-                contracts.uniswap.v4StateView
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
             );
             // TODO: Deploy hyperc20 router when hyperlane is available
             // Create HypERC20Collateral for token C and D
@@ -129,62 +135,61 @@ contract DeployInteropTestnet is DeployCoreContracts {
 
         // TODO: Deploy hyperc20 router when hyperlane is available
         // /***** Remote Fork(s) Deploy Tokens *****/
-            //     vm.selectFork(forks[2]);
-            //     vm.startBroadcast();
-            //     CoreContracts storage contracts = chainContracts[chainIds[i]];
-            //
-            //     (address hypERC20TokenC, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token C", "C");
-            //     console2.log("hypERC20TokenC:", hypERC20TokenC);
-            //     (address hypERC20TokenD, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token D", "D");
-            //     console2.log("hypERC20TokenD:", hypERC20TokenD);
-            //     tokens[chainIds[0]][keccak256("C")] = hypERC20TokenC;
-            //     tokens[chainIds[0]][keccak256("D")] = hypERC20TokenD;
-            //     vm.stopBroadcast();
-            //
-            // /***** Enroll Tokens *****/
-            //     vm.selectFork(forks[0]);
-            //     vm.startBroadcast();
-            //     TokenRouter routerC = TokenRouter(tokens[chainIds[0]][keccak256("C")]);
-            //     TokenRouter routerD = TokenRouter(tokens[chainIds[0]][keccak256("D")]);
-            //
-            //             uint256 remoteChainId = chainIds[2];
-            //             bytes32 remoteRouterC = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("C")])));
-            //             if (routerC.routers(uint32(remoteChainId)) != remoteRouterC) {
-            //                 routerC.enrollRemoteRouter(uint32(remoteChainId), remoteRouterC);
-            //             }
-            //             bytes32 remoteRouterD = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("D")])));
-            //             if (routerD.routers(uint32(remoteChainId)) != remoteRouterD) {
-            //                 routerD.enrollRemoteRouter(uint32(remoteChainId), remoteRouterD);
-            //             }
-            //     vm.stopBroadcast();
-            //
-            //     vm.selectFork(forks[2]);
-            //     vm.startBroadcast();
-            //     TokenRouter routerC = TokenRouter(tokens[chainIds[2]][keccak256("C")]);
-            //     TokenRouter routerD = TokenRouter(tokens[chainIds[2]][keccak256("D")]);
-            //
-            //             uint256 remoteChainId = chainIds[0];
-            //             bytes32 remoteRouterC = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("C")])));
-            //             if (routerC.routers(uint32(remoteChainId)) != remoteRouterC) {
-            //                 routerC.enrollRemoteRouter(uint32(remoteChainId), remoteRouterC);
-            //             }
-            //             bytes32 remoteRouterD = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("D")])));
-            //             if (routerD.routers(uint32(remoteChainId)) != remoteRouterD) {
-            //                 routerD.enrollRemoteRouter(uint32(remoteChainId), remoteRouterD);
-            //             }
-            //     vm.stopBroadcast();
-            // }
-}
+        //     vm.selectFork(forks[2]);
+        //     vm.startBroadcast();
+        //     CoreContracts storage contracts = chainContracts[chainIds[i]];
+        //
+        //     (address hypERC20TokenC, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token C", "C");
+        //     console2.log("hypERC20TokenC:", hypERC20TokenC);
+        //     (address hypERC20TokenD, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token D", "D");
+        //     console2.log("hypERC20TokenD:", hypERC20TokenD);
+        //     tokens[chainIds[0]][keccak256("C")] = hypERC20TokenC;
+        //     tokens[chainIds[0]][keccak256("D")] = hypERC20TokenD;
+        //     vm.stopBroadcast();
+        //
+        // /***** Enroll Tokens *****/
+        //     vm.selectFork(forks[0]);
+        //     vm.startBroadcast();
+        //     TokenRouter routerC = TokenRouter(tokens[chainIds[0]][keccak256("C")]);
+        //     TokenRouter routerD = TokenRouter(tokens[chainIds[0]][keccak256("D")]);
+        //
+        //             uint256 remoteChainId = chainIds[2];
+        //             bytes32 remoteRouterC = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("C")])));
+        //             if (routerC.routers(uint32(remoteChainId)) != remoteRouterC) {
+        //                 routerC.enrollRemoteRouter(uint32(remoteChainId), remoteRouterC);
+        //             }
+        //             bytes32 remoteRouterD = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("D")])));
+        //             if (routerD.routers(uint32(remoteChainId)) != remoteRouterD) {
+        //                 routerD.enrollRemoteRouter(uint32(remoteChainId), remoteRouterD);
+        //             }
+        //     vm.stopBroadcast();
+        //
+        //     vm.selectFork(forks[2]);
+        //     vm.startBroadcast();
+        //     TokenRouter routerC = TokenRouter(tokens[chainIds[2]][keccak256("C")]);
+        //     TokenRouter routerD = TokenRouter(tokens[chainIds[2]][keccak256("D")]);
+        //
+        //             uint256 remoteChainId = chainIds[0];
+        //             bytes32 remoteRouterC = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("C")])));
+        //             if (routerC.routers(uint32(remoteChainId)) != remoteRouterC) {
+        //                 routerC.enrollRemoteRouter(uint32(remoteChainId), remoteRouterC);
+        //             }
+        //             bytes32 remoteRouterD = bytes32(uint256(uint160(tokens[remoteChainId][keccak256("D")])));
+        //             if (routerD.routers(uint32(remoteChainId)) != remoteRouterD) {
+        //                 routerD.enrollRemoteRouter(uint32(remoteChainId), remoteRouterD);
+        //             }
+        //     vm.stopBroadcast();
+        // }
+    }
 
-        function deployTokensAndPools(
-            address router,
-            address v4PositionManager,
-            address v4StateView
-        ) internal returns (address tokenC, address tokenD) {
-            (tokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
-            (tokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+    function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenC, address tokenD)
+    {
+        (tokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+        (tokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
-            /*
+        /*
                 address token0 = tokenC;
             address token1 = tokenD;
             if (uint160(tokenC) > uint160(tokenD)) {
@@ -198,16 +203,16 @@ contract DeployInteropTestnet is DeployCoreContracts {
             // Skip if liquidity > 0
             uint256 liquidity = v4StateView.getLiquidity(PoolIdLibrary.toId(poolKey));
         */
-            // Skip liquidity for now
-            uint256 liquidity = 0; // Placeholder for actual liquidity check
-                if (liquidity == 0) {
-                    PoolUtils.setupToken(IERC20(tokenC), IPositionManager(v4PositionManager), IUniversalRouter(router));
-                    PoolUtils.setupToken(IERC20(tokenD), IPositionManager(v4PositionManager), IUniversalRouter(router));
-                    PoolUtils.deployPool(tokenC, tokenD, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        // Skip liquidity for now
+        uint256 liquidity = 0; // Placeholder for actual liquidity check
+        if (liquidity == 0) {
+            PoolUtils.setupToken(IERC20(tokenC), IPositionManager(v4PositionManager), IUniversalRouter(router));
+            PoolUtils.setupToken(IERC20(tokenD), IPositionManager(v4PositionManager), IUniversalRouter(router));
+            PoolUtils.deployPool(tokenC, tokenD, IPositionManager(v4PositionManager), IStateView(v4StateView));
 
-                    console2.log("Token C:", tokenC);
-                    console2.log("Token D:", tokenD);
-                    console2.log("Deployed Tokens and pool");
-                }
+            console2.log("Token C:", tokenC);
+            console2.log("Token D:", tokenD);
+            console2.log("Deployed Tokens and pool");
         }
+    }
 }
