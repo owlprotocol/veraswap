@@ -6,42 +6,51 @@ import "forge-std/console2.sol";
 
 // ERC20
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {MockERC20Utils} from "../script/utils/MockERC20Utils.sol";
 // Permit2
-import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
 // WETH9
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {WETHUtils} from "../script/utils/WETHUtils.sol";
 // Uniswap V4 Core
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
-import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
-import {PoolManagerUtils} from "../script/utils/PoolManagerUtils.sol";
-import {PositionManagerUtils} from "../script/utils/PositionManagerUtils.sol";
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 // Uniswap V4 Periphery
-import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IV4Quoter} from "@uniswap/v4-periphery/src/interfaces/IV4Quoter.sol";
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
+import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
 import {PathKey} from "@uniswap/v4-periphery/src/libraries/PathKey.sol";
-import {StateViewUtils} from "../script/utils/StateViewUtils.sol";
-import {V4QuoterUtils} from "../script/utils/V4QuoterUtils.sol";
 // Uniswap Universal Router
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
-import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {UnsupportedProtocolUtils} from "../script/utils/UnsupportedProtocolUtils.sol";
-import {UniversalRouterUtils} from "../script/utils/UniversalRouterUtils.sol";
 // Liquidity Pools
-import {PoolUtils} from "../script/utils/PoolUtils.sol";
+import {LocalTokens, LocalTokensLibrary} from "../script/libraries/LocalTokens.sol";
+import {LocalPoolsLibrary, LocalV4Pools} from "../script/libraries/LocalPools.sol";
+import {ContractsUniswapLibrary} from "../script/libraries/ContractsUniswap.sol";
+import {UniswapContracts} from "../script/Structs.sol";
 
 contract V4QuoterTest is Test {
-    bytes32 constant BYTES32_ZERO = bytes32(0);
+    using LocalTokensLibrary for LocalTokens;
+
     uint128 constant amount = 0.01 ether;
+
+    // Liquid tokens
+    // weth: Has V3 and V4 pools with all tokens
+    // liq34: Has V3 and V4 pools with all tokens
+    // liq3: Has V3 pools with all tokens
+    // liq4: Has V4 pools with all tokens
+    Currency internal constant eth = Currency.wrap(address(0));
+    Currency internal weth9;
+    Currency internal liq34;
+    Currency internal liq3;
+    Currency internal liq4;
+    Currency internal tokenA;
+    Currency internal tokenB;
+
+    IV4Quoter internal v4Quoter;
+    IUniversalRouter internal router;
 
     struct PoolKeyOptions {
         uint24 fee;
@@ -50,18 +59,6 @@ contract V4QuoterTest is Test {
     }
     PoolKeyOptions internal poolKeyOptions;
 
-    // Tokens
-    IERC20 internal tokenA;
-    IERC20 internal tokenB;
-    // Uniswap V4 Core
-    IPoolManager internal v4PoolManager;
-    IPositionManager internal v4PositionManager;
-    // Uniswap V4 Periphery
-    IStateView internal v4StateView;
-    IV4Quoter internal v4Quoter;
-    // Uniswap Universal Router
-    IUniversalRouter internal router;
-
     function setUp() public {
         // Global poolKey options
         poolKeyOptions = PoolKeyOptions({fee: 3000, tickSpacing: 60, hooks: IHooks(address(0))});
@@ -69,60 +66,29 @@ contract V4QuoterTest is Test {
         vm.startBroadcast();
         // WETH9
         // Set weth9 code to Optimism pre-deploy for anvil local chains that don't have pre-deploy (used by Uniswap V3)
-        (address _weth9, ) = WETHUtils.getOrEtch();
+        (address _weth9, ) = WETHUtils.getOrEtch(WETHUtils.opStackPreDeploy);
+        LocalTokens memory tokens = LocalTokensLibrary.deploy(_weth9);
+
         // Tokens
-        (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
-        (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
-        tokenA = IERC20(_tokenA);
-        tokenB = IERC20(_tokenB);
-        // Mint tokens
-        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
-        // Permit2
-        (address permit2, ) = Permit2Utils.getOrCreate2();
-        // Approve Permit2
-        tokenA.approve(permit2, type(uint256).max);
-        tokenB.approve(permit2, type(uint256).max);
+        weth9 = Currency.wrap(address(tokens.weth9));
+        liq34 = Currency.wrap(address(tokens.liq34));
+        liq3 = Currency.wrap(address(tokens.liq3));
+        liq4 = Currency.wrap(address(tokens.liq4));
+        tokenA = Currency.wrap(address(tokens.tokenA));
+        tokenB = Currency.wrap(address(tokens.tokenB));
 
-        // Uniswap V4 Core
-        (address _v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        v4PoolManager = IPoolManager(_v4PoolManager);
-        (address _v4PositionManager, ) = PositionManagerUtils.getOrCreate2(_v4PoolManager, _weth9);
-        v4PositionManager = IPositionManager(_v4PositionManager);
-
-        // Uniswap V4 Periphery
-        (address _v4StateView, ) = StateViewUtils.getOrCreate2(_v4PoolManager);
-        v4StateView = IStateView(_v4StateView);
-        (address _v4Quoter, ) = V4QuoterUtils.getOrCreate2(_v4PoolManager);
-        v4Quoter = IV4Quoter(_v4Quoter);
-
-        // Uniswap Universal Router
-        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
-        RouterParameters memory routerParams = RouterParameters({
-            permit2: permit2,
-            weth9: 0x4200000000000000000000000000000000000006,
-            v2Factory: unsupported,
-            v3Factory: unsupported,
-            pairInitCodeHash: BYTES32_ZERO,
-            poolInitCodeHash: BYTES32_ZERO,
-            v4PoolManager: address(v4PoolManager),
-            v3NFTPositionManager: unsupported,
-            v4PositionManager: address(v4PositionManager)
-        });
-        (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
-        router = IUniversalRouter(_router);
-        IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
-
+        UniswapContracts memory contracts = ContractsUniswapLibrary.deploy(_weth9);
+        router = IUniversalRouter(contracts.universalRouter);
+        v4Quoter = IV4Quoter(contracts.v4Quoter);
+        tokens.permit2Approve(contracts.universalRouter);
         // Create V4 Pools
-        PoolUtils.createV4Pool(Currency.wrap(address(tokenA)), Currency.wrap(address(0)), v4PositionManager, 10 ether);
-        PoolUtils.createV4Pool(Currency.wrap(address(tokenB)), Currency.wrap(address(0)), v4PositionManager, 10 ether);
+        LocalPoolsLibrary.deployV4Pools(IPositionManager(contracts.v4PositionManager), tokens);
     }
 
     // A (exact) -> ETH (variable)
     function testExactInputSingle() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(0)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, eth);
         // PoolKey
         (Currency currency0, Currency currency1) = currencyIn < currencyOut
             ? (currencyIn, currencyOut)
@@ -183,7 +149,7 @@ contract V4QuoterTest is Test {
     // A (variable) -> ETH (exact)
     function testExactOutputSingle() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(0)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, eth);
         // PoolKey
         (Currency currency0, Currency currency1) = currencyIn < currencyOut
             ? (currencyIn, currencyOut)
@@ -244,11 +210,11 @@ contract V4QuoterTest is Test {
     // A (exact) -> ETH -> B (variable)
     function testExactInput() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, tokenB);
         // V4 Quote
         PathKey[] memory path = new PathKey[](2);
         PathKey memory pathKeyIntermediate = PathKey({
-            intermediateCurrency: Currency.wrap(address(0)),
+            intermediateCurrency: eth,
             fee: poolKeyOptions.fee,
             tickSpacing: poolKeyOptions.tickSpacing,
             hooks: poolKeyOptions.hooks,
@@ -307,7 +273,7 @@ contract V4QuoterTest is Test {
     // A (variable) -> ETH -> B (exact)
     function testExactOutput() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, tokenB);
         // V4 Quote
         PathKey[] memory path = new PathKey[](2);
         PathKey memory pathKeyInput = PathKey({
@@ -318,7 +284,7 @@ contract V4QuoterTest is Test {
             hookData: ""
         });
         PathKey memory pathKeyIntermediate = PathKey({
-            intermediateCurrency: Currency.wrap(address(0)),
+            intermediateCurrency: eth,
             fee: poolKeyOptions.fee,
             tickSpacing: poolKeyOptions.tickSpacing,
             hooks: poolKeyOptions.hooks,

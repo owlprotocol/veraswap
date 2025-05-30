@@ -6,73 +6,69 @@ import "forge-std/console2.sol";
 
 // ERC20
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {MockERC20Utils} from "../script/utils/MockERC20Utils.sol";
 // Permit2
-import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
 // WETH9
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {WETHUtils} from "../script/utils/WETHUtils.sol";
 // Uniswap V3 Core
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import {UniswapV3Pool} from "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
-import {UniswapV3FactoryUtils} from "../script/utils/UniswapV3FactoryUtils.sol";
-// Uniswap V3 Periphery
 import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
-import {V3PositionManagerMockUtils} from "../script/utils/V3PositionManagerMockUtils.sol";
 // Uniswap V4 Core
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
-import {PoolManagerUtils} from "../script/utils/PoolManagerUtils.sol";
-import {PositionManagerUtils} from "../script/utils/PositionManagerUtils.sol";
 // Uniswap V4 Periphery
-import {IStateView} from "@uniswap/v4-periphery/src/interfaces/IStateView.sol";
+import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IV4MetaQuoter} from "../contracts/uniswap/IV4MetaQuoter.sol";
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
-import {StateViewUtils} from "../script/utils/StateViewUtils.sol";
-import {MetaQuoterUtils} from "../script/utils/MetaQuoterUtils.sol";
 // Uniswap Universal Router
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
-import {RouterParameters} from "@uniswap/universal-router/contracts/types/RouterParameters.sol";
-import {UnsupportedProtocolUtils} from "../script/utils/UnsupportedProtocolUtils.sol";
-import {UniversalRouterUtils} from "../script/utils/UniversalRouterUtils.sol";
 // Liquidity Pools
-import {PoolUtils} from "../script/utils/PoolUtils.sol";
+import {LocalTokens, LocalTokensLibrary} from "../script/libraries/LocalTokens.sol";
+import {LocalPoolsLibrary, LocalV4Pools} from "../script/libraries/LocalPools.sol";
+import {ContractsUniswapLibrary} from "../script/libraries/ContractsUniswap.sol";
+import {UniswapContracts} from "../script/Structs.sol";
 
+// V3/V4 paths
+// A -> liq34/ETH
+// A -> liq34/ETH -> B
+
+// V3-only paths
+// A -> liq3
+// A -> liq3 -> B
+
+// V4-only paths
+// A -> liq4
+// A -> liq4 -> B
+
+// Mixed route paths
+// A -> liq4 -> liq34 (V4 -> V3)
+// A -> liq3 -> liq34 (V3 -> V4)
+// ETH -> liq3 -> A (V4 -> V3)
+// ETH -> liq4 -> A (V3 -> V4)
 contract MetaQuoterTest is Test {
-    bytes32 constant BYTES32_ZERO = bytes32(0);
+    using LocalTokensLibrary for LocalTokens;
+
     uint128 constant amount = 0.01 ether;
 
     // Liquid tokens
-    // weth: Has V3 and V4 pools with all tokens
+    // eth/weth: Has V3 and V4 pools with all tokens
     // liq34: Has V3 and V4 pools with all tokens
     // liq3: Has V3 pools with all tokens
     // liq4: Has V4 pools with all tokens
-    IERC20 internal weth9;
-    IERC20 internal liq34;
-    IERC20 internal liq3;
-    IERC20 internal liq4;
+    Currency internal constant eth = Currency.wrap(address(0));
+    Currency internal weth9;
+    Currency internal liq34;
+    Currency internal liq3;
+    Currency internal liq4;
+    Currency internal tokenA;
+    Currency internal tokenB;
 
-    // Tokens
-    IERC20 internal tokenA;
-    IERC20 internal tokenB;
-    // Uniswap V3 Core
-    IUniswapV3Factory internal v3Factory;
-    // Uniswap V4 Core
-    IPoolManager internal v4PoolManager;
-    IPositionManager internal v4PositionManager;
-    // Uniswap V4 Periphery
-    IStateView internal v4StateView;
     IV4MetaQuoter internal metaQuoter;
-    // Uniswap Universal Router
     IUniversalRouter internal router;
 
     function setUp() public {
@@ -80,183 +76,28 @@ contract MetaQuoterTest is Test {
         vm.startBroadcast();
         // WETH9
         // Set weth9 code to Optimism pre-deploy for anvil local chains that don't have pre-deploy (used by Uniswap V3)
-        (address _weth9, ) = WETHUtils.getOrEtch();
+        (address _weth9, ) = WETHUtils.getOrEtch(WETHUtils.opStackPreDeploy);
+        LocalTokens memory tokens = LocalTokensLibrary.deploy(_weth9);
+
         // Tokens
-        (address _liq34, ) = MockERC20Utils.getOrCreate2("Liquid V34", "L34", 18);
-        (address _liq3, ) = MockERC20Utils.getOrCreate2("Liquid V3", "L3", 18);
-        (address _liq4, ) = MockERC20Utils.getOrCreate2("Liquid V4", "L4", 18);
-        (address _tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
-        (address _tokenB, ) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
-        weth9 = IERC20(_weth9);
-        liq34 = IERC20(_liq34);
-        liq3 = IERC20(_liq3);
-        liq4 = IERC20(_liq4);
-        tokenA = IERC20(_tokenA);
-        tokenB = IERC20(_tokenB);
-        // Mint tokens
-        WETH(payable(address(weth9))).deposit{value: 100 ether}();
-        MockERC20(address(liq34)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(liq3)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(liq4)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
-        MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
-        // Permit2
-        (address permit2, ) = Permit2Utils.getOrCreate2();
-        // Approve Permit2
-        weth9.approve(permit2, type(uint256).max);
-        liq34.approve(permit2, type(uint256).max);
-        liq3.approve(permit2, type(uint256).max);
-        liq4.approve(permit2, type(uint256).max);
-        tokenA.approve(permit2, type(uint256).max);
-        tokenB.approve(permit2, type(uint256).max);
-        // Uniswap V3 Core
-        bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
-        (address _v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
-        v3Factory = IUniswapV3Factory(_v3Factory);
-        (address _v3Posm, ) = V3PositionManagerMockUtils.getOrCreate2(address(v3Factory), poolInitCodeHash);
-        V3PositionManagerMock v3Posm = V3PositionManagerMock(_v3Posm);
+        weth9 = Currency.wrap(address(tokens.weth9));
+        liq34 = Currency.wrap(address(tokens.liq34));
+        liq3 = Currency.wrap(address(tokens.liq3));
+        liq4 = Currency.wrap(address(tokens.liq4));
+        tokenA = Currency.wrap(address(tokens.tokenA));
+        tokenB = Currency.wrap(address(tokens.tokenB));
 
-        // Uniswap V4 Core
-        (address _v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        v4PoolManager = IPoolManager(_v4PoolManager);
-        (address _v4PositionManager, ) = PositionManagerUtils.getOrCreate2(address(v4PoolManager), address(weth9));
-        v4PositionManager = IPositionManager(_v4PositionManager);
-
-        // Uniswap V4 Periphery
-        (address _v4StateView, ) = StateViewUtils.getOrCreate2(_v4PoolManager);
-        v4StateView = IStateView(_v4StateView);
-        (address _metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
-            address(v3Factory),
-            poolInitCodeHash,
-            address(v4PoolManager),
-            address(weth9)
-        );
-        metaQuoter = IV4MetaQuoter(_metaQuoter);
-
-        // Uniswap Universal Router
-        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
-        RouterParameters memory routerParams = RouterParameters({
-            permit2: permit2,
-            weth9: address(weth9),
-            v2Factory: unsupported,
-            v3Factory: address(v3Factory),
-            pairInitCodeHash: BYTES32_ZERO,
-            poolInitCodeHash: poolInitCodeHash,
-            v4PoolManager: address(v4PoolManager),
-            v3NFTPositionManager: unsupported,
-            v4PositionManager: address(v4PositionManager)
-        });
-        (address _router, ) = UniversalRouterUtils.getOrCreate2(routerParams);
-        router = IUniversalRouter(_router);
-        IAllowanceTransfer(permit2).approve(address(weth9), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(liq34), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(liq3), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(liq4), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenA), address(router), type(uint160).max, type(uint48).max);
-        IAllowanceTransfer(permit2).approve(address(tokenB), address(router), type(uint160).max, type(uint48).max);
-
-        // V3/V4 paths
-        // A -> liq34/ETH
-        // A -> liq34/ETH -> B
-        // V3-only paths
-        // A -> liq3
-        // A -> liq3 -> B
-        // V4-only paths
-        // A -> liq4
-        // A -> liq4 -> B
-        // Mixed route paths
-        // A -> liq4 -> liq34 (V4 -> V3)
-        // A -> liq3 -> liq34 (V3 -> V4)
-        // ETH -> liq3 -> A (V4 -> V3)
-        // ETH -> liq4 -> A (V3 -> V4)
-
+        UniswapContracts memory contracts = ContractsUniswapLibrary.deploy(_weth9);
+        router = IUniversalRouter(contracts.universalRouter);
+        metaQuoter = IV4MetaQuoter(contracts.metaQuoter);
+        tokens.permit2Approve(contracts.universalRouter);
         // Create V4 Pools
-        PoolUtils.createV4Pool(Currency.wrap(address(0)), Currency.wrap(address(tokenA)), v4PositionManager, 10 ether);
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(tokenA)),
-            v4PositionManager,
-            10 ether
-        );
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(tokenB)),
-            v4PositionManager,
-            10 ether
-        );
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(liq4)),
-            Currency.wrap(address(tokenA)),
-            v4PositionManager,
-            10 ether
-        );
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(liq4)),
-            Currency.wrap(address(tokenB)),
-            v4PositionManager,
-            10 ether
-        );
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(liq3)), //for mixed route test A -> liq3 -> liq34
-            v4PositionManager,
-            10 ether
-        );
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(0)),
-            Currency.wrap(address(liq3)), //for mixed route test ETH -> liq3 -> A
-            v4PositionManager,
-            10 ether
-        );
+        LocalPoolsLibrary.deployV4Pools(IPositionManager(contracts.v4PositionManager), tokens);
         // Create V3 Pools
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(weth9)),
-            Currency.wrap(address(tokenA)),
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(tokenA)),
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(tokenB)),
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(liq3)),
-            Currency.wrap(address(tokenA)),
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(liq3)),
-            Currency.wrap(address(tokenB)),
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(liq34)),
-            Currency.wrap(address(liq4)), //for mixed route test A -> liq4 -> liq34
-            v3Factory,
-            v3Posm,
-            10 ether
-        );
-        PoolUtils.createV3Pool(
-            Currency.wrap(address(weth9)),
-            Currency.wrap(address(liq4)), //for mixed route test ETH -> liq4 -> A
-            v3Factory,
-            v3Posm,
-            10 ether
+        LocalPoolsLibrary.deployV3Pools(
+            IUniswapV3Factory(contracts.v3Factory),
+            V3PositionManagerMock(contracts.v3NFTPositionManager),
+            tokens
         );
     }
 
@@ -276,7 +117,7 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L3 (variable)
     function testExactInputSingle_A_L3() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq3)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq3);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -324,7 +165,7 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L4 (variable)
     function testExactInputSingle_A_L4() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq4)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq4);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -377,7 +218,7 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L34 (variable)
     function testExactInputSingle_A_L34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -431,7 +272,7 @@ contract MetaQuoterTest is Test {
     // ETH (exact) -> A (variable)
     function testExactInputSingle_ETH_A() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(0)), Currency.wrap(address(tokenA)));
+        (Currency currencyIn, Currency currencyOut) = (eth, tokenA);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyIn,
@@ -485,7 +326,7 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L3 (exact)
     function testExactOutputSingle_A_L3() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq3)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq3);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
@@ -533,7 +374,7 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L4 (exact)
     function testExactOutputSingle_A_L4() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq4)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq4);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
@@ -586,7 +427,7 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L34 (exact)
     function testExactOutputSingle_A_L34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
@@ -640,7 +481,7 @@ contract MetaQuoterTest is Test {
     // ETH (variable) -> A (exact)
     function testExactOutputSingle_ETH_A() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(0)), Currency.wrap(address(tokenA)));
+        (Currency currencyIn, Currency currencyOut) = (eth, tokenA);
         // Quote
         IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
             exactCurrency: currencyOut,
@@ -695,10 +536,10 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L34 -> B (variable)
     function testExactInput_A_L34_B() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, tokenB);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq34));
+        hopCurrencies[0] = liq34;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -750,10 +591,10 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L34 -> B (exact)
     function testExactOutput_A_L34_B() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(tokenB)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, tokenB);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq34));
+        hopCurrencies[0] = liq34;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyOut,
             variableCurrency: currencyIn,
@@ -806,10 +647,10 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L3 -> L34 (variable)
     function testExactInput_A_L3_L34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq3));
+        hopCurrencies[0] = liq3;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -888,10 +729,10 @@ contract MetaQuoterTest is Test {
     // ETH (exact) -> L4 -> A (variable)
     function testExactInput_ETH_L4_A() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(0)), Currency.wrap(address(tokenA)));
+        (Currency currencyIn, Currency currencyOut) = (eth, tokenA);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq4));
+        hopCurrencies[0] = liq4;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -910,7 +751,7 @@ contract MetaQuoterTest is Test {
         // V3 Swap
         // Encode V3 Swap
         bytes memory path = abi.encodePacked(
-            WETHUtils.weth9, // ETH is wrapped to WETH
+            address(Currency.unwrap(weth9)), // ETH is wrapped to WETH
             quote.path[0].fee,
             Currency.unwrap(quote.path[0].intermediateCurrency)
         );
@@ -976,10 +817,10 @@ contract MetaQuoterTest is Test {
     // A (exact) -> L4 -> L34 (variable)
     function testExactInput_A_L4_L34C() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq4));
+        hopCurrencies[0] = liq4;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -1061,10 +902,10 @@ contract MetaQuoterTest is Test {
     // ETH (exact) -> L3 -> A (variable)
     function testExactInput_ETH_L3_A() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(0)), Currency.wrap(address(tokenA)));
+        (Currency currencyIn, Currency currencyOut) = (eth, tokenA);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq3));
+        hopCurrencies[0] = liq3;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyIn,
             variableCurrency: currencyOut,
@@ -1153,10 +994,10 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L3 -> L34 (exact)
     function testExactOutput_A_L3_L34() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq3));
+        hopCurrencies[0] = liq3;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyOut,
             variableCurrency: currencyIn,
@@ -1236,10 +1077,10 @@ contract MetaQuoterTest is Test {
     // A (variable) -> L4 -> L34 (exact)
     function testExactOutput_A_L4_L34C() public {
         // Currency
-        (Currency currencyIn, Currency currencyOut) = (Currency.wrap(address(tokenA)), Currency.wrap(address(liq34)));
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq34);
         // Quote
         Currency[] memory hopCurrencies = new Currency[](1);
-        hopCurrencies[0] = Currency.wrap(address(liq4));
+        hopCurrencies[0] = liq4;
         IV4MetaQuoter.MetaQuoteExactParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactParams({
             exactCurrency: currencyOut,
             variableCurrency: currencyIn,

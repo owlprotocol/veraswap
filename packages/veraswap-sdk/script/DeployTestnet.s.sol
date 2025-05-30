@@ -21,7 +21,10 @@ import {HypTokenRouterSweep} from "../contracts/hyperlane/HypTokenRouterSweep.so
 
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
-import {CoreContracts} from "./Structs.sol";
+// Contract Structs
+import {CoreContracts, DeployParams} from "./Structs.sol";
+import {ContractParams} from "./libraries/ContractParams.sol";
+import {ContractsCoreLibrary} from "./libraries/ContractsCore.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment

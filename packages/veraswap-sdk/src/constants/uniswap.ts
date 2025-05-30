@@ -13,6 +13,7 @@ import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4MetaQuoter } from "../artifacts/V4MetaQuoter.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
+import { WETH } from "../artifacts/WETH.js";
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
@@ -33,8 +34,11 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
  */
 export function getUniswapContracts(params?: { owner?: Address }) {
     const permit2: Address = PERMIT2_ADDRESS;
-    // Deployed with vm.rpc setCode when using anvil (supersim has pre-deploy)
-    const weth9: Address = "0x4200000000000000000000000000000000000006";
+    // TODO: Deployed with vm.rpc setCode when using anvil (supersim has pre-deploy)
+    const weth9 = getDeployDeterministicAddress({
+        bytecode: WETH.bytecode,
+        salt: zeroHash,
+    });
 
     // Uniswap V3 Core
     const v3Factory = getDeployDeterministicAddress({

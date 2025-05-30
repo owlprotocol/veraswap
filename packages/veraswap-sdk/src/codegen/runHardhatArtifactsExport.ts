@@ -9,6 +9,9 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/IAllowanceTransfer.sol/*.json",
     "out/ISignatureTransfer.sol/*.json",
     "out/IPermit2.sol/*.json",
+    // WETH
+    "out/IWETH9.sol/*.json",
+    "out/WETH.sol/*.json",
     // Uniswap V3
     "out/IUniswapV3Factory.sol/*.json",
     "out/UniswapV3Factory.sol/*.json",

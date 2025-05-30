@@ -78,6 +78,24 @@ export const events = [
     },
     {
         type: "event",
+        name: "Deposit",
+        inputs: [
+            { name: "from", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Withdrawal",
+        inputs: [
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+            { name: "amount", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "FeeAmountEnabled",
         inputs: [
             { name: "fee", type: "uint24", indexed: true, internalType: "uint24" },

@@ -18,7 +18,6 @@ import {
 } from "./MetaQuoter.js";
 
 const address3: Address = padHex("0x3", { size: 20 });
-// TODO: With WETH9 pools, A -> ETH should return 2 results (V4 and V3)
 // Replicate tests from test/MetaQuoter.test.sol in Typescript but without execution (just quotes)
 describe("uniswap/quote/MetaQuoter.test.ts", function () {
     const exactAmount = parseUnits("0.01", 18);
@@ -115,8 +114,9 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                         } as const,
                     ],
                 });
-                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes.length).toBe(2); // 2 pools
                 expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(quotes[1].poolKey.hooks).toBe(address3); // V3 Pool
                 const quote = quotes[0];
                 expect(quote.variableAmount).toBeGreaterThan(0n);
             });
@@ -204,8 +204,9 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                         } as const,
                     ],
                 });
-                expect(quotes.length).toBe(1); // 1 pool
+                expect(quotes.length).toBe(2); // 2 pools
                 expect(quotes[0].poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(quotes[1].poolKey.hooks).toBe(address3); // V3 Pool
                 const quote = quotes[0];
                 expect(quote.variableAmount).toBeGreaterThan(0n);
             });

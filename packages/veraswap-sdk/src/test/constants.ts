@@ -1,5 +1,6 @@
 import { getAnvilAccount } from "@veraswap/anvil-account";
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import { createConfig } from "@wagmi/core";
 import {
     Account,
     Chain,
@@ -17,7 +18,7 @@ import {
 import { KernelFactory } from "../artifacts/KernelFactory.js";
 import { MockMailbox } from "../artifacts/MockMailbox.js";
 import { OwnableSignatureExecutor } from "../artifacts/OwnableSignatureExecutor.js";
-import { opChainA, opChainL1, opChainL1Client } from "../chains/supersim.js";
+import { opChainA, opChainB, opChainL1, opChainL1Client } from "../chains/supersim.js";
 import { getHypERC7579RouterAddress } from "../constants/hyperlane.js";
 import { LOCAL_KERNEL_CONTRACTS } from "../constants/kernel.js";
 import { createMockERC20ConnectedTokens } from "../constants/tokens.js";
@@ -27,6 +28,15 @@ export const anvilClientL1: WalletClient<Transport, Chain, Account> = createWall
     account: anvilAccount,
     chain: opChainL1Client.chain,
     transport: http(),
+});
+
+export const wagmiConfig = createConfig({
+    chains: [opChainL1, opChainA, opChainB] as readonly [Chain, ...Chain[]],
+    transports: {
+        [opChainL1.id]: http(),
+        [opChainA.id]: http(),
+        [opChainB.id]: http(),
+    },
 });
 
 export function getMockMailboxAddress({ chainId }: { chainId: number }) {

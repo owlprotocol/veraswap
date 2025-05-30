@@ -449,6 +449,14 @@ export const functions = [
         outputs: [],
         stateMutability: "nonpayable",
     },
+    { type: "function", name: "deposit", inputs: [], outputs: [], stateMutability: "payable" },
+    {
+        type: "function",
+        name: "withdraw",
+        inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
     {
         type: "function",
         name: "createPool",
@@ -4046,7 +4054,6 @@ export const functions = [
         outputs: [{ name: "actualGasCost", type: "uint256", internalType: "uint256" }],
         stateMutability: "nonpayable",
     },
-    { type: "function", name: "deposit", inputs: [], outputs: [], stateMutability: "payable" },
     {
         type: "function",
         name: "entryPoint",
