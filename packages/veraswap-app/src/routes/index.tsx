@@ -74,6 +74,8 @@ import {
     orbiterQuoteAtom,
     orbiterRoutersEndpointsAtom,
     slippageToleranceAtom,
+    tokenInUsdValueAtom,
+    tokenOutUsdValueAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -183,6 +185,9 @@ function Index() {
     const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
 
     const slippageTolerance = useAtomValue(slippageToleranceAtom);
+
+    const tokenInUsdValue = useAtomValue(tokenInUsdValueAtom);
+    const tokenOutUsdValue = useAtomValue(tokenOutUsdValueAtom);
 
     /*
     //DISABLE DIVVY
@@ -687,7 +692,8 @@ function Index() {
                                 )}
                                 <TokenSelector selectingTokenIn={true} />
                             </div>
-                            <div className="mt-1 flex justify-end text-xs text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <div>{!!tokenInUsdValue && <span>≈ ${tokenInUsdValue.toFixed(2)}</span>}</div>
                                 <div className="space-x-2">
                                     <span>Balance: {tokenInBalanceFormatted}</span>
                                     <Button
@@ -749,7 +755,8 @@ function Index() {
                                 )}
                                 <TokenSelector />
                             </div>
-                            <div className="mt-1 flex justify-end text-xs text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <div>{!!tokenOutUsdValue && <span>≈ ${tokenOutUsdValue.toFixed(2)}</span>}</div>
                                 <div className="space-x-1 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>
                                 </div>

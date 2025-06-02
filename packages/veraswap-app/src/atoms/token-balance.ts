@@ -447,3 +447,51 @@ export const currencyMultichainUsdBalanceAtomFamily = atomFamily(
 );
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 currencyMultichainUsdBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
+export const tokenInUsdValueAtom = atom((get) => {
+    const currencyIn = get(currencyInAtom);
+    const tokenInAmount = get(tokenInAmountAtom);
+
+    if (!currencyIn?.symbol || !tokenInAmount) return undefined;
+
+    const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyIn.symbol));
+    if (!bestQuoteData) return undefined;
+
+    const { quote, usdDecimals: quoteUsdDecimals } = bestQuoteData;
+    const currencyUsdDecimals = USD_CURRENCIES[currencyIn.chainId]?.decimals ?? 6;
+
+    const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
+    const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
+
+    return (
+        BigNumber.from(tokenInAmount as unknown as number)
+            .mul(10000000)
+            .div(adjustedQuote as unknown as number)
+            .toNumber() / 10000000
+    );
+});
+
+export const tokenOutUsdValueAtom = atom((get) => {
+    const currencyOut = get(currencyOutAtom);
+    const amountOut = get(amountOutAtom);
+
+    if (!currencyOut?.symbol || !amountOut) return undefined;
+
+    const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyOut.symbol));
+    if (!bestQuoteData) return undefined;
+
+    const { quote, usdDecimals: quoteUsdDecimals } = bestQuoteData;
+    const currencyUsdDecimals = USD_CURRENCIES[currencyOut.chainId]?.decimals ?? 6;
+
+    const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
+    const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
+
+    const amountOutBigInt = BigInt(parseFloat(amountOut) * 10 ** currencyOut.decimals);
+
+    return (
+        BigNumber.from(amountOutBigInt as unknown as number)
+            .mul(10000000)
+            .div(adjustedQuote as unknown as number)
+            .toNumber() / 10000000
+    );
+});
