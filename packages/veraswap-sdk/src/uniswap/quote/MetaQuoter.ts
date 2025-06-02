@@ -1,3 +1,5 @@
+import { AbiParametersToPrimitiveTypes } from "abitype";
+
 import {
     metaQuoteExactInput as metaQuoteExactInputPayable,
     metaQuoteExactInputBest as metaQuoteExactInputBestPayable,
@@ -43,3 +45,8 @@ export type MetaQuoteExactOutputBestAbi = Omit<typeof metaQuoteExactOutputBestPa
     stateMutability: "view";
 };
 export const metaQuoteExactOutputBest = metaQuoteExactOutputBestPayable as unknown as MetaQuoteExactOutputBestAbi;
+
+export type MetaQuoteExactBestParams = AbiParametersToPrimitiveTypes<(typeof metaQuoteExactInputBestPayable)["inputs"]>;
+export type MetaQuoteExactBestReturnType = AbiParametersToPrimitiveTypes<
+    (typeof metaQuoteExactInputBestPayable)["outputs"]
+>;

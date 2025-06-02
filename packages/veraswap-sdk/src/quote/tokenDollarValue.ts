@@ -4,13 +4,14 @@ import { Address, numberToHex, parseUnits, zeroAddress } from "viem";
 
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { USD_CURRENCIES } from "../currency/usdCurrencies.js";
+import { getChainById } from "../query/tokenData.js";
 import { getCurrencyHops } from "../swap/getCurrencyHops.js";
 import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import {
+    MetaQuoteExactBestParams,
+    MetaQuoteExactBestReturnType,
     metaQuoteExactOutputBest,
-    V4MetaQuoteExactBestParams,
-    V4MetaQuoteExactBestReturnType,
-} from "../uniswap/V4MetaQuoter.js";
+} from "../uniswap/quote/MetaQuoter.js";
 
 export async function getTokenDollarValue(
     config: Config,
@@ -18,7 +19,13 @@ export async function getTokenDollarValue(
 ) {
     if (!tokenAddress || !chainId) return 0n;
 
-    const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter;
+    // TODO: remove all this once we know metaQuoter is always available
+    const metaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter ?? UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter;
+    if (!UNISWAP_CONTRACTS[chainId]!.metaQuoter) {
+        const chain = getChainById(chainId)!;
+        console.warn(`Meta quoter not found for chain ${chain.name} (${chainId}). Using v4MetaQuoter instead.`);
+    }
+
     const hopCurrencies = getCurrencyHops(chainId);
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
@@ -26,7 +33,7 @@ export async function getTokenDollarValue(
     const quote = (await readContract(config, {
         chainId,
         abi: [metaQuoteExactOutputBest],
-        address: v4MetaQuoter,
+        address: metaQuoter,
         functionName: "metaQuoteExactOutputBest",
         // @ts-expect-error wrong type since query key can't have a bigint
         args: [
@@ -37,8 +44,8 @@ export async function getTokenDollarValue(
                 hopCurrencies: hopCurrencies.filter((c) => c !== usdCurrency.address && c !== tokenAddress),
                 poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
             },
-        ] as V4MetaQuoteExactBestParams,
-    })) as V4MetaQuoteExactBestReturnType;
+        ] as MetaQuoteExactBestParams,
+    })) as MetaQuoteExactBestReturnType;
 
     const bestSwap = quote[2];
     if (bestSwap === 0) return 0n;
