@@ -9,6 +9,7 @@ import { Address, formatUnits } from "viem";
 import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { groupBy } from "lodash-es";
 import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
@@ -50,10 +51,9 @@ currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt 
 export const currencyMultichainBalanceAtomFamily = atomFamily(
     (symbol: string) =>
         atom((get) => {
-            const allCurrencies = get(currenciesAtom);
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
             const account = get(accountAtom);
-
-            const matchingCurrencies = allCurrencies.filter((c) => c.symbol === symbol);
 
             const currenciesWithBalance = matchingCurrencies.map((currency) => {
                 const balanceRaw = account?.address
@@ -330,12 +330,20 @@ export const tokenDollarValueAtomFamily = atomFamily(
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 tokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
 
+export const currenciesBySymbolAtom = atom((get) => {
+    const allCurrencies = get(currenciesAtom);
+    return groupBy(
+        allCurrencies.filter((currency) => currency.symbol),
+        "symbol",
+    );
+});
+
 // Gets the best available token price in USD across all chains
 export const bestTokenDollarValueAtomFamily = atomFamily(
     (symbol: string) =>
         atom((get) => {
-            const allCurrencies = get(currenciesAtom);
-            const matchingCurrencies = allCurrencies.filter((c) => c.symbol === symbol);
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
 
             const quotes = matchingCurrencies.map((currency) => {
                 const quote = get(tokenDollarValueAtomFamily({ currency, chainId: currency.chainId }));
@@ -397,12 +405,12 @@ currencyUsdBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - created
 export const currencyMultichainUsdBalanceAtomFamily = atomFamily(
     (symbol: string) =>
         atom((get) => {
-            const allCurrencies = get(currenciesAtom);
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
             const account = get(accountAtom);
 
             if (!account?.address) return undefined;
 
-            const matchingCurrencies = allCurrencies.filter((c) => c.symbol === symbol);
             const usdBalances = matchingCurrencies.map((currency) =>
                 get(currencyUsdBalanceAtomFamily({ currency, account: account.address! })),
             );

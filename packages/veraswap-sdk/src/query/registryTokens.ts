@@ -22,7 +22,7 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
         return {
             queryKey: registryTokenQueryKey("local"),
             queryFn: () => localCurrencies,
-            staleTime: 5 * 60 * 1000,
+            staleTime: Infinity,
         };
     }
 
