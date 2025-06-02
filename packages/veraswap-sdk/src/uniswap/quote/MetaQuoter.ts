@@ -50,3 +50,5 @@ export type MetaQuoteExactBestParams = AbiParametersToPrimitiveTypes<(typeof met
 export type MetaQuoteExactBestReturnType = AbiParametersToPrimitiveTypes<
     (typeof metaQuoteExactInputBestPayable)["outputs"]
 >;
+export type MetaQuoteBestSingle = AbiParametersToPrimitiveTypes<MetaQuoteExactInputBestAbi["outputs"]>[0];
+export type MetaQuoteBestMultihop = AbiParametersToPrimitiveTypes<MetaQuoteExactInputBestAbi["outputs"]>[1];

@@ -23,9 +23,9 @@ export interface GetMetaQuoteExactOutputParams {
 export function getMetaQuoteExactOutputQueryOptions(wagmiConfig: Config, params: GetMetaQuoteExactOutputParams) {
     const {
         chainId,
+        currencyIn,
         currencyOut,
         amountOut,
-        currencyIn,
         contracts,
         currencyHops = [zeroAddress],
         poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),

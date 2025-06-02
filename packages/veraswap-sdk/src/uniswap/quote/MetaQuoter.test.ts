@@ -418,13 +418,13 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
 
     describe("Best Quotes", () => {
         describe("exactInput", () => {
-            const currencyIn = tokenA;
-            const exactCurrency = currencyIn;
             test("A (exact) -> ETH (variable)", async () => {
+                const currencyIn = tokenA;
+                const exactCurrency = currencyIn;
                 const currencyOut = zeroAddress;
                 const variableCurrency = currencyOut;
                 const hopCurrencies: Address[] = [];
-                const [, , bestType] = await opChainL1Client.readContract({
+                const [bestQuoteSingle, , bestType] = await opChainL1Client.readContract({
                     address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                     abi: [metaQuoteExactInputBest],
                     functionName: "metaQuoteExactInputBest",
@@ -439,12 +439,16 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                     ],
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Single);
+                expect(bestQuoteSingle.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteSingle.poolKey.hooks).toBe(zeroAddress); // V4 Pool
             });
             test("A (exact) -> ETH -> B (variable)", async () => {
+                const currencyIn = tokenA;
+                const exactCurrency = currencyIn;
                 const currencyOut = tokenB;
                 const variableCurrency = currencyOut;
                 const hopCurrencies = [zeroAddress];
-                const [, , bestType] = await opChainL1Client.readContract({
+                const [, bestQuoteMultihop, bestType] = await opChainL1Client.readContract({
                     address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                     abi: [metaQuoteExactInputBest],
                     functionName: "metaQuoteExactInputBest",
@@ -459,8 +463,63 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                     ],
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Multihop);
+                expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteMultihop.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteMultihop.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("L4 (exact) -> L34 -> L3 (variable): Mixed V3 -> V4", async () => {
+                const currencyIn = tokenL4;
+                const exactCurrency = currencyIn;
+                const currencyOut = tokenL3;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [tokenL34];
+                const [, bestQuoteMultihop, bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputBest],
+                    functionName: "metaQuoteExactInputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Multihop);
+                expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteMultihop.path[0].hooks).toBe(address3); // V3 Pool
+                expect(bestQuoteMultihop.path[1].hooks).toBe(zeroAddress); // V4 Pool
+            });
+            test("L3 (exact) -> L34 -> L4 (variable): Mixed V4 -> V3", async () => {
+                const currencyIn = tokenL3;
+                const exactCurrency = currencyIn;
+                const currencyOut = tokenL4;
+                const variableCurrency = currencyOut;
+                const hopCurrencies = [tokenL34];
+                const [, bestQuoteMultihop, bestType] = await opChainL1Client.readContract({
+                    address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+                    abi: [metaQuoteExactInputBest],
+                    functionName: "metaQuoteExactInputBest",
+                    args: [
+                        {
+                            exactCurrency,
+                            variableCurrency,
+                            hopCurrencies,
+                            exactAmount,
+                            poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+                        } as const,
+                    ],
+                });
+                expect(bestType).toBe(MetaQuoteBestType.Multihop);
+                expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteMultihop.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteMultihop.path[1].hooks).toBe(address3); // V3 Pool
             });
             test("A (exact) -> ETH -> B (variable): none (no hop currencies)", async () => {
+                const currencyIn = tokenA;
+                const exactCurrency = currencyIn;
                 const currencyOut = tokenB;
                 const variableCurrency = currencyOut;
                 const hopCurrencies: Address[] = [];
@@ -489,7 +548,7 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 const currencyOut = zeroAddress;
                 const exactCurrency = currencyOut;
                 const hopCurrencies: Address[] = [];
-                const [, , bestType] = await opChainL1Client.readContract({
+                const [bestQuoteSingle, , bestType] = await opChainL1Client.readContract({
                     address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                     abi: [metaQuoteExactOutputBest],
                     functionName: "metaQuoteExactOutputBest",
@@ -504,12 +563,15 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                     ],
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Single);
+                expect(bestType).toBe(MetaQuoteBestType.Single);
+                expect(bestQuoteSingle.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteSingle.poolKey.hooks).toBe(zeroAddress); // V4 Pool
             });
             test("A (variable) -> ETH -> B (exact)", async () => {
                 const currencyOut = tokenB;
                 const exactCurrency = currencyOut;
                 const hopCurrencies = [zeroAddress];
-                const [, , bestType] = await opChainL1Client.readContract({
+                const [, bestQuoteMultihop, bestType] = await opChainL1Client.readContract({
                     address: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
                     abi: [metaQuoteExactOutputBest],
                     functionName: "metaQuoteExactOutputBest",
@@ -524,6 +586,9 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                     ],
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Multihop);
+                expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
+                expect(bestQuoteMultihop.path[0].hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteMultihop.path[1].hooks).toBe(zeroAddress); // V4 Pool
             });
             test("A (variable) -> ETH -> B (exact): none (no hop currencies)", async () => {
                 const currencyOut = tokenB;

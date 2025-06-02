@@ -23,9 +23,9 @@ export interface GetMetaQuoteExactInputParams {
 export function getMetaQuoteExactInputQueryOptions(wagmiConfig: Config, params: GetMetaQuoteExactInputParams) {
     const {
         chainId,
+        currencyIn,
         currencyOut,
         amountIn,
-        currencyIn,
         contracts,
         currencyHops = [zeroAddress],
         poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),
@@ -38,8 +38,8 @@ export function getMetaQuoteExactInputQueryOptions(wagmiConfig: Config, params: 
         functionName: "metaQuoteExactInputBest",
         args: [
             {
-                exactCurrency: currencyOut,
-                variableCurrency: currencyIn,
+                exactCurrency: currencyIn,
+                variableCurrency: currencyOut,
                 // Filter out hop currencies that are the same as currencyIn or currencyOut
                 hopCurrencies: currencyHops.filter((hopToken) => hopToken !== currencyOut && hopToken !== currencyIn),
                 exactAmount: numberToHex(amountIn) as unknown as bigint,
