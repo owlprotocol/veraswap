@@ -39,6 +39,13 @@ export const usdcData = {
     logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
 };
 
+export const usdcBscData = {
+    name: "Binance-Peg USD Coin",
+    symbol: "USDC",
+    decimals: 18,
+    logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+};
+
 export const wethData = {
     name: "Wrapped Ether",
     symbol: "WETH",
@@ -65,6 +72,14 @@ export const usdtData = {
     name: "Tether USD",
     symbol: "USDT",
     decimals: 6,
+    logoURI:
+        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
+};
+
+export const usdtBscData = {
+    name: "Binance-Peg Tether USD",
+    symbol: "USDT",
+    decimals: 18,
     logoURI:
         "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
 };
@@ -139,13 +154,13 @@ export const BTC_BSC = new Token({
 export const USDC_BSC = new Token({
     chainId: bsc.id,
     address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-    ...usdcData,
+    ...usdcBscData,
 });
 
 export const USDT_BSC = new Token({
     chainId: bsc.id,
     address: "0x55d398326f99059fF775485246999027B3197955",
-    ...usdtData,
+    ...usdtBscData,
 });
 
 // export const ETH_BSC = new Token({chainId: bsc.id, address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", ...wethData});

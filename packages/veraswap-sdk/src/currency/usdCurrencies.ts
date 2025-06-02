@@ -5,16 +5,15 @@ import {
     USDC,
     USDC_ARBITRUM,
     USDC_BASE,
+    USDC_BSC,
     USDC_MAINNET,
     USDC_OPTIMISM,
     USDC_POLYGON,
-    USDT,
-    USDT_BSC,
 } from "../uniswap/constants/tokens.js";
 
 export const USD_CURRENCIES = {
     [mainnet.id]: { address: USDC_MAINNET.address, decimals: USDC.decimals },
-    [bsc.id]: { address: USDT_BSC.address, decimals: USDT.decimals },
+    [bsc.id]: { address: USDC_BSC.address, decimals: USDC_BSC.decimals },
     [optimism.id]: { address: USDC_OPTIMISM.address, decimals: USDC.decimals },
     [base.id]: { address: USDC_BASE.address, decimals: USDC.decimals },
     [polygon.id]: { address: USDC_POLYGON.address, decimals: USDC.decimals },

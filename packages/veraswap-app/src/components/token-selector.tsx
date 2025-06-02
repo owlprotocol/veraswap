@@ -22,7 +22,12 @@ import {
     chainOutAtom,
 } from "@/atoms/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
-import { currencyBalanceAtomFamily, currencyMultichainBalanceAtomFamily } from "@/atoms/token-balance.js";
+import {
+    currencyBalanceAtomFamily,
+    currencyMultichainBalanceAtomFamily,
+    currencyMultichainUsdBalanceAtomFamily,
+    currencyUsdBalanceAtomFamily,
+} from "@/atoms/token-balance.js";
 import { accountAtom } from "@/atoms/account.js";
 
 export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
@@ -278,6 +283,7 @@ const TokenGroup = ({
     const ref = useRef<HTMLDivElement>(null);
     const account = useAtomValue(accountAtom);
     const { balance: totalBalance } = useAtomValue(currencyMultichainBalanceAtomFamily(symbol));
+    const totalUsdBalance = useAtomValue(currencyMultichainUsdBalanceAtomFamily(symbol));
 
     // Inspired from https://github.com/pmndrs/jotai/issues/454#issuecomment-829779749
     const balanceValues = useAtomValue(
@@ -347,9 +353,16 @@ const TokenGroup = ({
 
                 <div className="flex items-center gap-1">
                     <div className="text-right">
-                        <div className="text-sm text-muted-foreground">
-                            {account?.address && `${totalBalance.toFixed(4)} ${symbol}`}
-                        </div>
+                        {account?.address && (
+                            <>
+                                <div className="text-sm text-muted-foreground">
+                                    {totalBalance.toFixed(4)} {symbol}
+                                </div>
+                                {typeof totalUsdBalance === "number" && (
+                                    <div className="text-xs text-muted-foreground">${totalUsdBalance.toFixed(2)}</div>
+                                )}
+                            </>
+                        )}
                     </div>
                     {isExpanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground ml-2" />
@@ -421,10 +434,18 @@ const ChainTokenBalance = ({
     const balanceQuery = useAtomValue(
         account?.address ? currencyBalanceAtomFamily({ currency: token, account: account.address }) : atom(null),
     );
+    const usdBalance = useAtomValue(
+        account?.address ? currencyUsdBalanceAtomFamily({ currency: token, account: account.address }) : atom(0),
+    );
 
     const balanceValue = balanceQuery?.data ?? 0n;
     const decimals = token.decimals ?? 18;
     const balance = Number(formatUnits(balanceValue, decimals));
+
+    const formatUsdBalance = (value: number) => {
+        if (value < 0.01) return "<$0.01";
+        return `$${value.toFixed(2)}`;
+    };
 
     return (
         <Button
@@ -446,7 +467,16 @@ const ChainTokenBalance = ({
                 </div>
                 {hasBalance && (
                     <div className="text-sm truncate text-left text-muted-foreground">
-                        {account?.address && `${balance.toFixed(4)} ${symbol}`}
+                        {account?.address && (
+                            <>
+                                <div>
+                                    {balance.toFixed(4)} {symbol}
+                                </div>
+                                {typeof usdBalance === "number" && (
+                                    <div className="text-xs">{formatUsdBalance(usdBalance)}</div>
+                                )}
+                            </>
+                        )}
                     </div>
                 )}
             </div>
