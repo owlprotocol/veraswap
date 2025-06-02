@@ -388,6 +388,8 @@ export const bestTokenDollarValueAtomFamily = atomFamily(
     (a, b) => a === b,
 ) as unknown as AtomFamily<string, Atom<{ quote: bigint; usdDecimals: number } | undefined>>;
 
+bestTokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
 // Calculates how much a token is worth in USD
 export const currencyUsdBalanceAtomFamily = atomFamily(
     ({ currency, account }: { currency: Currency; account: Address }) =>
