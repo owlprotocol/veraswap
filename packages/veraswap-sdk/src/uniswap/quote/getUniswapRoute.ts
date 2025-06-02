@@ -12,7 +12,7 @@ import { MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
 const address3 = padHex("0x3", { size: 20 }); // Used as a flag for Uni V3 pools
 
-export interface GetUniswapV4RouteParams {
+export interface GetUniswapRouteParams {
     chainId: number;
     currencyIn: Address;
     currencyOut: Address;
@@ -32,7 +32,7 @@ export interface GetUniswapV4RouteParams {
 export async function getUniswapRouteExactIn(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetUniswapV4RouteParams,
+    params: GetUniswapRouteParams,
 ) {
     const { currencyIn, currencyOut, amountIn, contracts } = params;
     const weth9 = contracts.weth9;
@@ -49,18 +49,17 @@ export async function getUniswapRouteExactIn(
     // Universal Router planner
     let routePlanner = new RoutePlanner();
     const value = currencyIn === zeroAddress ? amountIn : 0n;
-    let variableAmount: bigint;
-    console.debug({ bestQuoteSingle, bestQuoteMultihop, bestQuoteType });
+    let amountOut: bigint;
 
     if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
         // Single quotes
         const quote = bestQuoteSingle;
-        variableAmount = quote.variableAmount;
+        amountOut = quote.variableAmount;
         routePlanner = getRoutePlannerForSingleQuote({ currencyIn, currencyOut, amountIn, quote, contracts });
     } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
         // Multihop quotes
         const quote = bestQuoteMultihop;
-        variableAmount = quote.variableAmount;
+        amountOut = quote.variableAmount;
         invariant(quote.path.length === 2, "Multihop quotes should have exactly 2 hops");
 
         const [hop0, hop1] = quote.path;
@@ -247,7 +246,7 @@ export async function getUniswapRouteExactIn(
         throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
     }
 
-    return { variableAmount, routePlanner, value };
+    return { amountOut, routePlanner, value };
 }
 
 export interface GetRoutePlannerForSingleQuoteParams {

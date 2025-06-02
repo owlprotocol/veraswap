@@ -65,7 +65,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -82,7 +82,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
 
@@ -104,7 +104,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -121,7 +121,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
 
@@ -143,7 +143,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -160,7 +160,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
 
@@ -182,7 +182,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -199,7 +199,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
 
@@ -222,7 +222,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -239,7 +239,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
     describe("Mixed V4 -> V3", () => {
@@ -261,7 +261,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, variableAmount, value } = route!;
+            const { routePlanner, amountOut, value } = route!;
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -278,7 +278,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + variableAmount); // Output balance increased by variable amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
 });
