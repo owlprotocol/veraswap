@@ -445,8 +445,8 @@ export const errors = [
         type: "error",
         name: "SlippageExceeded",
         inputs: [
-            { name: "amountToCreditLD", type: "uint256", internalType: "uint256" },
-            { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+            { name: "amountLD", type: "uint256", internalType: "uint256" },
+            { name: "minAmountLD", type: "uint256", internalType: "uint256" },
         ],
     },
 ] as const;

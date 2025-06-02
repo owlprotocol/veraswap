@@ -1,5 +1,7 @@
+import { BigNumber } from "@ethersproject/bignumber";
 import { queryOptions } from "@tanstack/react-query";
 import { Config, readContract } from "@wagmi/core";
+import invariant from "tiny-invariant";
 import { AbiParameterToPrimitiveType, Address, numberToHex, padHex } from "viem";
 import { arbitrum, arbitrumSepolia, mainnet, optimism, sepolia } from "viem/chains";
 
@@ -51,7 +53,8 @@ export function stargateETHQuoteQueryKey({ receiver, amount, srcChain, dstChain 
 
 type SendParams = AbiParameterToPrimitiveType<(typeof quoteOFT)["inputs"][0]>;
 
-async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendParams: SendParams) {
+async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendParams: SendParams, slippage = 0.05) {
+    invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0 and 1");
     const quoteOFTResult = await readContract(wagmiConfig, {
         chainId: srcChain,
         address: STARGATE_POOL_NATIVE[srcChain as keyof typeof STARGATE_POOL_NATIVE],
@@ -65,8 +68,12 @@ async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendPara
     // Amount is too low
     if (receipt.amountReceivedLD === 0n) return null;
 
+    const minAmountLd = BigNumber.from(receipt.amountReceivedLD as unknown as number)
+        .mul(slippage)
+        .div(100)
+        .toBigInt();
     //@ts-expect-error use hex instead of bigint for query key
-    sendParams.minAmountLD = numberToHex(receipt.amountReceivedLD);
+    sendParams.minAmountLD = numberToHex(minAmountLd);
 
     // Don't want to pay in LayerZero token
     const payInLzToken = false;

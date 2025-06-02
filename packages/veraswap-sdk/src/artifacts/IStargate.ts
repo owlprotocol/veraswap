@@ -1,8 +1,8 @@
-export const msgInspector = {
+export const approvalRequired = {
     type: "function",
-    name: "msgInspector",
+    name: "approvalRequired",
     inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
     stateMutability: "view",
 } as const;
 export const oftVersion = {
@@ -10,8 +10,8 @@ export const oftVersion = {
     name: "oftVersion",
     inputs: [],
     outputs: [
-        { name: "major", type: "uint64", internalType: "uint64" },
-        { name: "minor", type: "uint64", internalType: "uint64" },
+        { name: "interfaceId", type: "bytes4", internalType: "bytes4" },
+        { name: "version", type: "uint64", internalType: "uint64" },
     ],
     stateMutability: "view",
 } as const;
@@ -26,11 +26,13 @@ export const quoteOFT = {
             components: [
                 { name: "dstEid", type: "uint32", internalType: "uint32" },
                 { name: "to", type: "bytes32", internalType: "bytes32" },
-                { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
-                { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountLD", type: "uint256", internalType: "uint256" },
+                { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+                { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                { name: "oftCmd", type: "bytes", internalType: "bytes" },
             ],
         },
-        { name: "_oftCmd", type: "bytes", internalType: "bytes" },
     ],
     outputs: [
         {
@@ -47,7 +49,7 @@ export const quoteOFT = {
             type: "tuple[]",
             internalType: "struct OFTFeeDetail[]",
             components: [
-                { name: "feeAmountLD", type: "uint256", internalType: "uint256" },
+                { name: "feeAmountLD", type: "int256", internalType: "int256" },
                 { name: "description", type: "string", internalType: "string" },
             ],
         },
@@ -56,8 +58,8 @@ export const quoteOFT = {
             type: "tuple",
             internalType: "struct OFTReceipt",
             components: [
-                { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
-                { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountSentLD", type: "uint256", internalType: "uint256" },
+                { name: "amountReceivedLD", type: "uint256", internalType: "uint256" },
             ],
         },
     ],
@@ -74,14 +76,14 @@ export const quoteSend = {
             components: [
                 { name: "dstEid", type: "uint32", internalType: "uint32" },
                 { name: "to", type: "bytes32", internalType: "bytes32" },
-                { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
-                { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountLD", type: "uint256", internalType: "uint256" },
+                { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+                { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                { name: "oftCmd", type: "bytes", internalType: "bytes" },
             ],
         },
-        { name: "_extraOptions", type: "bytes", internalType: "bytes" },
         { name: "_payInLzToken", type: "bool", internalType: "bool" },
-        { name: "_composeMsg", type: "bytes", internalType: "bytes" },
-        { name: "_oftCmd", type: "bytes", internalType: "bytes" },
     ],
     outputs: [
         {
@@ -107,11 +109,13 @@ export const send = {
             components: [
                 { name: "dstEid", type: "uint32", internalType: "uint32" },
                 { name: "to", type: "bytes32", internalType: "bytes32" },
-                { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
-                { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountLD", type: "uint256", internalType: "uint256" },
+                { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+                { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                { name: "oftCmd", type: "bytes", internalType: "bytes" },
             ],
         },
-        { name: "_extraOptions", type: "bytes", internalType: "bytes" },
         {
             name: "_fee",
             type: "tuple",
@@ -122,8 +126,6 @@ export const send = {
             ],
         },
         { name: "_refundAddress", type: "address", internalType: "address" },
-        { name: "_composeMsg", type: "bytes", internalType: "bytes" },
-        { name: "_oftCmd", type: "bytes", internalType: "bytes" },
     ],
     outputs: [
         {
@@ -149,8 +151,8 @@ export const send = {
             type: "tuple",
             internalType: "struct OFTReceipt",
             components: [
-                { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
-                { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountSentLD", type: "uint256", internalType: "uint256" },
+                { name: "amountReceivedLD", type: "uint256", internalType: "uint256" },
             ],
         },
     ],
@@ -167,8 +169,11 @@ export const sendToken = {
             components: [
                 { name: "dstEid", type: "uint32", internalType: "uint32" },
                 { name: "to", type: "bytes32", internalType: "bytes32" },
-                { name: "amountToSendLD", type: "uint256", internalType: "uint256" },
-                { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountLD", type: "uint256", internalType: "uint256" },
+                { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+                { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                { name: "oftCmd", type: "bytes", internalType: "bytes" },
             ],
         },
         {
@@ -206,8 +211,8 @@ export const sendToken = {
             type: "tuple",
             internalType: "struct OFTReceipt",
             components: [
-                { name: "amountDebitLD", type: "uint256", internalType: "uint256" },
-                { name: "amountCreditLD", type: "uint256", internalType: "uint256" },
+                { name: "amountSentLD", type: "uint256", internalType: "uint256" },
+                { name: "amountReceivedLD", type: "uint256", internalType: "uint256" },
             ],
         },
         {
@@ -221,13 +226,6 @@ export const sendToken = {
         },
     ],
     stateMutability: "payable",
-} as const;
-export const setMsgInspector = {
-    type: "function",
-    name: "setMsgInspector",
-    inputs: [{ name: "_msgInspector", type: "address", internalType: "address" }],
-    outputs: [],
-    stateMutability: "nonpayable",
 } as const;
 export const sharedDecimals = {
     type: "function",
@@ -250,19 +248,13 @@ export const token = {
     outputs: [{ name: "", type: "address", internalType: "address" }],
     stateMutability: "view",
 } as const;
-export const MsgInspectorSet = {
-    type: "event",
-    name: "MsgInspectorSet",
-    inputs: [{ name: "inspector", type: "address", indexed: false, internalType: "address" }],
-    anonymous: false,
-} as const;
 export const OFTReceived = {
     type: "event",
     name: "OFTReceived",
     inputs: [
         { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+        { name: "srcEid", type: "uint32", indexed: false, internalType: "uint32" },
         { name: "toAddress", type: "address", indexed: true, internalType: "address" },
-        { name: "amountToCreditLD", type: "uint256", indexed: false, internalType: "uint256" },
         { name: "amountReceivedLD", type: "uint256", indexed: false, internalType: "uint256" },
     ],
     anonymous: false,
@@ -272,10 +264,10 @@ export const OFTSent = {
     name: "OFTSent",
     inputs: [
         { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+        { name: "dstEid", type: "uint32", indexed: false, internalType: "uint32" },
         { name: "fromAddress", type: "address", indexed: true, internalType: "address" },
-        { name: "amountDebitedLD", type: "uint256", indexed: false, internalType: "uint256" },
-        { name: "amountToCreditLD", type: "uint256", indexed: false, internalType: "uint256" },
-        { name: "composeMsg", type: "bytes", indexed: false, internalType: "bytes" },
+        { name: "amountSentLD", type: "uint256", indexed: false, internalType: "uint256" },
+        { name: "amountReceivedLD", type: "uint256", indexed: false, internalType: "uint256" },
     ],
     anonymous: false,
 } as const;
@@ -284,23 +276,22 @@ export const SlippageExceeded = {
     type: "error",
     name: "SlippageExceeded",
     inputs: [
-        { name: "amountToCreditLD", type: "uint256", internalType: "uint256" },
-        { name: "minAmountToCreditLD", type: "uint256", internalType: "uint256" },
+        { name: "amountLD", type: "uint256", internalType: "uint256" },
+        { name: "minAmountLD", type: "uint256", internalType: "uint256" },
     ],
 } as const;
 export const functions = [
-    msgInspector,
+    approvalRequired,
     oftVersion,
     quoteOFT,
     quoteSend,
     send,
     sendToken,
-    setMsgInspector,
     sharedDecimals,
     stargateType,
     token,
 ] as const;
-export const events = [MsgInspectorSet, OFTReceived, OFTSent] as const;
+export const events = [OFTReceived, OFTSent] as const;
 export const errors = [InvalidLocalDecimals, SlippageExceeded] as const;
 export const abi = [...functions, ...events, ...errors] as const;
 
