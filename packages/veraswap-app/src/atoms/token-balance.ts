@@ -6,7 +6,14 @@ import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
-import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
+import { BigNumber } from "@ethersproject/bignumber";
+import {
+    PERMIT2_ADDRESS,
+    UNISWAP_CONTRACTS,
+    getUniswapV4Address,
+    Currency,
+    USD_CURRENCIES,
+} from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { groupBy } from "lodash-es";
@@ -347,31 +354,39 @@ export const bestTokenDollarValueAtomFamily = atomFamily(
 
             const quotes = matchingCurrencies.map((currency) => {
                 const quote = get(tokenDollarValueAtomFamily({ currency, chainId: currency.chainId }));
+                const usdDecimals = USD_CURRENCIES[currency.chainId]?.decimals ?? 6;
+                const decimalsDiff = 18 - usdDecimals;
+                const normalizedValue = quote.data ? quote.data * 10n ** BigInt(decimalsDiff) : undefined;
                 return {
                     currency,
+                    normalizedValue,
                     quote: quote.data,
+                    usdDecimals,
                     isLoading: quote.isLoading,
                     isError: quote.isError,
                 };
             });
 
-            const validQuotes = quotes.filter((q) => q.quote !== undefined && q.quote !== 0n && !q.isError);
+            const validQuotes = quotes.filter((q) => !!q.quote && !q.isError);
 
             if (validQuotes.length > 0) {
-                // return the highest quote
-                return validQuotes.reduce((max, curr) => (curr.quote! > max.quote! ? curr : max)).quote;
+                // return the highest quote and its decimals
+                const bestQuote = validQuotes.reduce((max, curr) =>
+                    curr.normalizedValue! > max.normalizedValue! ? curr : max,
+                );
+                return {
+                    quote: bestQuote.quote,
+                    usdDecimals: bestQuote.usdDecimals,
+                };
             }
 
             // return undefined if all quotes are invalid or loading
-            if (quotes.every((q) => q.isLoading || q.isError || !q.quote || q.quote === 0n)) {
+            if (quotes.every((q) => q.isLoading || q.isError || !q.quote)) {
                 return undefined;
             }
         }),
     (a, b) => a === b,
-) as unknown as AtomFamily<string, Atom<bigint | undefined>>;
-
-// https://jotai.org/docs/utilities/family#caveat-memory-leaks
-bestTokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+) as unknown as AtomFamily<string, Atom<{ quote: bigint; usdDecimals: number } | undefined>>;
 
 // Calculates how much a token is worth in USD
 export const currencyUsdBalanceAtomFamily = atomFamily(
@@ -380,20 +395,23 @@ export const currencyUsdBalanceAtomFamily = atomFamily(
             const balanceQuery = get(currencyBalanceAtomFamily({ currency, account }));
             if (!currency.symbol) return undefined;
 
-            // get quote on the token's chain
-            const localQuote = get(tokenDollarValueAtomFamily({ currency, chainId: currency.chainId }));
+            // get best quote across all chains
+            const bestQuoteData = get(bestTokenDollarValueAtomFamily(currency.symbol));
+            if (!balanceQuery.data || !bestQuoteData) return undefined;
 
-            if (localQuote.data && localQuote.data !== 0n && !localQuote.isError) {
-                return Number(balanceQuery.data) / Number(localQuote.data);
-            }
+            const { quote, usdDecimals: quoteUsdDecimals } = bestQuoteData;
+            const currencyUsdDecimals = USD_CURRENCIES[currency.chainId]?.decimals ?? 6;
 
-            if (localQuote.isLoading) return undefined;
+            // Only adjust if the currency's decimals differ from the quote's decimals
+            const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
+            const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
 
-            // If not quote on the token's chain, get the best quote across all chains
-            const bestQuote = get(bestTokenDollarValueAtomFamily(currency.symbol));
-            if (!balanceQuery.data || bestQuote === undefined) return undefined;
-
-            return Number(balanceQuery.data) / Number(bestQuote);
+            return (
+                BigNumber.from(balanceQuery.data as unknown as number)
+                    .mul(10000000) // Increase for precision
+                    .div(adjustedQuote as unknown as number)
+                    .toNumber() / 10000000
+            );
         }),
     (a, b) => a.account === b.account && a.currency.equals(b.currency),
 );
@@ -411,13 +429,17 @@ export const currencyMultichainUsdBalanceAtomFamily = atomFamily(
 
             if (!account?.address) return undefined;
 
-            const usdBalances = matchingCurrencies.map((currency) =>
-                get(currencyUsdBalanceAtomFamily({ currency, account: account.address! })),
-            );
+            const balances = matchingCurrencies.map((currency) => {
+                const balance = get(currencyBalanceAtomFamily({ currency, account: account.address! }));
+                const usdBalance = get(currencyUsdBalanceAtomFamily({ currency, account: account.address! }));
+                return { balance: balance.data, usdBalance };
+            });
 
-            if (usdBalances.some((balance) => balance === undefined)) return undefined;
+            const validBalances = balances.filter((b) => !!b.balance && !!b.usdBalance);
 
-            return (usdBalances as number[]).reduce((sum, balance) => sum + balance, 0);
+            if (validBalances.length === 0) return undefined;
+
+            return validBalances.reduce((sum, { usdBalance }) => sum + (usdBalance ?? 0), 0);
         }),
     (a, b) => a === b,
 );
