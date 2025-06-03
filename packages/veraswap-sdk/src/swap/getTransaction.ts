@@ -14,6 +14,8 @@ import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../c
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
 import { OrbiterQuote } from "../query/orbiterQuote.js";
+import { StargateETHQuote } from "../query/stargateETHQuote.js";
+import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { TokenStandard } from "../types/Token.js";
@@ -43,6 +45,7 @@ export interface TransactionBridgeOptions {
     walletAddress: Address;
     bridgePayment: bigint;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
     initData?: Hex;
     queryClient?: QueryClient;
     wagmiConfig?: Config;
@@ -53,15 +56,17 @@ export interface TransactionBridgeHyperlaneCollateralOptions {
     walletAddress: Address;
     bridgePayment?: bigint;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
     initData: Hex;
     queryClient: QueryClient;
     wagmiConfig: Config;
 }
 
-export interface TransactionBridgeOrbiterOptions {
+export interface TransactionBridgeStargateOrOrbterOptions {
     amountIn: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -78,6 +83,7 @@ export interface TransactionSwapBridgeOptions {
     bridgePayment: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
@@ -87,6 +93,7 @@ export interface TransactionSwapBridgeOrbiterOptions {
     amountOutMinimum: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -100,12 +107,13 @@ export interface TransactionBridgeSwapOptions {
     amountOutMinimum: bigint;
     initData: Hex;
     orbiterQuote?: OrbiterQuote;
+    stargateQuote?: StargateETHQuote;
 }
 
 export type TransactionParams =
     | (TransactionTypeSwap & TransactionSwapOptions)
     | (TransactionTypeBridge & TransactionBridgeOptions)
-    | (TransactionTypeBridge & TransactionBridgeOrbiterOptions)
+    | (TransactionTypeBridge & TransactionBridgeStargateOrOrbterOptions)
     | (TransactionTypeBridge & TransactionBridgeHyperlaneCollateralOptions)
     | (TransactionTypeSwapBridge & TransactionSwapBridgeOptions)
     | (TransactionTypeSwapBridge & TransactionSwapBridgeOrbiterOptions)
@@ -171,9 +179,17 @@ export async function getTransaction(
         }
 
         case "BRIDGE": {
-            const { currencyIn, currencyOut, amountIn, walletAddress, orbiterQuote } = params;
-
+            const { currencyIn, currencyOut, amountIn, walletAddress, orbiterQuote, stargateQuote } = params;
             if (currencyIn.isNative && currencyOut.isNative) {
+                if (stargateQuote) {
+                    return getStargateETHBridgeTransaction({
+                        srcChain: currencyIn.chainId,
+                        dstChain: currencyOut.chainId,
+                        receiver: walletAddress,
+                        stargateQuote,
+                    });
+                }
+
                 if (!orbiterQuote) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }

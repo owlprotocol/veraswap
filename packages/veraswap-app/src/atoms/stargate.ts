@@ -1,4 +1,9 @@
-import { StargateETHQuote, StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "@owlprotocol/veraswap-sdk";
+import {
+    STARGATE_POOL_NATIVE,
+    StargateETHQuote,
+    StargateETHQuoteParams,
+    stargateETHQuoteQueryOptions,
+} from "@owlprotocol/veraswap-sdk";
 import { Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { accountAtom } from "./account.js";
@@ -31,8 +36,10 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
     const receiver = transactionType.type === "BRIDGE_SWAP" ? kernelAddressChainOut : account.address;
     if (!receiver) return disabledQueryOptions as any;
 
-    // Only supports mainnet for now
-    if (chainIn.testnet) return disabledQueryOptions as any;
+    // TODO: also check for USDC pools
+    if (!(chainIn.id in STARGATE_POOL_NATIVE && chainOut.id in STARGATE_POOL_NATIVE)) {
+        return disabledQueryOptions as any;
+    }
 
     if (transactionType.type === "SWAP") return disabledQueryOptions as any;
 

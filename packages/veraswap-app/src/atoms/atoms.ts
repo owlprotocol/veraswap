@@ -198,6 +198,8 @@ export const swapMessageIdAtom = atom<Hash | null>(null);
 
 export const superchainBridgeMessageIdAtom = atom<Hash | null>(null);
 
+export const stargateBridgeMessageIdAtom = atom<Hash | null>(null);
+
 export const bridgeRemoteTransactionHashAtom = atom<Hash | null>(null);
 export const swapRemoteTransactionHashAtom = atom<Hash | null>(null);
 

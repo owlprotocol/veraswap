@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils.js";
 import { TransactionStepId } from "@/atoms/atoms.js";
 import { transactionTypeAtom } from "@/atoms/uniswap.js";
 import { orbiterQuoteAtom } from "@/atoms/orbiter.js";
+import { stargateQuoteAtom } from "@/atoms/stargate.js";
 
 export type TransactionStep = {
     id: TransactionStepId;
@@ -35,6 +36,7 @@ export function TransactionStatusModal({
     networkType,
 }: TransactionStatusModalProps) {
     const transactionType = useAtomValue(transactionTypeAtom);
+    const stargateQuote = useAtomValue(stargateQuoteAtom);
     const orbiterQuote = useAtomValue(orbiterQuoteAtom);
 
     const getExplorerUrl = (stepId: "swap" | "bridge" | "sendOrigin" | "transferRemote") => {
@@ -55,6 +57,8 @@ export function TransactionStatusModal({
                     // We have to search by transaction hash
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.sendOrigin}`;
                 }
+
+                if (stargateQuote) return `https://testnet.layerzeroscan.com/tx/${hashes.bridge}`;
 
                 // TODO: change once orbiter has a URL
                 if (orbiterQuote) return undefined;
