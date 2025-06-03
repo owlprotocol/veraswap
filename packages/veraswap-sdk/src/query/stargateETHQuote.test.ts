@@ -3,17 +3,17 @@ import { http, parseEther } from "viem";
 import { describe, expect, test } from "vitest";
 import { createConfig } from "wagmi";
 
-import { arbitrumSepolia, sepolia } from "../chains/index.js";
+import { optimismSepolia, sepolia } from "../chains/index.js";
 
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "./stargateETHQuote.js";
 
 describe("stargateETHQuote.test.ts", function () {
     const queryClient = new QueryClient();
     const wagmiConfig = createConfig({
-        chains: [sepolia, arbitrumSepolia],
+        chains: [sepolia, optimismSepolia],
         transports: {
             [sepolia.id]: http(),
-            [arbitrumSepolia.id]: http(),
+            [optimismSepolia.id]: http(),
         },
     });
 
@@ -22,7 +22,7 @@ describe("stargateETHQuote.test.ts", function () {
 
         const params: StargateETHQuoteParams = {
             amount,
-            dstChain: arbitrumSepolia.id,
+            dstChain: optimismSepolia.id,
             srcChain: sepolia.id,
             receiver: "0x0000000000000000000000000000000000000001",
         };
@@ -42,7 +42,7 @@ describe("stargateETHQuote.test.ts", function () {
 
         const params: StargateETHQuoteParams = {
             amount,
-            dstChain: arbitrumSepolia.id,
+            dstChain: optimismSepolia.id,
             srcChain: sepolia.id,
             receiver: "0x0000000000000000000000000000000000000001",
         };

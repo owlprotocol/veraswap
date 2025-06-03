@@ -2,36 +2,17 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { queryOptions } from "@tanstack/react-query";
 import { Config, readContract } from "@wagmi/core";
 import invariant from "tiny-invariant";
-import { AbiParameterToPrimitiveType, Address, numberToHex, padHex } from "viem";
-import { arbitrum, arbitrumSepolia, mainnet, optimism, sepolia } from "viem/chains";
+import { AbiParameterToPrimitiveType, Address, padHex } from "viem";
 
 import { quoteOFT, quoteSend } from "../artifacts/IStargate.js";
-
-// From https://stargateprotocol.gitbook.io/stargate/v2-developer-docs/technical-reference/mainnet-contracts
-export const CHAIN_ID_TO_ENDPOINT_ID = {
-    [arbitrum.id]: 30110,
-    [mainnet.id]: 30101,
-    [arbitrumSepolia.id]: 40231,
-    [sepolia.id]: 40161,
-    [optimism.id]: 30111,
-} as const satisfies Record<number, number>;
-
-// https://stargateprotocol.gitbook.io/stargate/v2-developer-docs/technical-reference/mainnet-contracts
-export const STARGATE_POOL_NATIVE = {
-    [arbitrum.id]: "0xA45B5130f36CDcA45667738e2a258AB09f4A5f7F",
-    [mainnet.id]: "0x77b2043768d28E9C9aB44E1aBfC95944bcE57931",
-    [optimism.id]: "0xe8CDF27AcD73a434D661C84887215F7598e7d0d3",
-    [arbitrumSepolia.id]: "0x6fddB6270F6c71f31B62AE0260cfa8E2e2d186E0",
-    [sepolia.id]: "0x9Cc7e185162Aa5D1425ee924D97a87A0a34A0706",
-} as const satisfies Record<keyof typeof CHAIN_ID_TO_ENDPOINT_ID, Address>;
-
-export const STARGATE_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_NATIVE } from "../stargate/constants.js";
 
 export interface StargateETHQuoteParams {
     receiver: Address;
     amount: bigint;
     srcChain: number;
     dstChain: number;
+    slippage?: number; // Default 0.005 (0.5%)
 }
 
 export interface StargateETHQuote {
@@ -48,13 +29,13 @@ export function stargateETHQuoteQueryOptions(wagmiConfig: Config, params: Starga
 }
 
 export function stargateETHQuoteQueryKey({ receiver, amount, srcChain, dstChain }: StargateETHQuoteParams) {
-    return ["stargateETHQuote", receiver, amount.toString(), srcChain, dstChain];
+    return ["stargateETHQuote", srcChain, dstChain, receiver, amount.toString()];
 }
 
 type SendParams = AbiParameterToPrimitiveType<(typeof quoteOFT)["inputs"][0]>;
 
-async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendParams: SendParams, slippage = 0.05) {
-    invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0 and 1");
+const fullPercent = 1000000; // 100% in base percentage of 0.0001%
+async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendParams: SendParams) {
     const quoteOFTResult = await readContract(wagmiConfig, {
         chainId: srcChain,
         address: STARGATE_POOL_NATIVE[srcChain as keyof typeof STARGATE_POOL_NATIVE],
@@ -68,12 +49,9 @@ async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendPara
     // Amount is too low
     if (receipt.amountReceivedLD === 0n) return null;
 
-    const minAmountLd = BigNumber.from(receipt.amountReceivedLD as unknown as number)
-        .mul(slippage)
-        .div(100)
-        .toBigInt();
-    //@ts-expect-error use hex instead of bigint for query key
-    sendParams.minAmountLD = numberToHex(minAmountLd);
+    // TODO: remove this if unnecessary when already using slippage?
+    //ts-expect-error use hex instead of bigint for query key
+    // sendParams.minAmountLD = numberToHex(receipt.amountReceivedLD);
 
     // Don't want to pay in LayerZero token
     const payInLzToken = false;
@@ -91,13 +69,22 @@ async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendPara
 
 export async function stargateETHQuote(
     wagmiConfig: Config,
-    { receiver, amount, srcChain, dstChain }: StargateETHQuoteParams,
+    { receiver, amount, srcChain, dstChain, slippage = 0.05 }: StargateETHQuoteParams,
 ): Promise<StargateETHQuote | null> {
+    invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0.0001 and 1");
+
+    const slippageOppositePercentFull = fullPercent - slippage * fullPercent;
+
+    const minAmountLD = BigNumber.from(amount as unknown as number)
+        .mul(slippageOppositePercentFull)
+        .div(fullPercent)
+        .toBigInt();
+
     const sendParamsFullAmount = {
         dstEid: CHAIN_ID_TO_ENDPOINT_ID[dstChain as keyof typeof CHAIN_ID_TO_ENDPOINT_ID],
         to: padHex(receiver, { size: 32 }),
         amountLD: amount,
-        minAmountLD: amount,
+        minAmountLD,
         extraOptions: "0x",
         composeMsg: "0x",
         oftCmd: "0x",
@@ -110,10 +97,15 @@ export async function stargateETHQuote(
 
     const amountFeeRemoved = amount - nativeFeeFullAmount;
 
+    const minAmountLDFeeRemoved = BigNumber.from(amountFeeRemoved as unknown as number)
+        .mul(slippageOppositePercentFull)
+        .div(fullPercent)
+        .toBigInt();
+
     const sendParams = {
         ...sendParamsFullAmount,
         amountLD: amountFeeRemoved,
-        minAmountLD: amountFeeRemoved,
+        minAmountLD: minAmountLDFeeRemoved,
     } as SendParams;
 
     const nativeFee = await stargateETHGetFee(wagmiConfig, srcChain, sendParams);

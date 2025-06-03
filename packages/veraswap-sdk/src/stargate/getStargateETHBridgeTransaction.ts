@@ -2,7 +2,8 @@ import invariant from "tiny-invariant";
 import { Address, encodeFunctionData } from "viem";
 
 import { sendToken } from "../artifacts/IStargate.js";
-import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_NATIVE } from "../query/stargateETHQuote.js";
+
+import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_NATIVE } from "./constants.js";
 
 export function getStargateETHBridgeTransaction({
     srcChain,
