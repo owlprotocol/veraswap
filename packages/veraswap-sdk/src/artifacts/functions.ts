@@ -2862,6 +2862,51 @@ export const functions = [
     },
     {
         type: "function",
+        name: "bridgeAllETH",
+        inputs: [
+            { name: "to", type: "address", internalType: "address payable" },
+            {
+                name: "bridgeParams",
+                type: "tuple",
+                internalType: "struct StargateBridgeSweep.BridgeParams",
+                components: [
+                    { name: "recipient", type: "address", internalType: "address" },
+                    { name: "recipientPadded", type: "bytes32", internalType: "bytes32" },
+                    { name: "dstEid", type: "uint32", internalType: "uint32" },
+                    { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                    { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                    { name: "oftCmd", type: "bytes", internalType: "bytes" },
+                ],
+            },
+        ],
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        name: "bridgeAllToken",
+        inputs: [
+            { name: "to", type: "address", internalType: "address payable" },
+            { name: "inputToken", type: "address", internalType: "address" },
+            {
+                name: "bridgeParams",
+                type: "tuple",
+                internalType: "struct StargateBridgeSweep.BridgeParams",
+                components: [
+                    { name: "recipient", type: "address", internalType: "address" },
+                    { name: "recipientPadded", type: "bytes32", internalType: "bytes32" },
+                    { name: "dstEid", type: "uint32", internalType: "uint32" },
+                    { name: "extraOptions", type: "bytes", internalType: "bytes" },
+                    { name: "composeMsg", type: "bytes", internalType: "bytes" },
+                    { name: "oftCmd", type: "bytes", internalType: "bytes" },
+                ],
+            },
+        ],
+        outputs: [],
+        stateMutability: "payable",
+    },
+    {
+        type: "function",
         name: "accountId",
         inputs: [],
         outputs: [{ name: "accountImplementationId", type: "string", internalType: "string" }],

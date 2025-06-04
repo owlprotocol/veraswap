@@ -1,11 +1,13 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { queryOptions } from "@tanstack/react-query";
-import { Config, readContract } from "@wagmi/core";
+import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
-import { AbiParameterToPrimitiveType, Address, padHex } from "viem";
+import { Address, padHex } from "viem";
 
-import { quoteOFT, quoteSend } from "../artifacts/IStargate.js";
-import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_NATIVE } from "../stargate/constants.js";
+import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_NATIVE } from "../constants/stargate.js";
+import { StargateSendParam } from "../types/StargateSendParam.js";
+
+import { stargateGetFee } from "./stargateGetFee.js";
 
 export interface StargateETHQuoteParams {
     receiver: Address;
@@ -33,46 +35,14 @@ export function stargateETHQuoteQueryKey({ receiver, amount, srcChain, dstChain 
     return ["stargateETHQuote", srcChain, dstChain, receiver, amount.toString()];
 }
 
-type SendParams = AbiParameterToPrimitiveType<(typeof quoteOFT)["inputs"][0]>;
-
 const fullPercent = 1000000; // 100% in base percentage of 0.0001%
-async function stargateETHGetFee(wagmiConfig: Config, srcChain: number, sendParams: SendParams) {
-    const quoteOFTResult = await readContract(wagmiConfig, {
-        chainId: srcChain,
-        address: STARGATE_POOL_NATIVE[srcChain as keyof typeof STARGATE_POOL_NATIVE],
-        abi: [quoteOFT],
-        functionName: "quoteOFT",
-        args: [sendParams],
-    });
-
-    const receipt = quoteOFTResult[2];
-
-    // Amount is too low
-    if (receipt.amountReceivedLD === 0n) return null;
-
-    // TODO: remove this if unnecessary when already using slippage?
-    //ts-expect-error use hex instead of bigint for query key
-    // sendParams.minAmountLD = numberToHex(receipt.amountReceivedLD);
-
-    // Don't want to pay in LayerZero token
-    const payInLzToken = false;
-
-    const quote = await readContract(wagmiConfig, {
-        chainId: srcChain,
-        address: STARGATE_POOL_NATIVE[srcChain as keyof typeof STARGATE_POOL_NATIVE],
-        abi: [quoteSend],
-        functionName: "quoteSend",
-        args: [sendParams, payInLzToken],
-    });
-
-    return quote.nativeFee;
-}
-
 export async function stargateETHQuote(
     wagmiConfig: Config,
     { receiver, amount, srcChain, dstChain, slippage = 0.05 }: StargateETHQuoteParams,
 ): Promise<StargateETHQuote | null> {
     invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0.0001 and 1");
+    invariant(dstChain in STARGATE_POOL_NATIVE, "Destination chain is not supported by Stargate for ETH");
+    invariant(srcChain in STARGATE_POOL_NATIVE, "Source chain is not supported by Stargate for ETH");
 
     const slippageOppositePercentFull = fullPercent - slippage * fullPercent;
 
@@ -81,7 +51,7 @@ export async function stargateETHQuote(
         .div(fullPercent)
         .toBigInt();
 
-    const sendParamsFullAmount = {
+    const sendParamFullAmount = {
         dstEid: CHAIN_ID_TO_ENDPOINT_ID[dstChain as keyof typeof CHAIN_ID_TO_ENDPOINT_ID],
         to: padHex(receiver, { size: 32 }),
         amountLD: amount,
@@ -89,9 +59,11 @@ export async function stargateETHQuote(
         extraOptions: "0x",
         composeMsg: "0x",
         oftCmd: "0x",
-    } as SendParams;
+    } as StargateSendParam;
 
-    const nativeFeeFullAmount = await stargateETHGetFee(wagmiConfig, srcChain, sendParamsFullAmount);
+    const poolAddress = STARGATE_POOL_NATIVE[srcChain as keyof typeof STARGATE_POOL_NATIVE];
+
+    const nativeFeeFullAmount = await stargateGetFee(wagmiConfig, srcChain, poolAddress, sendParamFullAmount);
 
     // Amount too low
     if (nativeFeeFullAmount === null) return null;
@@ -103,13 +75,13 @@ export async function stargateETHQuote(
         .div(fullPercent)
         .toBigInt();
 
-    const sendParams = {
-        ...sendParamsFullAmount,
+    const sendParam = {
+        ...sendParamFullAmount,
         amountLD: amountFeeRemoved,
         minAmountLD: minAmountLDFeeRemoved,
-    } as SendParams;
+    } as StargateSendParam;
 
-    const nativeFee = await stargateETHGetFee(wagmiConfig, srcChain, sendParams);
+    const nativeFee = await stargateGetFee(wagmiConfig, srcChain, poolAddress, sendParam);
 
     // Amount too low
     if (nativeFee === null) return null;

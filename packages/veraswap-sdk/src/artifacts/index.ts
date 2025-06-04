@@ -43,6 +43,7 @@ export { PausableHook } from "./PausableHook.js";
 export { PoolManager } from "./PoolManager.js";
 export { PositionManager } from "./PositionManager.js";
 export { SimpleAccountFactory } from "./SimpleAccountFactory.js";
+export { StargateBridgeSweep } from "./StargateBridgeSweep.js";
 export { StateView } from "./StateView.js";
 export { SuperchainTokenBridgeSweep } from "./SuperchainTokenBridgeSweep.js";
 export { UniversalRouter } from "./UniversalRouter.js";

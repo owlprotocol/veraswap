@@ -4,7 +4,9 @@ import { maxBy, minBy, zip } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
+import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
+import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
 import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 
@@ -76,9 +78,28 @@ export async function getUniswapV4RouteExactInMultichain(
                         stargateETHQuoteQueryOptions(wagmiConfig, stargateETHQuoteParams),
                     );
 
-                    if (!stargateQuoteResult) return null;
+                    if (stargateQuoteResult) {
+                        exactAmount = BigInt(stargateQuoteResult.amountFeeRemoved);
+                    } else {
+                        if (!stargateQuoteResult) {
+                            const orbiterQuoteResult = await queryClient.fetchQuery(
+                                orbiterQuoteQueryOptions({
+                                    amount: exactAmount,
+                                    destChainId: currIn.chainId,
+                                    destToken: zeroAddress,
+                                    sourceChainId: currencyIn.chainId,
+                                    sourceToken: zeroAddress,
+                                    // User address doesn't matter, but avoid address zero
+                                    userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
+                                }),
+                            );
 
-                    exactAmount = BigInt(stargateQuoteResult.amountFeeRemoved);
+                            // Bridging is needed, but no quote found for either providers
+                            if (!orbiterQuoteResult) return null;
+
+                            exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                        }
+                    }
                 }
 
                 const route = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {

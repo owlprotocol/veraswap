@@ -1,5 +1,8 @@
-import { Address } from "viem";
+import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
+import { Address, zeroHash } from "viem";
 import { arbitrum, arbitrumSepolia, base, bsc, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
+
+import { StargateBridgeSweep } from "../artifacts/StargateBridgeSweep.js";
 
 // From https://stargateprotocol.gitbook.io/stargate/v2-developer-docs/technical-reference/mainnet-contracts
 export const CHAIN_ID_TO_ENDPOINT_ID = {
@@ -31,6 +34,12 @@ export const STARGATE_POOL_USDC = {
     [bsc.id]: "0x962Bd449E630b0d928f308Ce63f1A21F02576057",
     [mainnet.id]: "0xc026395860Db2d07ee33e05fE50ed7bD583189C7",
     [optimism.id]: "0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0",
-};
+} as const satisfies { [K in keyof typeof CHAIN_ID_TO_ENDPOINT_ID]?: Address };
 
 export const STARGATE_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+// 04/06: 0x4eF1b0DC0e2eA41AeCbA2903E9041Ef33045fa10
+export const STARGATE_BRIDGE_SWEEP_ADDRESS = getDeployDeterministicAddress({
+    bytecode: StargateBridgeSweep.bytecode,
+    salt: zeroHash,
+});
