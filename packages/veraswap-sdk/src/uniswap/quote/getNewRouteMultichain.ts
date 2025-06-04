@@ -10,7 +10,9 @@ import { RoutePlanner } from "../routerCommands.js";
 
 import { getUniswapRouteExactInMultichain } from "./getUniswapRouteMultichain.js";
 
-export interface RouteComponentSwap {
+// TODO: Remove 'New' from the name, set it up to avoid conflicts with the old one
+
+export interface NewRouteComponentSwap {
     type: "SWAP";
     chainId: number;
     currencyIn: Currency;
@@ -19,20 +21,20 @@ export interface RouteComponentSwap {
     routePlanner: RoutePlanner;
 }
 
-export interface RouteComponentBridge {
+export interface NewRouteComponentBridge {
     type: "BRIDGE";
     currencyIn: Currency;
     currencyOut: Currency;
 }
 
-export type RouteComponent = RouteComponentSwap | RouteComponentBridge;
+export type NewRouteComponent = NewRouteComponentSwap | NewRouteComponentBridge;
 
-export type GetRouteMultichainReturnType = {
-    flows: [RouteComponent, ...RouteComponent[]];
+export type GetNewRouteMultichainReturnType = {
+    flows: [NewRouteComponent, ...NewRouteComponent[]];
     amountOut: bigint;
 } | null;
 
-export interface GetRouteMultichainParams {
+export interface GetNewRouteMultichainParams {
     currencyIn: Currency;
     currencyOut: Currency;
     amountIn: bigint;
@@ -51,11 +53,11 @@ export interface GetRouteMultichainParams {
  *  - assets on same chain to be swapped
  *  - assets on different chains that are remote tokens of each other
  */
-export async function getRouteMultichain(
+export async function getNewRouteMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetRouteMultichainParams,
-): Promise<GetRouteMultichainReturnType> {
+    params: GetNewRouteMultichainParams,
+): Promise<GetNewRouteMultichainReturnType> {
     const { currencyIn, currencyOut, amountIn } = params;
 
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap or bridge same token");
@@ -80,9 +82,9 @@ export async function getRouteMultichain(
     if (!route) return null;
 
     // Mixed Bridge/Swap/Bridge
-    const flows: RouteComponent[] = [];
+    const flows: NewRouteComponent[] = [];
 
-    const swap: RouteComponentSwap = {
+    const swap: NewRouteComponentSwap = {
         type: "SWAP",
         chainId: route.currencyIn.chainId,
         currencyIn: route.currencyIn,
@@ -110,5 +112,5 @@ export async function getRouteMultichain(
         });
     }
 
-    return { flows: flows as [RouteComponent, ...RouteComponent[]], amountOut: route.amountOut };
+    return { flows: flows as [NewRouteComponent, ...NewRouteComponent[]], amountOut: route.amountOut };
 }
