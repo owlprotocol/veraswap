@@ -97,7 +97,7 @@ export const routeMultichainAtom = atomWithQuery((get) => {
             numberToHex(amountIn),
         ],
     });
-}) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;
+}) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getNewRouteMultichain>>>>;
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
 export const transactionTypeAtom = atom<TransactionType | null>((get) => {

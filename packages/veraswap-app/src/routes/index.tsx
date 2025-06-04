@@ -352,7 +352,8 @@ function Index() {
                             bridgePayment,
                             queryClient,
                             wagmiConfig: config,
-                        } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
+                            routePlanner: quoterData?.flows.find((f) => f.type === "SWAP")?.routePlanner,
+                        } as unknown as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const inChainId = currencyIn.chainId;
             const outChainId = currencyOut!.chainId;
