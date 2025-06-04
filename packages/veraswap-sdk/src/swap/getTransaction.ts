@@ -376,6 +376,7 @@ export async function getTransaction(
                 amountIn,
                 amountOutMinimum,
                 initData,
+                stargateQuote,
                 orbiterQuote,
             } = params;
             // TODO: check if withSuperchain is needed
@@ -398,9 +399,12 @@ export async function getTransaction(
                 throw new Error(`ERC7579ExecutorRouter address not defined for chain id: ${currencyOut.chainId}`);
             }
 
-            const remoteSwapAmountIn = orbiterQuote
-                ? (BigInt(orbiterQuote.details.minDestTokenAmount) * 99n) / 100n //TODO: Orbiter bug min destination amount is not correct
-                : amountIn;
+            let remoteSwapAmountIn = amountIn;
+            if (stargateQuote) {
+                remoteSwapAmountIn = stargateQuote.minAmountLDFeeRemoved;
+            } else if (orbiterQuote) {
+                remoteSwapAmountIn = (BigInt(orbiterQuote.details.minDestTokenAmount) * 999n) / 1000n; //TODO: Orbiter bug min destination amount is not correct
+            }
 
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: currencyIn.chainId,
@@ -443,7 +447,7 @@ export async function getTransaction(
                 // erc7579RouterOwners: [],
                 // erc7579RouterOwnersRemote: [],
                 remoteSwapParams: {
-                    // Adjust amount in if using orbiter to account for fees
+                    // Adjust amount in if using Stargate or Orbiter to account for fees
                     amountIn: remoteSwapAmountIn,
                     amountOutMinimum,
                     path,
@@ -452,6 +456,7 @@ export async function getTransaction(
                     receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
                 },
+                stargateQuote,
                 orbiterQuote,
             };
 

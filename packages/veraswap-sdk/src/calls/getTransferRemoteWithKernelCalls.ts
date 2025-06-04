@@ -16,6 +16,7 @@ import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAcco
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
+import { StargateETHQuote } from "../query/stargateETHQuote.js";
 
 export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     tokenStandard: TokenStandard;
@@ -43,6 +44,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         erc7579Router: Address;
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
+    stargateQuote?: StargateETHQuote;
     orbiterQuote?: OrbiterQuote;
 }
 
