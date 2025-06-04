@@ -28,6 +28,7 @@ import {
 
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 import { getSwapAndOrbiterETHBridgeTransaction } from "./getSwapAndOrbiterETHBridgeTransaction.js";
+import { getSwapAndStargateETHBridgeTransaction } from "./getSwapAndStargateETHBridgeTransaction.js";
 import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
@@ -269,6 +270,7 @@ export async function getTransaction(
                 amountIn,
                 amountOutMinimum,
                 walletAddress,
+                stargateQuote,
                 orbiterQuote,
                 queryClient,
                 wagmiConfig,
@@ -313,6 +315,21 @@ export async function getTransaction(
             }
 
             if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
+                if (stargateQuote) {
+                    return getSwapAndStargateETHBridgeTransaction({
+                        amountIn,
+                        amountOutMinimum,
+                        currencyIn: getUniswapV4Address(swapCurrencyIn),
+                        currencyOut: getUniswapV4Address(swapCurrencyOut),
+                        path,
+                        universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                        srcChain: bridgeCurrencyIn.chainId,
+                        dstChain: bridgeCurrencyOut.chainId,
+                        recipient: walletAddress,
+                        permit2PermitParams,
+                    });
+                }
+
                 if (!orbiterQuote) {
                     throw new Error("Orbiter params are required for Orbiter bridging");
                 }
