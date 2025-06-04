@@ -46,7 +46,7 @@ export async function getUniswapRouteExactInMultichain(
                     chainId,
                     currencyIn: pair[0].wrapped.address,
                     currencyOut: pair[1].wrapped.address,
-                    currencyHops: currencyHopsByChain[pair[0].chainId] ?? [],
+                    currencyHops: currencyHopsByChain[pair[0].chainId],
                     amountIn,
                     contracts,
                     poolKeyOptions,
