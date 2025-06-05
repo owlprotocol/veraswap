@@ -365,7 +365,7 @@ export async function getBridgeSwapWithKernelCalls(
         account: kernelAddress,
         to: contracts.erc7579Router,
         data: callRemoteData,
-        value: tokenStandard === "NativeToken" ? amount + callRemotePayment : callRemotePayment,
+        value: callRemotePayment,
     };
 
     const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([
