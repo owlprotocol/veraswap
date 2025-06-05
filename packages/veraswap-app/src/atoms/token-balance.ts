@@ -305,7 +305,7 @@ export const amountOutAtom = atom((get) => {
 
     // TODO: improve how we show amount out
     if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
-        // TODO: remove orbtier references entirely
+        // TODO: remove orbiter references entirely
         if (stargateQuote && currencyOut) {
             amountOut = formatUnits(stargateQuote.amountFeeRemoved, currencyOut.decimals);
         } else if (orbiterRouter && orbiterQuote && currencyOut) {
@@ -316,6 +316,9 @@ export const amountOutAtom = atom((get) => {
             amountOut = "";
         } else if (!orbiterQuote && (orbiterQuoteFetchStatus === "fetching" || orbiterQuoteStatus === "error")) {
             amountOut = "";
+        } else if (!orbiterRouter && currencyOut.symbol === "ETH") {
+            // Need to bridge, but there's no provider that supports bridging ETH
+            amountOut = formatUnits(0n, currencyOut.decimals ?? 18);
         } else if (!orbiterRouter && orbiterQuoteFetchStatus === "idle" && orbiterQuoteStatus !== "error") {
             amountOut = formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18);
         }

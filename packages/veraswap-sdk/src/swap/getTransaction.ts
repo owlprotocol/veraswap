@@ -383,8 +383,8 @@ export async function getTransaction(
             const { currencyIn, currencyOut } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
 
-            if (currencyIn.isNative && !orbiterQuote) {
-                throw new Error("Orbiter params and amount out are required for Orbiter bridging");
+            if (currencyIn.isNative && !stargateQuote && !orbiterQuote) {
+                throw new Error("Stargate or orbiter params are required for ETH bridging");
             }
 
             // TODO: fix this for non local env

@@ -1,12 +1,13 @@
 import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
-import { isMultichainToken, TransactionType } from "@owlprotocol/veraswap-sdk";
+import { isMultichainToken, STARGATE_POOL_NATIVE, TransactionType } from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
 import { amountOutAtom, tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
+import { orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
@@ -67,6 +68,8 @@ export const swapStepAtom = atom((get) => {
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
     const amountOut = get(amountOutAtom);
 
+    const orbiterRouter = get(orbiterRouterAtom);
+
     const transactionType = get(transactionTypeAtom);
 
     const mutation = get(sendTransactionMutationAtom);
@@ -83,7 +86,13 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.SELECT_TOKEN;
     } else if (tokenInAmount === null) {
         return SwapStep.SELECT_TOKEN_AMOUNT;
-    } else if (!transactionType) {
+    } else if (
+        // Be clear if there is no quote because chains are not supported by bridge providers
+        !transactionType ||
+        ((transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
+            (!(currencyIn.chainId in STARGATE_POOL_NATIVE) || !(currencyOut.chainId in STARGATE_POOL_NATIVE)) &&
+            !orbiterRouter)
+    ) {
         return SwapStep.NOT_SUPPORTED;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
         return SwapStep.INSUFFICIENT_BALANCE;
