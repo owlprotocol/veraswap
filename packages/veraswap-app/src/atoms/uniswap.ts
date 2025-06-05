@@ -12,7 +12,7 @@ import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { config } from "@/config.js";
+import { config, chains } from "@/config.js";
 
 // const emptyToken = new Token(1, zeroAddress, 1);
 // const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
@@ -67,16 +67,15 @@ export const routeMultichainAtom = atomWithQuery((get) => {
 
     return queryOptions({
         queryFn: async () => {
-            const contractsByChain = {
-                [currencyIn.chainId]: {
-                    weth9: UNISWAP_CONTRACTS[currencyIn.chainId]?.weth9 ?? zeroAddress,
-                    metaQuoter: UNISWAP_CONTRACTS[currencyIn.chainId]?.metaQuoter ?? zeroAddress,
-                },
-                [currencyOut.chainId]: {
-                    weth9: UNISWAP_CONTRACTS[currencyOut.chainId]?.weth9 ?? zeroAddress,
-                    metaQuoter: UNISWAP_CONTRACTS[currencyOut.chainId]?.metaQuoter ?? zeroAddress,
-                },
-            };
+            const contractsByChain = Object.fromEntries(
+                chains.map((chain) => [
+                    chain.id,
+                    {
+                        weth9: UNISWAP_CONTRACTS[chain.id]?.weth9 ?? zeroAddress,
+                        metaQuoter: UNISWAP_CONTRACTS[chain.id]?.metaQuoter ?? zeroAddress,
+                    },
+                ]),
+            );
 
             const route = await getNewRouteMultichain(queryClient, config, {
                 currencyIn,
