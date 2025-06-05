@@ -1,10 +1,13 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 
+import { localChains, mainnetChains, testnetChains } from "../../chains/index.js";
+import { UNISWAP_CONTRACTS } from "../../constants/index.js";
 import { Currency } from "../../currency/currency.js";
 import { MultichainToken } from "../../currency/multichainToken.js";
+import { getCurrencyHops } from "../../swap/getCurrencyHops.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
 import { RoutePlanner } from "../routerCommands.js";
 
@@ -38,8 +41,8 @@ export interface GetNewRouteMultichainParams {
     currencyIn: Currency;
     currencyOut: Currency;
     amountIn: bigint;
-    currencyHopsByChain: Record<number, Address[] | undefined>;
-    contractsByChain: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
+    currencyHopsByChain?: Record<number, Address[] | undefined>;
+    contractsByChain?: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
     recipient?: Address;
     poolKeyOptions?: PoolKeyOptions[];
 }
@@ -62,6 +65,22 @@ export async function getNewRouteMultichain(
 
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap or bridge same token");
 
+    const allChains = [...testnetChains, ...mainnetChains, ...localChains];
+
+    const contractsByChain =
+        params.contractsByChain ??
+        Object.fromEntries(
+            allChains.map((chain) => [
+                chain.id,
+                {
+                    weth9: UNISWAP_CONTRACTS[chain.id]?.weth9 ?? zeroAddress,
+                    metaQuoter: UNISWAP_CONTRACTS[chain.id]?.metaQuoter ?? zeroAddress,
+                },
+            ]),
+        );
+
+    const currencyHopsByChain = Object.fromEntries(allChains.map((chain) => [chain.id, getCurrencyHops(chain.id)]));
+
     // BRIDGE ONLY
     // BRIDGE: Native token bridge
     // TODO: account for bridge and gas fees
@@ -78,7 +97,11 @@ export async function getNewRouteMultichain(
 
     // SWAP with pre-swap, post-swap bridging
     // Find crosschain pools
-    const route = await getUniswapRouteExactInMultichain(queryClient, wagmiConfig, params);
+    const route = await getUniswapRouteExactInMultichain(queryClient, wagmiConfig, {
+        ...params,
+        contractsByChain,
+        currencyHopsByChain,
+    });
     if (!route) return null;
 
     // Mixed Bridge/Swap/Bridge

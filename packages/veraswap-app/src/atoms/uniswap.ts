@@ -1,18 +1,16 @@
 import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
 import {
-    getRouteMultichain,
     getUniswapV4Address,
     getTransactionType,
     TransactionType,
     getNewRouteMultichain,
 } from "@owlprotocol/veraswap-sdk";
 import { atom, Atom } from "jotai";
-import { numberToHex, zeroAddress } from "viem";
-import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
+import { numberToHex } from "viem";
 import { queryOptions } from "@tanstack/react-query";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { config, chains } from "@/config.js";
+import { config } from "@/config.js";
 
 // const emptyToken = new Token(1, zeroAddress, 1);
 // const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
@@ -67,22 +65,10 @@ export const routeMultichainAtom = atomWithQuery((get) => {
 
     return queryOptions({
         queryFn: async () => {
-            const contractsByChain = Object.fromEntries(
-                chains.map((chain) => [
-                    chain.id,
-                    {
-                        weth9: UNISWAP_CONTRACTS[chain.id]?.weth9 ?? zeroAddress,
-                        metaQuoter: UNISWAP_CONTRACTS[chain.id]?.metaQuoter ?? zeroAddress,
-                    },
-                ]),
-            );
-
             const route = await getNewRouteMultichain(queryClient, config, {
                 currencyIn,
                 currencyOut,
                 amountIn,
-                contractsByChain,
-                currencyHopsByChain: {},
             });
 
             return route;
