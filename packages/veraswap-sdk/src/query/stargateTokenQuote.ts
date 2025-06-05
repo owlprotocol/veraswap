@@ -55,8 +55,8 @@ export async function stargateTokenQuote(
     const pools: Record<number, Address | undefined> = STARGATE_POOL_USDC;
 
     const poolAddress = pools[srcChain];
-    invariant(!!poolAddress, `Stargate pool for ${tokenSymbol} not found for source chain ${srcChain}`);
-    invariant(dstChain in pools, `Stargate pool for ${tokenSymbol} not found for destination chain ${dstChain}`);
+    invariant(!!poolAddress, `Source chain ${srcChain} is not supported by Stargate for ${tokenSymbol}`);
+    invariant(dstChain in pools, `Destination chain ${dstChain} is not supported by Stargate for ${tokenSymbol}`);
 
     const slippageOppositePercentFull = fullPercent - slippage * fullPercent;
 

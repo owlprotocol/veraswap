@@ -66,7 +66,7 @@ describe("stargateTokenQuote.test.ts", function () {
         };
 
         await expect(queryClient.fetchQuery(stargateTokenQuoteQueryOptions(wagmiConfig, params))).rejects.toThrowError(
-            "chain is not supported by Stargate",
+            "is not supported by Stargate",
         );
     });
 });
