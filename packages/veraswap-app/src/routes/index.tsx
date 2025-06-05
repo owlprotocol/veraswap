@@ -227,18 +227,21 @@ function Index() {
         bridgeRemoteTransactionHash,
     );
 
+    const bridgeToAddress =
+        (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress;
+
     useWatchStargateMessageProcessed(
         stargateBridgeMessageId,
         chainOut,
         setBridgeRemoteTransactionHash,
         bridgeRemoteTransactionHash,
+        bridgeToAddress,
     );
 
-    const orbiterTo = (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress;
     useWatchOrbiterMessageProcessed(
         chainOut,
         hash,
-        orbiterTo,
+        bridgeToAddress,
         orbiterQuote,
         stargateQuote,
         transactionType?.withSuperchain,
@@ -558,18 +561,20 @@ function Index() {
         if (submittedTransactionType.type === "BRIDGE_SWAP") {
             if (bridgeRemoteTransactionHash) {
                 updateTransactionStep({ id: "bridge", status: "success" });
-
-                if (swapRemoteTransactionHash) {
-                    updateTransactionStep({ id: "swap", status: "success" });
-                    setTransactionHashes((prev) => ({ ...prev, transferRemote: swapRemoteTransactionHash }));
-                    updateTransactionStep({ id: "transferRemote", status: "success" });
-                }
             }
-            toast({
-                title: "Transaction Complete",
-                description: "Your transaction has been completed successfully",
-                variant: "default",
-            });
+
+            if (swapRemoteTransactionHash) {
+                updateTransactionStep({ id: "swap", status: "success" });
+                setTransactionHashes((prev) => ({ ...prev, transferRemote: swapRemoteTransactionHash }));
+                updateTransactionStep({ id: "transferRemote", status: "success" });
+            }
+            if (bridgeRemoteTransactionHash && swapRemoteTransactionHash) {
+                toast({
+                    title: "Transaction Complete",
+                    description: "Your transaction has been completed successfully",
+                    variant: "default",
+                });
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bridgeRemoteTransactionHash, swapRemoteTransactionHash]);

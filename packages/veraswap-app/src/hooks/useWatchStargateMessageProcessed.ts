@@ -1,4 +1,4 @@
-import { Chain, createPublicClient, Hex, http, zeroAddress } from "viem";
+import { Address, Chain, createPublicClient, Hex, http, zeroAddress } from "viem";
 import { useWatchContractEvent } from "wagmi";
 import { useEffect } from "react";
 import { OFTReceived } from "@owlprotocol/veraswap-sdk/artifacts/IStargate";
@@ -9,9 +9,10 @@ export function useWatchStargateMessageProcessed(
     chainOut: Chain | null,
     setRemoteTransactionHash: (txHash: Hex) => void,
     remoteTransactionHash: Hex | null,
+    toAddress: Address | null,
 ) {
     const address = STARGATE_POOL_NATIVE[chainOut?.id ?? 0] ?? zeroAddress;
-    const args = { guid: messageId ?? "0x" };
+    const args = { guid: messageId ?? "0x", toAddress: toAddress ?? zeroAddress };
 
     // TODO: handle USDC too
     useWatchContractEvent({
