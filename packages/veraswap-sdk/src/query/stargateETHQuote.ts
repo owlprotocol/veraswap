@@ -38,7 +38,7 @@ export function stargateETHQuoteQueryKey({ receiver, amount, srcChain, dstChain 
 const fullPercent = 1000000; // 100% in base percentage of 0.0001%
 export async function stargateETHQuote(
     wagmiConfig: Config,
-    { receiver, amount, srcChain, dstChain, slippage = 0.05 }: StargateETHQuoteParams,
+    { receiver, amount, srcChain, dstChain, slippage = 0.005 }: StargateETHQuoteParams,
 ): Promise<StargateETHQuote | null> {
     invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0.0001 and 1");
     invariant(dstChain in STARGATE_POOL_NATIVE, "Destination chain is not supported by Stargate for ETH");

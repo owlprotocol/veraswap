@@ -46,7 +46,7 @@ const fullPercent = 1000000; // 100% in base percentage of 0.0001%
 
 export async function stargateTokenQuote(
     wagmiConfig: Config,
-    { receiver, tokenSymbol, amount, srcChain, dstChain, slippage = 0.05 }: StargateTokenQuoteParams,
+    { receiver, tokenSymbol, amount, srcChain, dstChain, slippage = 0.005 }: StargateTokenQuoteParams,
 ): Promise<StargateTokenQuote | null> {
     invariant(slippage >= 0 && slippage < 1, "Slippage must be between 0.0001 and 1");
     invariant(tokenSymbol === "USDC", "Only USDC is supported for now");
