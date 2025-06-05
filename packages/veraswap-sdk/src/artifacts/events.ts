@@ -759,4 +759,27 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "OFTReceived",
+        inputs: [
+            { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "srcEid", type: "uint32", indexed: false, internalType: "uint32" },
+            { name: "toAddress", type: "address", indexed: true, internalType: "address" },
+            { name: "amountReceivedLD", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "OFTSent",
+        inputs: [
+            { name: "guid", type: "bytes32", indexed: true, internalType: "bytes32" },
+            { name: "dstEid", type: "uint32", indexed: false, internalType: "uint32" },
+            { name: "fromAddress", type: "address", indexed: true, internalType: "address" },
+            { name: "amountSentLD", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amountReceivedLD", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
 ] as const;

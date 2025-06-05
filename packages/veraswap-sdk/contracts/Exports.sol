@@ -12,3 +12,5 @@ import {KernelFactory} from "@zerodev/kernel/factory/KernelFactory.sol";
 // Account Abstraction
 import {IEntryPoint} from "@ERC4337/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {EntryPoint} from "@ERC4337/account-abstraction/contracts/core/EntryPoint.sol";
+// Stargate
+import {IStargate} from "@stargatefinance/stg-evm-v2/src/interfaces/IStargate.sol";

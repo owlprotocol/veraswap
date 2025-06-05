@@ -47,6 +47,8 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     "out/MockSuperchainERC20.sol/*.json",
     // Orbiter (custom)
     "out/OrbiterBridgeSweep.sol/*.json",
+    // Stargate (custom)
+    "out/StargateBridgeSweep.sol/*.json",
     // Kernel
     "out/Kernel.sol/*.json",
     "out/KernelFactory.sol/*.json",
@@ -63,4 +65,7 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     // Baskets (custom)
     "out/BasketFixedUnits.sol/*.json",
     "out/ExecuteSweep.sol/*.json",
+    // Stargate
+    "out/IStargate.sol/*.json",
+    "out/StargateBase.sol/*.json",
 ]);

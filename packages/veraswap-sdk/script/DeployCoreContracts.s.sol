@@ -30,6 +30,8 @@ import {HypTokenRouterSweepUtils} from "./utils/HypTokenRouterSweepUtils.sol";
 import {HyperlaneTestRecipientUtils} from "./utils/HyperlaneTestRecipientUtils.sol";
 // Orbiter
 import {OrbiterBridgeSweepUtils} from "./utils/OrbiterBridgeSweepUtils.sol";
+// Stargate
+import {StargateBridgeSweepUtils} from "./utils/StargateBridgeSweepUtils.sol";
 // ERC4337
 import {SimpleAccountFactoryUtils} from "./utils/SimpleAccountFactoryUtils.sol";
 import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
@@ -253,6 +255,10 @@ contract DeployCoreContracts is DeployParameters {
         (address execute,) = ExecuteUtils.getOrCreate2();
 
         (address orbiterBridgeSweep,) = OrbiterBridgeSweepUtils.getOrCreate2();
+        (address stargateBridgeSweep,) = StargateBridgeSweepUtils.getOrCreate2();
+
+        // NOTE: bridge sweep contracts don't need to part of the core contracts struct
+        console2.log("stargateBridgeSweep:", stargateBridgeSweep);
 
         contracts.kernel = kernel;
         contracts.kernelFactory = kernelFactory;

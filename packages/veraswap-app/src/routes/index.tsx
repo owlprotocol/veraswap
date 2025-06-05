@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { ArrowUpDown, Wallet } from "lucide-react";
-import { useAccount, useSwitchChain, useWatchContractEvent, useWatchAsset, useWatchBlocks } from "wagmi";
-import { getBlock } from "@wagmi/core";
+import { useAccount, useSwitchChain, useWatchAsset } from "wagmi";
 import {
     getHyperlaneMessageIdsFromReceipt,
     getTransaction,
@@ -15,7 +14,9 @@ import {
     TransactionTypeSwapBridge,
     Currency,
     getUniswapV4Address,
+    getStargateMessageIdFromReceipt,
     getSuperchainMessageIdFromReceipt,
+    STARGATE_POOL_NATIVE,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -56,7 +57,6 @@ import {
     hyperlaneRegistryAtom,
     chainsTypeAtom,
     getSwapStepMessage,
-    orbiterRoutersEndpointContractsAtom,
     kernelInitDataAtom,
     kernelAddressChainOutQueryAtom,
     isDisabledStep,
@@ -72,8 +72,9 @@ import {
     submittedTransactionTypeAtom,
     amountOutAtom,
     orbiterQuoteAtom,
-    orbiterRoutersEndpointsAtom,
     slippageToleranceAtom,
+    stargateQuoteAtom,
+    stargateBridgeMessageIdAtom,
     tokenInUsdValueAtom,
     tokenOutUsdValueAtom,
 } from "../atoms/index.js";
@@ -86,11 +87,11 @@ import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
 import { config } from "@/config.js";
-import { Transfer } from "@/abis/events.js";
-import { useDustAccount, useWatchHyperlaneMessageProcessed } from "@/hooks/index.js";
+import { useDustAccount, useWatchHyperlaneMessageProcessed, useWatchStargateMessageProcessed } from "@/hooks/index.js";
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
 import { TransactionFlow } from "@/components/transaction-flow.js";
 import { SettingsDialog } from "@/components/settings-dialog.js";
+import { useWatchOrbiterMessageProcessed } from "@/hooks/useWatchOrbiterMessageProcessed.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -118,9 +119,6 @@ function Index() {
     const chainIn = useAtomValue(chainInAtom);
     const chainOut = useAtomValue(chainOutAtom);
 
-    const orbiterRoutersEndpointContracts = useAtomValue(orbiterRoutersEndpointContractsAtom);
-    const orbiterRoutersEndpoints = useAtomValue(orbiterRoutersEndpointsAtom);
-
     const tokenInAmount = useAtomValue(tokenInAmountAtom);
     const { data: tokenInBalance } = useAtomValue(tokenInAccountBalanceQueryAtom);
 
@@ -130,6 +128,7 @@ function Index() {
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
     const [superchainBridgeMessageId, setSuperchainBridgeMessageId] = useAtom(superchainBridgeMessageIdAtom);
+    const [stargateBridgeMessageId, setStargateBridgeMessageId] = useAtom(stargateBridgeMessageIdAtom);
 
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
@@ -183,6 +182,7 @@ function Index() {
     const { switchChain } = useSwitchChain();
 
     const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
+    const { data: stargateQuote } = useAtomValue(stargateQuoteAtom);
 
     const slippageTolerance = useAtomValue(slippageToleranceAtom);
 
@@ -227,52 +227,24 @@ function Index() {
         bridgeRemoteTransactionHash,
     );
 
-    useWatchContractEvent({
-        abi: [Transfer],
-        eventName: "Transfer",
-        chainId: chainOut?.id ?? 0,
-        address: orbiterRoutersEndpointContracts[currencyOut?.chainId ?? 0] ?? zeroAddress,
-        args: { to: (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress },
-        enabled:
-            !!chainOut &&
-            !!orbiterQuote &&
-            !!orbiterRoutersEndpointContracts[chainOut?.id ?? 0] &&
-            !!hash &&
-            !submittedTransactionType?.withSuperchain,
-        strict: true,
-        onLogs: (logs) => {
-            setBridgeRemoteTransactionHash(logs[0].transactionHash);
-        },
-    });
+    useWatchStargateMessageProcessed(
+        stargateBridgeMessageId,
+        chainOut,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
 
-    useWatchBlocks({
-        chainId: chainOut?.id ?? 0,
-        enabled:
-            !!chainOut &&
-            !!orbiterQuote &&
-            !!hash &&
-            !bridgeRemoteTransactionHash &&
-            !!orbiterRoutersEndpoints[chainOut?.id ?? 0],
-        onBlock(block) {
-            const from = orbiterRoutersEndpoints[chainOut?.id ?? 0] ?? zeroAddress;
-            // Assume bridging only to same address
-            const to = walletAddress?.toLowerCase() ?? zeroAddress;
-
-            // TODO: Keep track of estimated value out and check that transaction value approximately matches to avoid issue if the address is receiving two bridging transactions from orbiter somewhat simultaneously
-            // TODO: use includeTransactions in useWatchBlocks when we figure out why block.transactions is undefined
-            // NOTE: This is a workaround for the issue with useWatchBlocks not returning transactions, even without includeTransactions
-            getBlock(config, {
-                blockNumber: block.number,
-                includeTransactions: true,
-                chainId: currencyOut!.chainId,
-            }).then((block) => {
-                const tx = block.transactions.find((tx) => tx.from === from && tx.to === to);
-                if (tx) {
-                    setBridgeRemoteTransactionHash(tx.hash);
-                }
-            });
-        },
-    });
+    const orbiterTo = (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress;
+    useWatchOrbiterMessageProcessed(
+        chainOut,
+        hash,
+        orbiterTo,
+        orbiterQuote,
+        stargateQuote,
+        transactionType?.withSuperchain,
+        setBridgeRemoteTransactionHash,
+        bridgeRemoteTransactionHash,
+    );
 
     const handleSwapSteps = async () => {
         if (!walletAddress) {
@@ -333,6 +305,7 @@ function Index() {
                           walletAddress,
                           bridgePayment,
                           orbiterQuote,
+                          stargateQuote,
                           queryClient,
                           wagmiConfig: config,
                           initData: kernelSmartAccountInitData,
@@ -344,6 +317,7 @@ function Index() {
                             amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
                             orbiterQuote,
+                            stargateQuote,
                             queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
@@ -352,6 +326,7 @@ function Index() {
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             orbiterQuote,
+                            stargateQuote,
                             amountOutMinimum: adjustedAmountOutMinimum!,
                             walletAddress,
                             bridgePayment,
@@ -483,6 +458,7 @@ function Index() {
 
         const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
         const superchainBridgeMessageId = getSuperchainMessageIdFromReceipt(receipt, chainIn!.id);
+        const stargateBridgeMessageId = getStargateMessageIdFromReceipt(receipt);
 
         if (
             (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") &&
@@ -505,16 +481,21 @@ function Index() {
         }
 
         const hyperlaneBridgeMessageId = hyperlaneMessageIds[0];
-        const hyperlaneSwapMessageId = !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
+        const hyperlaneSwapMessageId =
+            !stargateQuote && !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
 
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId && !orbiterQuote) {
+            if (hyperlaneBridgeMessageId && !stargateQuote && !orbiterQuote) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
-            } else if (orbiterQuote) {
+            } else if (stargateQuote || orbiterQuote) {
+                if (stargateBridgeMessageId) {
+                    setStargateBridgeMessageId(stargateBridgeMessageId);
+                }
+
                 setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
             }
@@ -534,6 +515,9 @@ function Index() {
                 } else if (superchainBridgeMessageId) {
                     setSuperchainBridgeMessageId(superchainBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
+                } else if (stargateQuote) {
+                    setStargateBridgeMessageId(stargateBridgeMessageId);
+                    setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 } else if (orbiterQuote) {
                     setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 }
@@ -632,7 +616,15 @@ function Index() {
         if (
             !currency.isNative ||
             !transactionTypeType ||
-            !(transactionTypeType === "BRIDGE" || transactionTypeType === "BRIDGE_SWAP")
+            !(
+                transactionTypeType === "BRIDGE" ||
+                transactionTypeType === "BRIDGE_SWAP" ||
+                // Assume that if Stargate supports this route, we will use Stargate
+                (currencyIn &&
+                    currencyOut &&
+                    currencyIn.chainId in STARGATE_POOL_NATIVE &&
+                    currencyOut.chainId in STARGATE_POOL_NATIVE)
+            )
         ) {
             setTokenInAmountInput(formatUnits(max, decimals));
             return;

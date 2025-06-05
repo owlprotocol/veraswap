@@ -3,6 +3,7 @@ export * from "./erc4337.js";
 export * from "./hyperlane.js";
 export * from "./kernel.js";
 export * from "./orbiter.js";
+export * from "./stargate.js";
 export * from "./tokens.js";
 export * from "./uint256.js";
 export * from "./uniswap.js";

@@ -11,6 +11,7 @@ import { Execute } from "../artifacts/Execute.js";
 import { InterchainGasPaymaster } from "../artifacts/InterchainGasPaymaster.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
+import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { PathKey } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
@@ -180,11 +181,24 @@ export async function getBridgeSwapWithKernelCalls(
     // BRIDGE CALLS
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
-        // Assume that if the token is native, we are using the Orbiter bridge
-        // TODO: if using USDC, find the step with bridge, since there could be an approve step
-        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
-        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
-        bridgeCalls = [orbiterCall];
+        const { stargateQuote, orbiterQuote } = params;
+        if (stargateQuote) {
+            const stargateTx = getStargateETHBridgeTransaction({
+                dstChain: destination,
+                srcChain: chainId,
+                receiver: kernelAddress,
+                stargateQuote,
+            });
+            bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
+        } else if (orbiterQuote) {
+            // Assume that if the token is native, we are using the Orbiter bridge
+            // TODO: if using USDC, find the step with bridge, since there could be an approve step
+            const { to, value, data } = params.orbiterQuote!.steps[0].tx;
+            const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
+            bridgeCalls = [orbiterCall];
+        } else {
+            invariant(false, "NativeToken bridging requires either Stargate or Orbiter quotes to be provided");
+        }
     } else if (
         // TODO: use the withSuperchain flag, and fix the GetBridgeSwapWithKernelCallsParams type accordingly
         tokenStandard === "SuperchainERC20" ||

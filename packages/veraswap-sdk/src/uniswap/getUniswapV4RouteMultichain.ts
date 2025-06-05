@@ -6,7 +6,8 @@ import { Address, zeroAddress } from "viem";
 
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
-import { orbiterQuote } from "../query/orbiterQuote.js";
+import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
+import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
 import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 
 import { nativeOnChain } from "./constants/tokens.js";
@@ -65,23 +66,39 @@ export async function getUniswapV4RouteExactInMultichain(
                         return null;
                     }
 
-                    // TODO: handle this better, especially if not using orbiter
-                    try {
-                        const orbiterQuoteResult = await orbiterQuote({
-                            amount: exactAmount,
-                            destChainId: currIn.chainId,
-                            destToken: zeroAddress,
-                            sourceChainId: currencyIn.chainId,
-                            sourceToken: zeroAddress,
-                            // User address doesn't matter, but avoid address zero
-                            userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
-                        });
-                        if (!orbiterQuoteResult) return null;
+                    // Address doesn't matter for quote
+                    const quoteReceiver = "0x0000000000000000000000000000000000000001";
+                    const stargateETHQuoteParams: StargateETHQuoteParams = {
+                        amount: exactAmount,
+                        srcChain: currencyIn.chainId,
+                        dstChain: currIn.chainId,
+                        receiver: quoteReceiver,
+                    };
+                    const stargateQuoteResult = await queryClient.fetchQuery(
+                        stargateETHQuoteQueryOptions(wagmiConfig, stargateETHQuoteParams),
+                    );
 
-                        exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    } catch (_err) {
-                        return null;
+                    if (stargateQuoteResult) {
+                        exactAmount = BigInt(stargateQuoteResult.amountFeeRemoved);
+                    } else {
+                        if (!stargateQuoteResult) {
+                            const orbiterQuoteResult = await queryClient.fetchQuery(
+                                orbiterQuoteQueryOptions({
+                                    amount: exactAmount,
+                                    destChainId: currIn.chainId,
+                                    destToken: zeroAddress,
+                                    sourceChainId: currencyIn.chainId,
+                                    sourceToken: zeroAddress,
+                                    // User address doesn't matter, but avoid address zero
+                                    userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
+                                }),
+                            );
+
+                            // Bridging is needed, but no quote found for either providers
+                            if (!orbiterQuoteResult) return null;
+
+                            exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                        }
                     }
                 }
 

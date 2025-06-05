@@ -246,6 +246,7 @@ export const errors = [
     { type: "error", name: "PermitExpired", inputs: [] },
     { type: "error", name: "TotalSupplyOverflow", inputs: [] },
     { type: "error", name: "TransferFailed", inputs: [] },
+    { type: "error", name: "QuoteAmountTooLow", inputs: [] },
     { type: "error", name: "EnableNotApproved", inputs: [] },
     { type: "error", name: "ExecutionReverted", inputs: [] },
     { type: "error", name: "InitConfigError", inputs: [{ name: "idx", type: "uint256", internalType: "uint256" }] },
@@ -440,4 +441,13 @@ export const errors = [
     { type: "error", name: "ZeroUnits", inputs: [] },
     { type: "error", name: "AddressEmptyCode", inputs: [{ name: "target", type: "address", internalType: "address" }] },
     { type: "error", name: "CallSelectorApprove", inputs: [] },
+    { type: "error", name: "InvalidLocalDecimals", inputs: [] },
+    {
+        type: "error",
+        name: "SlippageExceeded",
+        inputs: [
+            { name: "amountLD", type: "uint256", internalType: "uint256" },
+            { name: "minAmountLD", type: "uint256", internalType: "uint256" },
+        ],
+    },
 ] as const;
