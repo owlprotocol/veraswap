@@ -79,7 +79,7 @@ export async function getUniswapV4RouteExactInMultichain(
                     );
 
                     if (stargateQuoteResult) {
-                        exactAmount = BigInt(stargateQuoteResult.amountFeeRemoved);
+                        exactAmount = BigInt(stargateQuoteResult.minAmountLDFeeRemoved);
                     } else {
                         if (!stargateQuoteResult) {
                             const orbiterQuoteResult = await queryClient.fetchQuery(
