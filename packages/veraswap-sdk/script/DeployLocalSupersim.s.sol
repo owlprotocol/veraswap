@@ -2,6 +2,9 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/console2.sol";
+import "forge-std/Script.sol";
+
+import {WETHUtils} from "./utils/WETHUtils.sol";
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
@@ -26,6 +29,7 @@ import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSwee
 import {OwnableSignatureExecutorUtils} from "./utils/OwnableSignatureExecutorUtils.sol";
 import {KernelFactoryUtils} from "./utils/KernelFactoryUtils.sol";
 
+import {ContractsCoreLibrary} from "./libraries/ContractsCore.sol";
 import {DeployCoreContracts} from "./DeployCoreContracts.s.sol";
 import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts} from "./Structs.sol";
@@ -36,13 +40,13 @@ import {MockInterchainGasPaymasterUtils} from "./utils/MockInterchainGasPaymaste
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
  * Similar pattern can be used to configure Testnet and Mainnet deployments
  */
-contract DeployLocal is DeployCoreContracts {
+contract DeployLocalSupersim is Script {
     // Core contracts
     mapping(uint256 chainId => CoreContracts) public chainContracts;
     // Tokens with bytes32 identifiers
     mapping(uint256 chainId => mapping(bytes32 id => address)) public tokens;
 
-    function run() external virtual override {
+    function run() external virtual {
         string[] memory chains = new string[](3);
         chains[0] = "localhost";
         chains[1] = "OPChainA";
@@ -52,33 +56,14 @@ contract DeployLocal is DeployCoreContracts {
 
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
-
             vm.startBroadcast();
 
+            // Deploy core contracts
             console2.log("Deploying contracts on chain: ", chains[i]);
-            CoreContracts memory contracts = deployCoreContracts();
-
-            //TODO: Move this to deployCoreContracts & only deploy if chain has the interop predeploys
-            (address superchainTokenBridgeSweep, ) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
-            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
-
-            // Deploy mock paymaster for local testing only
-            (address mockInterchainGasPaymaster, ) = MockInterchainGasPaymasterUtils.getOrCreate2();
-            console2.log("mockInterchainGasPaymaster:", mockInterchainGasPaymaster);
-
+            // TODO: Use setCode or etch to match pre-deploy addresses
+            (address weth9, ) = WETHUtils.getOrCreate2();
+            CoreContracts memory contracts = ContractsCoreLibrary.deploy(weth9);
             vm.stopBroadcast();
-
-            console2.log("v4PoolManager:", contracts.uniswap.v4PoolManager);
-            console2.log("v4PositionManager:", contracts.uniswap.v4PositionManager);
-
-            console2.log("mailbox:", contracts.hyperlane.mailbox);
-
-            console2.log("kernel:", contracts.kernel);
-            console2.log("kernelFactory:", contracts.kernelFactory);
-            console2.log("ecdsaValidator:", contracts.ecdsaValidator);
-            console2.log("ownableSignatureExecutor:", contracts.ownableSignatureExecutor);
-            console2.log("erc7579ExecutorRouter:", contracts.erc7579ExecutorRouter);
-
             chainContracts[chainIds[i]] = contracts;
         }
 

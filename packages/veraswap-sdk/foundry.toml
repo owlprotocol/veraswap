@@ -12,6 +12,13 @@ optimizer_runs = 200
 bytecode_hash = "none"
 cbor_metadata = true
 
+# Fast profile for testing
+[profile.fast]
+optimizer_runs = 20       # Optimizer required due to stack too deep errors
+sparse_mode = true
+out = "out_fast"
+cache_path = "cache_fast"
+
 [rpc_endpoints]
 # Local Supersim
 localhost = "http://127.0.0.1:8547"
@@ -54,7 +61,7 @@ somnia-testnet = "https://dream-rpc.somnia.network"
 # https://docs.blockscout.com/devs/verification/foundry-verification
 
 [etherscan]
-mainnet = { url = "https://api.etherscan.io/v2/api?chainid=1",  key = "${ETHERSCAN_MAINNET_KEY}" }
+mainnet = { url = "https://api.etherscan.io/v2/api?chainid=1", key = "${ETHERSCAN_MAINNET_KEY}" }
 sepolia = { url = "https://api.etherscan.io/v2/api?chainid=11155111", key = "${ETHERSCAN_MAINNET_KEY}" }
 polygon = { url = "https://api.etherscan.io/v2/api?chainid=137", key = "${ETHERSCAN_MAINNET_KEY}" }
 optimism = { url = "https://api.etherscan.io/v2/api?chainid=10", key = "${ETHERSCAN_MAINNET_KEY}" }

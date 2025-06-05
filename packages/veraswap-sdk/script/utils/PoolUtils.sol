@@ -54,7 +54,7 @@ library PoolUtils {
         IUniswapV3Factory v3Factory,
         V3PositionManagerMock v3PositionManager,
         uint256 amount
-    ) internal {
+    ) internal returns (IUniswapV3Pool pool) {
         (Currency currency0, Currency currency1) = (currencyA < currencyB)
             ? (currencyA, currencyB)
             : (currencyB, currencyA);
@@ -63,9 +63,7 @@ library PoolUtils {
         uint24 fee = 3000;
         int24 tickSpacing = 60;
         V3PoolKey memory poolKey = V3PoolKey({currency0: currency0, currency1: currency1, fee: fee});
-        IUniswapV3Pool pool = IUniswapV3Pool(
-            v3Factory.createPool(Currency.unwrap(currency0), Currency.unwrap(currency1), fee)
-        );
+        pool = IUniswapV3Pool(v3Factory.createPool(Currency.unwrap(currency0), Currency.unwrap(currency1), fee));
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
         pool.initialize(startingPrice);
         // Mint Liquidity
@@ -104,7 +102,7 @@ library PoolUtils {
         Currency currencyB,
         IPositionManager v4PositionManager,
         uint256 amount
-    ) internal {
+    ) internal returns (PoolKey memory poolKey) {
         (Currency currency0, Currency currency1) = (currencyA < currencyB)
             ? (currencyA, currencyB)
             : (currencyB, currencyA);
@@ -116,7 +114,7 @@ library PoolUtils {
         // 1. Initialize the parameters provided to multicall()
         uint24 fee = 3000;
         int24 tickSpacing = 60;
-        PoolKey memory poolKey = PoolKey(currency0, currency1, fee, tickSpacing, IHooks(address(0)));
+        poolKey = PoolKey(currency0, currency1, fee, tickSpacing, IHooks(address(0)));
         // 3. Encode the initializePool parameters
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
         //WANING UNCOMMENT

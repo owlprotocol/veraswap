@@ -17,8 +17,10 @@ library DeployBase {
             v4PoolManager: 0x498581fF718922c3f8e6A244956aF099B2652b2b,
             v3NFTPositionManager: 0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1,
             v4PositionManager: 0x7C5f5A4bBd8fD63184577525326123B519429bDc,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

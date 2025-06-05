@@ -17,8 +17,10 @@ library DeploySepolia {
             v4PoolManager: 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543,
             v3NFTPositionManager: 0x1238536071E1c677A632429e3655c799b22cDA52,
             v4PositionManager: 0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4,
+            v3Quoter: address(0),
             v4StateView: 0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C,
             v4Quoter: 0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227,
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

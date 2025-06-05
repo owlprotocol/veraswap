@@ -13,6 +13,8 @@ describe("constants/uniswap.test.ts", function () {
     test("contracts exist", async () => {
         for (const [chainId, client] of Object.entries(clients)) {
             for (const [name, address] of Object.entries(LOCAL_UNISWAP_CONTRACTS)) {
+                if (name === "v3PoolInitCodeHash") continue; // Skip v3PoolInitCodeHash as it's not a contract address
+
                 await expect(client.getCode({ address }), `${name} at ${chainId},${address}`).resolves.toBeDefined();
             }
         }

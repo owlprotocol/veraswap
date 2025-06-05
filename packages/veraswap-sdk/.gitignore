@@ -1,6 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+out/
+out_fast/
 cache/
+cache_fast/
 
 # forge
 !lib
