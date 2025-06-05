@@ -6,8 +6,17 @@ import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, formatUnits } from "viem";
-import { PERMIT2_ADDRESS, UNISWAP_CONTRACTS, getUniswapV4Address, Currency } from "@owlprotocol/veraswap-sdk";
+import { BigNumber } from "@ethersproject/bignumber";
+import {
+    PERMIT2_ADDRESS,
+    UNISWAP_CONTRACTS,
+    getUniswapV4Address,
+    Currency,
+    USD_CURRENCIES,
+} from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
+import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { groupBy } from "lodash-es";
 import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
@@ -49,10 +58,9 @@ currencyBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt 
 export const currencyMultichainBalanceAtomFamily = atomFamily(
     (symbol: string) =>
         atom((get) => {
-            const allCurrencies = get(currenciesAtom);
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
             const account = get(accountAtom);
-
-            const matchingCurrencies = allCurrencies.filter((c) => c.symbol === symbol);
 
             const currenciesWithBalance = matchingCurrencies.map((currency) => {
                 const balanceRaw = account?.address
@@ -304,4 +312,172 @@ export const amountOutAtom = atom((get) => {
     }
 
     return amountOut;
+});
+
+const calculateUsdValueFromQuote = (
+    amount: bigint,
+    quote: bigint,
+    quoteUsdDecimals: number,
+    chainId: number,
+): number => {
+    const currencyUsdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 6;
+    const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
+    const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
+
+    return (
+        BigNumber.from(amount as unknown as number)
+            .mul(10000000)
+            .div(adjustedQuote as unknown as number)
+            .toNumber() / 10000000
+    );
+};
+
+// Gets token price in USD
+export const tokenDollarValueAtomFamily = atomFamily(
+    ({ currency, chainId }: { currency: Currency; chainId: number }) =>
+        atomWithQuery<bigint>(() => {
+            if (!currency) return disabledQueryOptions as any;
+
+            return {
+                ...getTokenDollarValueQueryOptions(config, {
+                    tokenAddress: getUniswapV4Address(currency),
+                    chainId,
+                }),
+                // override app default, causes too much flickering
+                staleTime: 5 * 60 * 1000,
+                refetchInterval: 5 * 60 * 1000,
+                refetchOnWindowFocus: false,
+            };
+        }),
+    (a, b) => a.currency.equals(b.currency) && a.chainId === b.chainId,
+) as unknown as AtomFamily<{ currency: Currency; chainId: number }, Atom<AtomWithQueryResult<bigint>>>;
+
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+tokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
+export const currenciesBySymbolAtom = atom((get) => {
+    const allCurrencies = get(currenciesAtom);
+    return groupBy(
+        allCurrencies.filter((currency) => currency.symbol),
+        "symbol",
+    );
+});
+
+// Gets the best available token price in USD across all chains
+export const bestTokenDollarValueAtomFamily = atomFamily(
+    (symbol: string) =>
+        atom((get) => {
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
+
+            const quotes = matchingCurrencies.map((currency) => {
+                const quote = get(tokenDollarValueAtomFamily({ currency, chainId: currency.chainId }));
+                const usdDecimals = USD_CURRENCIES[currency.chainId]?.decimals ?? 6;
+                const decimalsDiff = 18 - usdDecimals;
+                const normalizedValue = quote.data ? quote.data * 10n ** BigInt(decimalsDiff) : undefined;
+                return {
+                    currency,
+                    normalizedValue,
+                    quote: quote.data,
+                    usdDecimals,
+                    isLoading: quote.isLoading,
+                    isError: quote.isError,
+                };
+            });
+
+            const validQuotes = quotes.filter((q) => !!q.quote && !q.isError);
+
+            if (validQuotes.length > 0) {
+                // return the highest quote and its decimals
+                const bestQuote = validQuotes.reduce((max, curr) =>
+                    curr.normalizedValue! > max.normalizedValue! ? curr : max,
+                );
+                return {
+                    quote: bestQuote.quote,
+                    usdDecimals: bestQuote.usdDecimals,
+                };
+            }
+
+            // return undefined if all quotes are invalid or loading
+            if (quotes.every((q) => q.isLoading || q.isError || !q.quote)) {
+                return undefined;
+            }
+        }),
+    (a, b) => a === b,
+) as unknown as AtomFamily<string, Atom<{ quote: bigint; usdDecimals: number } | undefined>>;
+
+bestTokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
+// Calculates how much a token is worth in USD
+export const currencyUsdBalanceAtomFamily = atomFamily(
+    ({ currency, account }: { currency: Currency; account: Address }) =>
+        atom((get) => {
+            const balanceQuery = get(currencyBalanceAtomFamily({ currency, account }));
+            if (!currency.symbol) return undefined;
+
+            // get best quote across all chains
+            const bestQuoteData = get(bestTokenDollarValueAtomFamily(currency.symbol));
+            if (!balanceQuery.data || !bestQuoteData) return undefined;
+
+            const { quote, usdDecimals } = bestQuoteData;
+            return calculateUsdValueFromQuote(balanceQuery.data, quote, usdDecimals, currency.chainId);
+        }),
+    (a, b) => a.account === b.account && a.currency.equals(b.currency),
+);
+
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+currencyUsdBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
+// Shows total USD value
+export const currencyMultichainUsdBalanceAtomFamily = atomFamily(
+    (symbol: string) =>
+        atom((get) => {
+            const currencyGroups = get(currenciesBySymbolAtom);
+            const matchingCurrencies = currencyGroups[symbol];
+            const account = get(accountAtom);
+
+            if (!account?.address) return undefined;
+
+            const balances = matchingCurrencies.map((currency) => {
+                const balance = get(currencyBalanceAtomFamily({ currency, account: account.address! }));
+                const usdBalance = get(currencyUsdBalanceAtomFamily({ currency, account: account.address! }));
+                return { balance: balance.data, usdBalance };
+            });
+
+            const validBalances = balances.filter((b) => !!b.balance && !!b.usdBalance);
+
+            if (validBalances.length === 0) return undefined;
+
+            return validBalances.reduce((sum, { usdBalance }) => sum + (usdBalance ?? 0), 0);
+        }),
+    (a, b) => a === b,
+);
+// https://jotai.org/docs/utilities/family#caveat-memory-leaks
+currencyMultichainUsdBalanceAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
+
+export const tokenInUsdValueAtom = atom((get) => {
+    const currencyIn = get(currencyInAtom);
+    const tokenInAmount = get(tokenInAmountAtom);
+
+    if (!currencyIn?.symbol || !tokenInAmount) return undefined;
+
+    const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyIn.symbol));
+    if (!bestQuoteData) return undefined;
+
+    const { quote, usdDecimals } = bestQuoteData;
+    return calculateUsdValueFromQuote(tokenInAmount, quote, usdDecimals, currencyIn.chainId);
+});
+
+export const tokenOutUsdValueAtom = atom((get) => {
+    const currencyOut = get(currencyOutAtom);
+    const amountOut = get(amountOutAtom);
+
+    if (!currencyOut?.symbol || !amountOut) return undefined;
+
+    const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyOut.symbol));
+    if (!bestQuoteData) return undefined;
+
+    const { quote, usdDecimals } = bestQuoteData;
+    const amountOutBigInt = BigInt(parseFloat(amountOut) * 10 ** currencyOut.decimals);
+    return calculateUsdValueFromQuote(amountOutBigInt, quote, usdDecimals, currencyOut.chainId);
 });
