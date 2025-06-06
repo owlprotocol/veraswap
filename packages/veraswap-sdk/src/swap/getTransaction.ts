@@ -90,7 +90,7 @@ export interface TransactionSwapBridgeOptions {
     bridgePayment: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote | StargateTokenQuote;
+    stargateQuote?: StargateQuote;
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
