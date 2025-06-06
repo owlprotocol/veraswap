@@ -307,7 +307,7 @@ export const amountOutAtom = atom((get) => {
     if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
         // TODO: remove orbiter references entirely
         if (stargateQuote && currencyOut) {
-            amountOut = formatUnits(stargateQuote.amountFeeRemoved, currencyOut.decimals);
+            amountOut = formatUnits(stargateQuote.minAmountLDFeeRemoved, currencyOut.decimals);
         } else if (orbiterRouter && orbiterQuote && currencyOut) {
             const amountOutDecimalsStripped = orbiterQuote.details.minDestTokenAmount.split(".")[0];
             amountOut = formatUnits(BigInt(amountOutDecimalsStripped), currencyOut.decimals);
