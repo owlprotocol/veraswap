@@ -112,13 +112,17 @@ export const orbiterQuoteAtom = atomWithQuery((get) => {
     const transactionType = get(transactionTypeAtom);
     const routeMultichain = get(routeMultichainAtom);
 
-    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount || !account.address)
+    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount)
         return disabledQueryOptions;
 
     const kernelAddressChainOut = get(kernelAddressChainOutQueryAtom).data;
 
     // Kernel address is only used when bridging and then swapping
-    const targetRecipient = transactionType.type === "BRIDGE_SWAP" ? kernelAddressChainOut : account.address;
+    const targetRecipient =
+        transactionType.type === "BRIDGE_SWAP"
+            ? kernelAddressChainOut
+            : (account.address ?? "0x0000000000000000000000000000000000000001");
+
     if (!targetRecipient) return disabledQueryOptions as any;
 
     // Only supports mainnet for now
