@@ -56,6 +56,6 @@ export const unichainSepolia = /* #__PURE__ */ defineChain({
     testnet: true,
     sourceId,
     custom: {
-        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/unichain/logo.svg",
+        logoURI: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg",
     },
 }) satisfies ChainWithMetadata;
