@@ -36,7 +36,18 @@ export const STARGATE_POOL_USDC = {
     [optimism.id]: "0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0",
 } as const satisfies { [K in keyof typeof CHAIN_ID_TO_ENDPOINT_ID]?: Address };
 
+export const STARGATE_POOL_USDT = {
+    [bsc.id]: "0x138EB30f73BC423c6455C53df6D89CB01d9eBc63",
+    [mainnet.id]: "0x933597a323Eb81cAe705C5bC29985172fd5A3973",
+    [optimism.id]: "0x19cFCE47eD54a88614648DC3f19A5980097007dD",
+} as const satisfies { [K in keyof typeof CHAIN_ID_TO_ENDPOINT_ID]?: Address };
+
 export const STARGATE_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+export const STARGATE_TOKEN_POOLS = {
+    USDC: STARGATE_POOL_USDC,
+    USDT: STARGATE_POOL_USDT,
+} satisfies Record<string, Record<number, Address>>;
 
 // 04/06: 0x4eF1b0DC0e2eA41AeCbA2903E9041Ef33045fa10
 export const STARGATE_BRIDGE_SWEEP_ADDRESS = getDeployDeterministicAddress({
