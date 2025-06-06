@@ -18,6 +18,7 @@ export interface StargateETHQuoteParams {
 }
 
 export interface StargateETHQuote {
+    type: "ETH";
     amountFeeRemoved: bigint;
     minAmountLDFeeRemoved: bigint;
     fee: bigint;
@@ -86,5 +87,5 @@ export async function stargateETHQuote(
     // Amount too low
     if (nativeFee === null) return null;
 
-    return { amountFeeRemoved, fee: nativeFee, minAmountLDFeeRemoved };
+    return { type: "ETH", amountFeeRemoved, fee: nativeFee, minAmountLDFeeRemoved };
 }
