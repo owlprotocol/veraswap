@@ -11,6 +11,6 @@ export const polygon = {
         },
     },
     custom: {
-        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/polygon/logo.svg",
+        logoURI: "https://icons.llamao.fi/icons/chains/rsz_polygon.jpg",
     },
 } satisfies ChainWithMetadata;
