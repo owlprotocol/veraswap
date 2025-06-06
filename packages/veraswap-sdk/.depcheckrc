@@ -11,6 +11,7 @@ ignores: [
     "@layerzerolabs/lz-evm-protocol-v2",
     "@openzeppelin/contracts",
     "@openzeppelin/contracts-upgradeable",
+    "@stargatefinance/stg-evm-v2",
     "prool",
     "core-js"
 ]
