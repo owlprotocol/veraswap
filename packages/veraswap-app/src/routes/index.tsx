@@ -17,17 +17,18 @@ import {
     getStargateMessageIdFromReceipt,
     STARGATE_POOL_NATIVE,
     getSuperchainMessageIdsFromReceipt,
+    PERMIT2_ADDRESS,
+    MAX_UINT_256,
+    STARGATE_TOKEN_POOLS,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
     HYPERLANE_CONTRACTS,
     LOCAL_HYPERLANE_CONTRACTS,
     LOCAL_KERNEL_CONTRACTS,
-    MAX_UINT_256,
-    PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
@@ -288,6 +289,26 @@ function Index() {
                     abi: IERC20.abi,
                     functionName: "approve",
                     args: [PERMIT2_ADDRESS, MAX_UINT_256],
+                }),
+            });
+
+            return;
+        }
+
+        if (swapStep === SwapStep.APPROVE_POOL) {
+            const pools = STARGATE_TOKEN_POOLS[currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS];
+            if (!pools) return;
+
+            const poolAddress = pools[currencyIn.chainId];
+            if (!poolAddress) return;
+
+            sendTransaction({
+                to: getUniswapV4Address(currencyIn),
+                chainId: currencyIn.chainId,
+                data: encodeFunctionData({
+                    abi: IERC20.abi,
+                    functionName: "approve",
+                    args: [poolAddress, MAX_UINT_256],
                 }),
             });
 

@@ -8,6 +8,7 @@ import { Address, encodeFunctionData, Hex } from "viem";
 import { Execute } from "../artifacts/Execute.js";
 import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { StargateETHQuote } from "../query/stargateETHQuote.js";
+import { StargateTokenQuote } from "../query/stargateTokenQuote.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { TokenStandard } from "../types/Token.js";
 
@@ -44,7 +45,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         erc7579Router: Address;
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateETHQuote | StargateTokenQuote;
     orbiterQuote?: OrbiterQuote;
     withSuperchain?: boolean;
 }

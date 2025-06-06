@@ -9,7 +9,7 @@ import { StargateSendParam } from "../types/StargateSendParam.js";
 
 import { stargateGetFee } from "./stargateGetFee.js";
 
-export type StargateTokenSymbol = "USDC"; // Add more tokens as they become available
+export type StargateTokenSymbol = keyof typeof STARGATE_TOKEN_POOLS;
 
 export interface StargateTokenQuoteParams {
     receiver: Address;
@@ -21,6 +21,7 @@ export interface StargateTokenQuoteParams {
 }
 
 export interface StargateTokenQuote {
+    type: "TOKEN";
     amount: bigint;
     minAmountLD: bigint;
     fee: bigint;
@@ -80,5 +81,5 @@ export async function stargateTokenQuote(
     // Amount too low
     if (nativeFee === null) return null;
 
-    return { amount, fee: nativeFee, minAmountLD };
+    return { type: "TOKEN", amount, fee: nativeFee, minAmountLD };
 }

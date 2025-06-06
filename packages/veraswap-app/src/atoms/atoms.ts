@@ -1,11 +1,21 @@
 import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
-import { isMultichainToken, STARGATE_POOL_NATIVE, TransactionType } from "@owlprotocol/veraswap-sdk";
+import {
+    isMultichainToken,
+    STARGATE_POOL_NATIVE,
+    TransactionType,
+    STARGATE_TOKEN_POOLS,
+} from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
-import { amountOutAtom, tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
+import {
+    amountOutAtom,
+    tokenInAccountBalanceAtom,
+    tokenInAllowanceAccountToPermit2Atom,
+    tokenInAllowanceAccountToPoolAtom,
+} from "./token-balance.js";
 import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
 import { orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
@@ -22,6 +32,7 @@ export enum SwapStep {
     AMOUNT_TOO_LOW = "Amount too low",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
+    APPROVE_POOL = "Approve Pool",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
@@ -34,6 +45,7 @@ const enabledSteps = [
     SwapStep.CONNECT_WALLET,
     SwapStep.APPROVE_PERMIT2,
     SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
+    SwapStep.APPROVE_POOL,
     SwapStep.EXECUTE_SWAP,
 ];
 
@@ -66,6 +78,7 @@ export const swapStepAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInAccountBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
+    const tokenInPoolAllowance = get(tokenInAllowanceAccountToPoolAtom);
     const amountOut = get(amountOutAtom);
 
     const orbiterRouter = get(orbiterRouterAtom);
@@ -100,6 +113,13 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (amountOut === "" || Number(amountOut) <= 0) {
         return SwapStep.AMOUNT_TOO_LOW;
+    } else if (
+        transactionType.type === "BRIDGE" &&
+        currencyIn.symbol &&
+        currencyIn.symbol in STARGATE_TOKEN_POOLS &&
+        (tokenInPoolAllowance === null || tokenInPoolAllowance < tokenInAmount)
+    ) {
+        return SwapStep.APPROVE_POOL;
     } else if (
         // tokenIn is not native, and we don't have enough allowance
         !currencyIn.isNative &&

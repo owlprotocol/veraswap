@@ -1,4 +1,4 @@
-import { OrbiterQuote, StargateETHQuote } from "@owlprotocol/veraswap-sdk";
+import { OrbiterQuote, StargateETHQuote, StargateTokenQuote } from "@owlprotocol/veraswap-sdk";
 import { zeroAddress, Hex, Chain, Address } from "viem";
 import { getBlock } from "@wagmi/core";
 import { useWatchContractEvent, useWatchBlocks } from "wagmi";
@@ -12,7 +12,7 @@ export function useWatchOrbiterMessageProcessed(
     hash: Hex | undefined,
     to: Address,
     orbiterQuote: OrbiterQuote | undefined,
-    stargateQuote: StargateETHQuote | null | undefined,
+    stargateQuote: StargateETHQuote | StargateTokenQuote | null | undefined,
     withSuperchain: boolean | undefined,
     setRemoteTransactionHash: (txHash: Hex) => void,
     remoteTransactionHash: Hex | null,
