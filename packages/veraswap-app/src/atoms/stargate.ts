@@ -27,62 +27,70 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
     const transactionType = get(transactionTypeAtom);
     const routeMultichain = get(routeMultichainAtom);
 
-    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount || !account.address)
+    if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount)
         return disabledQueryOptions;
 
     const kernelAddressChainOut = get(kernelAddressChainOutQueryAtom).data;
 
-    // Kernel address is only used when bridging and then swapping
-    const receiver = transactionType.type === "BRIDGE_SWAP" ? kernelAddressChainOut : account.address;
-    if (!receiver) return disabledQueryOptions as any;
-
-    // TODO: also check for USDC pools
-    if (!(chainIn.id in STARGATE_POOL_NATIVE && chainOut.id in STARGATE_POOL_NATIVE)) {
-        return disabledQueryOptions as any;
-    }
-
     if (transactionType.type === "SWAP") return disabledQueryOptions as any;
 
-    const chainInSymbol = chainIn.nativeCurrency.symbol;
-    const chainOutSymbol = chainOut.nativeCurrency.symbol;
+    // Kernel address is only used when bridging and then swapping
+    const receiver =
+        transactionType.type === "BRIDGE_SWAP"
+            ? kernelAddressChainOut
+            : (account.address ?? "0x0000000000000000000000000000000000000001");
+
+    if (!receiver) return disabledQueryOptions as any;
+
+    const bridge = transactionType.type === "BRIDGE" ? transactionType : transactionType.bridge;
+
+    const bridgeSymbol = bridge.currencyIn.symbol!;
+
+    // TODO: handle USDC bridging
+    if (bridge.currencyIn.isNative) {
+        if (bridgeSymbol !== "ETH" || !(chainIn.id in STARGATE_POOL_NATIVE && chainOut.id in STARGATE_POOL_NATIVE)) {
+            return disabledQueryOptions as any;
+        }
+        // } else if (bridgeSymbol === "USDC") {
+        //     if (!(chainIn.id in STARGATE_POOL_USDC && chainOut.id in STARGATE_POOL_USDC)) {
+        //         return disabledQueryOptions as any;
+        //     }
+    } else {
+        return disabledQueryOptions as any;
+    }
 
     let amount: bigint;
 
     if (transactionType.type === "SWAP_BRIDGE") {
-        // TODO: Handle USDC
-        if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
-            // If bridging on output a native token, must be ETH on both chains
-            return disabledQueryOptions as any;
-        }
-
         // Need to have an estimate of the amout out
         if (!routeMultichain.data) return disabledQueryOptions as any;
 
         amount = routeMultichain.data?.amountOut;
-
-        // Type is either "BRIDGE" or "BRIDGE_SWAP"
     } else {
-        // TODO: Handle USDC
-        if (!currencyIn.isNative || currencyIn.symbol !== "ETH" || chainOutSymbol !== "ETH") {
-            // If bridging on input a native token, must be ETH on both chains
-            return disabledQueryOptions as any;
-        }
-
+        // Type is either "BRIDGE" or "BRIDGE_SWAP"
         amount = tokenInAmount;
     }
 
-    const bridge = transactionType.type === "BRIDGE" ? transactionType : transactionType.bridge;
+    if (bridgeSymbol === "ETH") {
+        // Native bridging
+        const params: StargateETHQuoteParams = {
+            srcChain: chainIn.id,
+            dstChain: chainOut.id,
+            amount,
+            receiver,
+        };
 
-    // TODO: handle USDC bridging
-    if (!bridge.currencyIn.isNative) return disabledQueryOptions as any;
+        return stargateETHQuoteQueryOptions(config, params);
+    }
 
-    // Native bridging
-    const params: StargateETHQuoteParams = {
-        srcChain: chainIn.id,
-        dstChain: chainOut.id,
-        amount,
-        receiver,
-    };
-
-    return stargateETHQuoteQueryOptions(config, params);
+    // TODO: Handle USDC bridging
+    // const params: StargateTokenQuoteParams = {
+    //     srcChain: chainIn.id,
+    //     dstChain: chainOut.id,
+    //     tokenSymbol: bridgeSymbol,
+    //     amount,
+    //     receiver,
+    // };
+    // return stargateTokenQuoteQueryOptions
+    return disabledQueryOptions as any;
 }) as unknown as Atom<AtomWithQueryResult<StargateETHQuote | null>>;
