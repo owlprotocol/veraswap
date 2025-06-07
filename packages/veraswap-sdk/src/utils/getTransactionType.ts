@@ -1,7 +1,7 @@
 import { Currency } from "../currency/currency.js";
 import { PathKey } from "../types/PoolKey.js";
 import { NewRouteComponent } from "../uniswap/quote/getNewRouteMultichain.js";
-import { RoutePlanner } from "../uniswap/routerCommands.js";
+import { RouterCommand } from "../uniswap/routerCommands.js";
 
 import { assetFlowsToTransactionType } from "./getAssetFlows.js";
 
@@ -11,7 +11,7 @@ export interface TransactionTypeSwap {
     currencyIn: Currency;
     currencyOut: Currency;
     amountOut: bigint;
-    routePlanner: RoutePlanner;
+    commands: RouterCommand[];
     path?: PathKey[]; // TODO: Remove once BRIDGE_SWAP is updated to use routePlanner
     // Not needed here but used for consistency
     withSuperchain?: boolean;

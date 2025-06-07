@@ -9,7 +9,7 @@ import { Currency } from "../../currency/currency.js";
 import { MultichainToken } from "../../currency/multichainToken.js";
 import { getCurrencyHops } from "../../swap/getCurrencyHops.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { RoutePlanner } from "../routerCommands.js";
+import { RouterCommand } from "../routerCommands.js";
 
 import { getUniswapRouteExactInMultichain } from "./getUniswapRouteMultichain.js";
 
@@ -21,7 +21,8 @@ export interface NewRouteComponentSwap {
     currencyIn: Currency;
     currencyOut: Currency;
     amountOut: bigint;
-    routePlanner: RoutePlanner;
+    value: bigint;
+    commands: RouterCommand[];
 }
 
 export interface NewRouteComponentBridge {
@@ -113,7 +114,8 @@ export async function getNewRouteMultichain(
         currencyIn: route.currencyIn,
         currencyOut: route.currencyOut,
         amountOut: route.amountOut,
-        routePlanner: route.routePlanner,
+        value: route.value,
+        commands: route.commands,
     };
 
     if (!swap.currencyIn.equals(currencyIn)) {

@@ -70,15 +70,15 @@ export interface ParamType {
 
 export type CommandDefinition =
     | {
-          parser: Parser.Abi;
-          params: ParamType[];
-      }
+        parser: Parser.Abi;
+        params: ParamType[];
+    }
     | {
-          parser: Parser.V4Actions;
-      }
+        parser: Parser.V4Actions;
+    }
     | {
-          parser: Parser.V3Actions;
-      };
+        parser: Parser.V3Actions;
+    };
 
 const ALLOW_REVERT_FLAG = 0x80;
 const REVERTIBLE_COMMANDS = new Set<CommandType>([CommandType.EXECUTE_SUB_PLAN]);
@@ -264,6 +264,18 @@ export class RoutePlanner {
     constructor() {
         this.commands = "0x";
         this.inputs = [];
+    }
+
+    /**
+     * Create a RoutePlanner from an array of encoded RouterCommands
+     * @param commands - Array of RouterCommand objects
+     * @returns A new RoutePlanner instance
+     */
+    static create(commands: RouterCommand[]): RoutePlanner {
+        const plan = new RoutePlanner();
+        plan.commands = ("0x" + commands.map((command) => command.type.toString(16).padStart(2, "0")).join("")) as Hex;
+        plan.inputs = commands.map((command) => command.encodedInput);
+        return plan;
     }
 
     addSubPlan(subplan: RoutePlanner): RoutePlanner {

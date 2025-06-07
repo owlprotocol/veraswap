@@ -9,6 +9,7 @@ import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
 import { anvilClientL1, wagmiConfig } from "../../test/constants.js";
+import { RoutePlanner } from "../routerCommands.js";
 
 import { getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
@@ -65,7 +66,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -104,7 +106,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -143,7 +146,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -182,7 +186,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -222,7 +227,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -261,7 +267,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { routePlanner, amountOut, value } = route!;
+            const { commands, amountOut, value } = route!;
+            const routePlanner = RoutePlanner.create(commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);

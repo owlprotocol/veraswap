@@ -17,6 +17,7 @@ import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { TokenStandard } from "../types/Token.js";
+import { RoutePlanner } from "../uniswap/routerCommands.js";
 import {
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
@@ -127,7 +128,8 @@ export async function getTransaction(
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
     switch (params.type) {
         case "SWAP": {
-            const { currencyIn, routePlanner, amountIn, walletAddress, queryClient, wagmiConfig } = params;
+            const { currencyIn, commands, amountIn, walletAddress, queryClient, wagmiConfig } = params;
+            const routePlanner = RoutePlanner.create(commands);
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
@@ -237,7 +239,9 @@ export async function getTransaction(
         case "SWAP_BRIDGE": {
             const { swap, bridge, bridgePayment, amountIn, walletAddress, orbiterQuote, queryClient, wagmiConfig } =
                 params;
-            const { currencyIn: swapCurrencyIn, routePlanner, currencyOut: swapCurrencyOut } = swap;
+            const { currencyIn: swapCurrencyIn, commands, currencyOut: swapCurrencyOut } = swap;
+            const routePlanner = RoutePlanner.create(commands);
+
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
