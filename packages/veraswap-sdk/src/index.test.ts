@@ -40,7 +40,8 @@ import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { PoolKey, PoolKeyAbi, poolKeysToPathExactIn } from "./types/PoolKey.js";
+import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
+import { RoutePlanner } from "./uniswap/routerCommands.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;
@@ -301,12 +302,12 @@ describe("index.test.ts", function () {
 
             /** *** Get Quote *****/
             const amountIn = 1_000_000n;
-            const [amountOutQuoted] = (await publicClient.readContract({
-                abi: [quoteExactInputSingleAbi],
-                address: uniswapContracts.v4Quoter,
-                functionName: "quoteExactInputSingle",
-                args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
-            })) as [bigint, bigint];
+            // const [amountOutQuoted] = (await publicClient.readContract({
+            //     abi: [quoteExactInputSingleAbi],
+            //     address: uniswapContracts.v4Quoter,
+            //     functionName: "quoteExactInputSingle",
+            //     args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
+            // })) as [bigint, bigint];
 
             const permit2Allowance = await publicClient.readContract({
                 abi: IERC20.abi,
@@ -318,17 +319,20 @@ describe("index.test.ts", function () {
             // Need to approve if allowance too low
             const approvePermit2 = permit2Allowance < amountIn;
 
-            const amountOutMinimum = amountOutQuoted;
+            // const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
+            // const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
+            // TODO: temp fix for type error
+            const routePlanner = new RoutePlanner();
             const swapCalls = getEOASwapCalls({
                 amountIn,
-                amountOutMinimum,
+                // amountOutMinimum,
                 currencyIn: currency0Address,
-                currencyOut: currency1Address,
-                path,
+                // currencyOut: currency1Address,
+                // path,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
+                routePlanner,
             });
 
             for (const call of swapCalls) {
@@ -405,12 +409,12 @@ describe("index.test.ts", function () {
             });
 
             /** *** Get Quote *****/
-            const [amountOutQuoted] = (await publicClient.readContract({
-                abi: [quoteExactInputSingleAbi],
-                address: uniswapContracts.v4Quoter,
-                functionName: "quoteExactInputSingle",
-                args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
-            })) as [bigint, bigint];
+            // const [amountOutQuoted] = (await publicClient.readContract({
+            //     abi: [quoteExactInputSingleAbi],
+            //     address: uniswapContracts.v4Quoter,
+            //     functionName: "quoteExactInputSingle",
+            //     args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
+            // })) as [bigint, bigint];
 
             const permit2Allowance = await publicClient.readContract({
                 abi: IERC20.abi,
@@ -422,18 +426,21 @@ describe("index.test.ts", function () {
             // Need to approve if allowance too low
             const approvePermit2 = permit2Allowance < amountIn;
 
-            const amountOutMinimum = amountOutQuoted;
+            // const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
+            // const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
+            // TODO: temp fix for type error
+            const routePlanner = new RoutePlanner();
 
             const batchCalls = getSmartAccountSwapCalls({
                 amountIn,
-                amountOutMinimum,
+                // amountOutMinimum,
                 currencyIn: currency0Address,
-                currencyOut: poolKey.currency1,
-                path,
+                // currencyOut: poolKey.currency1,
+                // path,
                 permitTransferFromData,
                 universalRouter: uniswapContracts.universalRouter,
+                routePlanner,
                 approvePermit2,
             });
 

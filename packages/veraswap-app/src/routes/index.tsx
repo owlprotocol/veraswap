@@ -323,17 +323,17 @@ function Index() {
             const transactionParams =
                 transactionType.type === "BRIDGE"
                     ? ({
-                          ...transactionType,
-                          amountIn: tokenInAmount!,
-                          walletAddress,
-                          bridgePayment,
-                          orbiterQuote,
-                          queryClient,
-                          wagmiConfig: config,
-                          initData: kernelSmartAccountInitData,
-                      } as TransactionParams & TransactionTypeBridge)
+                        ...transactionType,
+                        amountIn: tokenInAmount!,
+                        walletAddress,
+                        bridgePayment,
+                        orbiterQuote,
+                        queryClient,
+                        wagmiConfig: config,
+                        initData: kernelSmartAccountInitData,
+                    } as TransactionParams & TransactionTypeBridge)
                     : transactionType.type === "BRIDGE_SWAP"
-                      ? ({
+                        ? ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             amountOutMinimum: adjustedAmountOutMinimum,
@@ -343,7 +343,7 @@ function Index() {
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
                         } as TransactionParams & TransactionTypeBridgeSwap)
-                      : ({
+                        : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
                             orbiterQuote,
@@ -352,7 +352,8 @@ function Index() {
                             bridgePayment,
                             queryClient,
                             wagmiConfig: config,
-                        } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
+                            commands: quoterData?.flows.find((f) => f.type === "SWAP")?.commands,
+                        } as unknown as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const inChainId = currencyIn.chainId;
             const outChainId = currencyOut!.chainId;
@@ -733,8 +734,8 @@ function Index() {
                                         !!quoterError
                                             ? "Insufficient Liquidity"
                                             : isQuoterLoading
-                                              ? "Fetching quote..."
-                                              : "0"
+                                                ? "Fetching quote..."
+                                                : "0"
                                     }
                                     disabled={true}
                                 />

@@ -5,7 +5,7 @@ import invariant from "tiny-invariant";
 import { Address, encodePacked, Hex, padHex, zeroAddress } from "viem";
 
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { ACTION_CONSTANTS, CommandType, RoutePlanner } from "../routerCommands.js";
+import { ACTION_CONSTANTS, CommandType, createCommand, RouterCommand } from "../routerCommands.js";
 
 import { getMetaQuoteExactInputQueryOptions } from "./getMetaQuoteExactInput.js";
 import { MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
@@ -33,7 +33,11 @@ export async function getUniswapRouteExactIn(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetUniswapRouteParams,
-) {
+): Promise<{
+    amountOut: bigint;
+    value: bigint;
+    commands: RouterCommand[];
+} | null> {
     const { currencyIn, currencyOut, amountIn, contracts } = params;
     const weth9 = contracts.weth9;
 
@@ -47,7 +51,7 @@ export async function getUniswapRouteExactIn(
     }
 
     // Universal Router planner
-    let routePlanner = new RoutePlanner();
+    const commands: RouterCommand[] = [];
     const value = currencyIn === zeroAddress ? amountIn : 0n;
     let amountOut: bigint;
 
@@ -55,7 +59,7 @@ export async function getUniswapRouteExactIn(
         // Single quotes
         const quote = bestQuoteSingle;
         amountOut = quote.variableAmount;
-        routePlanner = getRoutePlannerForSingleQuote({ currencyIn, currencyOut, amountIn, quote, contracts });
+        commands.push(...getRoutePlannerForSingleQuote({ currencyIn, currencyOut, amountIn, quote, contracts }));
     } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
         // Multihop quotes
         const quote = bestQuoteMultihop;
@@ -69,10 +73,12 @@ export async function getUniswapRouteExactIn(
             // Wrap ETH to WETH if needed
             const wrapNative = currencyIn === zeroAddress;
             if (wrapNative) {
-                routePlanner.addCommand(CommandType.WRAP_ETH, [
-                    ACTION_CONSTANTS.ADDRESS_THIS,
-                    ACTION_CONSTANTS.CONTRACT_BALANCE,
-                ]);
+                commands.push(
+                    createCommand(CommandType.WRAP_ETH, [
+                        ACTION_CONSTANTS.ADDRESS_THIS,
+                        ACTION_CONSTANTS.CONTRACT_BALANCE,
+                    ]),
+                );
             }
 
             // V3 Trade Plan
@@ -90,11 +96,11 @@ export async function getUniswapRouteExactIn(
                 v3Path,
                 !wrapNative, // payerIsUser (WETH received to router)
             ];
-            routePlanner.addCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan);
+            commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
 
             // Unwrap WETH to ETH if needed
             if (unwrapWeth) {
-                routePlanner.addCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]);
+                commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
             }
         } else if (hop0.hooks !== address3 && hop1.hooks !== address3) {
             // Multihop V4 -> V4
@@ -117,16 +123,18 @@ export async function getUniswapRouteExactIn(
                     quote.variableAmount,
                 ]);
             }
-            routePlanner.addCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]);
+            commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
         } else if (hop0.hooks === address3 && hop1.hooks !== address3) {
             // Mixed Route V3 -> V4
             // Wrap ETH to WETH if needed
             const wrapNative = currencyIn === zeroAddress;
             if (wrapNative) {
-                routePlanner.addCommand(CommandType.WRAP_ETH, [
-                    ACTION_CONSTANTS.ADDRESS_THIS,
-                    ACTION_CONSTANTS.CONTRACT_BALANCE,
-                ]);
+                commands.push(
+                    createCommand(CommandType.WRAP_ETH, [
+                        ACTION_CONSTANTS.ADDRESS_THIS,
+                        ACTION_CONSTANTS.CONTRACT_BALANCE,
+                    ]),
+                );
             }
 
             // V3 Trade Plan
@@ -142,12 +150,12 @@ export async function getUniswapRouteExactIn(
                 v3Path,
                 !wrapNative, // payerIsUser (WETH received to router)
             ];
-            routePlanner.addCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan);
+            commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
 
             // Unwrap WETH to ETH if needed
             const unwrapWeth = hop0.intermediateCurrency === weth9;
             if (unwrapWeth) {
-                routePlanner.addCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]);
+                commands.push(createCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]));
             }
 
             // V4 Trade Plan
@@ -182,7 +190,7 @@ export async function getUniswapRouteExactIn(
                     quote.variableAmount,
                 ]);
             }
-            routePlanner.addCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]);
+            commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
         } else if (hop0.hooks !== address3 && hop1.hooks === address3) {
             // Mixed Route V4 -> V3
             // Uniswap V4 pool
@@ -212,12 +220,12 @@ export async function getUniswapRouteExactIn(
                 ACTION_CONSTANTS.ADDRESS_THIS,
                 ACTION_CONSTANTS.OPEN_DELTA,
             ]);
-            routePlanner.addCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]);
+            commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
 
             // Wrap ETH to WETH if needed
             const wrapNative = hop0.intermediateCurrency === zeroAddress;
             if (wrapNative) {
-                routePlanner.addCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]);
+                commands.push(createCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]));
             }
 
             // V3 Trade Plan
@@ -235,18 +243,18 @@ export async function getUniswapRouteExactIn(
                 v3Path,
                 false, // payerIsUser
             ];
-            routePlanner.addCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan);
+            commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
 
             // Unwrap WETH to ETH if needed
             if (unwrapWeth) {
-                routePlanner.addCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]);
+                commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
             }
         }
     } else {
         throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
     }
 
-    return { amountOut, routePlanner, value };
+    return { amountOut, commands, value };
 }
 
 export interface GetRoutePlannerForSingleQuoteParams {
@@ -259,10 +267,10 @@ export interface GetRoutePlannerForSingleQuoteParams {
         weth9: Address;
     };
 }
-export function getRoutePlannerForSingleQuote(params: GetRoutePlannerForSingleQuoteParams) {
+export function getRoutePlannerForSingleQuote(params: GetRoutePlannerForSingleQuoteParams): RouterCommand[] {
     const { currencyIn, currencyOut, amountIn, quote } = params;
     const weth9 = params.contracts.weth9;
-    const routePlanner = new RoutePlanner();
+    const commands: RouterCommand[] = [];
     // Single quotes
     const poolKey = quote.poolKey;
     if (quote.poolKey.hooks === address3) {
@@ -270,10 +278,9 @@ export function getRoutePlannerForSingleQuote(params: GetRoutePlannerForSingleQu
         // Wrap ETH to WETH if needed
         const wrapNative = currencyIn === zeroAddress;
         if (wrapNative) {
-            routePlanner.addCommand(CommandType.WRAP_ETH, [
-                ACTION_CONSTANTS.ADDRESS_THIS,
-                ACTION_CONSTANTS.CONTRACT_BALANCE,
-            ]);
+            commands.push(
+                createCommand(CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]),
+            );
         }
 
         // V3 Trade Plan
@@ -292,11 +299,11 @@ export function getRoutePlannerForSingleQuote(params: GetRoutePlannerForSingleQu
             v3Path,
             !wrapNative, // payerIsUser (WETH received to router)
         ];
-        routePlanner.addCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan);
+        commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
 
         // Unwrap WETH to ETH if needed
         if (unwrapWeth) {
-            routePlanner.addCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]);
+            commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
         }
     } else {
         // Uniswap V4 pool
@@ -316,8 +323,8 @@ export function getRoutePlannerForSingleQuote(params: GetRoutePlannerForSingleQu
         } else {
             v4TradePlan.addAction(Actions.TAKE, [currencyOut, params.recipient, quote.variableAmount]);
         }
-        routePlanner.addCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]);
+        commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
     }
 
-    return routePlanner;
+    return commands;
 }

@@ -6,6 +6,7 @@ import { Address } from "viem";
 
 import { Currency, getSharedChainTokenPairs } from "../../currency/currency.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
+import { RouterCommand } from "../routerCommands.js";
 
 import { getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
@@ -29,7 +30,13 @@ export async function getUniswapRouteExactInMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
     params: GetUniswapRouteMultichainParams,
-) {
+): Promise<{
+    currencyIn: Currency;
+    currencyOut: Currency;
+    amountOut: bigint;
+    value: bigint;
+    commands: RouterCommand[];
+} | null> {
     const { currencyIn, currencyOut, amountIn, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");
 
@@ -46,7 +53,7 @@ export async function getUniswapRouteExactInMultichain(
                     chainId,
                     currencyIn: pair[0].wrapped.address,
                     currencyOut: pair[1].wrapped.address,
-                    currencyHops: currencyHopsByChain[pair[0].chainId] ?? [],
+                    currencyHops: currencyHopsByChain[pair[0].chainId],
                     amountIn,
                     contracts,
                     poolKeyOptions,

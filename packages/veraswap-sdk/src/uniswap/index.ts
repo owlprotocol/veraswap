@@ -6,5 +6,4 @@ export * from "./getRouteMultichain.js";
 export * from "./getUniswapV4Route.js";
 export * from "./getUniswapV4RouteMultichain.js";
 export * from "./routerCommands.js";
-export * from "./quote/MetaQuoter.js";
 export * from "./v4Planner.js";
