@@ -6,7 +6,7 @@ import {TypeCasts} from "@hyperlane-xyz/core/libs/TypeCasts.sol";
 import {OwnableSignatureExecutor} from "../executors/OwnableSignatureExecutor.sol";
 import {MailboxClientStatic} from "./MailboxClientStatic.sol";
 import {IAccountFactory} from "../interfaces/IAccountFactory.sol";
-import {ERC7579ExecutorMessage} from "./ERC7579ExecutorMessage.sol";
+import {ERC7579ExecutorMessage} from "../libraries/ERC7579ExecutorMessage.sol";
 import {SignatureExecutionLib} from "../executors/SignatureExecutionLib.sol";
 
 /// @title ERC7579ExecutorRouter

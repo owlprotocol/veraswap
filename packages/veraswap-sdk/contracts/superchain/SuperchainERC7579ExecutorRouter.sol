@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.26;
 
-import {IPostDispatchHook} from "@hyperlane-xyz/core/interfaces/hooks/IPostDispatchHook.sol";
-import {TypeCasts} from "@hyperlane-xyz/core/libs/TypeCasts.sol";
 import {OwnableSignatureExecutor} from "../executors/OwnableSignatureExecutor.sol";
 import {IAccountFactory} from "../interfaces/IAccountFactory.sol";
 import {SignatureExecutionLib} from "../executors/SignatureExecutionLib.sol";
 import {PredeployAddresses} from "@interop-lib/libraries/PredeployAddresses.sol";
+import {IL2ToL2CrossDomainMessenger} from "@interop-lib/interfaces/IL2ToL2CrossDomainMessenger.sol";
+import {ERC7579ExecutorMessage} from "../libraries/ERC7579ExecutorMessage.sol";
 
 /// @title ERC7579ExecutorRouter
-/// @notice A Hyperlane Router designed to work with ERC7579 wallets using an Executor module
+/// @notice A Superchain interop router designed to work with ERC7579 wallets using an Executor module
 contract SuperchainERC7579ExecutorRouter {
     // ============ Structs ============
     // Remote Router Owner stores an approved owner, allowed to execute on an account from a specific router on a remote domain
@@ -17,6 +17,19 @@ contract SuperchainERC7579ExecutorRouter {
         uint32 domain;
         address owner;
         bool enabled;
+    }
+
+    struct MessageBody {
+        address owner;
+        address account;
+        bytes initData;
+        bytes32 initSalt;
+        ERC7579ExecutorMessage.ExecutionMode executionMode;
+        bytes callData;
+        uint256 nonce;
+        uint48 validAfter;
+        uint48 validUntil;
+        bytes signature;
     }
 
     // ============ Events ============
@@ -41,14 +54,17 @@ contract SuperchainERC7579ExecutorRouter {
     /// @dev Useful to watch pending/historical calls processed on an account
     // TODO: Future Mailbox version could pass the messageId in the handler for optimized indexing
     event RemoteCallProcessed(
-        uint32 indexed origin, address indexed account, ERC7579ExecutorMessage.ExecutionMode executionMode
+        uint256 indexed origin, address indexed account, ERC7579ExecutorMessage.ExecutionMode executionMode
     );
 
     // ============ Errors ============
     error AccountDeploymentFailed(address account);
-    error InvalidRemoteRouterOwner(address account, uint32 domain, address owner);
+    error InvalidRemoteRouterOwner(address account, uint256 domain, address owner);
     error InvalidExecutorMode();
     error InvalidTimestamp(uint48 validUntil, uint48 validAfter);
+    /// @notice Thrown when attempting to relay a message and the cross domain message sender is not the
+    /// SuperchainTokenBridge.
+    error InvalidCrossDomainSender();
 
     // ============ Constants ============
     /// @notice Address of the L2ToL2CrossDomainMessenger Predeploy.
@@ -57,21 +73,19 @@ contract SuperchainERC7579ExecutorRouter {
     // ============ Public Storage ============
     OwnableSignatureExecutor immutable executor;
     IAccountFactory immutable factory;
-    mapping(address account => mapping(uint32 domain => mapping(address owner => bool))) public owners;
+    mapping(address account => mapping(uint256 origin => mapping(address owner => bool))) public owners;
 
     // ============ Modifiers ============
     /**
-     * @notice Only accept messages from a Hyperlane Mailbox contract
+     * @notice Only accept messages from the Superchain Cross Domain Messenger
      */
-    modifier onlyMailbox() {
-        require(msg.sender == MESSENGER, "MailboxClient: sender not mailbox");
+    modifier onlyCrossDomainMessenger() {
+        require(msg.sender == MESSENGER, "Sender not L2_TO_L2_CROSS_DOMAIN_MESSENGER");
         _;
     }
 
     // ============ Constructor ============
-    constructor(address _mailbox, address _ism, address _executor, address _factory)
-        MailboxClientStatic(_mailbox, _ism)
-    {
+    constructor(address _executor, address _factory) {
         executor = OwnableSignatureExecutor(_executor);
         factory = IAccountFactory(_factory);
     }
@@ -106,9 +120,7 @@ contract SuperchainERC7579ExecutorRouter {
      * @param validAfter Signature validAfter (for signature execution only)
      * @param validUntil Signature validUntil (for signature execution only)
      * @param signature Signature (for signature execution only)
-     * @param hookMetadata Hook metadata
-     * @param hook Hook address
-     * @return The Hyperlane message ID
+     * @return The Superchain interop message ID
      */
     function callRemote(
         uint32 destination,
@@ -120,17 +132,20 @@ contract SuperchainERC7579ExecutorRouter {
         uint256 nonce,
         uint48 validAfter,
         uint48 validUntil,
-        bytes memory signature,
-        bytes memory hookMetadata,
-        address hook
+        bytes memory signature
     ) external payable returns (bytes32) {
         // TODO: replace with superchain mailbox logic
-        bytes memory msgBody = ERC7579ExecutorMessage.encode(
-            msg.sender, account, initData, initSalt, executionMode, callData, nonce, validAfter, validUntil, signature
+        // bytes memory msgBody = ERC7579ExecutorMessage.encode(
+        //     msg.sender, account, initData, initSalt, executionMode, callData, nonce, validAfter, validUntil, signature
+        // );
+
+        bytes memory message = abi.encodeCall(
+            this.handle,
+            (msg.sender, account, initData, initSalt, executionMode, callData, nonce, validAfter, validUntil, signature)
         );
 
         // bytes32 messageId = _dispatch(destination, msg.value, msgBody, hookMetadata, hook);
-        bytes32 messageId = IL2ToL2CrossDomainMessenger(MESSENGER).sendMessage(destination, account, msgBody);
+        bytes32 messageId = IL2ToL2CrossDomainMessenger(MESSENGER).sendMessage(destination, account, message);
         emit RemoteCallDispatched(destination, account, executionMode, messageId);
 
         return messageId;
@@ -139,27 +154,34 @@ contract SuperchainERC7579ExecutorRouter {
     // ============ Handle Incoming Messages ============
     /**
      * @notice Handles dispatched messages by relaying calls to the interchain account
-     * @param origin The origin domain of the interchain account
-     * @param sender The sender of the interchain message
-     * @param message The InterchainAccountMessage containing the account
-     * owner, ISM, and sequence of calls to be relayed
+     * @param account Target ERC7570 smart account
+     * @param initData Smart account init data that either configures Router as Executor or sets another owner that can then be used to execute via signature (if account does not exist)
+     * @param initSalt Smart account init salt (if account does not exist)
+     * @param executionMode Smart account execution mode (single/batch, direct/signature)
+     * @param callData Executor call data
+     * @param nonce Signature nonce (for signature execution only)
+     * @param validAfter Signature validAfter (for signature execution only)
+     * @param validUntil Signature validUntil (for signature execution only)
+     * @param signature Signature (for signature execution only)
      * @dev Does not need to be onlyRemoteRouter, as this application is designed
      * to receive messages from untrusted remote contracts.
      */
-    function handle(uint32 origin, bytes32 sender, bytes calldata message) external payable onlyCrossDomainMessenger {
-        (
-            address owner,
-            address account,
-            bytes memory initData,
-            bytes32 initSalt,
-            ERC7579ExecutorMessage.ExecutionMode executionMode,
-            bytes memory callData,
-            uint256 nonce,
-            uint48 validAfter,
-            uint48 validUntil,
-            bytes memory signature
-        ) = ERC7579ExecutorMessage.decode(message);
-        address router = TypeCasts.bytes32ToAddress(sender);
+    function handle(
+        address owner,
+        address account,
+        bytes memory initData,
+        bytes32 initSalt,
+        ERC7579ExecutorMessage.ExecutionMode executionMode,
+        bytes memory callData,
+        uint256 nonce,
+        uint48 validAfter,
+        uint48 validUntil,
+        bytes memory signature
+    ) external payable onlyCrossDomainMessenger {
+        (address crossDomainMessageSender, uint256 origin) =
+            IL2ToL2CrossDomainMessenger(MESSENGER).crossDomainMessageContext();
+
+        if (crossDomainMessageSender != address(this)) revert InvalidCrossDomainSender();
 
         if (initData.length > 0) {
             // Check account exists and deploy if not
