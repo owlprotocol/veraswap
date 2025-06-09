@@ -32,9 +32,11 @@ export const chainsAtom = atom<ChainWithMetadata[]>((get) => {
     return [];
 });
 
+const includeSupersim = import.meta.env.MODE === "development" && import.meta.env.VITE_SUPERSIM === "true";
+
 export const currenciesQueryAtom = atomWithQuery((get) => {
     const chainsType = get(chainsTypeAtom);
-    return registryTokensQueryOptions(chainsType);
+    return registryTokensQueryOptions(chainsType, includeSupersim);
 });
 
 export const currenciesAtom = atom<Currency[]>((get) => {

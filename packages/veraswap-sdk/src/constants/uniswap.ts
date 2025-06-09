@@ -162,21 +162,19 @@ export const UNISWAP_CONTRACTS: Record<
     //     universalRouter: "",
     // },
     [interopDevnet0.id]: {
-        v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
-        v4PositionManager: "0xb1163e279741D353540afF310ffAb329fbd78C08",
-        v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
-        v4Quoter: "0x27fCc8497f32B6D046ed433D633535E59Cf02dc7",
-        universalRouter: "0x5e654ADc08b75846bCa12a7FB88eD74309776605",
-        // TODO: properly deploy again. We get an error code -32000: already known
+        v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
+        v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
+        v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
+        v4Quoter: "0x7C594D9B533ac43D3595dd4117549111Ec48F8B2",
+        universalRouter: "0xB148BD2eE7211748b83BEf0a5728eD8EC675E1dc",
         v4MetaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [interopDevnet1.id]: {
-        v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
-        v4PositionManager: "0xb1163e279741D353540afF310ffAb329fbd78C08",
+        v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
+        v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
         v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
-        v4Quoter: "0x27fCc8497f32B6D046ed433D633535E59Cf02dc7",
-        universalRouter: "0x5e654ADc08b75846bCa12a7FB88eD74309776605",
-        // TODO: properly deploy again. We get an error code -32000: already known
+        v4Quoter: "0x7C594D9B533ac43D3595dd4117549111Ec48F8B2",
+        universalRouter: "0xB148BD2eE7211748b83BEf0a5728eD8EC675E1dc",
         v4MetaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [arbitrum.id]: {

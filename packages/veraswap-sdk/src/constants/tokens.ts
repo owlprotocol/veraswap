@@ -21,7 +21,15 @@ import {
 } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
+import {
+    interopDevnet0,
+    interopDevnet1,
+    opChainA,
+    opChainB,
+    opChainL1,
+    superseed,
+    unichainSepolia,
+} from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
@@ -177,27 +185,7 @@ const localMailboxByChain = {
     [opChainB.id]: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].mailbox,
 };
 
-export const LOCAL_CURRENCIES = [
-    ...createMockERC20ConnectedTokens(
-        {
-            chainId: opChainL1.id,
-            name: "Token A",
-            symbol: "A",
-            decimals: 18,
-        },
-        localMailboxByChain,
-    ),
-    ...createMockERC20ConnectedTokens(
-        {
-            chainId: opChainL1.id,
-            name: "Token B",
-            symbol: "B",
-            decimals: 18,
-        },
-        localMailboxByChain,
-    ),
-
-    // Commented out Super Tokens, (Pools are also commented out below)
+export const localSupersimCurrencies = [
     ...(() => {
         const tokenCData = {
             name: "Superchain Token C",
@@ -272,6 +260,27 @@ export const LOCAL_CURRENCIES = [
         MultichainToken.connect([tokenDA, tokenDB, tokenDL1]);
         return [tokenDA, tokenDB, tokenDL1];
     })(),
+];
+
+export const LOCAL_CURRENCIES = [
+    ...createMockERC20ConnectedTokens(
+        {
+            chainId: opChainL1.id,
+            name: "Token A",
+            symbol: "A",
+            decimals: 18,
+        },
+        localMailboxByChain,
+    ),
+    ...createMockERC20ConnectedTokens(
+        {
+            chainId: opChainL1.id,
+            name: "Token B",
+            symbol: "B",
+            decimals: 18,
+        },
+        localMailboxByChain,
+    ),
 
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
@@ -367,6 +376,48 @@ export const TESTNET_CURRENCIES = [
         },
         testnetMailboxByChain,
     ),
+    ...(() => {
+        const tokenCData = {
+            name: "Superchain Token C",
+            symbol: "SC",
+            decimals: 18,
+        };
+
+        const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
+        const tokenC0 = MultichainToken.createSuperERC20({
+            chainId: interopDevnet0.id,
+            address: tokenCAddress,
+            ...tokenCData,
+        });
+        const tokenC1 = MultichainToken.createSuperERC20({
+            chainId: interopDevnet1.id,
+            address: tokenCAddress,
+            ...tokenCData,
+        });
+        MultichainToken.connect([tokenC0, tokenC1]);
+        return [tokenC0, tokenC1];
+    })(),
+    ...(() => {
+        const tokenDData = {
+            name: "Superchain Token D",
+            symbol: "SD",
+            decimals: 18,
+        };
+
+        const tokenDAddress = getMockSuperchainERC20Address({ name: "Token D", symbol: "D", decimals: 18 });
+        const tokenD0 = MultichainToken.createSuperERC20({
+            chainId: interopDevnet0.id,
+            address: tokenDAddress,
+            ...tokenDData,
+        });
+        const tokenD1 = MultichainToken.createSuperERC20({
+            chainId: interopDevnet1.id,
+            address: tokenDAddress,
+            ...tokenDData,
+        });
+        MultichainToken.connect([tokenD0, tokenD1]);
+        return [tokenD0, tokenD1];
+    })(),
 ];
 
 // const tokenCBaseAddress = "0x6b821901f606F2216436CACA965c3B89cB4f1240";
@@ -629,4 +680,4 @@ export const LOCAL_POOLS = {
     */
 };
 
-export const CURRENCIES = [...LOCAL_CURRENCIES, ...MAINNET_CURRENCIES];
+export const CURRENCIES = [...LOCAL_CURRENCIES, ...TESTNET_CURRENCIES, ...MAINNET_CURRENCIES];
