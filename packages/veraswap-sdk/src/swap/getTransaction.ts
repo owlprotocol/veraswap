@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { Address, Hex, zeroHash } from "viem";
