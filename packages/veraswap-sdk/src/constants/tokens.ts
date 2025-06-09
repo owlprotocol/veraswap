@@ -196,53 +196,83 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
-    /*
+
     // Commented out Super Tokens, (Pools are also commented out below)
     ...(() => {
+        const tokenCData = {
+            name: "Superchain Token C",
+            symbol: "SC",
+            decimals: 18,
+        };
+
         const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
         const tokenCA = MultichainToken.createSuperERC20({
             chainId: opChainA.id,
             address: tokenCAddress,
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
+            ...tokenCData,
         });
-        const tokenCB = MultichainToken.createHypERC20({
+        const tokenCB = MultichainToken.createSuperERC20({
             chainId: opChainB.id,
-            address: getHypERC20CollateralAddress({
+            address: tokenCAddress,
+            hypERC20Collateral: getHypERC20CollateralAddress({
                 erc20: tokenCAddress,
                 mailbox: localMailboxByChain[opChainB.id],
             }),
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
+            ...tokenCData,
         });
-        MultichainToken.connect([tokenCA, tokenCB]);
-        return [tokenCA, tokenCB];
+        const tokenCL1 = MultichainToken.createHypERC20({
+            address: getHypERC20Address({
+                decimals: 18,
+                mailbox: localMailboxByChain[opChainL1.id],
+                totalSupply: 0n,
+                name: "Token C",
+                symbol: "C",
+                msgSender: zeroAddress,
+            }),
+            chainId: opChainL1.id,
+            ...tokenCData,
+        });
+        MultichainToken.connect([tokenCA, tokenCB, tokenCL1]);
+        return [tokenCA, tokenCB, tokenCL1];
     })(),
     ...(() => {
+        const tokenDData = {
+            name: "Superchain Token D",
+            symbol: "SD",
+            decimals: 18,
+        };
+
         const tokenDAddress = getMockSuperchainERC20Address({ name: "Token D", symbol: "D", decimals: 18 });
-        const tokenDA = MultichainToken.createHypERC20({
+        const tokenDA = MultichainToken.createSuperERC20({
             chainId: opChainA.id,
-            address: getHypERC20CollateralAddress({
+            address: tokenDAddress,
+            hypERC20Collateral: getHypERC20CollateralAddress({
                 erc20: tokenDAddress,
                 mailbox: localMailboxByChain[opChainA.id],
             }),
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
+            ...tokenDData,
         });
         const tokenDB = MultichainToken.createSuperERC20({
             chainId: opChainB.id,
             address: tokenDAddress,
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
+            ...tokenDData,
         });
-        MultichainToken.connect([tokenDA, tokenDB]);
-        return [tokenDA, tokenDB];
+        const tokenDL1 = MultichainToken.createHypERC20({
+            address: getHypERC20Address({
+                decimals: 18,
+                mailbox: localMailboxByChain[opChainL1.id],
+                totalSupply: 0n,
+                name: "Token D",
+                symbol: "D",
+                msgSender: zeroAddress,
+            }),
+            chainId: opChainL1.id,
+            ...tokenDData,
+        });
+        MultichainToken.connect([tokenDA, tokenDB, tokenDL1]);
+        return [tokenDA, tokenDB, tokenDL1];
     })(),
-    */
+
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),

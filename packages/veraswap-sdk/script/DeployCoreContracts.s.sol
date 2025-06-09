@@ -38,6 +38,7 @@ import {OpenPaymasterUtils} from "./utils/OpenPaymasterUtils.sol";
 import {BalanceDeltaPaymasterUtils} from "./utils/BalanceDeltaPaymasterUtils.sol";
 // Interop
 import {SuperchainTokenBridgeSweepUtils} from "./utils/SuperchainTokenBridgeSweepUtils.sol";
+import {SuperchainERC7579ExecutorRouterUtils} from "./utils/SuperchainERC7579ExecutorRouterUtils.sol";
 // Kernel Account
 import {ECDSAValidatorUtils} from "./utils/ECDSAValidatorUtils.sol";
 import {KernelUtils} from "./utils/KernelUtils.sol";
@@ -116,9 +117,18 @@ contract DeployCoreContracts is DeployParameters {
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
-            (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
-            bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
-            V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash);
+            address tokenBridge = 0x4200000000000000000000000000000000000028;
+            // Portal on L1 to chain A
+            address optimismPortal = 0xd1f1255D36A0b40cE65d26D8875963E4E234cB4F;
+
+            // TODO: stop using an env var after the deploy core contracts refactor
+            bool isSuperchain = vm.envOr("SUPERSIM", false);
+            if (!isSuperchain) {
+                // Only deploy if using regular anvil
+                (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
+                bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
+                V3QuoterUtils.getOrCreate2(v3Factory, poolInitCodeHash);
+            }
 
             // Uniswap V4
             // Core Uniswap Contracts
@@ -224,14 +234,6 @@ contract DeployCoreContracts is DeployParameters {
             );
         }
 
-        // Superchain Interop Contracts
-        address tokenBridge = 0x4200000000000000000000000000000000000028;
-        if (tokenBridge.code.length > 0) {
-            // Contracts only work on Superchain Interop chains
-            (address superchainTokenBridgeSweep,) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
-            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
-        }
-
         // KERNEL CONTRACTS
         (address kernel,) = KernelUtils.getOrCreate2(entryPoint);
         (address kernelFactory,) = KernelFactoryUtils.getOrCreate2(kernel);
@@ -253,6 +255,18 @@ contract DeployCoreContracts is DeployParameters {
             );
         }
         (address execute,) = ExecuteUtils.getOrCreate2();
+
+        // Superchain Interop Contracts
+        address tokenBridge = 0x4200000000000000000000000000000000000028;
+        if (tokenBridge.code.length > 0) {
+            // Contracts only work on Superchain Interop chains
+            (address superchainTokenBridgeSweep,) = SuperchainTokenBridgeSweepUtils.getOrCreate2();
+            console2.log("superchainTokenBridgeSweep:", superchainTokenBridgeSweep);
+
+            (address superchainERC7579ExecutorRouter,) =
+                SuperchainERC7579ExecutorRouterUtils.getOrCreate2(ownableSignatureExecutor, kernelFactory);
+            console2.log("superchainERC7579ExecutorRouter:", superchainERC7579ExecutorRouter);
+        }
 
         (address orbiterBridgeSweep,) = OrbiterBridgeSweepUtils.getOrCreate2();
         (address stargateBridgeSweep,) = StargateBridgeSweepUtils.getOrCreate2();

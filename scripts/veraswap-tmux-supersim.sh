@@ -27,7 +27,7 @@ if [ $? != 0 ]; then
     # tmux send-keys -t $session:anvil.2 "cd $VERASWAP && anvil -p 9546 --chain-id 902" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
-forge script ./script/DeployLocalSupersim.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
+SUPERSIM=true forge script ./script/DeployLocalSupersim.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
 HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,opchaina,opchainb" ENTER
 
     # Start auth dev mode
