@@ -1,13 +1,12 @@
 import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
 import {
-    getRouteMultichain,
     getUniswapV4Address,
     getTransactionType,
     TransactionType,
+    getNewRouteMultichain,
 } from "@owlprotocol/veraswap-sdk";
 import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
-import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
@@ -17,41 +16,73 @@ import { config } from "@/config.js";
 // const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
 
 //TODO: As tanstack query so that it refreshes
+// export const routeMultichainAtom = atomWithQuery((get) => {
+//     const queryClient = get(queryClientAtom);
+//     const currencyIn = get(currencyInAtom);
+//     const currencyOut = get(currencyOutAtom);
+//     const exactAmount = get(tokenInAmountAtom);
+
+//     if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
+
+//     const currencyInAddress = getUniswapV4Address(currencyIn);
+//     const currencyOutAddress = getUniswapV4Address(currencyOut);
+
+//     return queryOptions({
+//         queryFn: async () => {
+//             const route = await getRouteMultichain(queryClient, config, {
+//                 currencyIn,
+//                 currencyOut,
+//                 exactAmount,
+//                 contractsByChain: UNISWAP_CONTRACTS,
+//                 currencyHopsByChain: {},
+//             });
+
+//             console.debug({ route });
+
+//             return route;
+//         },
+//         queryKey: [
+//             "getRouteMultichain",
+//             currencyIn.chainId,
+//             currencyInAddress,
+//             currencyOut.chainId,
+//             currencyOutAddress,
+//             numberToHex(exactAmount),
+//         ],
+//     });
+// }) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;
+
 export const routeMultichainAtom = atomWithQuery((get) => {
     const queryClient = get(queryClientAtom);
     const currencyIn = get(currencyInAtom);
     const currencyOut = get(currencyOutAtom);
-    const exactAmount = get(tokenInAmountAtom);
+    const amountIn = get(tokenInAmountAtom);
 
-    if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
+    if (!currencyIn || !currencyOut || !amountIn) return disabledQueryOptions as any;
 
     const currencyInAddress = getUniswapV4Address(currencyIn);
     const currencyOutAddress = getUniswapV4Address(currencyOut);
 
     return queryOptions({
         queryFn: async () => {
-            const route = await getRouteMultichain(queryClient, config, {
+            const route = await getNewRouteMultichain(queryClient, config, {
                 currencyIn,
                 currencyOut,
-                exactAmount,
-                contractsByChain: UNISWAP_CONTRACTS,
-                currencyHopsByChain: {},
+                amountIn,
             });
-
-            console.debug({ route });
 
             return route;
         },
         queryKey: [
-            "getRouteMultichain",
+            "getNewRouteMultichain",
             currencyIn.chainId,
             currencyInAddress,
             currencyOut.chainId,
             currencyOutAddress,
-            numberToHex(exactAmount),
+            numberToHex(amountIn),
         ],
     });
-}) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getRouteMultichain>>>>;
+}) as Atom<AtomWithQueryResult<Awaited<ReturnType<typeof getNewRouteMultichain>>>>;
 
 /** Find transaction type (BRIDGE, SWAP, SWAP_BRIDGE, BRIDGE_SWAP) */
 export const transactionTypeAtom = atom<TransactionType | null>((get) => {

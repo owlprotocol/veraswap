@@ -6,19 +6,20 @@ import { Address } from "viem";
 
 import { Currency, getSharedChainTokenPairs } from "../../currency/currency.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { RouterCommand } from "../routerCommands.js";
 
-import { getUniswapRouteExactIn } from "./getUniswapRoute.js";
+import { getMetaQuoteExactInputQueryOptions } from "./getMetaQuoteExactInput.js";
+import { MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
-export interface GetUniswapRouteMultichainParams {
+export interface GetMetaQuoteExactInputMultichain {
     currencyIn: Currency;
     currencyOut: Currency;
     amountIn: bigint;
     currencyHopsByChain: Record<number, Address[] | undefined>;
-    contractsByChain: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
+    contractsByChain: Record<number, { metaQuoter?: Address } | undefined>;
     poolKeyOptions?: PoolKeyOptions[];
 }
 
+//TODO: Refactor as queryOptions with combine?
 /**
  * Get best Uniswap Route for chains where token share a deployment
  * @param queryClient
@@ -26,16 +27,17 @@ export interface GetUniswapRouteMultichainParams {
  * @param params
  * @returns List with token pair & supported routes for that pair
  */
-export async function getUniswapRouteExactInMultichain(
+export async function getMetaQuoteExactInputMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetUniswapRouteMultichainParams,
+    params: GetMetaQuoteExactInputMultichain,
 ): Promise<{
     currencyIn: Currency;
     currencyOut: Currency;
     amountOut: bigint;
-    value: bigint;
-    commands: RouterCommand[];
+    bestQuoteSingle: MetaQuoteBestSingle;
+    bestQuoteMultihop: MetaQuoteBestMultihop;
+    bestQuoteType: MetaQuoteBestType;
 } | null> {
     const { currencyIn, currencyOut, amountIn, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");
@@ -48,21 +50,36 @@ export async function getUniswapRouteExactInMultichain(
                 const chainId = pair[0].chainId;
                 const contracts = contractsByChain[chainId];
                 if (!contracts) return null; // No uniswap deployment on this chain
+                const { metaQuoter } = contracts;
+                if (!metaQuoter) return null; // Missing required contracts
 
-                const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                const options = getMetaQuoteExactInputQueryOptions(wagmiConfig, {
                     chainId,
                     currencyIn: pair[0].wrapped.address,
                     currencyOut: pair[1].wrapped.address,
                     currencyHops: currencyHopsByChain[pair[0].chainId],
                     amountIn,
-                    contracts,
+                    contracts: { metaQuoter },
                     poolKeyOptions,
                 });
-                if (!route) return null;
+
+                let amountOut: bigint;
+                const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = await queryClient.fetchQuery(options);
+                if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.None) {
+                    return null; // No active route
+                } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
+                    amountOut = bestQuoteSingle.variableAmount;
+                } else {
+                    amountOut = bestQuoteMultihop.variableAmount;
+                }
+
                 return {
                     currencyIn: pair[0],
                     currencyOut: pair[1],
-                    ...route,
+                    amountOut,
+                    bestQuoteSingle,
+                    bestQuoteMultihop,
+                    bestQuoteType,
                 };
             }),
         )
