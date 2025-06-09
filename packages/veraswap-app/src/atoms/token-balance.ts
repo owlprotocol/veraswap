@@ -518,8 +518,20 @@ export const tokenInAllowanceAccountToPoolQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
     const account = get(accountAtom);
     const stargateQuote = get(stargateQuoteAtom).data;
+    const transactionType = get(transactionTypeAtom);
+    const permit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
 
-    if (!currency || !account?.address || !stargateQuote || stargateQuote.type !== "TOKEN") {
+    if (
+        !currency ||
+        !account?.address ||
+        transactionType?.type !== "BRIDGE" ||
+        !stargateQuote ||
+        stargateQuote.type !== "TOKEN" ||
+        !currency.symbol ||
+        !(currency.symbol in STARGATE_TOKEN_POOLS) ||
+        !permit2Allowance ||
+        permit2Allowance < (get(tokenInAmountAtom) ?? 0n)
+    ) {
         return get(disabledQueryAtom) as any;
     }
 

@@ -72,8 +72,7 @@ export async function getRouteMultichain(
         currencyIn.symbol &&
         currencyOut.symbol &&
         currencyIn.symbol === currencyOut.symbol &&
-        currencyIn.symbol in STARGATE_TOKEN_POOLS &&
-        currencyOut.symbol in STARGATE_TOKEN_POOLS
+        currencyIn.symbol in STARGATE_TOKEN_POOLS
     ) {
         return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
     }

@@ -55,7 +55,7 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
             return disabledQueryOptions as any;
         }
     } else if (bridgeSymbol in STARGATE_TOKEN_POOLS) {
-        const pools = STARGATE_TOKEN_POOLS[bridgeSymbol as keyof typeof STARGATE_TOKEN_POOLS];
+        const pools = STARGATE_TOKEN_POOLS[bridgeSymbol];
 
         if (!(chainIn.id in pools && chainOut.id in pools)) {
             return disabledQueryOptions as any;
@@ -76,7 +76,7 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
         amount = tokenInAmount;
     }
 
-    if (bridgeSymbol === "ETH") {
+    if (bridge.currencyIn.isNative) {
         // Native bridging
         const params: StargateETHQuoteParams = {
             srcChain: chainIn.id,

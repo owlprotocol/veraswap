@@ -2,7 +2,7 @@ import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, padHex } from "viem";
 
 import { bridgeAllToken } from "../artifacts/StargateBridgeSweep.js";
-import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_POOL_USDC } from "../constants/stargate.js";
+import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 
 export function getStargateBridgeAllTokenCallData({
     dstChain,
@@ -15,14 +15,11 @@ export function getStargateBridgeAllTokenCallData({
     srcChain: number;
     recipient: Address;
     tokenAddress: Address;
-    tokenSymbol: "USDC";
+    tokenSymbol: keyof typeof STARGATE_TOKEN_POOLS;
 }) {
-    invariant(tokenSymbol === "USDC", "Only USDC is supported for now");
+    const pools = STARGATE_TOKEN_POOLS[tokenSymbol];
 
-    // TODO: conditionally pick pools based on tokenSymbol
-    const pools: Record<number, Address | undefined> = STARGATE_POOL_USDC;
-
-    const poolAddress = pools[srcChain];
+    const poolAddress = pools[srcChain as keyof typeof pools];
     invariant(!!poolAddress, `Stargate pool for ${tokenSymbol} not found for source chain ${srcChain}`);
     invariant(dstChain in pools, `Stargate pool for ${tokenSymbol} not found for destination chain ${dstChain}`);
 

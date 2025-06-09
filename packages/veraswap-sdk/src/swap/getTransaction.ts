@@ -33,6 +33,7 @@ import {
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 import { getSwapAndOrbiterETHBridgeTransaction } from "./getSwapAndOrbiterETHBridgeTransaction.js";
 import { getSwapAndStargateETHBridgeTransaction } from "./getSwapAndStargateETHBridgeTransaction.js";
+import { getSwapAndStargateTokenBridgeTransaction } from "./getSwapAndStargateTokenBridgeTransaction.js";
 import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
@@ -372,21 +373,23 @@ export async function getTransaction(
                     throw new Error(`Stargate token quote is required for ${bridgeCurrencyIn.symbol} bridging`);
                 }
 
-                const pools = STARGATE_TOKEN_POOLS[bridgeCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS];
-                const poolAddress = pools[bridgeCurrencyIn.chainId as keyof typeof pools];
-                if (!poolAddress) {
-                    throw new Error(
-                        `Source chain ${bridgeCurrencyIn.chainId} is not supported by Stargate for ${bridgeCurrencyIn.symbol}`,
-                    );
-                }
-                if (!(bridgeCurrencyOut.chainId in pools)) {
-                    throw new Error(
-                        `Destination chain ${bridgeCurrencyOut.chainId} is not supported by Stargate for ${bridgeCurrencyIn.symbol}`,
-                    );
-                }
+                const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
-                // TODO: Implement getSwapAndStargateTokenBridgeTransaction
-                return null;
+                // TODO: Add pool approval for Stargate token bridging
+
+                return getSwapAndStargateTokenBridgeTransaction({
+                    universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                    amountIn,
+                    amountOutMinimum,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    path,
+                    permit2PermitParams,
+                    dstChain: bridgeCurrencyOut.chainId,
+                    srcChain: bridgeCurrencyIn.chainId,
+                    recipient: walletAddress,
+                    tokenSymbol,
+                });
             }
 
             const hyperlaneBridgeAddress = isMultichainToken(bridgeCurrencyIn)
