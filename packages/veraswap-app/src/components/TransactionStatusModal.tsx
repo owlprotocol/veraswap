@@ -58,10 +58,10 @@ export function TransactionStatusModal({
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.sendOrigin}`;
                 }
 
-                if (stargateQuote) return `https://testnet.layerzeroscan.com/tx/${hashes.bridge}`;
+                if (stargateQuote.data) return `https://testnet.layerzeroscan.com/tx/${hashes.bridge}`;
 
                 // TODO: change once orbiter has a URL
-                if (orbiterQuote) return undefined;
+                if (orbiterQuote.data) return undefined;
 
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "sendOrigin":
