@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { Address, Hex, zeroHash } from "viem";
 
+import { getPoolApprovalParams } from "../calls/ERC20/getPoolApprovalParams.js";
 import {
     getBridgeSwapWithKernelCalls,
     GetBridgeSwapWithKernelCallsParams,
@@ -375,7 +376,17 @@ export async function getTransaction(
 
                 const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
-                // TODO: Add pool approval for Stargate token bridging
+                let poolApprovalParams: [Address, bigint, Hex] | undefined = undefined;
+
+                const { poolApprovalCall } = await getPoolApprovalParams(queryClient, wagmiConfig, {
+                    chainId: bridgeCurrencyIn.chainId,
+                    token: getUniswapV4Address(swapCurrencyIn),
+                    account: walletAddress,
+                    tokenSymbol,
+                    minAmount: amountIn,
+                    approveAmount: "MAX_UINT_256",
+                });
+                poolApprovalParams = poolApprovalCall;
 
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
@@ -385,6 +396,7 @@ export async function getTransaction(
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     path,
                     permit2PermitParams,
+                    poolApprovalParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
                     recipient: walletAddress,

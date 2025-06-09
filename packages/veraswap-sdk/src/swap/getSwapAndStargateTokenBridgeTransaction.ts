@@ -17,6 +17,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
     currencyOut,
     path,
     permit2PermitParams,
+    poolApprovalParams,
     hookData = "0x",
     dstChain,
     srcChain,
@@ -30,6 +31,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
     currencyOut: Address;
     path: PathKey[];
     permit2PermitParams?: [PermitSingle, Hex];
+    poolApprovalParams?: [Address, bigint, Hex];
     hookData?: Hex;
     dstChain: number;
     srcChain: number;
@@ -42,7 +44,9 @@ export function getSwapAndStargateTokenBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    // TODO: Add pool approval for Stargate token bridging
+    if (poolApprovalParams) {
+        routePlanner.addCommand(CommandType.CALL_TARGET, poolApprovalParams);
+    }
 
     const v4SwapParams = getV4SwapCommandParams({
         receiver: STARGATE_BRIDGE_SWEEP_ADDRESS,
