@@ -9,20 +9,20 @@ import { Currency } from "../../currency/currency.js";
 import { MultichainToken } from "../../currency/multichainToken.js";
 import { getCurrencyHops } from "../../swap/getCurrencyHops.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { RouterCommand } from "../routerCommands.js";
 
-import { getUniswapRouteExactInMultichain } from "./getUniswapRouteMultichain.js";
+import { getMetaQuoteExactInputMultichain } from "./getMetaQuoteExactInputMultichain.js";
+import { MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
 // TODO: Remove 'New' from the name, set it up to avoid conflicts with the old one
-
 export interface NewRouteComponentSwap {
     type: "SWAP";
     chainId: number;
     currencyIn: Currency;
     currencyOut: Currency;
     amountOut: bigint;
-    value: bigint;
-    commands: RouterCommand[];
+    bestQuoteSingle: MetaQuoteBestSingle;
+    bestQuoteMultihop: MetaQuoteBestMultihop;
+    bestQuoteType: MetaQuoteBestType;
 }
 
 export interface NewRouteComponentBridge {
@@ -43,8 +43,7 @@ export interface GetNewRouteMultichainParams {
     currencyOut: Currency;
     amountIn: bigint;
     currencyHopsByChain?: Record<number, Address[] | undefined>;
-    contractsByChain?: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
-    recipient?: Address;
+    contractsByChain?: Record<number, { metaQuoter?: Address } | undefined>;
     poolKeyOptions?: PoolKeyOptions[];
 }
 
@@ -66,8 +65,8 @@ export async function getNewRouteMultichain(
 
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap or bridge same token");
 
+    // TODO: Probably should remove these overrides
     const allChains = [...testnetChains, ...mainnetChains, ...localChains];
-
     const contractsByChain =
         params.contractsByChain ??
         Object.fromEntries(
@@ -79,7 +78,6 @@ export async function getNewRouteMultichain(
                 },
             ]),
         );
-
     const currencyHopsByChain = Object.fromEntries(allChains.map((chain) => [chain.id, getCurrencyHops(chain.id)]));
 
     // BRIDGE ONLY
@@ -98,7 +96,7 @@ export async function getNewRouteMultichain(
 
     // SWAP with pre-swap, post-swap bridging
     // Find crosschain pools
-    const route = await getUniswapRouteExactInMultichain(queryClient, wagmiConfig, {
+    const route = await getMetaQuoteExactInputMultichain(queryClient, wagmiConfig, {
         ...params,
         contractsByChain,
         currencyHopsByChain,
@@ -111,11 +109,7 @@ export async function getNewRouteMultichain(
     const swap: NewRouteComponentSwap = {
         type: "SWAP",
         chainId: route.currencyIn.chainId,
-        currencyIn: route.currencyIn,
-        currencyOut: route.currencyOut,
-        amountOut: route.amountOut,
-        value: route.value,
-        commands: route.commands,
+        ...route,
     };
 
     if (!swap.currencyIn.equals(currencyIn)) {

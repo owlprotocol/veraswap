@@ -43,42 +43,56 @@ export async function getUniswapRouteExactIn(
         getMetaQuoteExactInputQueryOptions(wagmiConfig, params),
     );
 
-    if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.None) {
+    const quoteType = bestQuoteType as MetaQuoteBestType;
+    if (quoteType === MetaQuoteBestType.None) {
         // No liquidity
         return null;
     }
 
     // Universal Router planner
-    const commands: RouterCommand[] = [];
     const value = currencyIn === zeroAddress ? amountIn : 0n;
-    let amountOut: bigint;
-
-    if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
-        // Single quotes
-        const quote = bestQuoteSingle;
-        amountOut = quote.variableAmount;
-        commands.push(
-            ...getRouterCommandsForSingleQuote({ currencyIn, currencyOut, amountIn, quote, recipient, contracts }),
-        );
-    } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
-        // Multihop quotes
-        const quote = bestQuoteMultihop;
-        amountOut = quote.variableAmount;
-        commands.push(
-            ...getRouterCommandsForMulthihopQuote({
-                currencyIn,
-                currencyOut,
-                amountIn,
-                quote,
-                recipient,
-                contracts,
-            }),
-        );
-    } else {
-        throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
-    }
+    const amountOut =
+        quoteType === MetaQuoteBestType.Single ? bestQuoteSingle.variableAmount : bestQuoteMultihop.variableAmount;
+    const commands = getRouterCommandsForQuote({
+        bestQuoteSingle,
+        bestQuoteMultihop,
+        bestQuoteType,
+        currencyIn,
+        currencyOut,
+        amountIn,
+        recipient,
+        contracts,
+    });
 
     return { amountOut, commands, value };
+}
+
+export interface GetRouterCommandsForQuote {
+    currencyIn: Address;
+    currencyOut: Address;
+    amountIn: bigint;
+    bestQuoteSingle: MetaQuoteBestSingle;
+    bestQuoteMultihop: MetaQuoteBestMultihop;
+    bestQuoteType: MetaQuoteBestType;
+    recipient?: Address;
+    contracts: {
+        weth9: Address;
+    };
+}
+export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): RouterCommand[] {
+    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
+    if (bestQuoteType === MetaQuoteBestType.None) {
+        return [];
+    } else if (bestQuoteType === MetaQuoteBestType.Single) {
+        // Single quotes
+        return getRouterCommandsForSingleQuote({ ...params, quote: bestQuoteSingle });
+    } else if (bestQuoteType === MetaQuoteBestType.Multihop) {
+        // Multihop quotes
+        return getRouterCommandsForMultihopQuote({ ...params, quote: bestQuoteMultihop });
+    } else {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
+    }
 }
 
 export interface GetRouterCommandsForMultihopQuoteParams {
@@ -91,7 +105,7 @@ export interface GetRouterCommandsForMultihopQuoteParams {
         weth9: Address;
     };
 }
-export function getRouterCommandsForMulthihopQuote(params: GetRouterCommandsForMultihopQuoteParams): RouterCommand[] {
+export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMultihopQuoteParams): RouterCommand[] {
     //TODO: Is currencyOut even needed here?
     const { currencyIn, amountIn, quote } = params;
     const weth9 = params.contracts.weth9;
