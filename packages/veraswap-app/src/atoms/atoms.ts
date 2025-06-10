@@ -32,7 +32,7 @@ export enum SwapStep {
     AMOUNT_TOO_LOW = "Amount too low",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
-    APPROVE_POOL = "Approve Pool",
+    // APPROVE_POOL = "Approve Pool",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
@@ -45,7 +45,7 @@ const enabledSteps = [
     SwapStep.CONNECT_WALLET,
     SwapStep.APPROVE_PERMIT2,
     SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
-    SwapStep.APPROVE_POOL,
+    // SwapStep.APPROVE_POOL,
     SwapStep.EXECUTE_SWAP,
 ];
 
@@ -113,14 +113,16 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (amountOut === "" || Number(amountOut) <= 0) {
         return SwapStep.AMOUNT_TOO_LOW;
-    } else if (
-        transactionType.type === "BRIDGE" &&
-        currencyIn.symbol &&
-        currencyIn.symbol in STARGATE_TOKEN_POOLS &&
-        (tokenInPoolAllowance === null || tokenInPoolAllowance < tokenInAmount)
-    ) {
-        return SwapStep.APPROVE_POOL;
-    } else if (
+    }
+    // else if (
+    //     transactionType.type === "BRIDGE" &&
+    //     currencyIn.symbol &&
+    //     currencyIn.symbol in STARGATE_TOKEN_POOLS &&
+    //     (tokenInPoolAllowance === null || tokenInPoolAllowance < tokenInAmount)
+    // ) {
+    //     return SwapStep.APPROVE_POOL;
+    // }
+    else if (
         // tokenIn is not native, and we don't have enough allowance
         !currencyIn.isNative &&
         (transactionType.type !== "BRIDGE" ||

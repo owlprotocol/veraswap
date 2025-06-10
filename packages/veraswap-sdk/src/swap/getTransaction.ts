@@ -2,11 +2,14 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { Address, Hex, zeroHash } from "viem";
 
-import { getPoolApprovalParams } from "../calls/ERC20/getPoolApprovalParams.js";
 import {
     getBridgeSwapWithKernelCalls,
     GetBridgeSwapWithKernelCallsParams,
 } from "../calls/getBridgeSwapWithKernelCalls.js";
+import {
+    getStargateBridgeWithKernelCalls,
+    GetStargateBridgeWithKernelCallsParams,
+} from "../calls/getStargateBridgeWithKernelCalls.js";
 import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
@@ -20,7 +23,6 @@ import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { StargateETHQuote } from "../query/stargateETHQuote.js";
 import { StargateTokenQuote } from "../query/stargateTokenQuote.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
-import { getStargateTokenBridgeTransaction } from "../stargate/getStargateTokenBridgeTransaction.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { TokenStandard } from "../types/Token.js";
@@ -213,13 +215,40 @@ export async function getTransaction(
 
                 const tokenSymbol = currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
-                return getStargateTokenBridgeTransaction({
-                    srcChain: currencyIn.chainId,
-                    dstChain: currencyOut.chainId,
-                    tokenSymbol,
-                    receiver: walletAddress,
-                    stargateQuote,
-                });
+                const { queryClient, wagmiConfig, initData } = params;
+                if (queryClient && wagmiConfig && initData && walletAddress) {
+                    const stargateBridgeParams: GetStargateBridgeWithKernelCallsParams = {
+                        chainId: currencyIn.chainId,
+                        token: getUniswapV4Address(currencyIn),
+                        tokenSymbol,
+                        account: walletAddress,
+                        destination: currencyOut.chainId,
+                        recipient: walletAddress,
+                        amount: amountIn,
+                        createAccount: {
+                            initData,
+                            salt: zeroHash,
+                            factoryAddress: contracts[currencyIn.chainId].kernelFactory,
+                        },
+                        contracts: {
+                            execute: contracts[currencyIn.chainId].execute,
+                            ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
+                            erc7579Router: contracts[currencyIn.chainId].erc7579Router,
+                        },
+                        stargateQuote,
+                    };
+
+                    const result = await getStargateBridgeWithKernelCalls(
+                        queryClient,
+                        wagmiConfig,
+                        stargateBridgeParams,
+                    );
+                    return result.calls[0] as {
+                        to: Address;
+                        data: Hex;
+                        value: bigint;
+                    };
+                }
             }
 
             if (isSuperOrLinkedToSuper(currencyIn) && isSuperOrLinkedToSuper(currencyOut)) {
@@ -376,17 +405,17 @@ export async function getTransaction(
 
                 const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
-                let poolApprovalParams: [Address, bigint, Hex] | undefined = undefined;
+                // let poolApprovalParams: [Address, bigint, Hex] | undefined = undefined;
 
-                const { poolApprovalCall } = await getPoolApprovalParams(queryClient, wagmiConfig, {
-                    chainId: bridgeCurrencyIn.chainId,
-                    token: getUniswapV4Address(swapCurrencyIn),
-                    account: walletAddress,
-                    tokenSymbol,
-                    minAmount: amountIn,
-                    approveAmount: "MAX_UINT_256",
-                });
-                poolApprovalParams = poolApprovalCall;
+                // const { poolApprovalCall } = await getPoolApprovalParams(queryClient, wagmiConfig, {
+                //     chainId: bridgeCurrencyIn.chainId,
+                //     token: getUniswapV4Address(swapCurrencyIn),
+                //     account: walletAddress,
+                //     tokenSymbol,
+                //     minAmount: amountIn,
+                //     approveAmount: "MAX_UINT_256",
+                // });
+                // poolApprovalParams = poolApprovalCall;
 
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
@@ -396,7 +425,7 @@ export async function getTransaction(
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     path,
                     permit2PermitParams,
-                    poolApprovalParams,
+                    // poolApprovalParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
                     recipient: walletAddress,

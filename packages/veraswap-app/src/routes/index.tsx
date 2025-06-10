@@ -295,25 +295,25 @@ function Index() {
             return;
         }
 
-        if (swapStep === SwapStep.APPROVE_POOL) {
-            const pools = STARGATE_TOKEN_POOLS[currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS];
-            if (!pools) return;
+        // if (swapStep === SwapStep.APPROVE_POOL) {
+        //     const pools = STARGATE_TOKEN_POOLS[currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS];
+        //     if (!pools) return;
 
-            const poolAddress = pools[currencyIn.chainId];
-            if (!poolAddress) return;
+        //     const poolAddress = pools[currencyIn.chainId];
+        //     if (!poolAddress) return;
 
-            sendTransaction({
-                to: getUniswapV4Address(currencyIn),
-                chainId: currencyIn.chainId,
-                data: encodeFunctionData({
-                    abi: IERC20.abi,
-                    functionName: "approve",
-                    args: [poolAddress, MAX_UINT_256],
-                }),
-            });
+        //     sendTransaction({
+        //         to: getUniswapV4Address(currencyIn),
+        //         chainId: currencyIn.chainId,
+        //         data: encodeFunctionData({
+        //             abi: IERC20.abi,
+        //             functionName: "approve",
+        //             args: [poolAddress, MAX_UINT_256],
+        //         }),
+        //     });
 
-            return;
-        }
+        //     return;
+        // }
 
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps
