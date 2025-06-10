@@ -93,7 +93,7 @@ export const swapStepAtom = atom((get) => {
         // Be clear if there is no quote because chains are not supported by bridge providers and the token is not a SuperERC20
         (!(currencyIn.chainId in STARGATE_POOL_NATIVE) || !(currencyOut.chainId in STARGATE_POOL_NATIVE)) &&
         !orbiterRouter &&
-        !(isMultichainToken(currencyOut) && currencyOut.isSuperERC20())
+        !(isMultichainToken(currencyOut) && (currencyOut.isSuperERC20() || !!currencyOut.hyperlaneAddress))
     ) {
         return SwapStep.NOT_SUPPORTED;
     } else if (tokenInBalance === null || tokenInBalance < tokenInAmount) {
