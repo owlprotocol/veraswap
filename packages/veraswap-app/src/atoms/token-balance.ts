@@ -514,36 +514,36 @@ export const tokenOutUsdValueAtom = atom((get) => {
     return calculateUsdValueFromQuote(amountOutBigInt, quote, usdDecimals, currencyOut.chainId);
 });
 
-export const tokenInAllowanceAccountToPoolQueryAtom = atom((get) => {
-    const currency = get(currencyInAtom);
-    const account = get(accountAtom);
-    const stargateQuote = get(stargateQuoteAtom).data;
-    const transactionType = get(transactionTypeAtom);
-    const permit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
+// export const tokenInAllowanceAccountToPoolQueryAtom = atom((get) => {
+//     const currency = get(currencyInAtom);
+//     const account = get(accountAtom);
+//     const stargateQuote = get(stargateQuoteAtom).data;
+//     const transactionType = get(transactionTypeAtom);
+//     const permit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
 
-    if (
-        !currency ||
-        !account?.address ||
-        transactionType?.type !== "BRIDGE" ||
-        !stargateQuote ||
-        stargateQuote.type !== "TOKEN" ||
-        !currency.symbol ||
-        !(currency.symbol in STARGATE_TOKEN_POOLS) ||
-        !permit2Allowance ||
-        permit2Allowance < (get(tokenInAmountAtom) ?? 0n)
-    ) {
-        return get(disabledQueryAtom) as any;
-    }
+//     if (
+//         !currency ||
+//         !account?.address ||
+//         transactionType?.type !== "BRIDGE" ||
+//         !stargateQuote ||
+//         stargateQuote.type !== "TOKEN" ||
+//         !currency.symbol ||
+//         !(currency.symbol in STARGATE_TOKEN_POOLS) ||
+//         !permit2Allowance ||
+//         permit2Allowance < (get(tokenInAmountAtom) ?? 0n)
+//     ) {
+//         return get(disabledQueryAtom) as any;
+//     }
 
-    const pools = STARGATE_TOKEN_POOLS[currency.symbol as keyof typeof STARGATE_TOKEN_POOLS];
-    if (!pools) return get(disabledQueryAtom) as any;
+//     const pools = STARGATE_TOKEN_POOLS[currency.symbol as keyof typeof STARGATE_TOKEN_POOLS];
+//     if (!pools) return get(disabledQueryAtom) as any;
 
-    const poolAddress = pools[currency.chainId];
-    if (!poolAddress) return get(disabledQueryAtom) as any;
+//     const poolAddress = pools[currency.chainId];
+//     if (!poolAddress) return get(disabledQueryAtom) as any;
 
-    return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender: poolAddress }));
-}) as Atom<AtomWithQueryResult<bigint>>;
+//     return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender: poolAddress }));
+// }) as Atom<AtomWithQueryResult<bigint>>;
 
-export const tokenInAllowanceAccountToPoolAtom = atom<bigint | null>((get) => {
-    return get(tokenInAllowanceAccountToPoolQueryAtom).data ?? null;
-});
+// export const tokenInAllowanceAccountToPoolAtom = atom<bigint | null>((get) => {
+//     return get(tokenInAllowanceAccountToPoolQueryAtom).data ?? null;
+// });

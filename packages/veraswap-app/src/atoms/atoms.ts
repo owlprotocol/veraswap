@@ -10,12 +10,7 @@ import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { accountAtom } from "./account.js";
-import {
-    amountOutAtom,
-    tokenInAccountBalanceAtom,
-    tokenInAllowanceAccountToPermit2Atom,
-    tokenInAllowanceAccountToPoolAtom,
-} from "./token-balance.js";
+import { amountOutAtom, tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
 import { orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
@@ -32,7 +27,6 @@ export enum SwapStep {
     AMOUNT_TOO_LOW = "Amount too low",
     APPROVE_PERMIT2 = "Approve Permit2",
     APPROVE_PERMIT2_UNISWAP_ROUTER = "Approve Uniswap Router",
-    // APPROVE_POOL = "Approve Pool",
     EXECUTE_SWAP = "Execute Swap",
     PENDING_SIGNATURE = "Waiting for wallet signature...",
     PENDING_TRANSACTION = "Waiting for transaction confirmation...",
@@ -45,7 +39,6 @@ const enabledSteps = [
     SwapStep.CONNECT_WALLET,
     SwapStep.APPROVE_PERMIT2,
     SwapStep.APPROVE_PERMIT2_UNISWAP_ROUTER,
-    // SwapStep.APPROVE_POOL,
     SwapStep.EXECUTE_SWAP,
 ];
 
@@ -78,7 +71,6 @@ export const swapStepAtom = atom((get) => {
     const tokenInAmount = get(tokenInAmountAtom);
     const tokenInBalance = get(tokenInAccountBalanceAtom);
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
-    const tokenInPoolAllowance = get(tokenInAllowanceAccountToPoolAtom);
     const amountOut = get(amountOutAtom);
 
     const orbiterRouter = get(orbiterRouterAtom);
@@ -113,22 +105,22 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (amountOut === "" || Number(amountOut) <= 0) {
         return SwapStep.AMOUNT_TOO_LOW;
-    }
-    // else if (
-    //     transactionType.type === "BRIDGE" &&
-    //     currencyIn.symbol &&
-    //     currencyIn.symbol in STARGATE_TOKEN_POOLS &&
-    //     (tokenInPoolAllowance === null || tokenInPoolAllowance < tokenInAmount)
-    // ) {
-    //     return SwapStep.APPROVE_POOL;
-    // }
-    else if (
-        // tokenIn is not native, and we don't have enough allowance
-        !currencyIn.isNative &&
-        (transactionType.type !== "BRIDGE" ||
-            (transactionType.type === "BRIDGE" &&
-                isMultichainToken(currencyIn) &&
-                !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20"))) &&
+    } else if (currencyIn.isNative) {
+        return SwapStep.EXECUTE_SWAP;
+    } else if (
+        transactionType.type !== "BRIDGE" &&
+        (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
+    ) {
+        return SwapStep.APPROVE_PERMIT2;
+    } else if (
+        transactionType.type === "BRIDGE" &&
+        ((isMultichainToken(currencyIn) &&
+            !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20")) ||
+            (currencyIn &&
+                currencyIn.symbol &&
+                currencyIn.symbol in STARGATE_TOKEN_POOLS &&
+                currencyIn.chainId in STARGATE_TOKEN_POOLS[currencyIn.symbol] &&
+                currencyOut.chainId in STARGATE_TOKEN_POOLS[currencyIn.symbol])) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
