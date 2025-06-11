@@ -27,11 +27,11 @@ if [ $? != 0 ]; then
     # tmux send-keys -t $session:anvil.2 "cd $VERASWAP && anvil -p 9546 --chain-id 902" ENTER
     tmux send-keys -t $session:deploy \
 "cd $VERASWAP/packages/veraswap-sdk && \
-forge script ./script/DeployLocalSupersim.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
+SUPERSIM=true forge script ./script/DeployLocalSupersim.s.sol --private-key ${privateKeyAnvil0} --broadcast && \
 HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,opchaina,opchainb" ENTER
 
-    # Start auth dev mode
-    tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && pnpm dev" ENTER
+    # Start frontend dev mode
+    tmux send-keys -t $session:apps.0 "cd $VERASWAP/packages/veraswap-app && VITE_SUPERSIM=true  pnpm dev" ENTER
      # Start duster
     tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && PRIVATE_KEY=${privateKeyAnvil0} pnpm dev" ENTER
     # tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && go build && sleep 5 && ./scoutup --supersim" ENTER

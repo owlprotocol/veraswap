@@ -303,6 +303,19 @@ export const amountOutAtom = atom((get) => {
 
     let amountOut = "";
 
+    if (transactionType.withSuperchain) {
+        if (transactionType.type === "BRIDGE") {
+            amountOut = formatUnits(tokenInAmount, currencyOut.decimals);
+        } else if (transactionType.type === "SWAP_BRIDGE") {
+            if (!quoterData?.amountOut) return "";
+            amountOut = formatUnits(quoterData?.amountOut, currencyOut.decimals ?? 18);
+        } else if (quoterData) {
+            amountOut = formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18);
+        }
+
+        return amountOut;
+    }
+
     // TODO: improve how we show amount out
     if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
         // TODO: remove orbiter references entirely

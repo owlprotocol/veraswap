@@ -45,6 +45,7 @@ export { PositionManager } from "./PositionManager.js";
 export { SimpleAccountFactory } from "./SimpleAccountFactory.js";
 export { StargateBridgeSweep } from "./StargateBridgeSweep.js";
 export { StateView } from "./StateView.js";
+export { SuperchainERC7579ExecutorRouter } from "./SuperchainERC7579ExecutorRouter.js";
 export { SuperchainTokenBridgeSweep } from "./SuperchainTokenBridgeSweep.js";
 export { UniversalRouter } from "./UniversalRouter.js";
 export { UnsupportedProtocol } from "./UnsupportedProtocol.js";

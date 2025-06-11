@@ -15,8 +15,8 @@ import {
     Currency,
     getUniswapV4Address,
     getStargateMessageIdFromReceipt,
-    getSuperchainMessageIdFromReceipt,
     STARGATE_POOL_NATIVE,
+    getSuperchainMessageIdsFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
@@ -77,6 +77,7 @@ import {
     stargateBridgeMessageIdAtom,
     tokenInUsdValueAtom,
     tokenOutUsdValueAtom,
+    superchainSwapMessageIdAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -128,6 +129,7 @@ function Index() {
     const [swapMessageId, setSwapMessageId] = useAtom(swapMessageIdAtom);
     const [bridgeMessageId, setBridgeMessageId] = useAtom(bridgeMessageIdAtom);
     const [superchainBridgeMessageId, setSuperchainBridgeMessageId] = useAtom(superchainBridgeMessageIdAtom);
+    const [superchainSwapMessageId, setSuperchainSwapMessageId] = useAtom(superchainSwapMessageIdAtom);
     const [stargateBridgeMessageId, setStargateBridgeMessageId] = useAtom(stargateBridgeMessageIdAtom);
 
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
@@ -225,6 +227,13 @@ function Index() {
         chainOut,
         setBridgeRemoteTransactionHash,
         bridgeRemoteTransactionHash,
+    );
+
+    useWatchSuperchainMessageProcessed(
+        superchainSwapMessageId,
+        chainOut,
+        setSwapRemoteTransactionHash,
+        swapRemoteTransactionHash,
     );
 
     const bridgeToAddress =
@@ -460,26 +469,37 @@ function Index() {
         }
 
         const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
-        const superchainBridgeMessageId = getSuperchainMessageIdFromReceipt(receipt, chainIn!.id);
+        const superchainMessageIds = getSuperchainMessageIdsFromReceipt(receipt, chainIn!.id);
         const stargateBridgeMessageId = getStargateMessageIdFromReceipt(receipt);
 
         if (
             (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") &&
-            superchainBridgeMessageId
+            superchainMessageIds[0]
         ) {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
+
+            const superchainBridgeMessageId = superchainMessageIds[0];
 
             setSuperchainBridgeMessageId(superchainBridgeMessageId);
             setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
             updateTransactionStep({ id: "bridge", status: "processing" });
 
-            const hyperlaneSwapMessageId = hyperlaneMessageIds[0];
+            if (submittedTransactionType.type === "BRIDGE_SWAP") {
+                // Either bridging happened with Superchain, or with Hyperlane
+                const superchainSwapMessageId = superchainMessageIds[1];
+                const hyperlaneSwapMessageId = hyperlaneMessageIds[0];
 
-            // TODO: change this to handle either hyperlane or superchain remote chain execution
-            if (submittedTransactionType.type === "BRIDGE_SWAP" && hyperlaneSwapMessageId) {
-                setSwapMessageId(hyperlaneSwapMessageId);
-                setTransactionHashes((prev) => ({ ...prev, swap: hyperlaneSwapMessageId }));
-                updateTransactionStep({ id: "swap", status: "processing" });
+                const swapMessageId = superchainSwapMessageId ?? hyperlaneSwapMessageId;
+
+                if (swapMessageId) {
+                    setSwapMessageId(swapMessageId);
+                    setTransactionHashes((prev) => ({ ...prev, swap: swapMessageId }));
+                    updateTransactionStep({ id: "swap", status: "processing" });
+                }
+
+                if (superchainSwapMessageId) {
+                    setSuperchainSwapMessageId(superchainSwapMessageId);
+                }
             }
         }
 

@@ -61,6 +61,11 @@ export async function getUniswapV4RouteExactInMultichain(
 
                 let exactAmount = params.exactAmount;
                 if (currencyIn.chainId !== currIn.chainId && currencyIn.isNative && currencyIn.symbol === "ETH") {
+                    if (currIn.chainId === 900 || currIn.chainId === 901 || currIn.chainId === 902) {
+                        // No stargate or orbiter on local chains
+                        return null;
+                    }
+
                     if (nativeOnChain(currIn.chainId).symbol !== "ETH") {
                         // Can only bridge native ETH
                         return null;
@@ -74,15 +79,15 @@ export async function getUniswapV4RouteExactInMultichain(
                         dstChain: currIn.chainId,
                         receiver: quoteReceiver,
                     };
-                    const stargateQuoteResult = await queryClient.fetchQuery(
-                        stargateETHQuoteQueryOptions(wagmiConfig, stargateETHQuoteParams),
-                    );
+                    const stargateQuoteResult = await queryClient
+                        .fetchQuery(stargateETHQuoteQueryOptions(wagmiConfig, stargateETHQuoteParams))
+                        .catch(() => null);
 
                     if (stargateQuoteResult) {
                         exactAmount = BigInt(stargateQuoteResult.minAmountLDFeeRemoved);
                     } else {
-                        if (!stargateQuoteResult) {
-                            const orbiterQuoteResult = await queryClient.fetchQuery(
+                        const orbiterQuoteResult = await queryClient
+                            .fetchQuery(
                                 orbiterQuoteQueryOptions({
                                     amount: exactAmount,
                                     destChainId: currIn.chainId,
@@ -92,13 +97,13 @@ export async function getUniswapV4RouteExactInMultichain(
                                     // User address doesn't matter, but avoid address zero
                                     userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
                                 }),
-                            );
+                            )
+                            .catch(() => null);
 
-                            // Bridging is needed, but no quote found for either providers
-                            if (!orbiterQuoteResult) return null;
+                        // Bridging is needed, but no quote found for either providers
+                        if (!orbiterQuoteResult) return null;
 
-                            exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
-                        }
+                        exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
                     }
                 }
 

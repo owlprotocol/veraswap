@@ -1,5 +1,5 @@
 import { localChains, mainnetChains, testnetChains } from "../chains/chainType.js";
-import { CURRENCIES } from "../constants/index.js";
+import { CURRENCIES, localSupersimCurrencies } from "../constants/index.js";
 import { RegistryToken } from "../types/RegistryToken.js";
 import { convertRegistryTokens } from "../utils/index.js";
 
@@ -12,7 +12,7 @@ export function registryTokenQueryKey(chainsType: "mainnet" | "testnet" | "local
     return ["registryTokens", chainsType];
 }
 
-export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "local") {
+export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "local", includeSupersim = false) {
     const chains = chainsType === "local" ? localChains : chainsType === "testnet" ? testnetChains : mainnetChains;
 
     const chainIds = chains.map((c) => c.id) as number[];
@@ -21,7 +21,7 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
     if (chainsType === "local") {
         return {
             queryKey: registryTokenQueryKey("local"),
-            queryFn: () => localCurrencies,
+            queryFn: () => (includeSupersim ? [...localCurrencies, ...localSupersimCurrencies] : localCurrencies),
             staleTime: Infinity,
         };
     }

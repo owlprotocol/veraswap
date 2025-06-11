@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
 
-import { Currency, getUniswapV4Address } from "../currency/currency.js";
+import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { PathKey, PoolKey, poolKeysToPathExactIn } from "../types/PoolKey.js";
 
@@ -26,6 +26,7 @@ export interface RouteComponentBridge {
     type: "BRIDGE";
     currencyIn: Currency;
     currencyOut: Currency;
+    withSuperchain?: boolean;
 }
 
 export type RouteComponent = RouteComponentSwap | RouteComponentBridge;
@@ -34,6 +35,12 @@ export type GetRouteMultichainReturnType = {
     flows: [RouteComponent, ...RouteComponent[]];
     amountOut: bigint;
 } | null;
+
+const isBridgeWithSuperchain = (currencyIn: Currency, currencyOut: Currency): boolean =>
+    isMultichainToken(currencyIn) &&
+    currencyIn.isSuperERC20() &&
+    isMultichainToken(currencyOut) &&
+    currencyOut.isSuperERC20();
 
 /**
  * Get list of asset flows to get from currencyIn to currencyOut
@@ -63,7 +70,17 @@ export async function getRouteMultichain(
     if (currencyIn instanceof MultichainToken) {
         // BRIDGE
         if (currencyIn.getRemoteToken(currencyOut.chainId)?.equals(currencyOut)) {
-            return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
+            return {
+                flows: [
+                    {
+                        type: "BRIDGE",
+                        currencyIn,
+                        currencyOut,
+                        withSuperchain: isBridgeWithSuperchain(currencyIn, currencyOut),
+                    },
+                ],
+                amountOut: exactAmount,
+            };
         }
     }
 
@@ -89,21 +106,26 @@ export async function getRouteMultichain(
     };
 
     if (!swap.currencyIn.equals(currencyIn)) {
+        const currencyOut = swap.currencyIn;
         // Add input bridge flow
         flows.push({
             type: "BRIDGE",
             currencyIn,
-            currencyOut: swap.currencyIn,
+            currencyOut,
+            withSuperchain: isBridgeWithSuperchain(currencyIn, currencyOut),
         });
     }
     // Add swap
     flows.push(swap);
     if (!swap.currencyOut.equals(currencyOut)) {
+        const currencyIn = swap.currencyOut;
+
         // Add ouput bridge flow
         flows.push({
             type: "BRIDGE",
             currencyIn: swap.currencyOut,
             currencyOut,
+            withSuperchain: isBridgeWithSuperchain(currencyIn, currencyOut),
         });
     }
 
