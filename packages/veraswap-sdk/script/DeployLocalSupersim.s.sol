@@ -219,6 +219,7 @@ contract DeployLocalSupersim is DeployCoreContracts {
         // Deploy Superchain Tokens on OP Chains with Collateral
         {
             // Deploy Token C and Collateral on OPChainA, and silently deploy Token D
+            // Also setup Superchain token pools
             {
                 vm.selectFork(forks[1]);
                 vm.startBroadcast();
@@ -230,16 +231,10 @@ contract DeployLocalSupersim is DeployCoreContracts {
                 tokens[chainIds[1]][keccak256("C")] = superchainTokenC;
                 console2.log("Deployed Superchain Token C on OPChainA:", superchainTokenC);
 
-                PoolUtils.setupToken(
-                    IERC20(superchainTokenC),
-                    IPositionManager(contractsA.uniswap.v4PositionManager),
-                    IUniversalRouter(contractsA.uniswap.universalRouter)
-                );
-                PoolUtils.deployPool(
-                    superchainTokenC,
-                    address(0),
-                    IPositionManager(contractsA.uniswap.v4PositionManager),
-                    IStateView(contractsA.uniswap.v4StateView)
+                deploySuperchainTokenAndPools(
+                    contractsA.uniswap.universalRouter,
+                    contractsA.uniswap.v4PositionManager,
+                    contractsA.uniswap.v4StateView
                 );
 
                 (address hypERC20CollateralTokenC,) =
@@ -261,19 +256,6 @@ contract DeployLocalSupersim is DeployCoreContracts {
                 (address superchainTokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
                 tokens[chainIds[2]][keccak256("D")] = superchainTokenD;
                 console2.log("Deployed Superchain Token D on OPChainB:", superchainTokenD);
-
-                // Setup token and deploy pool
-                PoolUtils.setupToken(
-                    IERC20(superchainTokenD),
-                    IPositionManager(contractsB.uniswap.v4PositionManager),
-                    IUniversalRouter(contractsB.uniswap.universalRouter)
-                );
-                PoolUtils.deployPool(
-                    superchainTokenD,
-                    address(0),
-                    IPositionManager(contractsB.uniswap.v4PositionManager),
-                    IStateView(contractsB.uniswap.v4StateView)
-                );
 
                 (address hypERC20CollateralTokenD,) =
                     HypERC20CollateralUtils.getOrCreate2(superchainTokenD, contractsB.hyperlane.mailbox);
@@ -371,21 +353,21 @@ contract DeployLocalSupersim is DeployCoreContracts {
         console2.log("Deployed Tokens and pool");
     }
 
-    function deploySuperchainTokenAndPools(
-        string memory name,
-        string memory symbol,
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address token) {
-        (token,) = MockSuperchainERC20Utils.getOrCreate2(name, symbol, 18);
+    function deploySuperchainTokenAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenC, address tokenD)
+    {
+        (tokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+        (tokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
-        PoolUtils.setupToken(IERC20(token), IPositionManager(v4PositionManager), IUniversalRouter(router));
-        PoolUtils.deployPool(token, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.setupToken(IERC20(tokenC), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.setupToken(IERC20(tokenD), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.deployPool(tokenC, tokenD, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPool(tokenC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPool(tokenD, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
 
-        console2.log("Token:", token);
-        console2.log("Deployed Token and pool");
-
-        return token;
+        console2.log("Token C:", tokenC);
+        console2.log("Token D:", tokenD);
+        console2.log("Deployed Tokens and pool");
     }
 }

@@ -2818,7 +2818,7 @@ export const functions = [
         type: "function",
         name: "callRemote",
         inputs: [
-            { name: "destination", type: "uint32", internalType: "uint32" },
+            { name: "destination", type: "uint256", internalType: "uint256" },
             { name: "account", type: "address", internalType: "address" },
             { name: "initData", type: "bytes", internalType: "bytes" },
             { name: "initSalt", type: "bytes32", internalType: "bytes32" },
@@ -2870,7 +2870,7 @@ export const functions = [
                 type: "tuple[]",
                 internalType: "struct SuperchainERC7579ExecutorRouter.RemoteRouterOwner[]",
                 components: [
-                    { name: "domain", type: "uint32", internalType: "uint32" },
+                    { name: "domain", type: "uint256", internalType: "uint256" },
                     { name: "owner", type: "address", internalType: "address" },
                     { name: "enabled", type: "bool", internalType: "bool" },
                 ],

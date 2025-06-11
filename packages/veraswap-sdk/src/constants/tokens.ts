@@ -14,22 +14,12 @@ import {
     metis,
     mode,
     optimism,
-    optimismSepolia,
     ronin,
-    sepolia,
     worldchain,
 } from "viem/chains";
 
 import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import {
-    interopDevnet0,
-    interopDevnet1,
-    opChainA,
-    opChainB,
-    opChainL1,
-    superseed,
-    unichainSepolia,
-} from "../chains/index.js";
+import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, superseed } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
@@ -287,95 +277,95 @@ export const LOCAL_CURRENCIES = [
     Ether.onChain(opChainB.id),
 ];
 
-const testnetMailboxByChain: Record<number, Address> = {
-    [sepolia.id]: "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766" as Address,
-    [optimismSepolia.id]: "0x6966b0E55883d49BFB24539356a2f8A673E02039" as Address,
-    [unichainSepolia.id]: "0xDDcFEcF17586D08A5740B7D91735fcCE3dfe3eeD" as Address,
-};
+// const testnetMailboxByChain: Record<number, Address> = {
+//     [sepolia.id]: "0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766" as Address,
+//     [optimismSepolia.id]: "0x6966b0E55883d49BFB24539356a2f8A673E02039" as Address,
+//     [unichainSepolia.id]: "0xDDcFEcF17586D08A5740B7D91735fcCE3dfe3eeD" as Address,
+// };
 
-function addMockERC20ConnectedTokens(
-    {
-        chainId,
-        name,
-        symbol,
-        decimals,
-        address,
-        hypAddresses,
-    }: {
-        chainId: number;
-        name: string;
-        symbol: string;
-        decimals: number;
-        address: Address;
-        hypAddresses: Record<number, Address>;
-    },
-    mailboxByChain: Record<number, Address>,
-): MultichainToken[] {
-    const mailbox = mailboxByChain[chainId];
-
-    const token = MultichainToken.createERC20({
-        chainId,
-        address,
-        name,
-        symbol,
-        decimals,
-        hypERC20Collateral: getHypERC20CollateralAddress({
-            erc20: address,
-            mailbox,
-        }),
-    });
-
-    const connections = Object.entries(mailboxByChain)
-        .filter(([id]) => parseInt(id) !== token.chainId)
-        .map(([id, mailbox]) => ({ chainId: parseInt(id), mailbox }));
-
-    const remoteTokens = connections.map(({ chainId }) => {
-        const hypAddress = hypAddresses[chainId];
-
-        return MultichainToken.createHypERC20({
-            chainId,
-            address: hypAddress,
-            name,
-            symbol,
-            decimals,
-        });
-    });
-
-    const tokens = [token, ...remoteTokens];
-    MultichainToken.connect(tokens);
-
-    return tokens;
-}
+// function addMockERC20ConnectedTokens(
+//     {
+//         chainId,
+//         name,
+//         symbol,
+//         decimals,
+//         address,
+//         hypAddresses,
+//     }: {
+//         chainId: number;
+//         name: string;
+//         symbol: string;
+//         decimals: number;
+//         address: Address;
+//         hypAddresses: Record<number, Address>;
+//     },
+//     mailboxByChain: Record<number, Address>,
+// ): MultichainToken[] {
+//     const mailbox = mailboxByChain[chainId];
+//
+//     const token = MultichainToken.createERC20({
+//         chainId,
+//         address,
+//         name,
+//         symbol,
+//         decimals,
+//         hypERC20Collateral: getHypERC20CollateralAddress({
+//             erc20: address,
+//             mailbox,
+//         }),
+//     });
+//
+//     const connections = Object.entries(mailboxByChain)
+//         .filter(([id]) => parseInt(id) !== token.chainId)
+//         .map(([id, mailbox]) => ({ chainId: parseInt(id), mailbox }));
+//
+//     const remoteTokens = connections.map(({ chainId }) => {
+//         const hypAddress = hypAddresses[chainId];
+//
+//         return MultichainToken.createHypERC20({
+//             chainId,
+//             address: hypAddress,
+//             name,
+//             symbol,
+//             decimals,
+//         });
+//     });
+//
+//     const tokens = [token, ...remoteTokens];
+//     MultichainToken.connect(tokens);
+//
+//     return tokens;
+// }
 
 export const TESTNET_CURRENCIES = [
-    ...addMockERC20ConnectedTokens(
-        {
-            chainId: sepolia.id,
-            name: "Token C",
-            symbol: "C",
-            decimals: 18,
-            address: "0x6b821901f606F2216436CACA965c3B89cB4f1240",
-            hypAddresses: {
-                [optimismSepolia.id]: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
-                [unichainSepolia.id]: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
-            },
-        },
-        testnetMailboxByChain,
-    ),
-    ...addMockERC20ConnectedTokens(
-        {
-            chainId: sepolia.id,
-            name: "Token D",
-            symbol: "D",
-            decimals: 18,
-            address: "0x37c6E14d5BB318f211f71e92857794fD9Dd97Ee9",
-            hypAddresses: {
-                [optimismSepolia.id]: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
-                [unichainSepolia.id]: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
-            },
-        },
-        testnetMailboxByChain,
-    ),
+    // ...addMockERC20ConnectedTokens(
+    //     {
+    //         chainId: sepolia.id,
+    //         name: "Token C",
+    //         symbol: "C",
+    //         decimals: 18,
+    //         address: "0x6b821901f606F2216436CACA965c3B89cB4f1240",
+    //         hypAddresses: {
+    //             [optimismSepolia.id]: "0x640C4647858C4FF1a9e72Ce0A2De1ef74641D954",
+    //             [unichainSepolia.id]: "0x5cED2AC3066a17c0A2ed31F95DcDC9fd5C19DAbB",
+    //         },
+    //     },
+    //     testnetMailboxByChain,
+    // ),
+    // ...addMockERC20ConnectedTokens(
+    //     {
+    //         chainId: sepolia.id,
+    //         name: "Token D",
+    //         symbol: "D",
+    //         decimals: 18,
+    //         address: "0x37c6E14d5BB318f211f71e92857794fD9Dd97Ee9",
+    //         hypAddresses: {
+    //             [optimismSepolia.id]: "0xE76f05585813d2736348F6AEeFbD94927813b4Cb",
+    //             [unichainSepolia.id]: "0x82B7EF712a532F9Dd068cd1B3ddf3948c1BBE39D",
+    //         },
+    //     },
+    //     testnetMailboxByChain,
+    // ),
     ...(() => {
         const tokenCData = {
             name: "Superchain Token C",

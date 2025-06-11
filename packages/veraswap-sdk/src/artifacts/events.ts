@@ -494,7 +494,7 @@ export const events = [
         name: "AccountRemoteRouterOwnerSet",
         inputs: [
             { name: "account", type: "address", indexed: true, internalType: "address" },
-            { name: "domain", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "domain", type: "uint256", indexed: true, internalType: "uint256" },
             { name: "owner", type: "address", indexed: false, internalType: "address" },
             { name: "enabled", type: "bool", indexed: false, internalType: "bool" },
         ],
@@ -504,7 +504,7 @@ export const events = [
         type: "event",
         name: "RemoteCallDispatched",
         inputs: [
-            { name: "destination", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "destination", type: "uint256", indexed: true, internalType: "uint256" },
             { name: "account", type: "address", indexed: true, internalType: "address" },
             {
                 name: "executionMode",

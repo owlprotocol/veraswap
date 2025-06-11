@@ -309,6 +309,8 @@ export const amountOutAtom = atom((get) => {
         } else if (transactionType.type === "SWAP_BRIDGE") {
             if (!quoterData?.amountOut) return "";
             amountOut = formatUnits(quoterData?.amountOut, currencyOut.decimals ?? 18);
+        } else if (quoterData) {
+            amountOut = formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18);
         }
 
         return amountOut;

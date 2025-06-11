@@ -117,10 +117,6 @@ contract DeployCoreContracts is DeployParameters {
         // Uniswap contracts
         if (chainId == 900 || chainId == 901 || chainId == 902) {
             // Uniswap V3
-            address tokenBridge = 0x4200000000000000000000000000000000000028;
-            // Portal on L1 to chain A
-            address optimismPortal = 0xd1f1255D36A0b40cE65d26D8875963E4E234cB4F;
-
             // TODO: stop using an env var after the deploy core contracts refactor
             bool isSuperchain = vm.envOr("SUPERSIM", false);
             if (!isSuperchain) {

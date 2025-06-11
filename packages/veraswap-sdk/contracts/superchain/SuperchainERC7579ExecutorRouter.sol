@@ -14,7 +14,7 @@ contract SuperchainERC7579ExecutorRouter {
     // ============ Structs ============
     // Remote Router Owner stores an approved owner, allowed to execute on an account from a specific router on a remote domain
     struct RemoteRouterOwner {
-        uint32 domain;
+        uint256 domain;
         address owner;
         bool enabled;
     }
@@ -39,12 +39,12 @@ contract SuperchainERC7579ExecutorRouter {
 
     /// @notice Emitted when an account owner is set
     /// @dev Useful to reconstruct current/historical set of owners for an account
-    event AccountRemoteRouterOwnerSet(address indexed account, uint32 indexed domain, address owner, bool enabled);
+    event AccountRemoteRouterOwnerSet(address indexed account, uint256 indexed domain, address owner, bool enabled);
 
     /// @notice Emitted when a call is dispatched to a remote domain
     /// @dev Useful to watch pending/historical messages dispatched to an account
     event RemoteCallDispatched(
-        uint32 indexed destination,
+        uint256 indexed destination,
         address indexed account,
         ERC7579ExecutorMessage.ExecutionMode executionMode,
         bytes32 messageId
@@ -52,7 +52,6 @@ contract SuperchainERC7579ExecutorRouter {
 
     /// @notice Emitted when a call is processed on an account
     /// @dev Useful to watch pending/historical calls processed on an account
-    // TODO: Future Mailbox version could pass the messageId in the handler for optimized indexing
     event RemoteCallProcessed(
         uint256 indexed origin, address indexed account, ERC7579ExecutorMessage.ExecutionMode executionMode
     );
@@ -80,7 +79,7 @@ contract SuperchainERC7579ExecutorRouter {
      * @notice Only accept messages from the Superchain Cross Domain Messenger
      */
     modifier onlyCrossDomainMessenger() {
-        require(msg.sender == MESSENGER, "Sender not L2_TO_L2_CROSS_DOMAIN_MESSENGER");
+        require(msg.sender == MESSENGER, "Sender not MESSENGER");
         _;
     }
 
@@ -98,6 +97,7 @@ contract SuperchainERC7579ExecutorRouter {
     function setAccountOwners(RemoteRouterOwner[] memory _owners) external {
         // Set Approved Remote Router Owners
         for (uint256 i = 0; i < _owners.length; i++) {
+            // Domain is implicitly converted to uint256 for mapping
             owners[msg.sender][_owners[i].domain][_owners[i].owner] = _owners[i].enabled;
             emit AccountRemoteRouterOwnerSet(msg.sender, _owners[i].domain, _owners[i].owner, _owners[i].enabled);
         }
@@ -123,7 +123,7 @@ contract SuperchainERC7579ExecutorRouter {
      * @return The Superchain interop message ID
      */
     function callRemote(
-        uint32 destination,
+        uint256 destination,
         address account,
         bytes memory initData,
         bytes32 initSalt,
@@ -134,17 +134,11 @@ contract SuperchainERC7579ExecutorRouter {
         uint48 validUntil,
         bytes memory signature
     ) external payable returns (bytes32) {
-        // TODO: replace with superchain mailbox logic
-        // bytes memory msgBody = ERC7579ExecutorMessage.encode(
-        //     msg.sender, account, initData, initSalt, executionMode, callData, nonce, validAfter, validUntil, signature
-        // );
-
         bytes memory message = abi.encodeCall(
             this.handle,
             (msg.sender, account, initData, initSalt, executionMode, callData, nonce, validAfter, validUntil, signature)
         );
 
-        // bytes32 messageId = _dispatch(destination, msg.value, msgBody, hookMetadata, hook);
         bytes32 messageId = IL2ToL2CrossDomainMessenger(MESSENGER).sendMessage(destination, account, message);
         emit RemoteCallDispatched(destination, account, executionMode, messageId);
 

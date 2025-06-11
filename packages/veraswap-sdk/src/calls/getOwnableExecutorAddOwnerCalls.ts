@@ -41,8 +41,6 @@ export async function getOwnableExecutorAddOwnerCalls(
         }),
     );
 
-    console.debug({ isInitialized });
-
     if (!isInitialized) {
         // Skip `getOwners` call as it will revert
         const call = {

@@ -43,11 +43,18 @@ export function TransactionStatusModal({
         if (networkType === "local") return undefined;
         switch (stepId) {
             case "swap":
-                if (transactionType?.type === "BRIDGE_SWAP" && hashes?.swap) {
+                if (!hashes?.swap) return undefined;
+
+                if (transactionType?.withSuperchain) {
+                    // We have to search by transaction hash
+                    return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.swap}`;
+                }
+
+                if (transactionType?.type === "BRIDGE_SWAP") {
                     return `https://explorer.hyperlane.xyz/message/${hashes.swap}`;
                 }
 
-                return hashes?.swap && chains?.source
+                return hashes.swap && chains?.source
                     ? `${chains.source.blockExplorers?.default?.url}/tx/${hashes.swap}`
                     : undefined;
             case "bridge":

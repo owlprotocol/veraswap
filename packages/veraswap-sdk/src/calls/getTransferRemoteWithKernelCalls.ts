@@ -46,6 +46,7 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
     stargateQuote?: StargateETHQuote;
     orbiterQuote?: OrbiterQuote;
+    withSuperchain?: boolean;
 }
 
 /**
@@ -73,6 +74,7 @@ export async function getTransferRemoteWithKernelCalls(
         hook,
         approveAmount,
         permit2,
+        withSuperchain,
     } = params;
     invariant(
         tokenStandard === "HypERC20" ||
@@ -108,6 +110,7 @@ export async function getTransferRemoteWithKernelCalls(
         account: kernelAddress,
         router: contracts.erc7579Router,
         owners: erc7579RouterOwners,
+        withSuperchain,
     });
 
     // BRIDGE CALLS

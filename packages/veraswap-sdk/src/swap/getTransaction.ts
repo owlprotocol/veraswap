@@ -11,6 +11,7 @@ import {
     GetTransferRemoteWithKernelCallsParams,
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
+import { SUPERCHAIN_ERC7579_ROUTER } from "../constants/superchain.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
 import { OrbiterQuote } from "../query/orbiterQuote.js";
@@ -215,7 +216,7 @@ export async function getTransaction(
                 currencyIn.hyperlaneAddress != currencyIn.address
             ) {
                 // HypERC20Collateral
-                const { queryClient, wagmiConfig, initData } = params;
+                const { queryClient, wagmiConfig, initData, withSuperchain } = params;
 
                 if (!queryClient || !wagmiConfig || !initData || !walletAddress) {
                     throw new Error(
@@ -242,6 +243,7 @@ export async function getTransaction(
                         ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
                         erc7579Router: contracts[currencyIn.chainId].erc7579Router,
                     },
+                    withSuperchain,
                 };
 
                 const result = await getTransferRemoteWithKernelCalls(queryClient, wagmiConfig, bridgeParams);
@@ -379,8 +381,7 @@ export async function getTransaction(
                 stargateQuote,
                 orbiterQuote,
             } = params;
-            // TODO: check if withSuperchain is needed
-            const { currencyIn, currencyOut } = bridge;
+            const { currencyIn, currencyOut, withSuperchain } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
 
             if (currencyIn.isNative && !stargateQuote && !orbiterQuote) {
@@ -406,31 +407,42 @@ export async function getTransaction(
                 remoteSwapAmountIn = (BigInt(orbiterQuote.details.minDestTokenAmount) * 999n) / 1000n; //TODO: Orbiter bug min destination amount is not correct
             }
 
+            // TODO: Cleaner way to get token address? Also, maybe we should not pass hyperlaneAddress here
+            let token: Address;
+            if (isMultichainToken(currencyIn)) {
+                if (currencyIn.hyperlaneAddress && !withSuperchain) {
+                    token = currencyIn.hyperlaneAddress;
+                }
+                token = currencyIn.address;
+            } else {
+                token = getUniswapV4Address(currencyIn);
+            }
+
             const bridgeSwapParams: GetBridgeSwapWithKernelCallsParams = {
                 chainId: currencyIn.chainId,
-                token: isMultichainToken(currencyIn)
-                    ? (currencyIn.hyperlaneAddress ?? currencyIn.address)
-                    : getUniswapV4Address(currencyIn),
+                token,
                 tokenStandard: getTokenStandard(currencyIn),
-                tokenOutStandard: getTokenStandard(currencyOut),
                 account: walletAddress,
                 destination: currencyOut.chainId,
                 recipient: walletAddress,
                 amount: amountIn,
-                //TODO: LOCAL CONTRACTS
                 contracts: {
                     // static
                     execute: contracts[currencyIn.chainId].execute,
                     ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
                     // mailbox
-                    erc7579Router: contracts[currencyIn.chainId].erc7579Router,
+                    erc7579Router: withSuperchain
+                        ? SUPERCHAIN_ERC7579_ROUTER
+                        : contracts[currencyIn.chainId].erc7579Router,
                     interchainGasPaymaster: contracts[currencyIn.chainId].interchainGasPaymaster,
                 },
                 contractsRemote: {
                     execute: contracts[currencyOut.chainId].execute,
                     ownableSignatureExecutor: contracts[currencyOut.chainId].ownableSignatureExecutor,
                     // mailbox
-                    erc7579Router: contracts[currencyOut.chainId].erc7579Router,
+                    erc7579Router: withSuperchain
+                        ? SUPERCHAIN_ERC7579_ROUTER
+                        : contracts[currencyOut.chainId].erc7579Router,
                 },
                 createAccount: {
                     initData,
@@ -458,6 +470,7 @@ export async function getTransaction(
                 },
                 stargateQuote,
                 orbiterQuote,
+                withSuperchain,
             };
 
             const result = await getBridgeSwapWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParams);
