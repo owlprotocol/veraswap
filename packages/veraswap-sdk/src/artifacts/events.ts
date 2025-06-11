@@ -491,6 +491,48 @@ export const events = [
     },
     {
         type: "event",
+        name: "AccountRemoteRouterOwnerSet",
+        inputs: [
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            { name: "domain", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "owner", type: "address", indexed: false, internalType: "address" },
+            { name: "enabled", type: "bool", indexed: false, internalType: "bool" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "RemoteCallDispatched",
+        inputs: [
+            { name: "destination", type: "uint32", indexed: true, internalType: "uint32" },
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            {
+                name: "executionMode",
+                type: "uint8",
+                indexed: false,
+                internalType: "enum ERC7579ExecutorMessage.ExecutionMode",
+            },
+            { name: "messageId", type: "bytes32", indexed: false, internalType: "bytes32" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "RemoteCallProcessed",
+        inputs: [
+            { name: "origin", type: "uint256", indexed: true, internalType: "uint256" },
+            { name: "account", type: "address", indexed: true, internalType: "address" },
+            {
+                name: "executionMode",
+                type: "uint8",
+                indexed: false,
+                internalType: "enum ERC7579ExecutorMessage.ExecutionMode",
+            },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "ModuleInstalled",
         inputs: [
             { name: "moduleTypeId", type: "uint256", indexed: false, internalType: "uint256" },

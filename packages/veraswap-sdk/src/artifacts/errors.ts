@@ -245,6 +245,15 @@ export const errors = [
     { type: "error", name: "Permit2AllowanceIsFixedAtInfinity", inputs: [] },
     { type: "error", name: "PermitExpired", inputs: [] },
     { type: "error", name: "TotalSupplyOverflow", inputs: [] },
+    {
+        type: "error",
+        name: "InvalidRemoteRouterOwner",
+        inputs: [
+            { name: "account", type: "address", internalType: "address" },
+            { name: "domain", type: "uint256", internalType: "uint256" },
+            { name: "owner", type: "address", internalType: "address" },
+        ],
+    },
     { type: "error", name: "TransferFailed", inputs: [] },
     { type: "error", name: "QuoteAmountTooLow", inputs: [] },
     { type: "error", name: "EnableNotApproved", inputs: [] },
