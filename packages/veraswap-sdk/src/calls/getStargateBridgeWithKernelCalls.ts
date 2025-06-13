@@ -2,14 +2,11 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
-import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { Execute } from "../artifacts/Execute.js";
-import { StargateETHQuote } from "../query/stargateETHQuote.js";
 import { StargateTokenQuote, StargateTokenSymbol } from "../query/stargateTokenQuote.js";
-import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
-import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
+import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
@@ -20,7 +17,7 @@ import { getStargateBridgeWithFunderCalls } from "./getStargateBridgeWithFunderC
 
 export interface GetStargateBridgeWithKernelCallsParams extends GetCallsParams {
     token: Address;
-    tokenSymbol?: StargateTokenSymbol;
+    tokenSymbol: StargateTokenSymbol;
     destination: number;
     recipient: Address;
     amount: bigint;
@@ -42,7 +39,7 @@ export interface GetStargateBridgeWithKernelCallsParams extends GetCallsParams {
         erc7579Router: Address;
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
-    stargateQuote: StargateETHQuote | StargateTokenQuote;
+    stargateQuote: StargateTokenQuote;
 }
 
 /**
@@ -83,39 +80,25 @@ export async function getStargateBridgeWithKernelCalls(
         owners: erc7579RouterOwners,
     });
 
-    let bridgeCalls: (CallArgs & { account: Address })[];
-    if (stargateQuote.type === "ETH") {
-        const stargateTx = getStargateETHBridgeTransaction({
-            srcChain: chainId,
-            dstChain: destination,
-            receiver: recipient,
-            stargateQuote,
-        });
-        bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
-    } else {
-        invariant(!!params.tokenSymbol, "tokenSymbol is required for token bridging");
-
-        const stargateBridgeCalls = await getStargateBridgeWithFunderCalls(queryClient, wagmiConfig, {
-            chainId,
-            token,
-            tokenSymbol: params.tokenSymbol,
-            account: kernelAddress,
-            funder: account,
-            destination,
-            recipient,
-            amount,
-            stargateQuote,
-            approveAmount: params.approveAmount,
-            permit2: params.permit2,
-        });
-        bridgeCalls = stargateBridgeCalls.calls;
-    }
+    const bridgeCalls = await getStargateBridgeWithFunderCalls(queryClient, wagmiConfig, {
+        chainId,
+        token,
+        tokenSymbol: params.tokenSymbol,
+        account: kernelAddress,
+        funder: account,
+        destination,
+        recipient,
+        amount,
+        stargateQuote,
+        approveAmount: params.approveAmount,
+        permit2: params.permit2,
+    });
 
     const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([
         executorAddOwnerCallsPromise,
         erc7579RouterSetOwnerCallsPromise,
     ]);
-    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
+    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls.calls];
     const kernelCallsValue = kernelCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     if (createAccountCalls.exists) {
