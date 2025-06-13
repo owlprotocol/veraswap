@@ -8,7 +8,7 @@ import { Route } from "@/routes/index.js";
 
 export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const navigate = Route.useNavigate();
-    const search = useSearch({ from: "/" });
+    const search = useSearch({ strict: false });
     const domainType = useDomainType();
 
     const [currencyIn, setCurrencyIn] = useAtom(currencyInAtom);

@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu, AlertTriangle } from "lucide-react";
 import { useState } from "react";
@@ -12,6 +12,14 @@ export const Route = createRootRoute({
 });
 function RootComponent() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const location = useLocation();
+
+    const isEmbedRoute = location.pathname.startsWith("/widget");
+
+    if (isEmbedRoute) {
+        return <Outlet />;
+    }
+
     return (
         <div className="min-h-screen page-gradient">
             <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b header-background">
