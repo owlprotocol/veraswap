@@ -83,7 +83,6 @@ export async function getStargateBridgeWithKernelCalls(
         owners: erc7579RouterOwners,
     });
 
-    // TODO: Fix for native
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (stargateQuote.type === "ETH") {
         const stargateTx = getStargateETHBridgeTransaction({
