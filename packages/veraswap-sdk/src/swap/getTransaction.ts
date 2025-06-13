@@ -7,15 +7,21 @@ import {
     GetBridgeSwapWithKernelCallsParams,
 } from "../calls/getBridgeSwapWithKernelCalls.js";
 import {
+    getStargateBridgeWithKernelCalls,
+    GetStargateBridgeWithKernelCallsParams,
+} from "../calls/getStargateBridgeWithKernelCalls.js";
+import {
     getTransferRemoteWithKernelCalls,
     GetTransferRemoteWithKernelCallsParams,
 } from "../calls/getTransferRemoteWithKernelCalls.js";
 import { getPermit2PermitSignature, GetPermit2PermitSignatureParams } from "../calls/index.js";
+import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { SUPERCHAIN_ERC7579_ROUTER } from "../constants/superchain.js";
 import { MAX_UINT_160 } from "../constants/uint256.js";
 import { Currency, getUniswapV4Address, isMultichainToken, isSuperOrLinkedToSuper } from "../currency/index.js";
 import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { StargateETHQuote } from "../query/stargateETHQuote.js";
+import { StargateTokenQuote } from "../query/stargateTokenQuote.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
@@ -30,6 +36,7 @@ import {
 import { getSwapAndHyperlaneSweepBridgeTransaction } from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
 import { getSwapAndOrbiterETHBridgeTransaction } from "./getSwapAndOrbiterETHBridgeTransaction.js";
 import { getSwapAndStargateETHBridgeTransaction } from "./getSwapAndStargateETHBridgeTransaction.js";
+import { getSwapAndStargateTokenBridgeTransaction } from "./getSwapAndStargateTokenBridgeTransaction.js";
 import { getSwapAndSuperchainBridgeTransaction } from "./getSwapAndSuperchainBridgeTransaction.js";
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 import { getTransferRemoteCall } from "./getTransferRemoteCall.js";
@@ -42,12 +49,14 @@ export interface TransactionSwapOptions {
     amountOutMinimum: bigint;
 }
 
+type StargateQuote = StargateETHQuote | StargateTokenQuote;
+
 export interface TransactionBridgeOptions {
     amountIn: bigint;
     walletAddress: Address;
     bridgePayment: bigint;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
     initData?: Hex;
     queryClient?: QueryClient;
     wagmiConfig?: Config;
@@ -58,7 +67,7 @@ export interface TransactionBridgeHyperlaneCollateralOptions {
     walletAddress: Address;
     bridgePayment?: bigint;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
     initData: Hex;
     queryClient: QueryClient;
     wagmiConfig: Config;
@@ -68,7 +77,7 @@ export interface TransactionBridgeStargateOrOrbterOptions {
     amountIn: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -85,7 +94,7 @@ export interface TransactionSwapBridgeOptions {
     bridgePayment: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
@@ -95,7 +104,7 @@ export interface TransactionSwapBridgeOrbiterOptions {
     amountOutMinimum: bigint;
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
@@ -109,7 +118,7 @@ export interface TransactionBridgeSwapOptions {
     amountOutMinimum: bigint;
     initData: Hex;
     orbiterQuote?: OrbiterQuote;
-    stargateQuote?: StargateETHQuote;
+    stargateQuote?: StargateQuote;
 }
 
 export type TransactionParams =
@@ -183,22 +192,63 @@ export async function getTransaction(
         case "BRIDGE": {
             const { currencyIn, currencyOut, amountIn, walletAddress, orbiterQuote, stargateQuote } = params;
             if (currencyIn.isNative && currencyOut.isNative) {
-                if (stargateQuote) {
-                    return getStargateETHBridgeTransaction({
-                        srcChain: currencyIn.chainId,
-                        dstChain: currencyOut.chainId,
-                        receiver: walletAddress,
+                if (!stargateQuote || stargateQuote.type !== "ETH") {
+                    if (!orbiterQuote) {
+                        throw new Error("Stargate ETH quote or Orbiter params are required for ETH bridging");
+                    }
+                    const { to, value, data } = orbiterQuote.steps[0].tx;
+                    return { to, value: BigInt(value), data };
+                }
+
+                return getStargateETHBridgeTransaction({
+                    srcChain: currencyIn.chainId,
+                    dstChain: currencyOut.chainId,
+                    receiver: walletAddress,
+                    stargateQuote,
+                });
+            }
+
+            if (currencyIn.symbol && currencyIn.symbol in STARGATE_TOKEN_POOLS) {
+                if (!stargateQuote || stargateQuote.type !== "TOKEN") {
+                    throw new Error(`Stargate token quote is required for ${currencyIn.symbol} bridging`);
+                }
+
+                const tokenSymbol = currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
+
+                const { queryClient, wagmiConfig, initData } = params;
+                if (queryClient && wagmiConfig && initData && walletAddress) {
+                    const stargateBridgeParams: GetStargateBridgeWithKernelCallsParams = {
+                        chainId: currencyIn.chainId,
+                        token: getUniswapV4Address(currencyIn),
+                        tokenSymbol,
+                        account: walletAddress,
+                        destination: currencyOut.chainId,
+                        recipient: walletAddress,
+                        amount: amountIn,
+                        createAccount: {
+                            initData,
+                            salt: zeroHash,
+                            factoryAddress: contracts[currencyIn.chainId].kernelFactory,
+                        },
+                        contracts: {
+                            execute: contracts[currencyIn.chainId].execute,
+                            ownableSignatureExecutor: contracts[currencyIn.chainId].ownableSignatureExecutor,
+                            erc7579Router: contracts[currencyIn.chainId].erc7579Router,
+                        },
                         stargateQuote,
-                    });
+                    };
+
+                    const result = await getStargateBridgeWithKernelCalls(
+                        queryClient,
+                        wagmiConfig,
+                        stargateBridgeParams,
+                    );
+                    return result.calls[0] as {
+                        to: Address;
+                        data: Hex;
+                        value: bigint;
+                    };
                 }
-
-                if (!orbiterQuote) {
-                    throw new Error("Orbiter params are required for Orbiter bridging");
-                }
-
-                const { to, value, data } = orbiterQuote.steps[0].tx;
-
-                return { to, value: BigInt(value), data };
             }
 
             if (isSuperOrLinkedToSuper(currencyIn) && isSuperOrLinkedToSuper(currencyOut)) {
@@ -348,6 +398,28 @@ export async function getTransaction(
                 });
             }
 
+            if (bridgeCurrencyIn.symbol && bridgeCurrencyIn.symbol in STARGATE_TOKEN_POOLS) {
+                if (!stargateQuote || stargateQuote.type !== "TOKEN") {
+                    throw new Error(`Stargate token quote is required for ${bridgeCurrencyIn.symbol} bridging`);
+                }
+
+                const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
+
+                return getSwapAndStargateTokenBridgeTransaction({
+                    universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                    amountIn,
+                    amountOutMinimum,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    path,
+                    permit2PermitParams,
+                    dstChain: bridgeCurrencyOut.chainId,
+                    srcChain: bridgeCurrencyIn.chainId,
+                    recipient: walletAddress,
+                    tokenSymbol,
+                });
+            }
+
             const hyperlaneBridgeAddress = isMultichainToken(bridgeCurrencyIn)
                 ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
                 : getUniswapV4Address(bridgeCurrencyIn);
@@ -402,7 +474,11 @@ export async function getTransaction(
 
             let remoteSwapAmountIn = amountIn;
             if (stargateQuote) {
-                remoteSwapAmountIn = stargateQuote.minAmountLDFeeRemoved;
+                if (stargateQuote.type === "ETH") {
+                    remoteSwapAmountIn = stargateQuote.minAmountLDFeeRemoved;
+                } else {
+                    remoteSwapAmountIn = stargateQuote.minAmountLD;
+                }
             } else if (orbiterQuote) {
                 remoteSwapAmountIn = (BigInt(orbiterQuote.details.minDestTokenAmount) * 999n) / 1000n; //TODO: Orbiter bug min destination amount is not correct
             }

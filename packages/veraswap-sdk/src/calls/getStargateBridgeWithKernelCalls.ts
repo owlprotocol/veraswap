@@ -2,31 +2,25 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { getExecMode } from "@zerodev/sdk";
 import { CALL_TYPE, EXEC_TYPE } from "@zerodev/sdk/constants";
-import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { Execute } from "../artifacts/Execute.js";
-import { OrbiterQuote } from "../query/orbiterQuote.js";
-import { StargateETHQuote } from "../query/stargateETHQuote.js";
-import { StargateTokenQuote } from "../query/stargateTokenQuote.js";
-import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
-import { TokenStandard } from "../types/Token.js";
+import { StargateTokenQuote, StargateTokenSymbol } from "../query/stargateTokenQuote.js";
+import { encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getOwnableExecutorExecuteCalls } from "./getOwnableExecutorExecuteCalls.js";
-import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
+import { getStargateBridgeWithFunderCalls } from "./getStargateBridgeWithFunderCalls.js";
 
-export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
-    tokenStandard: TokenStandard;
+export interface GetStargateBridgeWithKernelCallsParams extends GetCallsParams {
     token: Address;
+    tokenSymbol: StargateTokenSymbol;
     destination: number;
     recipient: Address;
     amount: bigint;
-    hookMetadata?: Hex;
-    hook?: Address;
     approveAmount?: bigint | "MAX_UINT_256";
     permit2?: {
         approveAmount?: bigint | "MAX_UINT_160";
@@ -45,45 +39,21 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
         erc7579Router: Address;
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
-    stargateQuote?: StargateETHQuote | StargateTokenQuote;
-    orbiterQuote?: OrbiterQuote;
-    withSuperchain?: boolean;
+    stargateQuote: StargateTokenQuote;
 }
 
 /**
- * Get call to fund & set appprovals for `TokenRouter.transferRemote` call
- * @dev Assumes `token.balanceOf(account) > amount`
+ * Get call to fund & set approvals for Stargate bridge call
  * @param queryClient
  * @param wagmiConfig
  * @param params
  */
-export async function getTransferRemoteWithKernelCalls(
+export async function getStargateBridgeWithKernelCalls(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetTransferRemoteWithKernelCallsParams,
+    params: GetStargateBridgeWithKernelCallsParams,
 ): Promise<GetCallsReturnType> {
-    const {
-        contracts,
-        chainId,
-        account,
-        tokenStandard,
-        token,
-        destination,
-        recipient,
-        amount,
-        hookMetadata,
-        hook,
-        approveAmount,
-        permit2,
-        withSuperchain,
-    } = params;
-    invariant(
-        tokenStandard === "HypERC20" ||
-            tokenStandard === "HypERC20Collateral" ||
-            tokenStandard === "HypSuperchainERC20Collateral" ||
-            tokenStandard === "NativeToken",
-        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral or NativeToken`,
-    );
+    const { contracts, chainId, account, token, destination, recipient, amount, stargateQuote } = params;
 
     const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
@@ -108,42 +78,27 @@ export async function getTransferRemoteWithKernelCalls(
         account: kernelAddress,
         router: contracts.erc7579Router,
         owners: erc7579RouterOwners,
-        withSuperchain,
     });
 
-    // BRIDGE CALLS
-    let bridgeCalls: (CallArgs & { account: Address })[];
-    if (tokenStandard === "NativeToken") {
-        // Assume that if the token is native, we are using the Orbiter bridge
-        // TODO: if using USDC, find the step with bridge, since there could be an approve step
-        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
-        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
-        bridgeCalls = [orbiterCall];
-    } else {
-        // TODO: handle future case where we bridge USDC with orbiter
-        // Encode transferRemote calls, pull funds from account if needed
-        const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
-            chainId,
-            token,
-            tokenStandard,
-            account: kernelAddress,
-            funder: account,
-            destination,
-            recipient,
-            amount,
-            hookMetadata,
-            hook,
-            approveAmount,
-            permit2,
-        });
-        bridgeCalls = transferRemoteCalls.calls;
-    }
+    const bridgeCalls = await getStargateBridgeWithFunderCalls(queryClient, wagmiConfig, {
+        chainId,
+        token,
+        tokenSymbol: params.tokenSymbol,
+        account: kernelAddress,
+        funder: account,
+        destination,
+        recipient,
+        amount,
+        stargateQuote,
+        approveAmount: params.approveAmount,
+        permit2: params.permit2,
+    });
 
     const [executorAddOwnerCalls, erc7579RouterSetOwnerCalls] = await Promise.all([
         executorAddOwnerCallsPromise,
         erc7579RouterSetOwnerCallsPromise,
     ]);
-    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls];
+    const kernelCalls = [...executorAddOwnerCalls.calls, ...erc7579RouterSetOwnerCalls.calls, ...bridgeCalls.calls];
     const kernelCallsValue = kernelCalls.reduce((acc, call) => acc + (call.value ?? 0n), 0n);
 
     if (createAccountCalls.exists) {
@@ -155,8 +110,7 @@ export async function getTransferRemoteWithKernelCalls(
             executor: contracts.ownableSignatureExecutor,
             owner: account,
             kernelAddress,
-            //TODO: Only send value if needed
-            value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
+            value: kernelCallsValue,
         });
 
         return { calls: executeOnOwnedAccount.calls };
@@ -170,11 +124,9 @@ export async function getTransferRemoteWithKernelCalls(
         executor: contracts.ownableSignatureExecutor,
         owner: account,
         kernelAddress,
-        //TODO: Only send value if needed
-        value: kernelCallsValue, //value needed to pay for Hyperlane Bridging
+        value: kernelCallsValue,
     });
 
-    //TODO: Additional util for Execute.sol contract
     // Execute batched calls
     const executeCalls = [...createAccountCalls.calls, ...executeOnOwnedAccount.calls];
     const executeCallsBatched = encodeCallArgsBatch(executeCalls);

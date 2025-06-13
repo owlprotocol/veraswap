@@ -16,17 +16,17 @@ import {
     getUniswapV4Address,
     STARGATE_POOL_NATIVE,
     getSuperchainMessageIdsFromReceipt,
+    PERMIT2_ADDRESS,
+    MAX_UINT_256,
 } from "@owlprotocol/veraswap-sdk";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
+import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
     HYPERLANE_CONTRACTS,
     LOCAL_HYPERLANE_CONTRACTS,
     LOCAL_KERNEL_CONTRACTS,
-    MAX_UINT_256,
-    PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";

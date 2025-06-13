@@ -1,8 +1,12 @@
 import {
     STARGATE_POOL_NATIVE,
+    STARGATE_TOKEN_POOLS,
     StargateETHQuote,
     StargateETHQuoteParams,
     stargateETHQuoteQueryOptions,
+    StargateTokenQuote,
+    StargateTokenQuoteParams,
+    stargateTokenQuoteQueryOptions,
 } from "@owlprotocol/veraswap-sdk";
 import { Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
@@ -46,15 +50,16 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
 
     const bridgeSymbol = bridge.currencyIn.symbol!;
 
-    // TODO: handle USDC bridging
     if (bridge.currencyIn.isNative) {
         if (bridgeSymbol !== "ETH" || !(chainIn.id in STARGATE_POOL_NATIVE && chainOut.id in STARGATE_POOL_NATIVE)) {
             return disabledQueryOptions as any;
         }
-        // } else if (bridgeSymbol === "USDC") {
-        //     if (!(chainIn.id in STARGATE_POOL_USDC && chainOut.id in STARGATE_POOL_USDC)) {
-        //         return disabledQueryOptions as any;
-        //     }
+    } else if (bridgeSymbol in STARGATE_TOKEN_POOLS) {
+        const pools = STARGATE_TOKEN_POOLS[bridgeSymbol];
+
+        if (!(chainIn.id in pools && chainOut.id in pools)) {
+            return disabledQueryOptions as any;
+        }
     } else {
         return disabledQueryOptions as any;
     }
@@ -71,7 +76,7 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
         amount = tokenInAmount;
     }
 
-    if (bridgeSymbol === "ETH") {
+    if (bridge.currencyIn.isNative) {
         // Native bridging
         const params: StargateETHQuoteParams = {
             srcChain: chainIn.id,
@@ -81,16 +86,16 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
         };
 
         return stargateETHQuoteQueryOptions(config, params);
-    }
+    } else {
+        // USDC, USDT
+        const params: StargateTokenQuoteParams = {
+            srcChain: chainIn.id,
+            dstChain: chainOut.id,
+            tokenSymbol: bridgeSymbol as keyof typeof STARGATE_TOKEN_POOLS,
+            amount,
+            receiver,
+        };
 
-    // TODO: Handle USDC bridging
-    // const params: StargateTokenQuoteParams = {
-    //     srcChain: chainIn.id,
-    //     dstChain: chainOut.id,
-    //     tokenSymbol: bridgeSymbol,
-    //     amount,
-    //     receiver,
-    // };
-    // return stargateTokenQuoteQueryOptions
-    return disabledQueryOptions as any;
-}) as unknown as Atom<AtomWithQueryResult<StargateETHQuote | null>>;
+        return stargateTokenQuoteQueryOptions(config, params);
+    }
+}) as unknown as Atom<AtomWithQueryResult<StargateETHQuote | StargateTokenQuote | null>>;

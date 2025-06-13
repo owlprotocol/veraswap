@@ -10,10 +10,12 @@ import { ERC7579ExecutorRouter } from "../artifacts/ERC7579ExecutorRouter.js";
 import { Execute } from "../artifacts/Execute.js";
 import { InterchainGasPaymaster } from "../artifacts/InterchainGasPaymaster.js";
 import { SuperchainERC7579ExecutorRouter } from "../artifacts/SuperchainERC7579ExecutorRouter.js";
+import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { SUPERCHAIN_ERC7579_ROUTER } from "../constants/superchain.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
+import { getStargateTokenBridgeTransaction } from "../stargate/getStargateTokenBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { PathKey } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
@@ -302,6 +304,9 @@ export async function getBridgeSwapWithKernelCalls(
     if (tokenStandard === "NativeToken") {
         const { stargateQuote, orbiterQuote } = params;
         if (stargateQuote) {
+            if (stargateQuote.type !== "ETH") {
+                throw new Error("Stargate ETH quote is required for native token bridging");
+            }
             const stargateTx = getStargateETHBridgeTransaction({
                 dstChain: destination,
                 srcChain: chainId,
@@ -338,6 +343,21 @@ export async function getBridgeSwapWithKernelCalls(
             permit2,
         });
         bridgeCalls = superchainBridgeCalls.calls;
+    } else if (params.stargateQuote?.type === "TOKEN") {
+        const { stargateQuote } = params;
+
+        const tokenSymbol = params.token;
+        if (!(tokenSymbol in STARGATE_TOKEN_POOLS)) {
+            throw new Error(`Token ${tokenSymbol} is not supported by Stargate`);
+        }
+        const stargateTx = getStargateTokenBridgeTransaction({
+            srcChain: chainId,
+            dstChain: destination,
+            tokenSymbol: tokenSymbol as keyof typeof STARGATE_TOKEN_POOLS,
+            receiver: kernelAddressRemote,
+            stargateQuote,
+        });
+        bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
     } else {
         invariant(
             tokenStandard !== "SuperchainERC20",

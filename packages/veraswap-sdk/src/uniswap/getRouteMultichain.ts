@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
 
+import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
 import { PathKey, PoolKey, poolKeysToPathExactIn } from "../types/PoolKey.js";
@@ -64,6 +65,15 @@ export async function getRouteMultichain(
     // BRIDGE: Native token bridge
     // TODO: account for bridge and gas fees
     if (currencyIn.isNative && currencyOut.isNative) {
+        return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
+    }
+
+    if (
+        currencyIn.symbol &&
+        currencyOut.symbol &&
+        currencyIn.symbol === currencyOut.symbol &&
+        currencyIn.symbol in STARGATE_TOKEN_POOLS
+    ) {
         return { flows: [{ type: "BRIDGE", currencyIn, currencyOut }], amountOut: exactAmount };
     }
 

@@ -1,6 +1,11 @@
 import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
-import { isMultichainToken, STARGATE_POOL_NATIVE, TransactionType } from "@owlprotocol/veraswap-sdk";
+import {
+    isMultichainToken,
+    STARGATE_POOL_NATIVE,
+    TransactionType,
+    STARGATE_TOKEN_POOLS,
+} from "@owlprotocol/veraswap-sdk";
 import { Hash } from "viem";
 import { sendTransactionMutationOptions, waitForTransactionReceiptQueryOptions } from "wagmi/query";
 import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
@@ -58,6 +63,11 @@ export const getSwapStepMessage = (swapStep: SwapStep, transactionType: Transact
     }
 };
 
+const currencyHasStargatePool = (currencySymbol: string, chainIdIn: number, chainIdOut: number) =>
+    currencySymbol in STARGATE_TOKEN_POOLS &&
+    chainIdIn in STARGATE_TOKEN_POOLS[currencySymbol] &&
+    chainIdOut in STARGATE_TOKEN_POOLS[currencySymbol];
+
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
     const account = get(accountAtom);
@@ -100,13 +110,19 @@ export const swapStepAtom = atom((get) => {
         return SwapStep.INSUFFICIENT_BALANCE;
     } else if (amountOut === "" || Number(amountOut) <= 0) {
         return SwapStep.AMOUNT_TOO_LOW;
+    } else if (currencyIn.isNative) {
+        return SwapStep.EXECUTE_SWAP;
     } else if (
-        // tokenIn is not native, and we don't have enough allowance
-        !currencyIn.isNative &&
-        (transactionType.type !== "BRIDGE" ||
-            (transactionType.type === "BRIDGE" &&
-                isMultichainToken(currencyIn) &&
-                !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20"))) &&
+        transactionType.type !== "BRIDGE" &&
+        (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
+    ) {
+        return SwapStep.APPROVE_PERMIT2;
+    } else if (
+        transactionType.type === "BRIDGE" &&
+        ((isMultichainToken(currencyIn) &&
+            !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20")) ||
+            (currencyIn.symbol &&
+                currencyHasStargatePool(currencyIn.symbol, currencyIn.chainId, currencyOut.chainId))) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;
