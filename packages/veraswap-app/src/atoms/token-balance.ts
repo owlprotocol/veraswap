@@ -13,7 +13,6 @@ import {
     getUniswapV4Address,
     Currency,
     USD_CURRENCIES,
-    STARGATE_TOKEN_POOLS,
 } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
@@ -513,37 +512,3 @@ export const tokenOutUsdValueAtom = atom((get) => {
     const amountOutBigInt = BigInt(parseFloat(amountOut) * 10 ** currencyOut.decimals);
     return calculateUsdValueFromQuote(amountOutBigInt, quote, usdDecimals, currencyOut.chainId);
 });
-
-// export const tokenInAllowanceAccountToPoolQueryAtom = atom((get) => {
-//     const currency = get(currencyInAtom);
-//     const account = get(accountAtom);
-//     const stargateQuote = get(stargateQuoteAtom).data;
-//     const transactionType = get(transactionTypeAtom);
-//     const permit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
-
-//     if (
-//         !currency ||
-//         !account?.address ||
-//         transactionType?.type !== "BRIDGE" ||
-//         !stargateQuote ||
-//         stargateQuote.type !== "TOKEN" ||
-//         !currency.symbol ||
-//         !(currency.symbol in STARGATE_TOKEN_POOLS) ||
-//         !permit2Allowance ||
-//         permit2Allowance < (get(tokenInAmountAtom) ?? 0n)
-//     ) {
-//         return get(disabledQueryAtom) as any;
-//     }
-
-//     const pools = STARGATE_TOKEN_POOLS[currency.symbol as keyof typeof STARGATE_TOKEN_POOLS];
-//     if (!pools) return get(disabledQueryAtom) as any;
-
-//     const poolAddress = pools[currency.chainId];
-//     if (!poolAddress) return get(disabledQueryAtom) as any;
-
-//     return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender: poolAddress }));
-// }) as Atom<AtomWithQueryResult<bigint>>;
-
-// export const tokenInAllowanceAccountToPoolAtom = atom<bigint | null>((get) => {
-//     return get(tokenInAllowanceAccountToPoolQueryAtom).data ?? null;
-// });

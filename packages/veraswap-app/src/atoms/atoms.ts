@@ -63,6 +63,11 @@ export const getSwapStepMessage = (swapStep: SwapStep, transactionType: Transact
     }
 };
 
+const currencyHasStargatePool = (currencySymbol: string, chainIdIn: number, chainIdOut: number) =>
+    currencySymbol in STARGATE_TOKEN_POOLS &&
+    chainIdIn in STARGATE_TOKEN_POOLS[currencySymbol] &&
+    chainIdOut in STARGATE_TOKEN_POOLS[currencySymbol];
+
 export const swapStepAtom = atom((get) => {
     // TODO: Could cause issues on account change
     const account = get(accountAtom);
@@ -116,11 +121,8 @@ export const swapStepAtom = atom((get) => {
         transactionType.type === "BRIDGE" &&
         ((isMultichainToken(currencyIn) &&
             !(currencyIn.standard === "HypERC20" || currencyIn.standard === "SuperERC20")) ||
-            (currencyIn &&
-                currencyIn.symbol &&
-                currencyIn.symbol in STARGATE_TOKEN_POOLS &&
-                currencyIn.chainId in STARGATE_TOKEN_POOLS[currencyIn.symbol] &&
-                currencyOut.chainId in STARGATE_TOKEN_POOLS[currencyIn.symbol])) &&
+            (currencyIn.symbol &&
+                currencyHasStargatePool(currencyIn.symbol, currencyIn.chainId, currencyOut.chainId))) &&
         (tokenInPermit2Allowance === null || tokenInPermit2Allowance < tokenInAmount)
     ) {
         return SwapStep.APPROVE_PERMIT2;

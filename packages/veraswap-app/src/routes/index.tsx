@@ -19,7 +19,6 @@ import {
     getSuperchainMessageIdsFromReceipt,
     PERMIT2_ADDRESS,
     MAX_UINT_256,
-    STARGATE_TOKEN_POOLS,
 } from "@owlprotocol/veraswap-sdk";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
@@ -294,26 +293,6 @@ function Index() {
 
             return;
         }
-
-        // if (swapStep === SwapStep.APPROVE_POOL) {
-        //     const pools = STARGATE_TOKEN_POOLS[currencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS];
-        //     if (!pools) return;
-
-        //     const poolAddress = pools[currencyIn.chainId];
-        //     if (!poolAddress) return;
-
-        //     sendTransaction({
-        //         to: getUniswapV4Address(currencyIn),
-        //         chainId: currencyIn.chainId,
-        //         data: encodeFunctionData({
-        //             abi: IERC20.abi,
-        //             functionName: "approve",
-        //             args: [poolAddress, MAX_UINT_256],
-        //         }),
-        //     });
-
-        //     return;
-        // }
 
         if (swapStep === SwapStep.EXECUTE_SWAP) {
             // NOTE: should be inferred from the top level check of handleSwapSteps

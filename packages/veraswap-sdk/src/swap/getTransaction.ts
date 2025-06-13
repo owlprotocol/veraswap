@@ -405,18 +405,6 @@ export async function getTransaction(
 
                 const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
-                // let poolApprovalParams: [Address, bigint, Hex] | undefined = undefined;
-
-                // const { poolApprovalCall } = await getPoolApprovalParams(queryClient, wagmiConfig, {
-                //     chainId: bridgeCurrencyIn.chainId,
-                //     token: getUniswapV4Address(swapCurrencyIn),
-                //     account: walletAddress,
-                //     tokenSymbol,
-                //     minAmount: amountIn,
-                //     approveAmount: "MAX_UINT_256",
-                // });
-                // poolApprovalParams = poolApprovalCall;
-
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     amountIn,
@@ -425,7 +413,6 @@ export async function getTransaction(
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     path,
                     permit2PermitParams,
-                    // poolApprovalParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
                     recipient: walletAddress,

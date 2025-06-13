@@ -73,9 +73,8 @@ export async function getStargateBridgeWithFunderCalls(
         approveAmount: amount,
     });
 
-    if (erc20ApproveCalls.calls.length > 0) {
-        calls.push(...erc20ApproveCalls.calls);
-    }
+    // NOTE: erc20ApproveCalls can be an empty array if there is no approval needed
+    calls.push(...erc20ApproveCalls.calls);
 
     const stargateTx = getStargateTokenBridgeTransaction({
         srcChain: chainId,

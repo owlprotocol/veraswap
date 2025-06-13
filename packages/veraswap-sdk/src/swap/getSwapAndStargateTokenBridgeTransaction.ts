@@ -44,10 +44,6 @@ export function getSwapAndStargateTokenBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    // if (poolApprovalParams) {
-    //     routePlanner.addCommand(CommandType.CALL_TARGET, poolApprovalParams);
-    // }
-
     const v4SwapParams = getV4SwapCommandParams({
         receiver: STARGATE_BRIDGE_SWEEP_ADDRESS,
         amountIn,

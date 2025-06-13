@@ -58,9 +58,6 @@ export async function getStargateBridgeWithKernelCalls(
 ): Promise<GetCallsReturnType> {
     const { contracts, chainId, account, token, destination, recipient, amount, stargateQuote } = params;
 
-    if (!params.contracts) {
-        invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
-    }
     const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
     // KERNEL ACCOUNT CONFIGURATION
@@ -97,9 +94,7 @@ export async function getStargateBridgeWithKernelCalls(
         });
         bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
     } else {
-        if (!params.tokenSymbol) {
-            throw new Error("tokenSymbol is required for token bridging");
-        }
+        invariant(!!params.tokenSymbol, "tokenSymbol is required for token bridging");
 
         const stargateBridgeCalls = await getStargateBridgeWithFunderCalls(queryClient, wagmiConfig, {
             chainId,

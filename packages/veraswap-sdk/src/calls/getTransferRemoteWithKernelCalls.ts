@@ -85,9 +85,6 @@ export async function getTransferRemoteWithKernelCalls(
         `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral or NativeToken`,
     );
 
-    if (!params.contracts) {
-        invariant(chainId === 900 || chainId === 901, "Chain ID must be 900 or 901 for default contracts");
-    }
     const erc7579RouterOwners = params.erc7579RouterOwners ?? [];
 
     // KERNEL ACCOUNT CONFIGURATION
