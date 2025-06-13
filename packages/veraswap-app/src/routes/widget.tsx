@@ -2,9 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { SwapWidget } from "@/components/SwapWidget.js";
 
-import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
-
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/widget")({
     validateSearch: z.object({
         type: z.enum(["mainnet", "testnet", "local"]).optional(),
         currencyIn: z.string().optional(),
@@ -12,14 +10,9 @@ export const Route = createFileRoute("/")({
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
     }),
-    component: Index,
+    component: Widget,
 });
 
-function Index() {
-    return (
-        <div className="max-w-md mx-auto px-2">
-            <MainnetTestnetButtons />
-            <SwapWidget />
-        </div>
-    );
+function Widget() {
+    return <SwapWidget />;
 }
