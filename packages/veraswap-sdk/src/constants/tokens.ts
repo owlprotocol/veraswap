@@ -185,8 +185,8 @@ const localMailboxByChain = {
 export const localSupersimCurrencies = [
     ...(() => {
         const tokenCData = {
-            name: "Superchain Token C",
-            symbol: "SC",
+            name: "Superchain Charlie",
+            symbol: "SCHRL",
             decimals: 18,
             logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/28752.png",
         };
@@ -223,8 +223,8 @@ export const localSupersimCurrencies = [
     })(),
     ...(() => {
         const tokenDData = {
-            name: "Superchain Token D",
-            symbol: "SD",
+            name: "Superchain Demso",
+            symbol: "SDEMS",
             decimals: 18,
             logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/30126.png",
         };
@@ -265,7 +265,7 @@ export const LOCAL_CURRENCIES = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Token A",
+            name: "Alberto",
             symbol: "A",
             decimals: 18,
             logoURI:
@@ -276,7 +276,7 @@ export const LOCAL_CURRENCIES = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Token B",
+            name: "Berenice",
             symbol: "B",
             decimals: 18,
             logoURI:
@@ -381,8 +381,8 @@ export const TESTNET_CURRENCIES = [
     // ),
     ...(() => {
         const tokenCData = {
-            name: "Superchain Token C",
-            symbol: "SC",
+            name: "Superchain Charlie",
+            symbol: "SCHRL",
             decimals: 18,
             logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/28752.png",
         };
@@ -403,8 +403,8 @@ export const TESTNET_CURRENCIES = [
     })(),
     ...(() => {
         const tokenDData = {
-            name: "Superchain Token D",
-            symbol: "SD",
+            name: "Superchain Demso",
+            symbol: "SDEMS",
             decimals: 18,
             logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/30126.png",
         };
