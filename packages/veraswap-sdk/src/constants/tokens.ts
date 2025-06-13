@@ -89,11 +89,13 @@ function createMockERC20Token(
         name,
         symbol,
         decimals,
+        logoURI,
     }: {
         chainId: number;
         name: string;
         symbol: string;
         decimals: number;
+        logoURI?: string;
     },
     mailbox: Address,
 ): MultichainToken {
@@ -108,6 +110,7 @@ function createMockERC20Token(
             erc20: address,
             mailbox: mailbox,
         }),
+        logoURI,
     });
 }
 
@@ -117,11 +120,13 @@ export function createMockERC20ConnectedTokens(
         name,
         symbol,
         decimals,
+        logoURI,
     }: {
         chainId: number;
         name: string;
         symbol: string;
         decimals: number;
+        logoURI?: string;
     },
     mailboxByChain: Record<number, Address>,
     msgSender: Address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
@@ -135,6 +140,7 @@ export function createMockERC20ConnectedTokens(
             name,
             symbol,
             decimals,
+            logoURI,
         },
         mailbox,
     );
@@ -160,6 +166,7 @@ export function createMockERC20ConnectedTokens(
             name,
             symbol,
             decimals,
+            logoURI,
         });
     });
 
@@ -181,6 +188,7 @@ export const localSupersimCurrencies = [
             name: "Superchain Token C",
             symbol: "SC",
             decimals: 18,
+            logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/28752.png",
         };
 
         const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
@@ -218,6 +226,7 @@ export const localSupersimCurrencies = [
             name: "Superchain Token D",
             symbol: "SD",
             decimals: 18,
+            logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/30126.png",
         };
 
         const tokenDAddress = getMockSuperchainERC20Address({ name: "Token D", symbol: "D", decimals: 18 });
@@ -259,6 +268,8 @@ export const LOCAL_CURRENCIES = [
             name: "Token A",
             symbol: "A",
             decimals: 18,
+            logoURI:
+                "https://i0.wp.com/musically.com/wp-content/uploads/2024/11/Pedro-the-Raccoon.png?resize=1568%2C1176&ssl=1",
         },
         localMailboxByChain,
     ),
@@ -268,6 +279,8 @@ export const LOCAL_CURRENCIES = [
             name: "Token B",
             symbol: "B",
             decimals: 18,
+            logoURI:
+                "https://static.the-independent.com/2024/10/08/14/moodeng-crypto-price-prediction-memecoin.jpg?quality=75&width=1368&crop=3%3A2%2Csmart&auto=webp",
         },
         localMailboxByChain,
     ),
@@ -371,6 +384,7 @@ export const TESTNET_CURRENCIES = [
             name: "Superchain Token C",
             symbol: "SC",
             decimals: 18,
+            logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/28752.png",
         };
 
         const tokenCAddress = getMockSuperchainERC20Address({ name: "Token C", symbol: "C", decimals: 18 });
@@ -392,6 +406,7 @@ export const TESTNET_CURRENCIES = [
             name: "Superchain Token D",
             symbol: "SD",
             decimals: 18,
+            logoURI: "https://s2.coinmarketcap.com/static/img/coins/128x128/30126.png",
         };
 
         const tokenDAddress = getMockSuperchainERC20Address({ name: "Token D", symbol: "D", decimals: 18 });

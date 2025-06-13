@@ -14,7 +14,6 @@ import {
     TransactionTypeSwapBridge,
     Currency,
     getUniswapV4Address,
-    getStargateMessageIdFromReceipt,
     STARGATE_POOL_NATIVE,
     getSuperchainMessageIdsFromReceipt,
 } from "@owlprotocol/veraswap-sdk";
@@ -470,7 +469,6 @@ function Index() {
 
         const hyperlaneMessageIds = getHyperlaneMessageIdsFromReceipt(receipt);
         const superchainMessageIds = getSuperchainMessageIdsFromReceipt(receipt, chainIn!.id);
-        const stargateBridgeMessageId = getStargateMessageIdFromReceipt(receipt);
 
         if (
             (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") &&
@@ -535,7 +533,8 @@ function Index() {
                 if (hyperlaneBridgeMessageId) {
                     setBridgeMessageId(hyperlaneBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
-                } else if (superchainBridgeMessageId) {
+                } else if (superchainMessageIds[0]) {
+                    const superchainBridgeMessageId = superchainMessageIds[0];
                     setSuperchainBridgeMessageId(superchainBridgeMessageId);
                     setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
                 } else if (stargateQuote) {
