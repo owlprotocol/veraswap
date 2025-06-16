@@ -148,7 +148,7 @@ function StepCard({ step, url, isEmbedded }: { step: TransactionStep; url?: stri
                 </div>
                 <CardDescription className={cn(isEmbedded && "text-xs mt-0")}>{step.description}</CardDescription>
             </CardHeader>
-            <CardContent className={cn(isEmbedded ? "pt-0 px-2 pb-1" : "pt-0")}>
+            <CardContent className={isEmbedded ? "pt-0 px-2 pb-1" : "pt-0"}>
                 {step.status === "processing" && (
                     <div className="w-full rounded-full h-2.5">
                         <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full animate-pulse w-full"></div>

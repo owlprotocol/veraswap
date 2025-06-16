@@ -11,14 +11,14 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as WidgetImport } from './routes/widget'
+import { Route as EmbedImport } from './routes/embed'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
 
-const WidgetRoute = WidgetImport.update({
-  id: '/widget',
-  path: '/widget',
+const EmbedRoute = EmbedImport.update({
+  id: '/embed',
+  path: '/embed',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,11 +39,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/widget': {
-      id: '/widget'
-      path: '/widget'
-      fullPath: '/widget'
-      preLoaderRoute: typeof WidgetImport
+    '/embed': {
+      id: '/embed'
+      path: '/embed'
+      fullPath: '/embed'
+      preLoaderRoute: typeof EmbedImport
       parentRoute: typeof rootRoute
     }
   }
@@ -53,37 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/widget': typeof WidgetRoute
+  '/embed': typeof EmbedRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/widget': typeof WidgetRoute
+  '/embed': typeof EmbedRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/widget': typeof WidgetRoute
+  '/embed': typeof EmbedRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/widget'
+  fullPaths: '/' | '/embed'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/widget'
-  id: '__root__' | '/' | '/widget'
+  to: '/' | '/embed'
+  id: '__root__' | '/' | '/embed'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  WidgetRoute: typeof WidgetRoute
+  EmbedRoute: typeof EmbedRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  WidgetRoute: WidgetRoute,
+  EmbedRoute: EmbedRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,14 +97,14 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/widget"
+        "/embed"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/widget": {
-      "filePath": "widget.tsx"
+    "/embed": {
+      "filePath": "embed.tsx"
     }
   }
 }
