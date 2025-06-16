@@ -9,10 +9,23 @@ export const Route = createFileRoute("/widget")({
         chainIdIn: z.coerce.number().optional(),
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
+        bgColor: z.string().optional(),
     }),
     component: Widget,
 });
 
 function Widget() {
-    return <SwapWidget />;
+    const { bgColor } = Route.useSearch();
+
+    return (
+        <div
+            style={{
+                background: bgColor || "transparent",
+                minHeight: "100vh",
+                width: "100%",
+            }}
+        >
+            <SwapWidget isEmbedded={true} />
+        </div>
+    );
 }

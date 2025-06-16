@@ -95,9 +95,15 @@ interface SwapWidgetProps {
     showSettings?: boolean;
     showTransactionFlow?: boolean;
     className?: string;
+    isEmbedded?: boolean;
 }
 
-export function SwapWidget({ showSettings = true, showTransactionFlow = false, className = "" }: SwapWidgetProps) {
+export function SwapWidget({
+    showSettings = true,
+    showTransactionFlow = false,
+    className = "",
+    isEmbedded = false,
+}: SwapWidgetProps) {
     const queryClient = useQueryClient();
     const { address: walletAddress, chainId } = useAccount();
     const { openConnectModal } = useConnectModal();
@@ -628,10 +634,10 @@ export function SwapWidget({ showSettings = true, showTransactionFlow = false, c
     };
 
     return (
-        <div className={cn("max-w-md mx-auto px-2", className)}>
+        <div className={cn("max-w-md px-2", className)}>
             {showSettings && (
                 <div className="flex items-center justify-end mb-4">
-                    <SettingsDialog />
+                    <SettingsDialog isEmbedded={isEmbedded} />
                 </div>
             )}
             <Card className="w-full backdrop-blur-sm shadow-xl">
@@ -668,7 +674,7 @@ export function SwapWidget({ showSettings = true, showTransactionFlow = false, c
                                         <Wallet size={20} /> +
                                     </button>
                                 )}
-                                <TokenSelector selectingTokenIn={true} />
+                                <TokenSelector selectingTokenIn={true} isEmbedded={isEmbedded} />
                             </div>
                             <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                 <div>{!!tokenInUsdValue && <span>≈ ${tokenInUsdValue.toFixed(2)}</span>}</div>
@@ -731,7 +737,7 @@ export function SwapWidget({ showSettings = true, showTransactionFlow = false, c
                                         <Wallet size={20} /> +
                                     </button>
                                 )}
-                                <TokenSelector />
+                                <TokenSelector isEmbedded={isEmbedded} />
                             </div>
                             <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                 <div>{!!tokenOutUsdValue && <span>≈ ${tokenOutUsdValue.toFixed(2)}</span>}</div>
@@ -762,6 +768,7 @@ export function SwapWidget({ showSettings = true, showTransactionFlow = false, c
                     destination: chainOut ?? undefined,
                 }}
                 networkType={networkType}
+                isEmbedded={isEmbedded}
             />
         </div>
     );

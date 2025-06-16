@@ -24,6 +24,7 @@ type TransactionStatusModalProps = {
     hashes?: { swap?: string; bridge?: string; transferRemote?: string; sendOrigin?: string };
     chains?: { source?: Chain; destination?: Chain };
     networkType: "local" | "testnet" | "mainnet";
+    isEmbedded?: boolean;
 };
 
 export function TransactionStatusModal({
@@ -34,6 +35,7 @@ export function TransactionStatusModal({
     hashes,
     chains,
     networkType,
+    isEmbedded = false,
 }: TransactionStatusModalProps) {
     const transactionType = useAtomValue(transactionTypeAtom);
     const stargateQuote = useAtomValue(stargateQuoteAtom);
@@ -88,14 +90,28 @@ export function TransactionStatusModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
-                <DialogHeader>
-                    <DialogTitle>{allComplete ? "Transaction Complete" : "Transaction in Progress"}</DialogTitle>
+            <DialogContent
+                className={cn(
+                    "aria-describedby={undefined} overflow-hidden",
+                    isEmbedded ? "max-w-full max-h-[90vh] w-[95vw]" : "sm:max-w-md max-h-[90vh]",
+                )}
+            >
+                <DialogHeader className={cn(isEmbedded ? "pb-1 px-4" : "pb-4")}>
+                    <DialogTitle className={cn(isEmbedded ? "text-base" : "text-lg")}>
+                        {allComplete ? "Transaction Complete" : "Transaction in Progress"}
+                    </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div
+                    className={cn(
+                        "overflow-y-auto",
+                        isEmbedded
+                            ? "py-2 px-4 space-y-2 max-h-[calc(90vh-80px)]"
+                            : "py-4 space-y-4 max-h-[calc(90vh-100px)]",
+                    )}
+                >
                     {steps.map((step) => {
                         const url = getExplorerUrl(step.id);
-                        return <StepCard key={step.id} step={step} isActive={step.id === currentStepId} url={url} />;
+                        return <StepCard key={step.id} step={step} url={url} isEmbedded={isEmbedded} />;
                     })}
                 </div>
             </DialogContent>
@@ -103,30 +119,36 @@ export function TransactionStatusModal({
     );
 }
 
-function StepCard({ step, isActive, url }: { step: TransactionStep; isActive: boolean; url?: string }) {
+function StepCard({ step, url, isEmbedded }: { step: TransactionStep; url?: string; isEmbedded: boolean }) {
     const content = (
         <Card
             className={cn(
                 "border-2 transition-all duration-200 group",
+                isEmbedded ? "p-1" : "p-0",
                 step.status === "processing" && "border-blue-500 shadow-md",
                 step.status === "success" && "border-green-500",
                 step.status === "error" && "border-red-500",
                 url && "hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer",
             )}
         >
-            <CardHeader className="pb-2">
+            <CardHeader className={cn(isEmbedded ? "pb-1 px-2" : "pb-2")}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg">{step.title}</CardTitle>
+                        <CardTitle className={cn(isEmbedded ? "text-sm" : "text-lg")}>{step.title}</CardTitle>
                         {url && (
-                            <ArrowUpRight className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                            <ArrowUpRight
+                                className={cn(
+                                    "opacity-70 group-hover:opacity-100 transition-opacity",
+                                    isEmbedded ? "w-3 h-3" : "w-4 h-4",
+                                )}
+                            />
                         )}
                     </div>
-                    <StatusIcon status={step.status} />
+                    <StatusIcon status={step.status} isEmbedded={isEmbedded} />
                 </div>
-                <CardDescription>{step.description}</CardDescription>
+                <CardDescription className={cn(isEmbedded && "text-xs mt-0")}>{step.description}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={cn(isEmbedded ? "pt-0 px-2 pb-1" : "pt-0")}>
                 {step.status === "processing" && (
                     <div className="w-full rounded-full h-2.5">
                         <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full animate-pulse w-full"></div>
@@ -145,15 +167,17 @@ function StepCard({ step, isActive, url }: { step: TransactionStep; isActive: bo
     );
 }
 
-function StatusIcon({ status }: { status: TransactionStep["status"] }) {
+function StatusIcon({ status, isEmbedded }: { status: TransactionStep["status"]; isEmbedded: boolean }) {
+    const iconSize = isEmbedded ? "w-4 h-4" : "w-5 h-5";
+
     switch (status) {
         case "pending":
-            return <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600" />;
+            return <div className={cn("rounded-full bg-gray-300 dark:bg-gray-600", iconSize)} />;
         case "processing":
-            return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
+            return <Loader2 className={cn("text-blue-500 animate-spin", iconSize)} />;
         case "success":
-            return <CheckCircle className="w-5 h-5 text-green-500" />;
+            return <CheckCircle className={cn("text-green-500", iconSize)} />;
         case "error":
-            return <XCircle className="w-5 h-5 text-red-500" />;
+            return <XCircle className={cn("text-red-500", iconSize)} />;
     }
 }

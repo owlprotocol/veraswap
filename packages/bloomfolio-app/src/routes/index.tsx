@@ -9,7 +9,6 @@ import { BasketCard } from "@/components/BasketCard.js";
 import { BasketPurchaseConfirmation } from "@/components/BasketPurchaseConfirmation.js";
 import { ShareButton } from "@/components/ShareButton.js";
 import { SelectedBasketPanel } from "@/components/SelectedBasketPanel.js";
-import { VeraSwapIframe } from "@/components/VeraSwapIframe.js";
 
 export const Route = createFileRoute("/")({
     validateSearch: z.object({
@@ -49,9 +48,6 @@ export default function SimplifiedPortfolioPage() {
                     </div>
                     <ShareButton />
                 </header>
-
-                <VeraSwapIframe showSettings={true} type="local" width="60%" height="450px" className="border-0" />
-
                 {showConfirmation ? (
                     <BasketPurchaseConfirmation selectedBasket={selectedBasket} amount={amount} hash={hash} />
                 ) : (

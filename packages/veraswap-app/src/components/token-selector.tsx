@@ -30,7 +30,13 @@ import {
 } from "@/atoms/token-balance.js";
 import { accountAtom } from "@/atoms/account.js";
 
-export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean }) => {
+export const TokenSelector = ({
+    selectingTokenIn,
+    isEmbedded = false,
+}: {
+    selectingTokenIn?: boolean;
+    isEmbedded?: boolean;
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -141,7 +147,10 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
             </DialogTrigger>
 
             <DialogContent
-                className="max-w-2xl max-h-[800px] rounded-2xl border-0 p-0 gap-0 shadow-xl overflow-hidden"
+                className={cn(
+                    "rounded-2xl border-0 p-0 gap-0 shadow-xl overflow-hidden",
+                    isEmbedded ? "max-w-full max-h-[90vh] w-[95vw]" : "max-w-2xl max-h-[90vh]",
+                )}
                 showCloseIcon={false}
                 aria-describedby={undefined}
             >
@@ -174,7 +183,13 @@ export const TokenSelector = ({ selectingTokenIn }: { selectingTokenIn?: boolean
                     }}
                 />
 
-                <div ref={scrollContainerRef} className="max-h-[400px] overflow-y-auto p-4">
+                <div
+                    ref={scrollContainerRef}
+                    className={cn(
+                        "overflow-y-auto p-4",
+                        isEmbedded ? "max-h-[calc(90vh-200px)]" : "max-h-[calc(90vh-250px)]",
+                    )}
+                >
                     {filteredTokens.length === 0 ? (
                         <div className="flex h-full items-center justify-center p-8">
                             <span className="text-muted-foreground">

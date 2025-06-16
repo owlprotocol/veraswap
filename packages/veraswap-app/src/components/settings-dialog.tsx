@@ -128,7 +128,7 @@ function SlippageSettings() {
     );
 }
 
-export function SettingsDialog() {
+export function SettingsDialog({ isEmbedded = false }: { isEmbedded?: boolean }) {
     const [open, setOpen] = useState(false);
     const [, setSlippage] = useAtom(slippageAtom);
     const [activeTab, setActiveTab] = useState("slippage");
@@ -140,7 +140,12 @@ export function SettingsDialog() {
                     <Settings2 className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden">
+            <DialogContent
+                className={cn(
+                    "p-0 overflow-hidden",
+                    isEmbedded ? "max-w-full max-h-[90vh] w-[95vw]" : "sm:max-w-[440px]",
+                )}
+            >
                 <div className="flex flex-col h-full">
                     <DialogHeader className="px-6 pt-6 pb-4 border-b">
                         <div className="flex items-center gap-2">
@@ -160,7 +165,9 @@ export function SettingsDialog() {
                         <p className="text-sm text-muted-foreground mt-1">Configure your trading preferences</p>
                     </DialogHeader>
 
-                    <div className="flex-1 px-6 py-4 overflow-y-auto max-h-[60vh]">
+                    <div
+                        className={cn("flex-1 px-6 py-4 overflow-y-auto", isEmbedded ? "max-h-[60vh]" : "max-h-[60vh]")}
+                    >
                         <SlippageSettings />
                     </div>
 
