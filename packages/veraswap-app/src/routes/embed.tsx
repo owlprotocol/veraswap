@@ -2,24 +2,30 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { SwapWidget } from "@/components/SwapWidget.js";
 
-import { MainnetTestnetButtons } from "@/components/MainnetTestnetButtons.js";
-
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/embed")({
     validateSearch: z.object({
         type: z.enum(["mainnet", "testnet", "local"]).optional(),
         currencyIn: z.string().optional(),
         chainIdIn: z.coerce.number().optional(),
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
+        bgColor: z.string().optional(),
     }),
-    component: Index,
+    component: Widget,
 });
 
-function Index() {
+function Widget() {
+    const { bgColor } = Route.useSearch();
+
     return (
-        <div className="max-w-md mx-auto px-2">
-            <MainnetTestnetButtons />
-            <SwapWidget />
+        <div
+            style={{
+                background: bgColor || "transparent",
+                minHeight: "100vh",
+                width: "100%",
+            }}
+        >
+            <SwapWidget isEmbedded={true} />
         </div>
     );
 }

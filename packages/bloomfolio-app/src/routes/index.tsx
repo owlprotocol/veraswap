@@ -48,7 +48,6 @@ export default function SimplifiedPortfolioPage() {
                     </div>
                     <ShareButton />
                 </header>
-
                 {showConfirmation ? (
                     <BasketPurchaseConfirmation selectedBasket={selectedBasket} amount={amount} hash={hash} />
                 ) : (
