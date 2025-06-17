@@ -19,7 +19,7 @@ function Index() {
     return (
         <div className="max-w-md mx-auto px-2">
             <MainnetTestnetButtons />
-            <SwapWidget />
+            <SwapWidget showTransactionFlow={true} />
         </div>
     );
 }
