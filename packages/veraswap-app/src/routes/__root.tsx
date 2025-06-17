@@ -14,7 +14,7 @@ function RootComponent() {
     const [menuOpen, setMenuOpen] = useState(false);
     const location = useLocation();
 
-    const isEmbedRoute = location.pathname.startsWith("/widget");
+    const isEmbedRoute = location.pathname.startsWith("/embed");
 
     if (isEmbedRoute) {
         return <Outlet />;
