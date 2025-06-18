@@ -211,8 +211,9 @@ contract DeployLocal is DeployCoreContracts {
             vm.selectFork(forks[1]);
             vm.startBroadcast();
 
+            CoreContracts storage contracts = chainContracts[chainIds[1]];
             deployTestUSDCPool(
-                contractsA.uniswap.universalRouter, contractsA.uniswap.v4PositionManager, contractsA.uniswap.v4StateView
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
             );
 
             vm.stopBroadcast();
@@ -286,7 +287,9 @@ contract DeployLocal is DeployCoreContracts {
         (testUSDC,) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
 
         PoolUtils.setupToken(IERC20(testUSDC), IPositionManager(v4PositionManager), IUniversalRouter(router));
-        PoolUtils.deployPool(testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
         console2.log("Test USD Coin:", testUSDC);
         console2.log("Deployed Token and pool");
     }
@@ -301,8 +304,12 @@ contract DeployLocal is DeployCoreContracts {
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
         // PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
-        PoolUtils.deployPool(tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
-        PoolUtils.deployPool(tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
 
         console2.log("Token A:", tokenA);
         console2.log("Token B:", tokenB);

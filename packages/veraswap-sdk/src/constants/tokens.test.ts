@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { opChainAClient, opChainBClient, opChainL1Client } from "../chains/index.js";
+import { MultichainToken } from "../currency/multichainToken.js";
 
 import { LOCAL_CURRENCIES } from "./tokens.js";
 
@@ -12,7 +13,7 @@ describe("constants/tokens.test.ts", function () {
     };
     test("tokens exist", async () => {
         // Ignore zeroAddress tokens
-        for (const token of LOCAL_CURRENCIES.filter((t) => !t.isNative)) {
+        for (const token of LOCAL_CURRENCIES.filter((t) => t instanceof MultichainToken)) {
             const client = clients[token.chainId as 900 | 901 | 902];
             await expect(
                 client.getCode({ address: token.address }),
