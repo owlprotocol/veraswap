@@ -219,7 +219,7 @@ contract DeployLocalSupersim is DeployCoreContracts {
         // Deploy Superchain Tokens on OP Chains with Collateral
         {
             // Deploy Token C and Collateral on OPChainA, and silently deploy Token D
-            // Also setup Superchain token pools
+            // Also deploy test USDC and setup Superchain token pools
             {
                 vm.selectFork(forks[1]);
                 vm.startBroadcast();
@@ -230,6 +230,12 @@ contract DeployLocalSupersim is DeployCoreContracts {
                 (address superchainTokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
                 tokens[chainIds[1]][keccak256("C")] = superchainTokenC;
                 console2.log("Deployed Superchain Token C on OPChainA:", superchainTokenC);
+
+                deployTestUSDCPool(
+                    contractsA.uniswap.universalRouter,
+                    contractsA.uniswap.v4PositionManager,
+                    contractsA.uniswap.v4StateView
+                );
 
                 deploySuperchainTokenAndPools(
                     contractsA.uniswap.universalRouter,
@@ -333,6 +339,18 @@ contract DeployLocalSupersim is DeployCoreContracts {
                 vm.stopBroadcast();
             }
         }
+    }
+
+    function deployTestUSDCPool(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address testUSDC)
+    {
+        (testUSDC,) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
+
+        PoolUtils.setupToken(IERC20(testUSDC), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.deployPool(testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        console2.log("Test USD Coin:", testUSDC);
+        console2.log("Deployed Token and pool");
     }
 
     function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)

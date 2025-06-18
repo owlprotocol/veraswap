@@ -27,6 +27,7 @@ import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { nativeOnChain } from "../uniswap/index.js";
 
 import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
+import { Token } from "../currency/token.js";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -261,6 +262,8 @@ export const localSupersimCurrencies = [
     })(),
 ];
 
+const tUSDCData = { name: "Test USD Coin", symbol: "tUSDC", decimals: 18 };
+
 export const LOCAL_CURRENCIES = [
     ...createMockERC20ConnectedTokens(
         {
@@ -284,6 +287,12 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
+    new Token({
+        chainId: opChainA.id,
+        address: getMockERC20Address(tUSDCData),
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+        ...tUSDCData,
+    }),
 
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),

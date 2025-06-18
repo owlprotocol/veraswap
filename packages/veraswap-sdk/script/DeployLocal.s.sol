@@ -204,6 +204,21 @@ contract DeployLocal is DeployCoreContracts {
         }
 
         /**
+         * Deploy Test USDC Pool on OP Chain A.
+         * We pick OP Chain A to be consistent with the supersim deployment.
+         */
+        {
+            vm.selectFork(forks[1]);
+            vm.startBroadcast();
+
+            deployTestUSDCPool(
+                contractsA.uniswap.universalRouter, contractsA.uniswap.v4PositionManager, contractsA.uniswap.v4StateView
+            );
+
+            vm.stopBroadcast();
+        }
+
+        /**
          * MockMailbox Environment ****
          */
         {
@@ -262,6 +277,18 @@ contract DeployLocal is DeployCoreContracts {
 
             vm.stopBroadcast();
         }
+    }
+
+    function deployTestUSDCPool(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address testUSDC)
+    {
+        (testUSDC,) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
+
+        PoolUtils.setupToken(IERC20(testUSDC), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.deployPool(testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        console2.log("Test USD Coin:", testUSDC);
+        console2.log("Deployed Token and pool");
     }
 
     function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
