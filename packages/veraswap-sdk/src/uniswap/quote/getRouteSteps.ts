@@ -1,8 +1,10 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
+import { readContractQueryOptions } from "@wagmi/core/query";
 import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
+import { GasRouter } from "../../artifacts/GasRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../../chains/supersim.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../../constants/hyperlane.js";
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../../constants/orbiter.js";
@@ -43,6 +45,7 @@ export interface RouteStepHyperlane extends RouteStepBase {
     type: "hyperlane";
     currencyIn: MultichainToken;
     currencyOut: MultichainToken;
+    bridgePayment: bigint; // Amount to pay for gas on destination chain
 }
 
 export interface RouteStepStargate extends RouteStepBase {
@@ -175,7 +178,7 @@ export async function getRouteSteps(
 // TODO: Add Stargate and more
 export async function getRouteStepBridge(
     queryClient: QueryClient,
-    _: Config,
+    wagmiConfig: Config,
     {
         currencyIn,
         currencyOut,
@@ -223,7 +226,25 @@ export async function getRouteStepBridge(
             }
             // Hyperlane: CurrencyIn has a Hyperlane address
             if (currencyIn.hyperlaneAddress != null) {
-                return { type: "hyperlane", currencyIn, currencyOut, amountIn, amountOut: amountIn, recipient };
+                const bridgePayment = await queryClient.fetchQuery(
+                    readContractQueryOptions(wagmiConfig, {
+                        chainId: currencyIn.chainId,
+                        address: currencyIn.hyperlaneAddress,
+                        abi: GasRouter.abi,
+                        functionName: "quoteGasPayment",
+                        args: [currencyOut.chainId],
+                    }),
+                );
+
+                return {
+                    type: "hyperlane",
+                    currencyIn,
+                    currencyOut,
+                    amountIn,
+                    amountOut: amountIn,
+                    recipient,
+                    bridgePayment,
+                };
             }
         }
     }
