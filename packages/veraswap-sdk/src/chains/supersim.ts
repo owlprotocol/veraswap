@@ -37,7 +37,8 @@ export const opChainAPort = 9545;
 export const opChainABundlerPort = 9901;
 export const opChainA = defineChain({
     id: 901,
-    name: "OP Chain A",
+    // name: "OP Chain A",
+    name: "Local Unichain",
     testnet: true,
     rpcUrls: {
         // default: { http: [`http://127.0.0.1:${opChainAPort}`], webSocket: [`ws://127.0.0.1:${opChainAPort}`] },
@@ -49,7 +50,8 @@ export const opChainA = defineChain({
         symbol: "ETH",
     },
     custom: {
-        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+        // logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+        logoURI: "https://icons.llamao.fi/icons/chains/rsz_unichain.jpg",
     },
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;
@@ -63,7 +65,8 @@ export const opChainBPort = 9546;
 export const opChainBBundlerPort = 9902;
 export const opChainB = defineChain({
     id: 902,
-    name: "OP Chain B",
+    // name: "OP Chain B",
+    name: "Local Base",
     testnet: true,
     rpcUrls: {
         // default: { http: [`http://127.0.0.1:${opChainBPort}`], webSocket: [`ws://127.0.0.1:${opChainBPort}`] },
@@ -75,7 +78,8 @@ export const opChainB = defineChain({
         symbol: "ETH",
     },
     custom: {
-        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+        // logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
+        logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/base/logo.svg",
     },
     iconUrl: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/optimism/logo.svg",
 }) satisfies ChainWithMetadata;

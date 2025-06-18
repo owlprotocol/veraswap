@@ -1,6 +1,10 @@
 import { MockERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
 import type { CallArgs, Currency } from "@owlprotocol/veraswap-sdk";
-import { isMultichainToken, MultichainToken } from "@owlprotocol/veraswap-sdk";
+import {
+    isMultichainToken,
+    MultichainToken,
+    Token,
+} from "@owlprotocol/veraswap-sdk";
 import {
     Address,
     PublicClient,
@@ -25,12 +29,15 @@ export async function getDustAccountCalls({
 }): Promise<CallArgs[]> {
     const calls: CallArgs[] = [];
 
+    // Dust with Multichain tokens
     let filteredTokens = currencies.filter(
-        (token): token is MultichainToken =>
-            isMultichainToken(token) &&
-            token.chainId === client.chain?.id &&
-            (token.standard === "ERC20" || token.standard === "SuperERC20")
-    );
+        (token) =>
+            (isMultichainToken(token) &&
+                token.chainId === client.chain?.id &&
+                (token.standard === "ERC20" ||
+                    token.standard === "SuperERC20")) ||
+            (token instanceof Token && token.symbol === "tUSDC")
+    ) as (Token | MultichainToken)[];
 
     if (
         client.chain.id === 900 ||

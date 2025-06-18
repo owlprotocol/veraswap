@@ -475,6 +475,8 @@ export function SwapWidget({
         const hyperlaneSwapMessageId =
             !stargateQuote && !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
 
+        const superchainBridgeMessageId = superchainMessageIds[0];
+
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 

@@ -204,6 +204,22 @@ contract DeployLocal is DeployCoreContracts {
         }
 
         /**
+         * Deploy Test USDC Pool on OP Chain A.
+         * We pick OP Chain A to be consistent with the supersim deployment.
+         */
+        {
+            vm.selectFork(forks[1]);
+            vm.startBroadcast();
+
+            CoreContracts storage contracts = chainContracts[chainIds[1]];
+            deployTestUSDCPool(
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
+            );
+
+            vm.stopBroadcast();
+        }
+
+        /**
          * MockMailbox Environment ****
          */
         {
@@ -264,6 +280,20 @@ contract DeployLocal is DeployCoreContracts {
         }
     }
 
+    function deployTestUSDCPool(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address testUSDC)
+    {
+        (testUSDC,) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
+
+        PoolUtils.setupToken(IERC20(testUSDC), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
+        console2.log("Test USD Coin:", testUSDC);
+        console2.log("Deployed Token and pool");
+    }
+
     function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
         internal
         returns (address tokenA, address tokenB)
@@ -274,8 +304,12 @@ contract DeployLocal is DeployCoreContracts {
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
         // PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
-        PoolUtils.deployPool(tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
-        PoolUtils.deployPool(tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView));
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
+        PoolUtils.deployPoolWithLiquidityMultiplier(
+            tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
+        );
 
         console2.log("Token A:", tokenA);
         console2.log("Token B:", tokenB);

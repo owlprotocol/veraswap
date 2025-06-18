@@ -351,7 +351,8 @@ const calculateUsdValueFromQuote = (
     quoteUsdDecimals: number,
     chainId: number,
 ): number => {
-    const currencyUsdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 6;
+    // Default is Ether decimals
+    const currencyUsdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 18;
     const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
     const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
 

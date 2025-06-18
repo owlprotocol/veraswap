@@ -12,6 +12,8 @@ import {
     V4MetaQuoteExactBestReturnType,
 } from "../uniswap/V4MetaQuoter.js";
 
+const tokenDollarQuoteAmount = (decimals: number) => parseUnits("1", decimals);
+
 export async function getTokenDollarValue(
     config: Config,
     { tokenAddress, chainId }: { tokenAddress?: Address; chainId?: number },
@@ -23,6 +25,9 @@ export async function getTokenDollarValue(
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
 
+    // 1 USD is always 1 USD
+    if (usdCurrency.address === tokenAddress) return tokenDollarQuoteAmount(usdCurrency.decimals);
+
     const quote = (await readContract(config, {
         chainId,
         abi: [metaQuoteExactOutputBest],
@@ -31,7 +36,7 @@ export async function getTokenDollarValue(
         // @ts-expect-error wrong type since query key can't have a bigint
         args: [
             {
-                exactAmount: numberToHex(parseUnits("1", usdCurrency.decimals)),
+                exactAmount: numberToHex(tokenDollarQuoteAmount(usdCurrency.decimals)),
                 exactCurrency: usdCurrency.address,
                 variableCurrency: tokenAddress,
                 hopCurrencies: hopCurrencies.filter((c) => c !== usdCurrency.address && c !== tokenAddress),

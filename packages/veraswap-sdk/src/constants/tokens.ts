@@ -23,6 +23,7 @@ import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, supersee
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
+import { Token } from "../currency/token.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { nativeOnChain } from "../uniswap/index.js";
 
@@ -261,7 +262,10 @@ export const localSupersimCurrencies = [
     })(),
 ];
 
-export const LOCAL_CURRENCIES = [
+const tUSDCData = { name: "Test USD Coin", symbol: "tUSDC", decimals: 18 };
+export const tUSDCAddress = getMockERC20Address(tUSDCData);
+
+export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
@@ -284,6 +288,12 @@ export const LOCAL_CURRENCIES = [
         },
         localMailboxByChain,
     ),
+    new Token({
+        chainId: opChainA.id,
+        address: tUSDCAddress,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+        ...tUSDCData,
+    }),
 
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
