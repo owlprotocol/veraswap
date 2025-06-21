@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { Config, readContract } from "@wagmi/core";
+import invariant from "tiny-invariant";
 import { Address, numberToHex, parseUnits, zeroAddress } from "viem";
 
 import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
@@ -16,7 +17,10 @@ export async function getTokenDollarValue(
 ) {
     if (!tokenAddress || !chainId) return 0n;
 
-    const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter!;
+    // TODO: remove all this once we know metaQuoter is always available
+    const metaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter!;
+    invariant(metaQuoter, `Meta quoter not found for chain ${chainId}.`);
+
     const hopCurrencies = getCurrencyHops(chainId);
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
@@ -27,7 +31,7 @@ export async function getTokenDollarValue(
     const quote = await readContract(config, {
         chainId,
         abi: [metaQuoteExactOutputBest],
-        address: v4MetaQuoter,
+        address: metaQuoter,
         functionName: "metaQuoteExactOutputBest",
         args: [
             {
