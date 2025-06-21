@@ -19,8 +19,10 @@ library DeploySuperseed {
             v4PoolManager: address(0),
             v3NFTPositionManager: address(0),
             v4PositionManager: address(0),
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

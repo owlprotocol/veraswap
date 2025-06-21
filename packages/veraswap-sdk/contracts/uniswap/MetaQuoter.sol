@@ -19,8 +19,6 @@ import {V4MetaQuoter} from "./V4MetaQuoter.sol";
 import {IV3MetaQuoter} from "./v3/IV3MetaQuoter.sol";
 import {IV4MetaQuoter} from "./IV4MetaQuoter.sol";
 
-//TODO: Handle address(0) => WETH for V3 quotes
-
 /// @title MetaQuoter
 /// @notice Supports quoting and routing optimal trade using logic by getting balance delta across multiple routes for v3/v4 pools
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
@@ -29,14 +27,25 @@ contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
+    /// @notice Used to map native token quotes (address(0)) to WETH9 for V3 quotes
+    address public immutable weth9;
+
     /// @param _factory The address of the Uniswap V3 factory contract
     /// @param _poolInitCodeHash The init code hash of the V3 pool
     /// @param _poolManager The address of the Uniswap V4 pool manager contract
     constructor(
         address _factory,
         bytes32 _poolInitCodeHash,
-        IPoolManager _poolManager
-    ) V3MetaQuoterBase(_factory, _poolInitCodeHash) V4MetaQuoter(_poolManager) {}
+        IPoolManager _poolManager,
+        address _weth9
+    ) V3MetaQuoterBase(_factory, _poolInitCodeHash) V4MetaQuoter(_poolManager) {
+        weth9 = _weth9;
+    }
+
+    function _mapCurrencyToWeth9(Currency currency) internal view returns (Currency) {
+        // If the currency is the native token, map it to WETH9
+        return currency.isAddressZero() ? Currency.wrap(weth9) : currency;
+    }
 
     function _metaQuoteExactInputSingle(
         MetaQuoteExactSingleParams memory params
@@ -49,8 +58,8 @@ contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
             v3FeeOptions[i] = params.poolKeyOptions[i].fee;
         }
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
-            exactCurrency: params.exactCurrency,
-            variableCurrency: params.variableCurrency,
+            exactCurrency: _mapCurrencyToWeth9(params.exactCurrency),
+            variableCurrency: _mapCurrencyToWeth9(params.variableCurrency),
             exactAmount: params.exactAmount,
             feeOptions: v3FeeOptions
         });
@@ -89,8 +98,8 @@ contract MetaQuoter is IV4MetaQuoter, V3MetaQuoterBase, V4MetaQuoter {
             v3FeeOptions[i] = params.poolKeyOptions[i].fee;
         }
         IV3MetaQuoter.MetaQuoteExactSingleParams memory v3Params = IV3MetaQuoter.MetaQuoteExactSingleParams({
-            exactCurrency: params.exactCurrency,
-            variableCurrency: params.variableCurrency,
+            exactCurrency: _mapCurrencyToWeth9(params.exactCurrency),
+            variableCurrency: _mapCurrencyToWeth9(params.variableCurrency),
             exactAmount: params.exactAmount,
             feeOptions: v3FeeOptions
         });

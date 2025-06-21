@@ -83,7 +83,6 @@ export const errors = [
         inputs: [{ name: "tickSpacing", type: "int24", internalType: "int24" }],
     },
     { type: "error", name: "UnauthorizedDynamicLPFeeUpdate", inputs: [] },
-    { type: "error", name: "UnsupportedProtocolError", inputs: [] },
     { type: "error", name: "DelegateCallNotAllowed", inputs: [] },
     { type: "error", name: "ContractLocked", inputs: [] },
     {
@@ -125,6 +124,20 @@ export const errors = [
         name: "UnsupportedAction",
         inputs: [{ name: "action", type: "uint256", internalType: "uint256" }],
     },
+    {
+        type: "error",
+        name: "NotEnoughLiquidity",
+        inputs: [{ name: "poolId", type: "bytes32", internalType: "PoolId" }],
+    },
+    { type: "error", name: "NotSelf", inputs: [] },
+    { type: "error", name: "QuoteSwap", inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }] },
+    { type: "error", name: "UnexpectedCallSuccess", inputs: [] },
+    {
+        type: "error",
+        name: "UnexpectedRevertBytes",
+        inputs: [{ name: "revertData", type: "bytes", internalType: "bytes" }],
+    },
+    { type: "error", name: "UnsupportedProtocolError", inputs: [] },
     { type: "error", name: "ETHNotAccepted", inputs: [] },
     {
         type: "error",
@@ -183,17 +196,13 @@ export const errors = [
     },
     {
         type: "error",
-        name: "NotEnoughLiquidity",
-        inputs: [{ name: "poolId", type: "bytes32", internalType: "PoolId" }],
+        name: "InvalidCallbackAddress",
+        inputs: [
+            { name: "msgSender", type: "address", internalType: "address" },
+            { name: "expectedPoolAddress", type: "address", internalType: "address" },
+        ],
     },
-    { type: "error", name: "NotSelf", inputs: [] },
-    { type: "error", name: "QuoteSwap", inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }] },
-    { type: "error", name: "UnexpectedCallSuccess", inputs: [] },
-    {
-        type: "error",
-        name: "UnexpectedRevertBytes",
-        inputs: [{ name: "revertData", type: "bytes", internalType: "bytes" }],
-    },
+    { type: "error", name: "PoolDoesNotExist", inputs: [{ name: "pool", type: "address", internalType: "address" }] },
     { type: "error", name: "ContractUnlocked", inputs: [] },
     { type: "error", name: "NegativeBalanceDelta", inputs: [] },
     { type: "error", name: "TargetIsHook", inputs: [] },

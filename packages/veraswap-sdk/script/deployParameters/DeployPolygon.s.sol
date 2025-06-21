@@ -17,13 +17,16 @@ library DeployPolygon {
             v4PoolManager: 0x67366782805870060151383F4BbFF9daB53e5cD6,
             v3NFTPositionManager: 0xC36442b4a4522E871399CD717aBDD847Ab11FE88,
             v4PositionManager: 0x1Ec2eBf4F37E7363FDfe3551602425af0B3ceef9,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane =
-            HyperlaneDeployParams({mailbox: 0x5d934f4e2f797775e53561bB72aca21ba36B96BB});
+        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({
+            mailbox: 0x5d934f4e2f797775e53561bB72aca21ba36B96BB
+        });
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }
