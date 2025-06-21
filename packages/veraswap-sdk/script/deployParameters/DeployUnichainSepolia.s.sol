@@ -17,8 +17,10 @@ library DeployUnichainSepolia {
             v4PoolManager: 0x9cB26A7183B2F4515945Dc52CB4195B0d2D06C95,
             v3NFTPositionManager: 0xB7F724d6dDDFd008eFf5cc2834edDE5F9eF0d075,
             v4PositionManager: 0x12A98709BB5D0641D61458f85dcAFbE17AC2d05c,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

@@ -17,8 +17,10 @@ library DeployAvalanche {
             v4PoolManager: 0x06380C0e0912312B5150364B9DC4542BA0DbBc85,
             v3NFTPositionManager: 0x655C406EBFa14EE2006250925e54ec43AD184f8B,
             v4PositionManager: 0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

@@ -15,16 +15,16 @@ library PositionManagerUtils {
 
     address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
-    function getDeployBytecode(address poolManager) internal pure returns (bytes memory) {
+    function getDeployBytecode(address poolManager, address weth9) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 type(PositionManager).creationCode,
-                abi.encode(poolManager, PERMIT2, uint256(300_000), address(0), address(0))
+                abi.encode(poolManager, PERMIT2, uint256(300_000), address(0), weth9)
             );
     }
 
-    function getOrCreate2(address poolManager) internal returns (address addr, bool exists) {
-        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(poolManager));
+    function getOrCreate2(address poolManager, address weth9) internal returns (address addr, bool exists) {
+        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(poolManager, weth9));
         if (!exists) {
             address deployed = address(
                 new PositionManager{salt: Create2Utils.BYTES32_ZERO}(
@@ -32,7 +32,7 @@ library PositionManagerUtils {
                     IAllowanceTransfer(PERMIT2),
                     uint256(300_000),
                     IPositionDescriptor(address(0)),
-                    IWETH9(address(0))
+                    IWETH9(weth9)
                 )
             );
             vm.assertEq(deployed, addr);

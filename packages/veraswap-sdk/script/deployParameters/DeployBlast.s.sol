@@ -17,8 +17,10 @@ library DeployBlast {
             v4PoolManager: 0x1631559198A9e474033433b2958daBC135ab6446,
             v3NFTPositionManager: 0xB218e4f7cF0533d4696fDfC419A0023D33345F28,
             v4PositionManager: 0x4AD2F4CcA2682cBB5B950d660dD458a1D3f1bAaD,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 
