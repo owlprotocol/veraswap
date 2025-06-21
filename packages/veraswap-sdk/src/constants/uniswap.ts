@@ -11,7 +11,6 @@ import { UniswapV3Factory } from "../artifacts/UniswapV3Factory.js";
 import { UniswapV3Pool } from "../artifacts/UniswapV3Pool.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
-import { V4MetaQuoter } from "../artifacts/V4MetaQuoter.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { WETH } from "../artifacts/WETH.js";
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
