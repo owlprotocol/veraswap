@@ -265,11 +265,12 @@ export const localSupersimCurrencies = [
 const tUSDCData = { name: "Test USD Coin", symbol: "tUSDC", decimals: 18 };
 export const tUSDCAddress = getMockERC20Address(tUSDCData);
 
+// WARNING: Changing the name/symbol has impacts on Solidity, Tests, and other constants that assume "Token A" (test/constants)
 export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Alberto",
+            name: "Token A",
             symbol: "A",
             decimals: 18,
             logoURI:
@@ -280,7 +281,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Berenice",
+            name: "Token B",
             symbol: "B",
             decimals: 18,
             logoURI:

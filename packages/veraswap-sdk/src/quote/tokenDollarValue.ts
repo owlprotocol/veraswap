@@ -16,7 +16,7 @@ export async function getTokenDollarValue(
 ) {
     if (!tokenAddress || !chainId) return 0n;
 
-    const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.v4MetaQuoter;
+    const v4MetaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter!;
     const hopCurrencies = getCurrencyHops(chainId);
 
     const usdCurrency = USD_CURRENCIES[chainId] ?? { address: zeroAddress, decimals: 18 };
