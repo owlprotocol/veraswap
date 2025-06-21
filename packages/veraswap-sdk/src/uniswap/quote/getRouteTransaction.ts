@@ -1,3 +1,4 @@
+//@ts-nocheck WIP new transaction builder
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { Address, encodeFunctionData, Hex, zeroHash } from "viem";
@@ -277,7 +278,7 @@ export async function getRouteTransaction(
             };
         } else if (steps[0].type != "uniswap" && steps[1].type === "uniswap") {
             // Bridge & Swap
-            const [bridge, swap] = steps;
+            const [bridge] = steps;
             const contracts = contractsByChain[bridge.currencyIn.chainId];
             if (!contracts) return null; // No contracts available for this chain
             const contractsRemote = contractsByChain[bridge.currencyOut.chainId];
@@ -289,7 +290,7 @@ export async function getRouteTransaction(
                     ? (bridge.currencyIn.hyperlaneAddress ?? bridge.currencyIn.address)
                     : getUniswapV4Address(bridge.currencyIn),
                 tokenStandard: getTokenStandard(bridge.currencyIn),
-                tokenOutStandard: getTokenStandard(bridge.currencyOut),
+                // tokenOutStandard: getTokenStandard(bridge.currencyOut),
                 account: account,
                 destination: bridge.currencyOut.chainId,
                 recipient: account ?? bridge.recipient,

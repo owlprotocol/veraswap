@@ -6,11 +6,7 @@ import { UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { USD_CURRENCIES } from "../currency/usdCurrencies.js";
 import { getCurrencyHops } from "../swap/getCurrencyHops.js";
 import { DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
-import {
-    metaQuoteExactOutputBest,
-    V4MetaQuoteExactBestParams,
-    V4MetaQuoteExactBestReturnType,
-} from "../uniswap/V4MetaQuoter.js";
+import { metaQuoteExactOutputBest } from "../uniswap/quote/MetaQuoter.js";
 
 const tokenDollarQuoteAmount = (decimals: number) => parseUnits("1", decimals);
 
@@ -28,22 +24,21 @@ export async function getTokenDollarValue(
     // 1 USD is always 1 USD
     if (usdCurrency.address === tokenAddress) return tokenDollarQuoteAmount(usdCurrency.decimals);
 
-    const quote = (await readContract(config, {
+    const quote = await readContract(config, {
         chainId,
         abi: [metaQuoteExactOutputBest],
         address: v4MetaQuoter,
         functionName: "metaQuoteExactOutputBest",
-        // @ts-expect-error wrong type since query key can't have a bigint
         args: [
             {
-                exactAmount: numberToHex(tokenDollarQuoteAmount(usdCurrency.decimals)),
+                exactAmount: numberToHex(tokenDollarQuoteAmount(usdCurrency.decimals)) as unknown as bigint,
                 exactCurrency: usdCurrency.address,
                 variableCurrency: tokenAddress,
                 hopCurrencies: hopCurrencies.filter((c) => c !== usdCurrency.address && c !== tokenAddress),
                 poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
             },
-        ] as V4MetaQuoteExactBestParams,
-    })) as V4MetaQuoteExactBestReturnType;
+        ],
+    });
 
     const bestSwap = quote[2];
     if (bestSwap === 0) return 0n;
