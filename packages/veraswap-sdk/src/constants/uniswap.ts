@@ -1,15 +1,19 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
-import { Address, encodeDeployData, zeroAddress, zeroHash } from "viem";
+import { Address, encodeDeployData, Hash, keccak256, zeroAddress, zeroHash } from "viem";
 import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
+import { MetaQuoter } from "../artifacts/MetaQuoter.js";
 import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
+import { UniswapV3Factory } from "../artifacts/UniswapV3Factory.js";
+import { UniswapV3Pool } from "../artifacts/UniswapV3Pool.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4MetaQuoter } from "../artifacts/V4MetaQuoter.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
+import { WETH } from "../artifacts/WETH.js";
 import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
@@ -30,10 +34,20 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
  */
 export function getUniswapContracts(params?: { owner?: Address }) {
     const permit2: Address = PERMIT2_ADDRESS;
-    const unsupported = getDeployDeterministicAddress({
-        bytecode: UnsupportedProtocol.bytecode,
+    // TODO: Deployed with vm.rpc setCode when using anvil (supersim has pre-deploy)
+    const weth9 = getDeployDeterministicAddress({
+        bytecode: WETH.bytecode,
         salt: zeroHash,
     });
+
+    // Uniswap V3 Core
+    const v3Factory = getDeployDeterministicAddress({
+        bytecode: UniswapV3Factory.bytecode,
+        salt: zeroHash,
+    });
+    const v3PoolInitCodeHash = keccak256(UniswapV3Pool.bytecode);
+
+    // Uniswap V4 Core
     const v4PoolManager = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: PoolManager.abi,
@@ -44,7 +58,6 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     });
 
     const positionDescriptor = zeroAddress;
-    const weth9 = zeroAddress;
     const v4PositionManager = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: PositionManager.abi,
@@ -53,6 +66,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+    // Uniswap V4 Periphery
     const v4StateView = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: StateView.abi,
@@ -69,6 +83,7 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+
     const v4MetaQuoter = getDeployDeterministicAddress({
         bytecode: encodeDeployData({
             abi: V4MetaQuoter.abi,
@@ -79,13 +94,18 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     });
 
     // Universal Router
+    const unsupported = getDeployDeterministicAddress({
+        bytecode: UnsupportedProtocol.bytecode,
+        salt: zeroHash,
+    });
+    // Universal Router
     const routerParams = {
         permit2,
-        weth9: "0x4200000000000000000000000000000000000006",
+        weth9,
         v2Factory: unsupported,
-        v3Factory: unsupported,
+        v3Factory,
         pairInitCodeHash: zeroHash,
-        poolInitCodeHash: zeroHash,
+        poolInitCodeHash: v3PoolInitCodeHash,
         v4PoolManager,
         v3NFTPositionManager: unsupported,
         v4PositionManager,
@@ -98,13 +118,25 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         }),
         salt: zeroHash,
     });
+    const metaQuoter = getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            abi: MetaQuoter.abi,
+            bytecode: MetaQuoter.bytecode,
+            args: [v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9],
+        }),
+        salt: zeroHash,
+    });
 
     return {
+        weth9,
+        v3Factory,
+        v3PoolInitCodeHash,
         v4PoolManager,
         v4PositionManager,
         v4StateView,
         v4Quoter,
         v4MetaQuoter,
+        metaQuoter,
         universalRouter,
     };
 }
@@ -113,19 +145,21 @@ export function getUniswapContracts(params?: { owner?: Address }) {
 export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
 //TODO: Add metaquoter address (compute using poolManager address)
+export interface UniswapContracts {
+    weth9?: Address;
+    v3Factory?: Address;
+    v3PoolInitCodeHash?: Hash;
+    v4PoolManager: Address;
+    v4PositionManager: Address;
+    v4StateView: Address;
+    v4Quoter: Address;
+    v4MetaQuoter: Address;
+    metaQuoter?: Address;
+    universalRouter: Address;
+}
+
 /** Uniswap contracts by chain */
-export const UNISWAP_CONTRACTS: Record<
-    number,
-    | {
-          v4PoolManager: `0x${string}`;
-          v4PositionManager: `0x${string}`;
-          v4StateView: `0x${string}`;
-          v4Quoter: `0x${string}`;
-          v4MetaQuoter: `0x${string}`;
-          universalRouter: `0x${string}`;
-      }
-    | undefined
-> = {
+export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainA.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainB.id]: LOCAL_UNISWAP_CONTRACTS,
@@ -192,6 +226,7 @@ export const UNISWAP_CONTRACTS: Record<
         v4Quoter: "0x613DB448fd6980dc84416B95380a8eaeC581DbE1",
         universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
         v4MetaQuoter: "0x9016fBc773B7309E80C2CF41EBd52EE58CBD4238",
+        metaQuoter: "0x8EEF9d75c396e4EeF76EDb51A828805b5BeE8c1A",
     },
     [bsc.id]: {
         v4PoolManager: "0x28e2Ea090877bF75740558f6BFB36A5ffeE9e9dF",
@@ -200,6 +235,7 @@ export const UNISWAP_CONTRACTS: Record<
         v4Quoter: "0xa889Eca9eDfa9d6048055098D1E8d0C5eC9676d8",
         universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
         v4MetaQuoter: "0x63A7c63E83d74f4E609d4E15d75fd155A9699C69",
+        metaQuoter: "0xab49293ff734f0615dfa67fdb3b4625fca0747e2",
     },
     [optimism.id]: {
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
@@ -216,5 +252,6 @@ export const UNISWAP_CONTRACTS: Record<
         v4Quoter: "0x2829D6f74c1ddaD51e528a270E8e8038AD56b59A",
         universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
         v4MetaQuoter: "0x3e0878e6c9ca0xA5C386eb2EaAe433fa925A74Ba19aad4eA8311de",
+        metaQuoter: "0x3e0878e6c9ca920b83a8c5d51a7a32ba18cf4449",
     },
 } as const;

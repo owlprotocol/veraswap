@@ -45,23 +45,24 @@ let bundlerBInstance: Instance;
  */
 export async function setup() {
     const host = "127.0.0.1";
+    const codeSizeLimit = 693216; // Increase code size limit for UniswapV3Factory
     chainL1Instance = anvil({
         host,
         port: opChainL1Port,
         chainId: opChainL1.id,
-        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
+        codeSizeLimit,
     });
     chainAInstance = anvil({
         host,
         port: opChainAPort,
         chainId: opChainA.id,
-        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
+        codeSizeLimit,
     });
     chainBInstance = anvil({
         host,
         port: opChainBPort,
         chainId: opChainB.id,
-        codeSizeLimit: 693216, // Set code size limit to match the one used in the forge script
+        codeSizeLimit,
     });
 
     await chainL1Instance.start();
@@ -96,7 +97,7 @@ export async function setup() {
     }
 
     // Forge script
-    const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast --code-size-limit 693216`;
+    const templateCommand = `forge script ./script/DeployLocal.s.sol --private-key ${anvil0} --broadcast --code-size-limit ${codeSizeLimit}`;
     // const { stdout } = await execPromise(templateCommand);
     await execPromise(templateCommand);
 
