@@ -1,19 +1,21 @@
 import { QueryClient, queryOptions } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
-import { Address, numberToHex } from "viem";
+import { Address, numberToHex, zeroAddress } from "viem";
 
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../../types/PoolKey.js";
-import { metaQuoteExactOutputBest, V4MetaQuoteBestType } from "../V4MetaQuoter.js";
+
+import { MetaQuoteBestType, metaQuoteExactOutputBest } from "./MetaQuoter.js";
 
 export interface GetMetaQuoteExactOutputParams {
     chainId: number;
     currencyIn: Address;
     currencyOut: Address;
     amountOut: bigint;
-    currencyHops: Address[];
+    /** @default currencyHops [zeroAddress] (native currency) */
+    currencyHops?: Address[];
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
 }
@@ -21,17 +23,17 @@ export interface GetMetaQuoteExactOutputParams {
 export function getMetaQuoteExactOutputQueryOptions(wagmiConfig: Config, params: GetMetaQuoteExactOutputParams) {
     const {
         chainId,
+        currencyIn,
         currencyOut,
         amountOut,
-        currencyIn,
         contracts,
-        currencyHops,
+        currencyHops = [zeroAddress],
         poolKeyOptions = Object.values(DEFAULT_POOL_PARAMS),
     } = params;
 
     return readContractQueryOptions(wagmiConfig, {
         chainId,
-        address: contracts.v4MetaQuoter,
+        address: contracts.metaQuoter,
         abi: [metaQuoteExactOutputBest],
         functionName: "metaQuoteExactOutputBest",
         args: [
@@ -54,9 +56,9 @@ export function getMetaQuoteExactOutputAmountQueryOptions(wagmiConfig: Config, p
             if (!data) return null;
 
             const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = data;
-            if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.None) {
+            if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.None) {
                 return 0n;
-            } else if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+            } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
                 return bestQuoteSingle.variableAmount;
             }
             return bestQuoteMultihop.variableAmount;
@@ -82,9 +84,9 @@ export async function getMetaQuoteExactOutputAmount(
         wagmiConfig,
         params,
     );
-    if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.None) {
+    if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.None) {
         return 0n;
-    } else if ((bestQuoteType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+    } else if ((bestQuoteType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
         return bestQuoteSingle.variableAmount;
     }
     return bestQuoteMultihop.variableAmount;
