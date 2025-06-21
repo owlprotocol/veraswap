@@ -250,6 +250,7 @@ contract DeployLocal is Script {
          * Deploy Test USDC Pool on OP Chain A.
          * We pick OP Chain A to be consistent with the supersim deployment.
          */
+        /*
         {
             vm.selectFork(forks[1]);
             vm.startBroadcast();
@@ -263,6 +264,7 @@ contract DeployLocal is Script {
 
             vm.stopBroadcast();
         }
+        */
 
         /**
          * MockMailbox Environment ****
