@@ -1,3 +1,4 @@
+/* eslint-disable */
 //@ts-nocheck WIP new transaction builder
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
