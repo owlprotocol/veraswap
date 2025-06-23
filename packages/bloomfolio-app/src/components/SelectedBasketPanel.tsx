@@ -123,13 +123,13 @@ export function SelectedBasketPanel({
         queryFn: () =>
             usdCurrency.address !== zeroAddress
                 ? getUniswapV4RouteExactIn(queryClient, config, {
-                      chainId: basketChainId,
-                      contracts: UNISWAP_CONTRACTS[basketChainId]!,
-                      currencyIn: zeroAddress,
-                      currencyOut: usdCurrency.address,
-                      currencyHops: getCurrencyHops(basketChainId),
-                      exactAmount: amountParsed,
-                  }).then((res) => res?.amountOut ?? 0n)
+                    chainId: basketChainId,
+                    contracts: UNISWAP_CONTRACTS[basketChainId]!,
+                    currencyIn: zeroAddress,
+                    currencyOut: usdCurrency.address,
+                    currencyHops: getCurrencyHops(basketChainId),
+                    exactAmount: amountParsed,
+                }).then((res) => res?.amountOut ?? 0n)
                 : 1n,
         enabled: !!amountParsed && !!basketChainId,
     });
@@ -137,9 +137,9 @@ export function SelectedBasketPanel({
     const shares =
         !!totalValue && !!ethToUsd
             ? BigNumber.from((shareUnits * ethToUsd * shareUnits) as unknown as number)
-                  .div(totalValue)
-                  .div(10n ** BigInt(usdCurrency.decimals))
-                  .toBigInt()
+                .div(totalValue)
+                .div(10n ** BigInt(usdCurrency.decimals))
+                .toBigInt()
             : 0n;
 
     const sharesMinusFee = mintFeeCentiBips ? (shares * (maxFeeCentiBips - mintFeeCentiBips)) / maxFeeCentiBips : 0n;
@@ -177,7 +177,7 @@ export function SelectedBasketPanel({
             chainId: basketChain.id,
             contracts: {
                 universalRouter: uniswapContract.universalRouter,
-                v4MetaQuoter: uniswapContract.v4MetaQuoter!,
+                metaQuoter: uniswapContract.metaQuoter!,
             },
             currencyHops: getCurrencyHops(basketChain.id),
             // TODO: use input currency
@@ -326,8 +326,8 @@ export function SelectedBasketPanel({
                                     !isConnected
                                         ? () => openConnectModal?.()
                                         : !basketChain || chainId !== basketChain.id
-                                          ? () => basketChain && switchChain?.({ chainId: basketChain.id })
-                                          : handlePurchase
+                                            ? () => basketChain && switchChain?.({ chainId: basketChain.id })
+                                            : handlePurchase
                                 }
                                 disabled={
                                     (!isConnected && !isAmountValid) ||
