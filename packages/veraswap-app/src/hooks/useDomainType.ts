@@ -1,5 +1,5 @@
-const mainnetDomains = ["veraswap.io", "app.veraswap.io", "www.veraswap.io"];
-const testnetDomains = ["testnet.veraswap.io"];
+const mainnetDomains = ["app.veraswap.io", "www.app.veraswap.io"];
+const testnetDomains = ["testnet.veraswap.io", "www.testnet.veraswap.io"];
 
 export const useDomainType = (): "mainnet" | "testnet" | null => {
     const hostname = window.location.hostname;
