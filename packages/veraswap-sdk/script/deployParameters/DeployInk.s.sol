@@ -18,8 +18,10 @@ library DeployInk {
             v4PoolManager: 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32,
             v3NFTPositionManager: 0xC0836E5B058BBE22ae2266e1AC488A1A0fD8DCE8,
             v4PositionManager: 0x1b35d13a2E2528f192637F14B05f0Dc0e7dEB566,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

@@ -6,7 +6,7 @@ import { Address } from "viem";
 import { BasketFixedUnits } from "../artifacts/BasketFixedUnits.js";
 import { DEFAULT_POOL_PARAMS, PoolKeyOptions } from "../types/PoolKey.js";
 import { getMetaQuoteExactInput } from "../uniswap/index.js";
-import { V4MetaQuoteBestType } from "../uniswap/V4MetaQuoter.js";
+import { MetaQuoteBestType } from "../uniswap/quote/MetaQuoter.js";
 
 export interface GetBasketBurnQuoteParams {
     chainId: number;
@@ -15,7 +15,7 @@ export interface GetBasketBurnQuoteParams {
     currencyOut: Address;
     currencyHops: Address[];
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
     };
     poolKeyOptions?: PoolKeyOptions[];
 }
@@ -75,10 +75,10 @@ export async function getBasketBurnQuote(
 
     const currencyOutAmount = quotes.reduce((acc, swap) => {
         const [bestSingleSwap, bestMultihopSwap, bestType] = swap.quote;
-        if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+        if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
             // Cheapest swap is single hop
             return acc + bestSingleSwap.variableAmount; // Increase input settlement
-        } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
+        } else if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
             // Cheapest swap is multihop
             return acc + bestMultihopSwap.variableAmount; // Increase input settlement
         } else {

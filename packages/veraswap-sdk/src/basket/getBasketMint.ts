@@ -9,8 +9,8 @@ import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { MAX_UINT_256 } from "../constants/uint256.js";
 import { EXECUTE_SWEEP } from "../constants/uniswap.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
+import { MetaQuoteBestType } from "../uniswap/quote/MetaQuoter.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-import { V4MetaQuoteBestType } from "../uniswap/V4MetaQuoter.js";
 
 import { getBasketMintQuote, GetBasketMintQuoteParams } from "./getBasketMintQuote.js";
 
@@ -22,7 +22,7 @@ export interface GetBasketMintParams extends GetBasketMintQuoteParams {
     slippageCentiBps?: bigint;
     nativeSweepRecipient?: Address; // Native token sweep recipient, defaults to address(1) which sweeps to caller
     contracts: {
-        v4MetaQuoter: Address;
+        metaQuoter: Address;
         universalRouter: Address;
     };
 }
@@ -60,7 +60,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
         const currencyOut = swap.currencyOut;
         const amountOut = swap.amountOut;
 
-        if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Single) {
+        if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Single) {
             // Cheapest swap is single hop
             tradePlan.addAction(Actions.SWAP_EXACT_OUT_SINGLE, [
                 {
@@ -71,7 +71,7 @@ export async function getBasketMint(queryClient: QueryClient, wagmiConfig: Confi
                     hookData: bestSingleSwap.hookData,
                 },
             ]);
-        } else if ((bestType as V4MetaQuoteBestType) === V4MetaQuoteBestType.Multihop) {
+        } else if ((bestType as MetaQuoteBestType) === MetaQuoteBestType.Multihop) {
             // Cheapest swap is multihop
             tradePlan.addAction(Actions.SWAP_EXACT_OUT, [
                 {

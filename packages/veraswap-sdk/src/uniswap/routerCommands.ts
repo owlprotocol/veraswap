@@ -3,12 +3,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-case-declarations */
 import type { AbiParametersToPrimitiveTypes } from "abitype";
-import { encodeAbiParameters, Hex } from "viem";
+import { encodeAbiParameters, Hex, hexToBigInt } from "viem";
 
 import {
     permit,
     permit_address___address_uint160_uint48_uint48__address_uint256__bytes,
 } from "../artifacts/IAllowanceTransfer.js";
+
+export const ACTION_CONSTANTS = {
+    MSG_SENDER: "0x0000000000000000000000000000000000000001",
+    ADDRESS_THIS: "0x0000000000000000000000000000000000000002",
+    CONTRACT_BALANCE: hexToBigInt("0x8000000000000000000000000000000000000000000000000000000000000000"),
+    OPEN_DELTA: 0,
+} as const;
 
 /**
  * CommandTypes
@@ -257,6 +264,18 @@ export class RoutePlanner {
     constructor() {
         this.commands = "0x";
         this.inputs = [];
+    }
+
+    /**
+     * Create a RoutePlanner from an array of encoded RouterCommands
+     * @param commands - Array of RouterCommand objects
+     * @returns A new RoutePlanner instance
+     */
+    static create(commands: RouterCommand[]): RoutePlanner {
+        const plan = new RoutePlanner();
+        plan.commands = ("0x" + commands.map((command) => command.type.toString(16).padStart(2, "0")).join("")) as Hex;
+        plan.inputs = commands.map((command) => command.encodedInput);
+        return plan;
     }
 
     addSubPlan(subplan: RoutePlanner): RoutePlanner {

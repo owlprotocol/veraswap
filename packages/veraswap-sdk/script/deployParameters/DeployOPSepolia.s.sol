@@ -19,8 +19,10 @@ library DeployOPSepolia {
             v4PoolManager: 0xf7F5aB3DcA35e17dE187b459159BC643853B3c67,
             v3NFTPositionManager: 0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2,
             v4PositionManager: 0x0B32f74f8365d535783949E014B7754047B64e31,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

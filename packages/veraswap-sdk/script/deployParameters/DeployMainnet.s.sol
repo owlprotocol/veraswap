@@ -18,8 +18,10 @@ library DeployMainnet {
             v4PoolManager: UNSUPPORTED_PROTOCOL,
             v3NFTPositionManager: 0xC36442b4a4522E871399CD717aBDD847Ab11FE88,
             v4PositionManager: UNSUPPORTED_PROTOCOL,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

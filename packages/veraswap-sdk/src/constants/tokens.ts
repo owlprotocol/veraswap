@@ -262,14 +262,14 @@ export const localSupersimCurrencies = [
     })(),
 ];
 
-const tUSDCData = { name: "Test USD Coin", symbol: "tUSDC", decimals: 18 };
-export const tUSDCAddress = getMockERC20Address(tUSDCData);
-
+// WARNING: Changing the "address" name/symbol has impacts on Solidity, Tests, and other constants that assume "Token A" (test/constants)
+// If you just want to change the "display" name/symbol, simply edit the one in the Token constructor
+// Also see LocalTokens.sol for deployment of tokens
 export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Alberto",
+            name: "Token A",
             symbol: "A",
             decimals: 18,
             logoURI:
@@ -280,7 +280,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
         {
             chainId: opChainL1.id,
-            name: "Berenice",
+            name: "Token B",
             symbol: "B",
             decimals: 18,
             logoURI:
@@ -289,12 +289,29 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
         localMailboxByChain,
     ),
     new Token({
-        chainId: opChainA.id,
-        address: tUSDCAddress,
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V34", symbol: "L34", decimals: 18 }),
+        name: "Liquid V34",
+        symbol: "L34",
+        decimals: 18,
         logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
-        ...tUSDCData,
     }),
-
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V3", symbol: "L3", decimals: 18 }),
+        name: "Liquid V3",
+        symbol: "L3",
+        decimals: 18,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    }),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V4", symbol: "L4", decimals: 18 }),
+        name: "Liquid V4",
+        symbol: "L4",
+        decimals: 18,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    }),
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),

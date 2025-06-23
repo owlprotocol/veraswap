@@ -13,20 +13,30 @@ library MetaQuoterUtils {
     function getDeployBytecode(
         address factory,
         bytes32 poolInitCodeHash,
-        address poolManager
+        address poolManager,
+        address weth9
     ) internal pure returns (bytes memory) {
-        return abi.encodePacked(type(MetaQuoter).creationCode, abi.encode(factory, poolInitCodeHash, poolManager));
+        return
+            abi.encodePacked(type(MetaQuoter).creationCode, abi.encode(factory, poolInitCodeHash, poolManager, weth9));
     }
 
     function getOrCreate2(
         address factory,
         bytes32 poolInitCodeHash,
-        address poolManager
+        address poolManager,
+        address weth9
     ) internal returns (address addr, bool exists) {
-        (addr, exists) = Create2Utils.getAddressExists(getDeployBytecode(factory, poolInitCodeHash, poolManager));
+        (addr, exists) = Create2Utils.getAddressExists(
+            getDeployBytecode(factory, poolInitCodeHash, poolManager, weth9)
+        );
         if (!exists) {
             address deployed = address(
-                new MetaQuoter{salt: Create2Utils.BYTES32_ZERO}(factory, poolInitCodeHash, IPoolManager(poolManager))
+                new MetaQuoter{salt: Create2Utils.BYTES32_ZERO}(
+                    factory,
+                    poolInitCodeHash,
+                    IPoolManager(poolManager),
+                    weth9
+                )
             );
             vm.assertEq(deployed, addr);
         }

@@ -18,8 +18,10 @@ library DeployWorldchain {
             v4PoolManager: 0xb1860D529182ac3BC1F51Fa2ABd56662b7D13f33,
             v3NFTPositionManager: 0xec12a9F9a09f50550686363766Cc153D03c27b5e,
             v4PositionManager: 0xC585E0f504613b5fBf874F21Af14c65260fB41fA,
+            v3Quoter: address(0),
             v4StateView: address(0),
             v4Quoter: address(0),
+            metaQuoter: address(0),
             universalRouter: address(0)
         });
 

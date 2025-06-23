@@ -177,7 +177,7 @@ export function SelectedBasketPanel({
             chainId: basketChain.id,
             contracts: {
                 universalRouter: uniswapContract.universalRouter,
-                v4MetaQuoter: uniswapContract.v4MetaQuoter!,
+                metaQuoter: uniswapContract.metaQuoter!,
             },
             currencyHops: getCurrencyHops(basketChain.id),
             // TODO: use input currency
