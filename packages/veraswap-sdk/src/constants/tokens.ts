@@ -262,10 +262,8 @@ export const localSupersimCurrencies = [
     })(),
 ];
 
-const tUSDCData = { name: "Test USD Coin", symbol: "tUSDC", decimals: 18 };
-export const tUSDCAddress = getMockERC20Address(tUSDCData);
-
-// WARNING: Changing the name/symbol has impacts on Solidity, Tests, and other constants that assume "Token A" (test/constants)
+// WARNING: Changing the "address" name/symbol has impacts on Solidity, Tests, and other constants that assume "Token A" (test/constants)
+// If you just want to change the "display" name/symbol, simply edit the one in the Token constructor
 // Also see LocalTokens.sol for deployment of tokens
 export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ...createMockERC20ConnectedTokens(
@@ -296,6 +294,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
         name: "Liquid V34",
         symbol: "L34",
         decimals: 18,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
     }),
     new Token({
         chainId: opChainL1.id,
@@ -303,6 +302,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
         name: "Liquid V3",
         symbol: "L3",
         decimals: 18,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
     }),
     new Token({
         chainId: opChainL1.id,
@@ -310,12 +310,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
         name: "Liquid V4",
         symbol: "L4",
         decimals: 18,
-    }),
-    new Token({
-        chainId: opChainA.id,
-        address: tUSDCAddress,
         logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
-        ...tUSDCData,
     }),
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),

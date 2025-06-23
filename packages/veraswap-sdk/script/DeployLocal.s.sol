@@ -247,26 +247,6 @@ contract DeployLocal is Script {
         }
 
         /**
-         * Deploy Test USDC Pool on OP Chain A.
-         * We pick OP Chain A to be consistent with the supersim deployment.
-         */
-        /*
-        {
-            vm.selectFork(forks[1]);
-            vm.startBroadcast();
-
-            CoreContracts storage contracts = chainContracts[chainIds[1]];
-            deployTestUSDCPool(
-                contracts.uniswap.universalRouter,
-                contracts.uniswap.v4PositionManager,
-                contracts.uniswap.v4StateView
-            );
-
-            vm.stopBroadcast();
-        }
-        */
-
-        /**
          * MockMailbox Environment ****
          */
         {

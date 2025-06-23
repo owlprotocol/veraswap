@@ -1,8 +1,6 @@
 import { Address } from "viem";
 import { arbitrum, base, bsc, mainnet, optimism, polygon } from "viem/chains";
 
-import { opChainA } from "../chains/supersim.js";
-import { tUSDCAddress } from "../constants/tokens.js";
 import {
     USDC_ARBITRUM,
     USDC_BASE,
@@ -19,8 +17,4 @@ export const USD_CURRENCIES = {
     [base.id]: { address: USDC_BASE.address, decimals: USDC_BASE.decimals },
     [polygon.id]: { address: USDC_POLYGON.address, decimals: USDC_POLYGON.decimals },
     [arbitrum.id]: { address: USDC_ARBITRUM.address, decimals: USDC_ARBITRUM.decimals },
-    [opChainA.id]: {
-        address: tUSDCAddress,
-        decimals: 18,
-    },
 } as const as Record<number, { address: Address; decimals: number } | undefined>;

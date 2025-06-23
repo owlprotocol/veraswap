@@ -31,9 +31,6 @@ describe("constants/tokens.test.ts", function () {
                     ).resolves.toBeDefined();
                 }
             } else if (token instanceof Token) {
-                //TODO: Deploy this in Solidity script
-                if (token.name === "Test USD Coin") continue; // Skip test USD Coin
-
                 // Regular ERC20 token
                 await expect(
                     client.getCode({ address: token.address }),
