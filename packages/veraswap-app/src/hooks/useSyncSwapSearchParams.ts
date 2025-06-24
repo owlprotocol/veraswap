@@ -3,7 +3,13 @@ import { useSearch } from "@tanstack/react-router";
 import { Currency } from "@owlprotocol/veraswap-sdk";
 import { useAtom } from "jotai";
 import { useDomainType } from "./useDomainType.js";
-import { currencyInAtom, currencyOutAtom, chainsTypeWriteAtom, chainsAtom, pinnedTokensAtom } from "@/atoms/index.js";
+import {
+    currencyInAtom,
+    currencyOutAtom,
+    chainsTypeWriteAtom,
+    chainsAtom,
+    updatePinnedTokensAtom,
+} from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 
 export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
@@ -15,7 +21,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
     const [, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const [enabledChains] = useAtom(chainsAtom);
-    const [, setPinnedTokens] = useAtom(pinnedTokensAtom);
+    const [, updatePinnedTokens] = useAtom(updatePinnedTokensAtom);
 
     useEffect(() => {
         const {
@@ -32,7 +38,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
 
         if (pinnedTokens) {
             const parsedPinnedTokens = pinnedTokens.split(",").map((token) => token.trim());
-            setPinnedTokens(parsedPinnedTokens);
+            updatePinnedTokens(parsedPinnedTokens);
         }
 
         if (domainType === null && !type) {
