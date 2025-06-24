@@ -35,7 +35,21 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
             if (!res.ok) throw new Error(`Failed to fetch registry tokens for ${chainsType}`);
 
             const tokens = (await res.json()) as RegistryToken[];
-            const filteredTokens = tokens.filter((token) => chainIds.includes(token.chainId));
+
+            const supportedChainTokens = tokens.filter((token) => chainIds.includes(token.chainId));
+
+            const filteredTokens = supportedChainTokens.map((token) => {
+                if ("remoteTokens" in token && token.remoteTokens) {
+                    return {
+                        ...token,
+                        remoteTokens: token.remoteTokens.filter((remoteToken) =>
+                            chainIds.includes(remoteToken.chainId),
+                        ),
+                    };
+                }
+                return token;
+            });
+
             const converted = convertRegistryTokens(filteredTokens);
             return [...converted, ...localCurrencies];
         },
