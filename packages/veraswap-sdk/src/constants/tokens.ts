@@ -14,6 +14,7 @@ import {
     metis,
     mode,
     optimism,
+    polygon,
     ronin,
     worldchain,
 } from "viem/chains";
@@ -675,6 +676,7 @@ export const MAINNET_CURRENCIES = [
         return tokens;
     })(),
     nativeOnChain(bsc.id),
+    nativeOnChain(polygon.id),
 ];
 
 export const LOCAL_POOLS = {
