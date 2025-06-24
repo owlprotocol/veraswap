@@ -426,7 +426,13 @@ class PolygonNativeCurrency extends NativeCurrency {
         if (!isPolygon(chainId)) {
             throw new Error("Not Polygon");
         }
-        super({ chainId, decimals: 18, symbol: "POL", name: "Polygon Ecosystem Token" });
+        super({
+            chainId,
+            decimals: 18,
+            symbol: "POL",
+            name: "Polygon Ecosystem Token",
+            logoURI: "https://coin-images.coingecko.com/coins/images/32440/large/polygon.png",
+        });
     }
 }
 
