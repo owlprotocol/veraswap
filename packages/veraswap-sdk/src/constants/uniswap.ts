@@ -239,4 +239,12 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
         metaQuoter: "0x3e0878e6c9ca920b83a8c5d51a7a32ba18cf4449",
     },
+    // [mainnet.id]: {
+    //     v4PoolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90",
+    //     v4PositionManager: "0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e",
+    //     v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
+    //     v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
+    //     metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
+    //     universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
+    // },
 } as const;

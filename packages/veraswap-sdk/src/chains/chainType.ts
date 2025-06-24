@@ -10,6 +10,7 @@ import { optimism } from "./optimism.js";
 import { optimismSepolia } from "./optimismSepolia.js";
 import { polygon } from "./polygon.js";
 import { sepolia } from "./sepolia.js";
+import { story } from "./story.js";
 import { superseed } from "./superseed.js";
 import { opChainA, opChainB, opChainL1 } from "./supersim.js";
 import { unichainSepolia } from "./unichainSepolia.js";
@@ -18,7 +19,7 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed, polygon];
+export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed, polygon, story];
 
 export const testnetChains = [
     sepolia,

@@ -74,7 +74,7 @@ op-interop-1 = { url = "https://optimism-interop-alpha-1.blockscout.com/api/", k
 #zircuit-testnet = { url = "https://explorer.testnet.zircuit.com" }
 #ink = { url = "https://explorer.inkonchain.com" }
 #ink-sepolia = { url = "https://explorer-sepolia.inkonchain.com" }
-#story = { url = "https://aeneid.storyscan.xyz" }
+story = { url = "https://www.storyscan.io/api/", key = "", verifier = "blockscout", chain = "1514" }
 #story-aeneid = { url = "https://storyscan.xyz" }
 #somnia-testnet = { url = "https://shannon-explorer.somnia.network" }
 #taraxa = { url = "https://mainnet.explorer.taraxa.io" }
