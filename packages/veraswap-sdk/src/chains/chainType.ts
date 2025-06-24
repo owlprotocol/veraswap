@@ -1,5 +1,6 @@
 import { arbitrum } from "./arbitrum.js";
 import { arbitrumSepolia } from "./arbitrumSepolia.js";
+import { avalanche } from "./avalanche.js";
 import { base } from "./base.js";
 import { baseSepolia } from "./baseSepolia.js";
 import { bsc } from "./bsc.js";
@@ -19,7 +20,7 @@ export const localChains = [opChainL1, opChainA, opChainB];
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed, polygon, story];
+export const mainnetChains = [ethereum, arbitrum, bsc, base, optimism, superseed, polygon, story, avalanche];
 
 export const testnetChains = [
     sepolia,

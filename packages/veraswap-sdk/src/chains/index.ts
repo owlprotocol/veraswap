@@ -13,6 +13,7 @@ export * from "./arbitrumSepolia.js";
 export * from "./optimismSepolia.js";
 export * from "./optimism.js";
 export * from "./polygon.js";
+export * from "./avalanche.js";
 export * from "./base.js";
 export * from "./arbitrum.js";
 export * from "./bsc.js";
