@@ -153,6 +153,12 @@ export const transactionHashesAtom = atom<Record<TransactionStepId, string | und
     {} as Record<TransactionStepId, string | undefined>,
 );
 
+export const pinnedTokensAtom = atom<string[]>(["ETH", "USDT", "USDC"]);
+
+export const updatePinnedTokensAtom = atom(null, (_, set, newPinnedTokens: string[]) => {
+    set(pinnedTokensAtom, newPinnedTokens);
+});
+
 export const updateTransactionStepAtom = atom(
     null,
     (get, set, update: { id: TransactionStepId; status: TransactionStep["status"] }) => {
