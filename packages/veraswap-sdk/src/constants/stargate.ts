@@ -1,6 +1,16 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, zeroHash } from "viem";
-import { arbitrum, arbitrumSepolia, base, bsc, mainnet, optimism, optimismSepolia, sepolia } from "viem/chains";
+import {
+    arbitrum,
+    arbitrumSepolia,
+    base,
+    bsc,
+    mainnet,
+    optimism,
+    optimismSepolia,
+    polygon,
+    sepolia,
+} from "viem/chains";
 
 import { StargateBridgeSweep } from "../artifacts/StargateBridgeSweep.js";
 
@@ -14,6 +24,7 @@ export const CHAIN_ID_TO_ENDPOINT_ID = {
     [optimismSepolia.id]: 40232,
     [sepolia.id]: 40161,
     [bsc.id]: 30102,
+    [polygon.id]: 30109,
 } as const satisfies Record<number, number>;
 
 // NOTE: not supported and irrelevant for BNB, Polygon
@@ -34,12 +45,15 @@ export const STARGATE_POOL_USDC = {
     [bsc.id]: "0x962Bd449E630b0d928f308Ce63f1A21F02576057",
     [mainnet.id]: "0xc026395860Db2d07ee33e05fE50ed7bD583189C7",
     [optimism.id]: "0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0",
+    [polygon.id]: "0x9Aa02D4Fae7F58b8E8f34c66E756cC734DAc7fe4",
 } as const satisfies { [K in keyof typeof CHAIN_ID_TO_ENDPOINT_ID]?: Address };
 
 export const STARGATE_POOL_USDT = {
+    [arbitrum.id]: "0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0",
     [bsc.id]: "0x138EB30f73BC423c6455C53df6D89CB01d9eBc63",
     [mainnet.id]: "0x933597a323Eb81cAe705C5bC29985172fd5A3973",
     [optimism.id]: "0x19cFCE47eD54a88614648DC3f19A5980097007dD",
+    [polygon.id]: "0xd47b03ee6d86Cf251ee7860FB2ACf9f91B9fD4d7",
 } as const satisfies { [K in keyof typeof CHAIN_ID_TO_ENDPOINT_ID]?: Address };
 
 export const STARGATE_NATIVE_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
