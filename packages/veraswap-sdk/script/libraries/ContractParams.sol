@@ -25,6 +25,7 @@ import {DeployPolygon} from "../deployParameters/DeployPolygon.s.sol";
 import {DeployPolygonMumbai} from "../deployParameters/DeployPolygonMumbai.s.sol";
 import {DeploySepolia} from "../deployParameters/DeploySepolia.s.sol";
 import {DeploySoneium} from "../deployParameters/DeploySoneium.s.sol";
+import {DeployStory} from "../deployParameters/DeployStory.s.sol";
 import {DeploySuperseed} from "../deployParameters/DeploySuperseed.s.sol";
 import {DeployUnichain} from "../deployParameters/DeployUnichain.s.sol";
 import {DeployUnichainSepolia} from "../deployParameters/DeployUnichainSepolia.s.sol";
@@ -79,6 +80,8 @@ library ContractParams {
             return DeploySepolia.getParams();
         } else if (chainId == DeploySoneium.chainId) {
             return DeploySoneium.getParams();
+        } else if (chainId == DeployStory.chainId) {
+            return DeployStory.getParams();
         } else if (chainId == DeploySuperseed.chainId) {
             return DeploySuperseed.getParams();
         } else if (chainId == DeployUnichain.chainId) {
