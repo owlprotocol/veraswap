@@ -11,6 +11,7 @@ export const Route = createFileRoute("/")({
         chainIdIn: z.coerce.number().optional(),
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
+        pinnedTokens: z.string().optional(),
     }),
     component: Index,
 });

@@ -3,7 +3,13 @@ import { useSearch } from "@tanstack/react-router";
 import { Currency } from "@owlprotocol/veraswap-sdk";
 import { useAtom } from "jotai";
 import { useDomainType } from "./useDomainType.js";
-import { currencyInAtom, currencyOutAtom, chainsTypeWriteAtom, chainsAtom } from "@/atoms/index.js";
+import {
+    currencyInAtom,
+    currencyOutAtom,
+    chainsTypeWriteAtom,
+    chainsAtom,
+    updatePinnedTokensAtom,
+} from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 
 export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
@@ -15,12 +21,25 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
     const [, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const [enabledChains] = useAtom(chainsAtom);
+    const [, updatePinnedTokens] = useAtom(updatePinnedTokensAtom);
 
     useEffect(() => {
-        const { currencyIn: currencyInSymbol, chainIdIn, currencyOut: currencyOutSymbol, chainIdOut, type } = search;
+        const {
+            currencyIn: currencyInSymbol,
+            chainIdIn,
+            currencyOut: currencyOutSymbol,
+            chainIdOut,
+            type,
+            pinnedTokens,
+        } = search;
 
         const chainsType = domainType || type || "mainnet";
         setNetworkType(chainsType);
+
+        if (pinnedTokens) {
+            const parsedPinnedTokens = pinnedTokens.split(",").map((token) => token.trim());
+            updatePinnedTokens(parsedPinnedTokens);
+        }
 
         if (domainType === null && !type) {
             navigate({

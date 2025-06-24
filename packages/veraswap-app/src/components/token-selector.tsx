@@ -20,6 +20,7 @@ import {
     currenciesAtom,
     chainInAtom,
     chainOutAtom,
+    pinnedTokensAtom,
 } from "@/atoms/index.js";
 import { useSyncSwapSearchParams } from "@/hooks/useSyncSwapSearchParams.js";
 import {
@@ -44,6 +45,7 @@ export const TokenSelector = ({
     const chains = useAtomValue(chainsAtom);
     const allCurrencies = useAtomValue(currenciesAtom);
     const uniqueTokens = useMemo(() => groupBy(allCurrencies, "symbol"), [allCurrencies]);
+    const pinnedTokens = useAtomValue(pinnedTokensAtom);
 
     useSyncSwapSearchParams(allCurrencies);
 
@@ -81,8 +83,6 @@ export const TokenSelector = ({
             })
             .filter(Boolean) as [string, Currency[]][];
     }, [uniqueTokens, searchQuery, currencyIn, currencyOut, selectingTokenIn]);
-
-    const popularTokens = ["ETH", "USDT", "USDC"];
 
     const handleTokenSelect = (currency: Currency) => {
         if (selectingTokenIn) {
@@ -170,7 +170,7 @@ export const TokenSelector = ({
                 </div>
 
                 <PopularTokens
-                    popularTokens={popularTokens}
+                    popularTokens={pinnedTokens}
                     uniqueTokens={uniqueTokens}
                     onExpand={(symbol) => {
                         const index = filteredTokens.findIndex(([s]) => s === symbol);

@@ -10,6 +10,7 @@ export const Route = createFileRoute("/embed")({
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
         bgColor: z.string().optional(),
+        pinnedTokens: z.string().optional(),
     }),
     component: Widget,
 });
