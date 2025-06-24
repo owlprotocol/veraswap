@@ -5,8 +5,8 @@ import { atomFamily } from "jotai/utils";
 import { getBalanceQueryOptions, readContractQueryOptions } from "wagmi/query";
 import { GetBalanceReturnType } from "@wagmi/core";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { Address, formatUnits } from "viem";
-import { BigNumber } from "@ethersproject/bignumber";
+import { Address, formatUnits, parseUnits } from "viem";
+
 import {
     PERMIT2_ADDRESS,
     UNISWAP_CONTRACTS,
@@ -356,12 +356,10 @@ const calculateUsdValueFromQuote = (
     const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
     const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
 
-    return (
-        BigNumber.from(amount as unknown as number)
-            .mul(10000000)
-            .div(adjustedQuote as unknown as number)
-            .toNumber() / 10000000
-    );
+    const precision = 10000000n;
+    const result = (amount * precision) / adjustedQuote;
+
+    return Number(result) / 10000000;
 };
 
 // Gets token price in USD
@@ -510,6 +508,6 @@ export const tokenOutUsdValueAtom = atom((get) => {
     if (!bestQuoteData) return undefined;
 
     const { quote, usdDecimals } = bestQuoteData;
-    const amountOutBigInt = BigInt(parseFloat(amountOut) * 10 ** currencyOut.decimals);
+    const amountOutBigInt = parseUnits(amountOut, currencyOut.decimals);
     return calculateUsdValueFromQuote(amountOutBigInt, quote, usdDecimals, currencyOut.chainId);
 });
