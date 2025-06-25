@@ -2,10 +2,7 @@ import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapExactInExecuteData creates a trade plan, and returns a router execute call data.
@@ -13,37 +10,31 @@ import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 export function getSwapExactInExecuteData({
     universalRouter,
     currencyIn,
-    currencyOut,
-    path,
+    routePlanner,
     permit2PermitParams,
     amountIn,
-    amountOutMinimum,
 }: {
     universalRouter: Address;
     currencyIn: Address;
-    currencyOut: Address;
-    path: PathKey[];
+    routePlanner: RoutePlanner;
     permit2PermitParams?: [PermitSingle, Hex];
     amountIn: bigint;
-    amountOutMinimum: bigint;
 }): { to: Address; data: Hex; value: bigint } {
-    const routePlanner = new RoutePlanner();
+    const finalRoutePlanner = permit2PermitParams ? new RoutePlanner() : routePlanner;
 
     if (permit2PermitParams) {
-        routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
+        finalRoutePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
+        const hexCommands = routePlanner.commands.slice(2); // remove "0x"
+        const commands: CommandType[] = [];
+        for (let i = 0; i < hexCommands.length; i += 2) {
+            commands.push(Number(hexCommands.slice(i, i + 2)));
+        }
+        commands.forEach((commandType, i) => {
+            finalRoutePlanner.addCommand(commandType, [routePlanner.inputs[i]]);
+        });
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        amountIn,
-        amountOutMinimum,
-        path,
-        currencyIn,
-        currencyOut,
-    });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
-
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-
     const isNative = currencyIn === zeroAddress;
 
     return {
@@ -51,7 +42,7 @@ export function getSwapExactInExecuteData({
         data: encodeFunctionData({
             abi: IUniversalRouter.abi,
             functionName: "execute",
-            args: [routePlanner.commands, routePlanner.inputs, routerDeadline],
+            args: [finalRoutePlanner.commands, finalRoutePlanner.inputs, routerDeadline],
         }),
         value: isNative ? amountIn : 0n,
     };

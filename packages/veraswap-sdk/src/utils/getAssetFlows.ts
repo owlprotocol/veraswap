@@ -1,28 +1,30 @@
 import invariant from "tiny-invariant";
 
-import { RouteComponent, RouteComponentBridge, RouteComponentSwap } from "../uniswap/getRouteMultichain.js";
+import {
+    NewRouteComponent,
+    NewRouteComponentBridge,
+    NewRouteComponentSwap,
+} from "../uniswap/quote/getNewRouteMultichain.js";
 
 export interface TransactionTypeSwapBridge {
     type: "SWAP_BRIDGE";
-    swap: RouteComponentSwap;
-    bridge: RouteComponentBridge;
-    withSuperchain?: boolean;
+    swap: NewRouteComponentSwap;
+    bridge: NewRouteComponentBridge;
 }
 
 export interface TransactionTypeBridgeSwap {
     type: "BRIDGE_SWAP";
-    bridge: RouteComponentBridge;
-    swap: RouteComponentSwap;
-    withSuperchain?: boolean;
+    bridge: NewRouteComponentBridge;
+    swap: NewRouteComponentSwap;
 }
 
-export type TransactionType = RouteComponent | TransactionTypeSwapBridge | TransactionTypeBridgeSwap;
+export type TransactionType = NewRouteComponent | TransactionTypeSwapBridge | TransactionTypeBridgeSwap;
 /**
  * Convert list of asset flows to TransactionType (used on frontend)
  * @param flows
  */
 export function assetFlowsToTransactionType(
-    routeComponents: [RouteComponent, ...RouteComponent[]],
+    routeComponents: [NewRouteComponent, ...NewRouteComponent[]],
 ): TransactionType | null {
     invariant(routeComponents.length >= 1, "routeComponents.length MUST be >= 1");
     if (routeComponents.length === 1) {

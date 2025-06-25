@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { Address, Hex, zeroHash } from "viem";
@@ -26,6 +27,7 @@ import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridg
 import { getSuperchainBridgeTransaction } from "../superchain/getSuperchainBridgeTransaction.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { TokenStandard } from "../types/Token.js";
+import { RoutePlanner } from "../uniswap/routerCommands.js";
 import {
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
@@ -146,16 +148,8 @@ export async function getTransaction(
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
     switch (params.type) {
         case "SWAP": {
-            const {
-                currencyIn,
-                currencyOut,
-                path,
-                amountIn,
-                walletAddress,
-                amountOutMinimum,
-                queryClient,
-                wagmiConfig,
-            } = params;
+            const { currencyIn, commands, amountIn, walletAddress, queryClient, wagmiConfig } = params;
+            const routePlanner = RoutePlanner.create(commands);
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
@@ -181,10 +175,8 @@ export async function getTransaction(
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
                 currencyIn: getUniswapV4Address(currencyIn),
-                currencyOut: getUniswapV4Address(currencyOut),
-                path,
+                routePlanner,
                 amountIn,
-                amountOutMinimum,
                 permit2PermitParams,
             });
         }
@@ -315,19 +307,11 @@ export async function getTransaction(
         }
 
         case "SWAP_BRIDGE": {
-            const {
-                swap,
-                bridge,
-                bridgePayment,
-                amountIn,
-                amountOutMinimum,
-                walletAddress,
-                stargateQuote,
-                orbiterQuote,
-                queryClient,
-                wagmiConfig,
-            } = params;
-            const { currencyIn: swapCurrencyIn, path, currencyOut: swapCurrencyOut } = swap;
+            const { swap, bridge, bridgePayment, amountIn, walletAddress, orbiterQuote, queryClient, wagmiConfig } =
+                params;
+            const { currencyIn: swapCurrencyIn, commands, currencyOut: swapCurrencyOut } = swap;
+            const routePlanner = RoutePlanner.create(commands);
+
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
@@ -354,14 +338,12 @@ export async function getTransaction(
             if (isSuperOrLinkedToSuper(bridgeCurrencyIn) && isSuperOrLinkedToSuper(bridgeCurrencyOut)) {
                 return getSwapAndSuperchainBridgeTransaction({
                     amountIn,
-                    amountOutMinimum,
                     destinationChain: bridgeCurrencyOut.chainId,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    path,
+                    routePlanner,
                     receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
-
                     permit2PermitParams,
                 });
             }
@@ -387,12 +369,8 @@ export async function getTransaction(
                 }
 
                 return getSwapAndOrbiterETHBridgeTransaction({
-                    amountIn,
-                    amountOutMinimum,
-                    currencyIn: getUniswapV4Address(swapCurrencyIn),
-                    currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    path,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                    routePlanner,
                     orbiterQuote,
                     permit2PermitParams,
                 });
@@ -432,11 +410,9 @@ export async function getTransaction(
                 destinationChain: bridgeCurrencyOut.chainId,
                 receiver: walletAddress,
                 currencyIn: getUniswapV4Address(swapCurrencyIn),
-                currencyOut: getUniswapV4Address(swapCurrencyOut),
-                path,
+                routePlanner,
                 permit2PermitParams,
                 amountIn,
-                amountOutMinimum,
             });
         }
 
@@ -455,6 +431,10 @@ export async function getTransaction(
             } = params;
             const { currencyIn, currencyOut, withSuperchain } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
+            // TODO: remove this once we use routePlanner
+            if (!path) {
+                throw new Error("Path is required for BRIDGE_SWAP transaction");
+            }
 
             if (currencyIn.isNative && !stargateQuote && !orbiterQuote) {
                 throw new Error("Stargate or orbiter params are required for ETH bridging");

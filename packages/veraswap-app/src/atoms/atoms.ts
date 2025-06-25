@@ -44,21 +44,24 @@ const enabledSteps = [
 
 export const isDisabledStep = (swapStep: SwapStep) => !enabledSteps.includes(swapStep);
 
-export const getSwapStepMessage = (swapStep: SwapStep, transactionType: TransactionType | null) => {
+export const getSwapStepMessage = (
+    swapStep: SwapStep,
+    transactionType: "SWAP" | "BRIDGE" | "SWAP_BRIDGE" | "BRIDGE_SWAP" | null,
+) => {
     if (swapStep !== SwapStep.EXECUTE_SWAP) return swapStep;
 
     if (!transactionType) return swapStep;
 
-    if (transactionType.type === "SWAP") {
+    if (transactionType === "SWAP") {
         return "Execute Swap";
     }
-    if (transactionType.type === "BRIDGE") {
+    if (transactionType === "BRIDGE") {
         return "Execute Bridge";
     }
-    if (transactionType.type === "SWAP_BRIDGE") {
+    if (transactionType === "SWAP_BRIDGE") {
         return "Execute Swap and Bridge";
     }
-    if (transactionType.type === "BRIDGE_SWAP") {
+    if (transactionType === "BRIDGE_SWAP") {
         return "Execute Bridge and Swap";
     }
 };
@@ -174,59 +177,62 @@ export const updateTransactionStepAtom = atom(
     },
 );
 
-export const initializeTransactionStepsAtom = atom(null, (_, set, transactionType: TransactionType) => {
-    // Clear previous transaction hashes
-    set(transactionHashesAtom, {} as Record<TransactionStepId, string | undefined>);
+export const initializeTransactionStepsAtom = atom(
+    null,
+    (_, set, transactionType: "SWAP" | "BRIDGE" | "SWAP_BRIDGE" | "BRIDGE_SWAP") => {
+        // Clear previous transaction hashes
+        set(transactionHashesAtom, {} as Record<TransactionStepId, string | undefined>);
 
-    const swapStep: TransactionStep = {
-        id: "swap",
-        title: "🤝 Swap",
-        description: "Trading with your local Walmart 💵💵💵💵💵💵",
-        status: "pending",
-    };
+        const swapStep: TransactionStep = {
+            id: "swap",
+            title: "🤝 Swap",
+            description: "Trading with your local Walmart 💵💵💵💵💵💵",
+            status: "pending",
+        };
 
-    const sendOriginStep: TransactionStep = {
-        id: "sendOrigin",
-        title: "📤 Initiating Origin Transfer",
-        description:
-            "Catapulting your tokens across the blockchain abyss. Please keep arms and legs inside the vehicle. 🌌🎢",
-        status: "pending",
-    };
+        const sendOriginStep: TransactionStep = {
+            id: "sendOrigin",
+            title: "📤 Initiating Origin Transfer",
+            description:
+                "Catapulting your tokens across the blockchain abyss. Please keep arms and legs inside the vehicle. 🌌🎢",
+            status: "pending",
+        };
 
-    const bridgeStep: TransactionStep = {
-        id: "bridge",
-        title: "🚀 Bridge",
-        description: "Your token is traveling...",
-        status: "pending",
-    };
+        const bridgeStep: TransactionStep = {
+            id: "bridge",
+            title: "🚀 Bridge",
+            description: "Your token is traveling...",
+            status: "pending",
+        };
 
-    const transferRemoteStep: TransactionStep = {
-        id: "transferRemote",
-        title: "🕊️ Transfer Token",
-        description: "We're freeing your token. Don't be impatient!",
-        status: "pending",
-    };
+        const transferRemoteStep: TransactionStep = {
+            id: "transferRemote",
+            title: "🕊️ Transfer Token",
+            description: "We're freeing your token. Don't be impatient!",
+            status: "pending",
+        };
 
-    let steps: TransactionStep[] = [];
+        let steps: TransactionStep[] = [];
 
-    switch (transactionType.type) {
-        case "SWAP":
-            steps = [swapStep];
-            break;
-        case "BRIDGE":
-            steps = [sendOriginStep, bridgeStep, transferRemoteStep];
-            break;
-        case "SWAP_BRIDGE":
-            steps = [swapStep, bridgeStep, transferRemoteStep];
-            break;
-        case "BRIDGE_SWAP":
-            steps = [sendOriginStep, bridgeStep, swapStep, transferRemoteStep];
-            break;
-    }
+        switch (transactionType) {
+            case "SWAP":
+                steps = [swapStep];
+                break;
+            case "BRIDGE":
+                steps = [sendOriginStep, bridgeStep, transferRemoteStep];
+                break;
+            case "SWAP_BRIDGE":
+                steps = [swapStep, bridgeStep, transferRemoteStep];
+                break;
+            case "BRIDGE_SWAP":
+                steps = [sendOriginStep, bridgeStep, swapStep, transferRemoteStep];
+                break;
+        }
 
-    set(transactionStepsAtom, steps);
-    set(transactionModalOpenAtom, true);
-});
+        set(transactionStepsAtom, steps);
+        set(transactionModalOpenAtom, true);
+    },
+);
 
 export const bridgeMessageIdAtom = atom<Hash | null>(null);
 export const swapMessageIdAtom = atom<Hash | null>(null);
