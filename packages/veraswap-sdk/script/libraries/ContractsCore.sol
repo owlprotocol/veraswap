@@ -4,6 +4,8 @@ pragma solidity ^0.8.26;
 import "forge-std/console2.sol";
 // Orbiter
 import {OrbiterBridgeSweepUtils} from "../utils/OrbiterBridgeSweepUtils.sol";
+// Stargate
+import {StargateBridgeSweepUtils} from "../utils/StargateBridgeSweepUtils.sol";
 // ERC4337
 import {SimpleAccountFactoryUtils} from "../utils/SimpleAccountFactoryUtils.sol";
 import {OpenPaymasterUtils} from "../utils/OpenPaymasterUtils.sol";
@@ -91,8 +93,12 @@ library ContractsCoreLibrary {
                 kernelFactory
             );
         }
-        (address execute,) = ExecuteUtils.getOrCreate2();
         (address orbiterBridgeSweep,) = OrbiterBridgeSweepUtils.getOrCreate2();
+        (address stargateBridgeSweep,) = StargateBridgeSweepUtils.getOrCreate2();
+
+        console2.log("stargateBridgeSweep:", stargateBridgeSweep);
+
+        (address execute,) = ExecuteUtils.getOrCreate2();
         (address executeSweep,) = ExecuteSweepUtils.getOrCreate2();
 
         contracts.kernel = kernel;

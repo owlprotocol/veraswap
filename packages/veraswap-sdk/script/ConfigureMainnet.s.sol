@@ -137,10 +137,10 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[5]].push(0x1731Fe5aED11f397C88aC2551384aF8E346Fc699); // ZEUS
         // hypERC20CollateralTokens[chainIds[5]].push(0xA7Db85E2925e3fec7C33A20d87CC895C948e62b3); // USDT
 
+        stargateTokenAndPools[chainIds[5]].push(
+            [0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, 0xc026395860Db2d07ee33e05fE50ed7bD583189C7]
+        ); // USDC
         // stargateTokenAndPools[chainIds[5]].push(
-        //     [0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, 0xc026395860Db2d07ee33e05fE50ed7bD583189C7]
-        // ); // USDC
-        // stargateTokenAndPools[chainIds[6]].push(
         //     [0xdAC17F958D2ee523a2206206994597C13D831ec7, 0x933597a323Eb81cAe705C5bC29985172fd5A3973]
         // ); // USDT
 
