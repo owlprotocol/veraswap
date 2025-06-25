@@ -23,6 +23,30 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const [enabledChains] = useAtom(chainsAtom);
     const [, updatePinnedTokens] = useAtom(updatePinnedTokensAtom);
 
+    const setCurrenciesFromUrl = (
+        currencyInSymbol?: string,
+        chainIdIn?: number,
+        currencyOutSymbol?: string,
+        chainIdOut?: number,
+    ) => {
+        const enabledChainIds = enabledChains.map((c) => c.id);
+        const availableCurrencies = allCurrencies.filter((t) => enabledChainIds.includes(t.chainId));
+
+        if (currencyInSymbol && chainIdIn) {
+            const currencyIn = availableCurrencies.find(
+                (t) => t.symbol === currencyInSymbol && t.chainId === chainIdIn,
+            );
+            if (currencyIn) setCurrencyIn(currencyIn);
+        }
+
+        if (currencyOutSymbol && chainIdOut) {
+            const currencyOut = availableCurrencies.find(
+                (t) => t.symbol === currencyOutSymbol && t.chainId === chainIdOut,
+            );
+            if (currencyOut) setCurrencyOut(currencyOut);
+        }
+    };
+
     useEffect(() => {
         const {
             currencyIn: currencyInSymbol,
@@ -41,32 +65,19 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
             updatePinnedTokens(parsedPinnedTokens);
         }
 
-        if (domainType === null && !type) {
+        // Wait for currencies to be loaded before setting from URL
+        if (allCurrencies.length === 0) return;
+
+        if (domainType !== null) {
+            navigate({ search: {}, replace: true });
+        } else if (!type) {
             navigate({
-                search: {
-                    ...search,
-                    type: chainsType,
-                },
+                search: { ...search, type: chainsType },
                 replace: true,
             });
         }
 
-        const enabledChainIds = enabledChains.map((c) => c.id);
-        const tokensInNetwork = allCurrencies.filter((t) => enabledChainIds.includes(t.chainId));
-
-        if (currencyInSymbol && chainIdIn) {
-            const foundCurrencyIn = tokensInNetwork.find(
-                (t) => t.symbol === currencyInSymbol && t.chainId === chainIdIn,
-            );
-            if (foundCurrencyIn) setCurrencyIn(foundCurrencyIn);
-        }
-
-        if (currencyOutSymbol && chainIdOut) {
-            const foundCurrencyOut = tokensInNetwork.find(
-                (t) => t.symbol === currencyOutSymbol && t.chainId === chainIdOut,
-            );
-            if (foundCurrencyOut) setCurrencyOut(foundCurrencyOut);
-        }
+        setCurrenciesFromUrl(currencyInSymbol, chainIdIn, currencyOutSymbol, chainIdOut);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allCurrencies, domainType]);
