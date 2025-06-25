@@ -77,6 +77,8 @@ contract DeployMainnet is Script {
         chains[4] = "bsc";
         chains[5] = "mainnet";
         chains[6] = "polygon";
+        // chains[7] = "avalanche";
+        // chains[8] = "apechain";
         // chains[4] = "unichain";
 
         (uint256[] memory chainIds, uint256[] memory forks) = MultichainFork.getForks(chains);
@@ -86,6 +88,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[0]].push(0x66477F84bd21697c7781fc3992b3163463e3B224); // CBBTC
         hypERC20CollateralTokens[chainIds[0]].push(0x458BDDd0793fe4f70912535f172466a5473f2e77); // SUPR
         hypERC20CollateralTokens[chainIds[0]].push(0x2552516453368e42705D791F674b312b8b87CD9e); // ezETH
+        hypERC20CollateralTokens[chainIds[0]].push(0x701208b328631fbCC49DB63fb9239F57fF3c1aa5); // UNDEAD
 
         stargateTokenAndPools[chainIds[0]].push(
             [0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, 0x27a16dc786820B16E5c9028b75B99F6f604b5d26]
@@ -96,6 +99,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[1]].push(0xae1E04F18D1323d8EaC7Ba5b2c683c95DC3baC97); // SUPR
         hypERC20CollateralTokens[chainIds[1]].push(0xacEB607CdF59EB8022Cc0699eEF3eCF246d149e2); // ezETH
         hypERC20CollateralTokens[chainIds[1]].push(0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1); // OP
+        hypERC20CollateralTokens[chainIds[1]].push(0x4ceC1aD4790de1D974a9AA4715A3c5070a737dc6); // UNDEAD
 
         stargateTokenAndPools[chainIds[1]].push(
             [0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85, 0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0]
@@ -111,6 +115,7 @@ contract DeployMainnet is Script {
 
         // Arbitrum
         hypERC20CollateralTokens[chainIds[3]].push(0xB26bBfC6d1F469C821Ea25099017862e7368F4E8); // ezETH
+        hypERC20CollateralTokens[chainIds[3]].push(0xc06E425DB48e43DB5169Bf1e3d946B314Dd4c800); // UNDEAD
 
         stargateTokenAndPools[chainIds[3]].push(
             [0xaf88d065e77c8cC2239327C5EDb3A432268e5831, 0xe8CDF27AcD73a434D661C84887215F7598e7d0d3]
@@ -121,6 +126,7 @@ contract DeployMainnet is Script {
 
         // BSC
         hypERC20CollateralTokens[chainIds[4]].push(0xE00C6185a5c19219F1FFeD213b4406a254968c26); // ezETH
+        hypERC20CollateralTokens[chainIds[4]].push(0x9dDE8646811238BBDD720d1dB18bEE825bD529b3); // UNDEAD
 
         stargateTokenAndPools[chainIds[4]].push(
             [0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d, 0x962Bd449E630b0d928f308Ce63f1A21F02576057]
@@ -135,6 +141,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[5]].push(0xC59336D8edDa9722B4f1Ec104007191Ec16f7087); // ezETH
         hypERC20CollateralTokens[chainIds[5]].push(0x235E11459c8C21B2656484F8c6a7418242cfBde0); // ATH
         hypERC20CollateralTokens[chainIds[5]].push(0x1731Fe5aED11f397C88aC2551384aF8E346Fc699); // ZEUS
+        hypERC20CollateralTokens[chainIds[5]].push(0xD971CDfFaC53d9DF56bad78E01711272C0570fb9); // UNDEAD
         // hypERC20CollateralTokens[chainIds[5]].push(0xA7Db85E2925e3fec7C33A20d87CC895C948e62b3); // USDT
 
         stargateTokenAndPools[chainIds[5]].push(
@@ -146,6 +153,7 @@ contract DeployMainnet is Script {
 
         // Polygon
         hypERC20CollateralTokens[chainIds[6]].push(0x38A357A34ea7e9E41718593Bb624CC628698eDc8); // VDT
+        hypERC20CollateralTokens[chainIds[6]].push(0x3F688eD33eff6ba3F819C5Ba69c689E8cCbbC9f7); // UNDEAD
 
         stargateTokenAndPools[chainIds[6]].push(
             [0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359, 0x9Aa02D4Fae7F58b8E8f34c66E756cC734DAc7fe4]
@@ -153,6 +161,12 @@ contract DeployMainnet is Script {
         stargateTokenAndPools[chainIds[6]].push(
             [0xc2132D05D31c914a87C6611C10748AEb04B58e8F, 0xd47b03ee6d86Cf251ee7860FB2ACf9f91B9fD4d7]
         ); // USDT
+
+        // Avalanche
+        // hypERC20CollateralTokens[chainIds[7]].push(0x5a3534720A4f29FA0dc53cE474Db88973A95f65C); // UNDEAD
+
+        // ApeChain
+        // hypERC20CollateralTokens[chainIds[8]].push(0x09567dFf68495d83F78E86b974774587Fe253287); // UNDEAD
 
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
