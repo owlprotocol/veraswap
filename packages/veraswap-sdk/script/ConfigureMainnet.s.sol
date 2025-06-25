@@ -77,7 +77,7 @@ contract DeployMainnet is Script {
         chains[4] = "bsc";
         chains[5] = "mainnet";
         chains[6] = "polygon";
-        // chains[7] = "avalanche";
+        chains[7] = "avalanche";
         // chains[8] = "apechain";
         // chains[4] = "unichain";
 
@@ -88,7 +88,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[0]].push(0x66477F84bd21697c7781fc3992b3163463e3B224); // CBBTC
         hypERC20CollateralTokens[chainIds[0]].push(0x458BDDd0793fe4f70912535f172466a5473f2e77); // SUPR
         hypERC20CollateralTokens[chainIds[0]].push(0x2552516453368e42705D791F674b312b8b87CD9e); // ezETH
-        hypERC20CollateralTokens[chainIds[0]].push(0x701208b328631fbCC49DB63fb9239F57fF3c1aa5); // UNDEAD
+
 
         stargateTokenAndPools[chainIds[0]].push(
             [0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, 0x27a16dc786820B16E5c9028b75B99F6f604b5d26]
@@ -99,7 +99,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[1]].push(0xae1E04F18D1323d8EaC7Ba5b2c683c95DC3baC97); // SUPR
         hypERC20CollateralTokens[chainIds[1]].push(0xacEB607CdF59EB8022Cc0699eEF3eCF246d149e2); // ezETH
         hypERC20CollateralTokens[chainIds[1]].push(0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1); // OP
-        hypERC20CollateralTokens[chainIds[1]].push(0x4ceC1aD4790de1D974a9AA4715A3c5070a737dc6); // UNDEAD
+
 
         stargateTokenAndPools[chainIds[1]].push(
             [0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85, 0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0]
@@ -115,7 +115,6 @@ contract DeployMainnet is Script {
 
         // Arbitrum
         hypERC20CollateralTokens[chainIds[3]].push(0xB26bBfC6d1F469C821Ea25099017862e7368F4E8); // ezETH
-        hypERC20CollateralTokens[chainIds[3]].push(0xc06E425DB48e43DB5169Bf1e3d946B314Dd4c800); // UNDEAD
 
         stargateTokenAndPools[chainIds[3]].push(
             [0xaf88d065e77c8cC2239327C5EDb3A432268e5831, 0xe8CDF27AcD73a434D661C84887215F7598e7d0d3]
@@ -126,7 +125,7 @@ contract DeployMainnet is Script {
 
         // BSC
         hypERC20CollateralTokens[chainIds[4]].push(0xE00C6185a5c19219F1FFeD213b4406a254968c26); // ezETH
-        hypERC20CollateralTokens[chainIds[4]].push(0x9dDE8646811238BBDD720d1dB18bEE825bD529b3); // UNDEAD
+
 
         stargateTokenAndPools[chainIds[4]].push(
             [0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d, 0x962Bd449E630b0d928f308Ce63f1A21F02576057]
@@ -153,7 +152,6 @@ contract DeployMainnet is Script {
 
         // Polygon
         hypERC20CollateralTokens[chainIds[6]].push(0x38A357A34ea7e9E41718593Bb624CC628698eDc8); // VDT
-        hypERC20CollateralTokens[chainIds[6]].push(0x3F688eD33eff6ba3F819C5Ba69c689E8cCbbC9f7); // UNDEAD
 
         stargateTokenAndPools[chainIds[6]].push(
             [0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359, 0x9Aa02D4Fae7F58b8E8f34c66E756cC734DAc7fe4]
@@ -163,10 +161,13 @@ contract DeployMainnet is Script {
         ); // USDT
 
         // Avalanche
-        // hypERC20CollateralTokens[chainIds[7]].push(0x5a3534720A4f29FA0dc53cE474Db88973A95f65C); // UNDEAD
+        stargateTokenAndPools[chainIds[7]].push(
+            [0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E, 0x5634c4a5FEd09819E3c46D86A965Dd9447d86e47]
+        ); // USDC
+        stargateTokenAndPools[chainIds[7]].push(
+            [0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7, 0x12dC9256Acc9895B076f6638D628382881e62CeE]
+        ); // USDT
 
-        // ApeChain
-        // hypERC20CollateralTokens[chainIds[8]].push(0x09567dFf68495d83F78E86b974774587Fe253287); // UNDEAD
 
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
