@@ -69,7 +69,8 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
         if (allCurrencies.length === 0) return;
 
         if (domainType !== null) {
-            navigate({ search: {}, replace: true });
+            const { type, ...currencyParams } = search;
+            navigate({ search: currencyParams, replace: true });
         } else if (!type) {
             navigate({
                 search: { ...search, type: chainsType },
@@ -83,7 +84,6 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     }, [allCurrencies, domainType]);
 
     useEffect(() => {
-        if (domainType !== null) return;
         if (!currencyIn && !currencyOut) return;
 
         navigate({
@@ -101,5 +101,5 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
             replace: true,
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currencyIn, currencyOut, domainType]);
+    }, [currencyIn, currencyOut]);
 }
