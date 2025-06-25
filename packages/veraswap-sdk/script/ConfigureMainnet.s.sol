@@ -69,7 +69,7 @@ contract DeployMainnet is Script {
     }
 
     function run() external virtual {
-        string[] memory chains = new string[](7);
+        string[] memory chains = new string[](8);
         chains[0] = "base";
         chains[1] = "optimism";
         chains[2] = "superseed";
@@ -164,7 +164,6 @@ contract DeployMainnet is Script {
         stargateTokenAndPools[chainIds[7]].push(
             [0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7, 0x12dC9256Acc9895B076f6638D628382881e62CeE]
         ); // USDT
-
 
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
