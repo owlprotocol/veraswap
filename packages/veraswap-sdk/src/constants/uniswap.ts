@@ -1,6 +1,17 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, Hash, keccak256, zeroAddress, zeroHash } from "viem";
-import { arbitrum, base, baseSepolia, bsc, mainnet, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
+import {
+    arbitrum,
+    avalanche,
+    base,
+    baseSepolia,
+    bsc,
+    mainnet,
+    optimism,
+    optimismSepolia,
+    polygon,
+    sepolia,
+} from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { MetaQuoter } from "../artifacts/MetaQuoter.js";
@@ -246,5 +257,13 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
         metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
         universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
+    },
+    [avalanche.id]: {
+        v4PoolManager: "0x06380C0e0912312B5150364B9DC4542BA0DbBc85",
+        v4PositionManager: "0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD",
+        v4StateView: "0x79E4E3F08f8646aD38d4184098ac78CD3453A906",
+        v4Quoter: "0x4BCb913C9b582b93E5D2f2F7885A05592AEf7ADa",
+        metaQuoter: "0xe56Bfc2D8b2f1dBd91d63324bDfc0F7eeC8E4b7C",
+        universalRouter: "0x677C26Dc148f42dF110859B0053e5a2d2E2Ec1d3",
     },
 } as const;
