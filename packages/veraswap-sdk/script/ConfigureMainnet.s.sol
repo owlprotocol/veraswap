@@ -89,7 +89,6 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[0]].push(0x458BDDd0793fe4f70912535f172466a5473f2e77); // SUPR
         hypERC20CollateralTokens[chainIds[0]].push(0x2552516453368e42705D791F674b312b8b87CD9e); // ezETH
 
-
         stargateTokenAndPools[chainIds[0]].push(
             [0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, 0x27a16dc786820B16E5c9028b75B99F6f604b5d26]
         ); // USDC
@@ -99,7 +98,6 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[1]].push(0xae1E04F18D1323d8EaC7Ba5b2c683c95DC3baC97); // SUPR
         hypERC20CollateralTokens[chainIds[1]].push(0xacEB607CdF59EB8022Cc0699eEF3eCF246d149e2); // ezETH
         hypERC20CollateralTokens[chainIds[1]].push(0x0Ea3C23A4dC198c289D5443ac302335aBc86E6b1); // OP
-
 
         stargateTokenAndPools[chainIds[1]].push(
             [0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85, 0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0]
@@ -125,7 +123,6 @@ contract DeployMainnet is Script {
 
         // BSC
         hypERC20CollateralTokens[chainIds[4]].push(0xE00C6185a5c19219F1FFeD213b4406a254968c26); // ezETH
-
 
         stargateTokenAndPools[chainIds[4]].push(
             [0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d, 0x962Bd449E630b0d928f308Ce63f1A21F02576057]
