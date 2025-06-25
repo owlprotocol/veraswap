@@ -1,6 +1,6 @@
 import { getDeployDeterministicAddress } from "@veraswap/create-deterministic";
 import { Address, encodeDeployData, Hash, keccak256, zeroAddress, zeroHash } from "viem";
-import { arbitrum, base, baseSepolia, bsc, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
+import { arbitrum, base, baseSepolia, bsc, mainnet, optimism, optimismSepolia, polygon, sepolia } from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
 import { MetaQuoter } from "../artifacts/MetaQuoter.js";
@@ -205,7 +205,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0xE751D8E8020B9AD1D2bb2CEd95EFA97fbd2F0A45",
         v4Quoter: "0x6e69C93152cFF1229E247CDB2153341cA39FE189",
         universalRouter: "0x5D188c9e6222DA351770bdf93517dCa70419e60A",
-        metaQuoter: "0x55B13561584DCf661f6ab4C6C80a4Be346C47D39",
+        metaQuoter: "0xBb87bCE5D03818cb068062aB8b1172864c88F35D",
     },
     [base.id]: {
         v4PoolManager: "0x498581fF718922c3f8e6A244956aF099B2652b2b",
@@ -221,7 +221,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0xD676ec87044B939D152499469889f5fB3a77D1E0",
         v4Quoter: "0xa889Eca9eDfa9d6048055098D1E8d0C5eC9676d8",
         universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
-        metaQuoter: "0xab49293ff734f0615dfa67fdb3b4625fca0747e2",
+        metaQuoter: "0x2D5aB88B9d3eF1f3D37a39b0905F1d0C1CA6C547",
     },
     [optimism.id]: {
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
@@ -237,14 +237,14 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x425BbF3cF4df231Da3F29555f72dD8F29465E4ee",
         v4Quoter: "0x2829D6f74c1ddaD51e528a270E8e8038AD56b59A",
         universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
-        metaQuoter: "0x3e0878e6c9ca920b83a8c5d51a7a32ba18cf4449",
+        metaQuoter: "0xe48C996c741328069Ca0230AE326bBf93794602d",
     },
-    // [mainnet.id]: {
-    //     v4PoolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90",
-    //     v4PositionManager: "0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e",
-    //     v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
-    //     v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
-    //     metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
-    //     universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
-    // },
+    [mainnet.id]: {
+        v4PoolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90",
+        v4PositionManager: "0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e",
+        v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
+        v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
+        metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
+        universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
+    },
 } as const;
