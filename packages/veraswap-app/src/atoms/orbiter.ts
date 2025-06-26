@@ -1,21 +1,9 @@
 import { Atom, atom } from "jotai";
-import {
-    chainIdToOrbiterChainId,
-    getUniswapV4Address,
-    ORBITER_BRIDGE_SWEEP_ADDRESS,
-    OrbiterParams,
-    OrbiterQuote,
-    OrbiterQuoteParams,
-    orbiterQuoteQueryOptions,
-    orbiterRoutersQueryOptions,
-} from "@owlprotocol/veraswap-sdk";
-import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
+import { chainIdToOrbiterChainId, OrbiterParams, orbiterRoutersQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { atomWithQuery } from "jotai-tanstack-query";
 import { zeroAddress, Address, parseUnits } from "viem";
 import { chainInAtom, chainOutAtom, tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
-import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
-import { accountAtom } from "./account.js";
-import { kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
-import { disabledQueryOptions } from "./disabledQuery.js";
+import { transactionTypeAtom } from "./uniswap.js";
 
 const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
 const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
@@ -71,12 +59,12 @@ export const orbiterRouterAtom = atom((get) => {
 
     if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType) return undefined;
 
-    if (transactionType.type === "SWAP") return undefined;
+    if (transactionType === "SWAP") return undefined;
 
     const chainInSymbol = chainIn.nativeCurrency.symbol;
     const chainOutSymbol = chainOut.nativeCurrency.symbol;
 
-    if (transactionType.type === "SWAP_BRIDGE") {
+    if (transactionType === "SWAP_BRIDGE") {
         // TODO: Handle USDC
         if (currencyOut.isNative && (currencyOut.symbol !== "ETH" || chainInSymbol !== "ETH")) {
             // If bridging on output a native token, must be ETH on both chains
@@ -91,7 +79,7 @@ export const orbiterRouterAtom = atom((get) => {
     }
 
     // For swap and bridge, tokenOut is what we bridge, else tokenIn
-    const bridgeSymbol = transactionType.type === "SWAP_BRIDGE" ? currencyOut.symbol : currencyIn.symbol;
+    const bridgeSymbol = transactionType === "SWAP_BRIDGE" ? currencyOut.symbol : currencyIn.symbol;
 
     const line = `${chainIn.id}/${chainOut.id}-${bridgeSymbol}/${bridgeSymbol}`;
 

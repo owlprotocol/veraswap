@@ -4,5 +4,4 @@ export * from "./getHyperlaneMessagesFromReceipt.js";
 export * from "./getStargateMessageIdFromReceipt.js";
 export * from "./getSuperchainMessageIdFromReceipt.js";
 export * from "./getSuperchainMessageIdsFromReceipt.js";
-export * from "./getTransactionType.js";
 export * from "./MockMailbox.js";

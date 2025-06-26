@@ -62,10 +62,13 @@ export function TransactionStatusModal({
             case "bridge":
                 if (!hashes?.bridge) return undefined;
 
+                //TODO: Handle superchain explorer URLs
+                /*
                 if (transactionType?.withSuperchain) {
                     // We have to search by transaction hash
                     return `https://sid.testnet.routescan.io/crosstransactions?txhash=${hashes.sendOrigin}`;
                 }
+                */
 
                 if (stargateQuote.data) return `https://testnet.layerzeroscan.com/tx/${hashes.bridge}`;
 

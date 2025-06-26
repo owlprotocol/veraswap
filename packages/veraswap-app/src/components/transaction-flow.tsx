@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { TransactionType, Currency } from "@owlprotocol/veraswap-sdk";
+import { Currency, RouteStep, isRouteStepSwap, isRouteStepBridge } from "@owlprotocol/veraswap-sdk";
 import { TokenBadge } from "./TokenBadge.js";
 import { chains } from "@/config.js";
 function TokenDisplay({ currency }: { currency: Currency }) {
@@ -40,85 +40,55 @@ function VerticalArrowWithLabel({ Icon, label }: { Icon: LucideIcon; label: stri
     );
 }
 
-export function TransactionFlow({ transaction }: { transaction: TransactionType }) {
-    const renderTransactionFlow = () => {
-        switch (transaction.type) {
-            case "SWAP":
-                return (
-                    <div className="flex flex-col items-center">
-                        <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenDisplay currency={transaction.currencyIn} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenDisplay currency={transaction.currencyOut} />
-                        </div>
-                        <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenDisplay currency={transaction.currencyIn} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenDisplay currency={transaction.currencyOut} />
-                        </div>
-                    </div>
-                );
-
-            case "BRIDGE":
-                return (
-                    <div className="flex flex-col items-center">
-                        <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenDisplay currency={transaction.currencyIn} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenDisplay currency={transaction.currencyOut} />
-                        </div>
-                        <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenDisplay currency={transaction.currencyIn} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenDisplay currency={transaction.currencyOut} />
-                        </div>
-                    </div>
-                );
-
-            case "SWAP_BRIDGE":
-                return (
-                    <div className="flex flex-col items-center">
-                        <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenDisplay currency={transaction.swap.currencyIn} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenDisplay currency={transaction.swap.currencyOut} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenDisplay currency={transaction.bridge.currencyOut} />
-                        </div>
-                        <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenDisplay currency={transaction.swap.currencyIn} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenDisplay currency={transaction.swap.currencyOut} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenDisplay currency={transaction.bridge.currencyOut} />
-                        </div>
-                    </div>
-                );
-
-            case "BRIDGE_SWAP":
-                return (
-                    <div className="flex flex-col items-center">
-                        <div className="hidden md:flex items-start md:space-x-4">
-                            <TokenDisplay currency={transaction.bridge.currencyIn} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Bridge" />
-                            <TokenDisplay currency={transaction.swap.currencyIn} />
-                            <ArrowWithLabel Icon={ArrowRight} label="Swap" />
-                            <TokenDisplay currency={transaction.swap.currencyOut} />
-                        </div>
-                        <div className="flex flex-col items-center space-y-1 md:hidden">
-                            <TokenDisplay currency={transaction.bridge.currencyIn} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Bridge" />
-                            <TokenDisplay currency={transaction.swap.currencyIn} />
-                            <VerticalArrowWithLabel Icon={ArrowDown} label="Swap" />
-                            <TokenDisplay currency={transaction.swap.currencyOut} />
-                        </div>
-                    </div>
-                );
-
-            default:
-                return <div>Unknown transaction type</div>;
-        }
-    };
-
-    return <div className="w-full p-4">{renderTransactionFlow()}</div>;
+export function TransactionFlow({ steps }: { steps: RouteStep[] }) {
+    return (
+        <div className="w-full p-4">
+            <div className="flex flex-col items-center">
+                <div className="hidden md:flex items-start md:space-x-4">
+                    <TokenDisplay currency={steps[0].currencyIn} />
+                    {steps.map((step, index) => {
+                        if (isRouteStepSwap(step)) {
+                            return (
+                                <>
+                                    <ArrowWithLabel key={`${index}-swap`} Icon={ArrowRight} label="Swap" />
+                                    <TokenDisplay key={index} currency={step.currencyOut} />
+                                </>
+                            );
+                        } else if (isRouteStepBridge(step)) {
+                            return (
+                                <>
+                                    <ArrowWithLabel key={`${index}-bridge`} Icon={ArrowRight} label="Bridge" />
+                                    <TokenDisplay key={index} currency={step.currencyOut} />
+                                </>
+                            );
+                        } else {
+                            return <div key={index}>Unknown transaction type</div>;
+                        }
+                    })}
+                </div>
+                <div className="flex flex-col items-center space-y-1 md:hidden">
+                    <TokenDisplay currency={steps[0].currencyIn} />
+                    {steps.map((step, index) => {
+                        if (isRouteStepSwap(step)) {
+                            return (
+                                <>
+                                    <VerticalArrowWithLabel key={`${index}-swap`} Icon={ArrowDown} label="Swap" />
+                                    <TokenDisplay key={index} currency={step.currencyOut} />
+                                </>
+                            );
+                        } else if (isRouteStepBridge(step)) {
+                            return (
+                                <>
+                                    <VerticalArrowWithLabel key={`${index}-bridge`} Icon={ArrowDown} label="Bridge" />
+                                    <TokenDisplay key={index} currency={step.currencyOut} />
+                                </>
+                            );
+                        } else {
+                            return <div key={index}>Unknown transaction type</div>;
+                        }
+                    })}
+                </div>
+            </div>
+        </div>
+    );
 }

@@ -21,8 +21,7 @@ import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
-import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
-import { orbiterQuoteAtom, orbiterRouterAtom } from "./orbiter.js";
+import { routeStepsAtom } from "./uniswap.js";
 import { currenciesAtom } from "./chains.js";
 
 import { stargateQuoteAtom } from "./stargate.js";
