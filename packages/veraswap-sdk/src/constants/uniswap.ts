@@ -249,7 +249,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x4DA860C1bA78a330391fE9c1106841389F1aEC01",
         v4Quoter: "0x613DB448fd6980dc84416B95380a8eaeC581DbE1",
         universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
-        metaQuoter: "0x8EEF9d75c396e4EeF76EDb51A828805b5BeE8c1A",
+        metaQuoter: "0x3f7e9263EDbC8c3ef2Be66b785114b4558722494",
     },
     [bsc.id]: {
         weth9: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
