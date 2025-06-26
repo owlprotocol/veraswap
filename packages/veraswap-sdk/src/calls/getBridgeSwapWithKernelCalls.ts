@@ -18,7 +18,7 @@ import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridg
 import { getStargateTokenBridgeTransaction } from "../stargate/getStargateTokenBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { TokenStandard } from "../types/Token.js";
-import { CreateCommandParamsGeneric } from "../uniswap/routerCommands.js";
+import { MetaQuoteBest } from "../uniswap/index.js";
 
 import { GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
@@ -58,12 +58,17 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     remoteSwapParams: {
         amountIn: bigint;
         amountOutMinimum: bigint;
-        commands: CreateCommandParamsGeneric[];
+        quote: MetaQuoteBest;
         currencyIn: Address;
+        currencyOut: Address;
         universalRouter: Address;
+        receiver: Address;
         callTargetAfter?: [Address, bigint, Hex];
         routerPayment?: bigint;
         approveExpiration?: number | "MAX_UINT_48";
+        contracts: {
+            weth9: Address;
+        };
     };
     withSuperchain?: boolean;
 }

@@ -13,7 +13,7 @@ import { PathKey, PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 import { nativeOnChain } from "./constants/tokens.js";
 import { getUniswapV4RouteExactOut, getUniswapV4RoutesWithLiquidity } from "./getUniswapV4Route.js";
 import { getUniswapRouteExactIn } from "./quote/getUniswapRoute.js";
-import { CreateCommandParamsGeneric } from "./routerCommands.js";
+import { MetaQuoteBest } from "./quote/MetaQuoter.js";
 
 export interface GetUniswapV4RouteMultichainParams {
     currencyIn: Currency;
@@ -39,7 +39,7 @@ export async function getUniswapV4RouteExactInMultichain(
     currencyIn: Currency;
     currencyOut: Currency;
     path: readonly PathKey[];
-    commands: CreateCommandParamsGeneric[];
+    quote: MetaQuoteBest;
     amountOut: bigint;
     gasEstimate: bigint;
 } | null> {

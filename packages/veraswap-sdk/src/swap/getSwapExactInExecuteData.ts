@@ -3,7 +3,9 @@ import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote } from "../uniswap/index.js";
+import { MetaQuoteBest } from "../uniswap/quote/MetaQuoter.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 /**
  * getSwapExactInExecuteData creates a trade plan, and returns a router execute call data.
@@ -11,16 +13,22 @@ import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswa
 export function getSwapExactInExecuteData({
     universalRouter,
     currencyIn,
-    commands,
+    currencyOut,
+    quote,
     permit2PermitParams,
     amountIn,
+    contracts,
 }: {
     universalRouter: Address;
     currencyIn: Address;
-    commands: CreateCommandParamsGeneric[];
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
     amountIn: bigint;
     amountOutMinimum: bigint;
+    contracts: {
+        weth9: Address;
+    };
 }): { to: Address; data: Hex; value: bigint } {
     const routePlanner = new RoutePlanner();
 
@@ -28,6 +36,13 @@ export function getSwapExactInExecuteData({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);

@@ -5,25 +5,36 @@ import { STARGATE_BRIDGE_SWEEP_ADDRESS } from "../constants/stargate.js";
 import { getStargateBridgeAllETHCallData } from "../stargate/getStargateBridgeAllETHCallData.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 /**
  * getSwapAndStargateETHBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge ETH to another chain using Stargate
  */
 export function getSwapAndStargateETHBridgeTransaction({
     universalRouter,
-    commands,
+    amountIn,
+    currencyIn,
+    currencyOut,
+    quote,
     permit2PermitParams,
     dstChain,
     srcChain,
     recipient,
+    contracts,
 }: {
     universalRouter: Address;
-    commands: CreateCommandParamsGeneric[];
+    amountIn: bigint;
+    currencyIn: Address;
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
     dstChain: number;
     srcChain: number;
     recipient: Address;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -31,6 +42,14 @@ export function getSwapAndStargateETHBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: STARGATE_BRIDGE_SWEEP_ADDRESS,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     const stargateCallData = getStargateBridgeAllETHCallData({ dstChain, srcChain, recipient });

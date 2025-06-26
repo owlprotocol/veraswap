@@ -11,7 +11,7 @@ import {
     getUniswapV4RouteExactInMultichain,
     GetUniswapV4RouteMultichainParams,
 } from "./getUniswapV4RouteMultichain.js";
-import { CreateCommandParamsGeneric } from "./routerCommands.js";
+import { MetaQuoteBest } from "./quote/MetaQuoter.js";
 
 export interface RouteComponentSwap {
     type: "SWAP";
@@ -19,7 +19,7 @@ export interface RouteComponentSwap {
     currencyIn: Currency;
     currencyOut: Currency;
     path: readonly PathKey[];
-    commands: CreateCommandParamsGeneric[];
+    quote: MetaQuoteBest;
     amountOut: bigint;
     gasEstimate: bigint;
 }
@@ -109,7 +109,7 @@ export async function getRouteMultichain(
         currencyIn: route.currencyIn,
         currencyOut: route.currencyOut,
         path: route.path,
-        commands: route.commands,
+        quote: route.quote,
         amountOut: route.amountOut,
         gasEstimate: route.gasEstimate,
     };

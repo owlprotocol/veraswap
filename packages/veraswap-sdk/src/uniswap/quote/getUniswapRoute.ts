@@ -8,7 +8,7 @@ import { PathKey, PoolKeyOptions, poolKeysToPathExactIn } from "../../types/Pool
 import { ACTION_CONSTANTS, CommandType, CreateCommandParamsGeneric } from "../routerCommands.js";
 
 import { getMetaQuoteExactInputQueryOptions } from "./getMetaQuoteExactInput.js";
-import { MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
+import { MetaQuoteBest, MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
 const address3 = padHex("0x3", { size: 20 }); // Used as a flag for Uni V3 pools
 
@@ -36,11 +36,11 @@ export async function getUniswapRouteExactIn(
 ): Promise<{
     amountOut: bigint;
     value: bigint;
-    commands: CreateCommandParamsGeneric[];
+    quote: MetaQuoteBest;
     path: readonly PathKey[];
     gasEstimate: bigint;
 } | null> {
-    const { currencyIn, currencyOut, amountIn, contracts, recipient } = params;
+    const { currencyIn, amountIn } = params;
     const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = await queryClient.fetchQuery(
         getMetaQuoteExactInputQueryOptions(wagmiConfig, params),
     );
@@ -51,28 +51,22 @@ export async function getUniswapRouteExactIn(
         return null;
     }
 
-    // Universal Router planner
-    const commands = getRouterCommandsForQuote({
-        bestQuoteSingle,
-        bestQuoteMultihop,
-        bestQuoteType,
-        currencyIn,
-        currencyOut,
-        amountIn,
-        recipient,
-        contracts,
-    });
-
     const value = currencyIn === zeroAddress ? amountIn : 0n;
 
     const { gasEstimate, variableAmount: amountOut } =
         quoteType === MetaQuoteBestType.Single ? bestQuoteSingle : bestQuoteMultihop;
 
+    const quote = {
+        bestQuoteSingle,
+        bestQuoteMultihop,
+        bestQuoteType: quoteType,
+    };
+
     if (quoteType === MetaQuoteBestType.Single) {
         const poolKeys = [bestQuoteSingle.poolKey];
         return {
             amountOut,
-            commands,
+            quote,
             value,
             gasEstimate,
             path: poolKeysToPathExactIn(currencyIn, poolKeys),
@@ -82,7 +76,7 @@ export async function getUniswapRouteExactIn(
     // Multihop quote
     return {
         amountOut,
-        commands,
+        quote,
         value,
         gasEstimate,
         path: bestQuoteMultihop.path,

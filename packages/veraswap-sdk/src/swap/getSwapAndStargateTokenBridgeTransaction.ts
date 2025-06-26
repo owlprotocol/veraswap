@@ -5,26 +5,35 @@ import { STARGATE_BRIDGE_SWEEP_ADDRESS, STARGATE_TOKEN_POOLS } from "../constant
 import { getStargateBridgeAllTokenCallData } from "../stargate/getStargateBridgeAllTokenCallData.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 export function getSwapAndStargateTokenBridgeTransaction({
     universalRouter,
+    amountIn,
     currencyIn,
-    commands,
+    currencyOut,
+    quote,
     permit2PermitParams,
     dstChain,
     srcChain,
     recipient,
     tokenSymbol,
+    contracts,
 }: {
     universalRouter: Address;
+    amountIn: bigint;
     currencyIn: Address;
-    commands: CreateCommandParamsGeneric[];
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
     dstChain: number;
     srcChain: number;
     recipient: Address;
     tokenSymbol: keyof typeof STARGATE_TOKEN_POOLS;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -32,6 +41,14 @@ export function getSwapAndStargateTokenBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: STARGATE_BRIDGE_SWEEP_ADDRESS,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     const stargateCallData = getStargateBridgeAllTokenCallData({

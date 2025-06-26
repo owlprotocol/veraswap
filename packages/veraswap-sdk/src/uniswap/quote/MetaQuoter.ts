@@ -52,3 +52,9 @@ export type MetaQuoteExactBestReturnType = AbiParametersToPrimitiveTypes<
 >;
 export type MetaQuoteBestSingle = AbiParametersToPrimitiveTypes<MetaQuoteExactInputBestAbi["outputs"]>[0];
 export type MetaQuoteBestMultihop = AbiParametersToPrimitiveTypes<MetaQuoteExactInputBestAbi["outputs"]>[1];
+
+export interface MetaQuoteBest {
+    bestQuoteSingle: MetaQuoteBestSingle;
+    bestQuoteMultihop: MetaQuoteBestMultihop;
+    bestQuoteType: MetaQuoteBestType;
+}

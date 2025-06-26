@@ -22,10 +22,9 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
-import { getV4SwapCommandParams } from "../swap/getV4SwapCommandParams.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS, poolKeysToPathExactIn } from "../types/PoolKey.js";
-import { CommandType, CreateCommandParamsGeneric } from "../uniswap/routerCommands.js";
+import { MetaQuoteBest, MetaQuoteBestSingle, MetaQuoteBestType } from "../uniswap/index.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -198,14 +197,15 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 }),
             ]);
 
-            const swapParams = getV4SwapCommandParams({
-                amountIn: amount,
-                amountOutMinimum,
-                currencyIn,
-                currencyOut,
-                path,
-            });
-            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+            const quote: MetaQuoteBest = {
+                bestQuoteType: MetaQuoteBestType.Multihop,
+                bestQuoteMultihop: {
+                    path,
+                    variableAmount: amountOutMinimum,
+                    gasEstimate: 0n, // not used in this test
+                },
+                bestQuoteSingle: {} as unknown as MetaQuoteBestSingle, // not used in this test
+            };
 
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {
@@ -242,8 +242,11 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     amountIn: amount,
                     amountOutMinimum,
                     currencyIn,
-                    commands,
+                    currencyOut,
+                    quote,
+                    receiver: recipient,
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                    contracts: LOCAL_UNISWAP_CONTRACTS,
                 },
             });
             expect(bridgeSwapCalls.calls.length).toBe(1);

@@ -6,21 +6,32 @@ import { getOrbiterBridgeAllETHCallData } from "../orbiter/getOrbiterBridgeAllET
 import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 /**
  * getSwapAndOrbiterETHBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge ETH to another chain using Orbiter
  */
 export function getSwapAndOrbiterETHBridgeTransaction({
     universalRouter,
-    commands,
+    amountIn,
+    currencyIn,
+    currencyOut,
+    quote,
     permit2PermitParams,
     orbiterQuote,
+    contracts,
 }: {
     universalRouter: Address;
-    commands: CreateCommandParamsGeneric[];
+    amountIn: bigint;
+    currencyIn: Address;
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
     orbiterQuote: OrbiterQuote;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -28,6 +39,14 @@ export function getSwapAndOrbiterETHBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: ORBITER_BRIDGE_SWEEP_ADDRESS,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     const orbiterCallData = getOrbiterBridgeAllETHCallData(orbiterQuote);

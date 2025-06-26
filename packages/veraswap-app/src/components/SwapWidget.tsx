@@ -347,6 +347,7 @@ export function SwapWidget({
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
                     erc7579Router: erc7579RouterIn,
                     interchainGasPaymaster: interchainGasPaymasterIn,
+                    weth9: UNISWAP_CONTRACTS[inChainId]?.weth9 ?? zeroAddress,
                 },
                 [outChainId]: {
                     universalRouter: UNISWAP_CONTRACTS[outChainId]?.universalRouter ?? zeroAddress,
@@ -355,6 +356,7 @@ export function SwapWidget({
                     ownableSignatureExecutor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
                     erc7579Router: erc7579RouterOut,
                     interchainGasPaymaster: interchainGasPaymasterOut,
+                    weth9: UNISWAP_CONTRACTS[outChainId]?.weth9 ?? zeroAddress,
                 },
             });
 
