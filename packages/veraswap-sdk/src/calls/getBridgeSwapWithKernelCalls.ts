@@ -17,8 +17,8 @@ import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { getStargateTokenBridgeTransaction } from "../stargate/getStargateTokenBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
-import { PathKey } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
+import { CreateCommandParamsGeneric } from "../uniswap/routerCommands.js";
 
 import { GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
@@ -58,14 +58,11 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     remoteSwapParams: {
         amountIn: bigint;
         amountOutMinimum: bigint;
-        path: PathKey[];
+        commands: CreateCommandParamsGeneric[];
         currencyIn: Address;
-        currencyOut: Address;
         universalRouter: Address;
-        receiver: Address;
         callTargetAfter?: [Address, bigint, Hex];
         routerPayment?: bigint;
-        hookData?: Hex;
         approveExpiration?: number | "MAX_UINT_48";
     };
     withSuperchain?: boolean;

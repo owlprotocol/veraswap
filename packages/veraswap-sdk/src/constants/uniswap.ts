@@ -161,7 +161,7 @@ export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
 //TODO: Add metaquoter address (compute using poolManager address)
 export interface UniswapContracts {
-    weth9?: Address;
+    weth9: Address;
     v2Factory?: Address;
     v2PairInitCodeHash?: Hash;
     v3Factory?: Address;
@@ -170,16 +170,18 @@ export interface UniswapContracts {
     v4PositionManager: Address;
     v4StateView: Address;
     v4Quoter: Address;
-    metaQuoter?: Address;
+    metaQuoter: Address;
     universalRouter: Address;
 }
 
+// TODO: FIXME fix all weth9 addresses
 /** Uniswap contracts by chain */
 export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainA.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainB.id]: LOCAL_UNISWAP_CONTRACTS,
     [sepolia.id]: {
+        weth9: zeroAddress,
         v4PoolManager: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
         v4PositionManager: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
@@ -188,6 +190,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x177109CaE87d41fE3c3d2CE7e7cc47D7d436c515",
     },
     [optimismSepolia.id]: {
+        weth9: "0x4200000000000000000000000000000000000006",
         v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
@@ -196,6 +199,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0xDdB56165FAd0595418479771aec342f57fded1e1",
     },
     [baseSepolia.id]: {
+        weth9: zeroAddress,
         v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
@@ -212,6 +216,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     //     universalRouter: "",
     // },
     [interopDevnet0.id]: {
+        weth9: zeroAddress,
         v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
         v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
         v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
@@ -220,6 +225,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [interopDevnet1.id]: {
+        weth9: zeroAddress,
         v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
         v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
         v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
@@ -228,6 +234,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
     },
     [arbitrum.id]: {
+        weth9: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
         v4PoolManager: "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32",
         v4PositionManager: "0xd88F38F930b7952f2DB2432Cb002E7abbF3dD869",
         v4StateView: "0xE751D8E8020B9AD1D2bb2CEd95EFA97fbd2F0A45",
@@ -236,6 +243,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0xBb87bCE5D03818cb068062aB8b1172864c88F35D",
     },
     [base.id]: {
+        weth9: "0x4200000000000000000000000000000000000006",
         v4PoolManager: "0x498581fF718922c3f8e6A244956aF099B2652b2b",
         v4PositionManager: "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
         v4StateView: "0x4DA860C1bA78a330391fE9c1106841389F1aEC01",
@@ -244,6 +252,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x8EEF9d75c396e4EeF76EDb51A828805b5BeE8c1A",
     },
     [bsc.id]: {
+        weth9: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
         v4PoolManager: "0x28e2Ea090877bF75740558f6BFB36A5ffeE9e9dF",
         v4PositionManager: "0x7A4a5c919aE2541AeD11041A1AEeE68f1287f95b",
         v4StateView: "0xD676ec87044B939D152499469889f5fB3a77D1E0",
@@ -252,6 +261,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x2D5aB88B9d3eF1f3D37a39b0905F1d0C1CA6C547",
     },
     [optimism.id]: {
+        weth9: "0x4200000000000000000000000000000000000006",
         v4PoolManager: "0x9a13F98Cb987694C9F086b1F5eB990EeA8264Ec3",
         v4PositionManager: "0x3C3Ea4B57a46241e54610e5f022E5c45859A1017",
         v4StateView: "0x97337d1C732FC10C809Ac28C6d2D787c8cA2dFC9",
@@ -260,6 +270,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0x7750F8480Ee52a810C12999e4CDAF5694736543a",
     },
     [polygon.id]: {
+        weth9: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
         v4PoolManager: "0x67366782805870060151383F4BbFF9daB53e5cD6",
         v4PositionManager: "0x1Ec2eBf4F37E7363FDfe3551602425af0B3ceef9",
         v4StateView: "0x425BbF3cF4df231Da3F29555f72dD8F29465E4ee",
@@ -268,6 +279,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         metaQuoter: "0xe48C996c741328069Ca0230AE326bBf93794602d",
     },
     [mainnet.id]: {
+        weth9: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         v4PoolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90",
         v4PositionManager: "0xbD216513d74C8cf14cf4747E6AaA6420FF64ee9e",
         v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
@@ -276,6 +288,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
     },
     [avalanche.id]: {
+        weth9: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
         v4PoolManager: "0x06380C0e0912312B5150364B9DC4542BA0DbBc85",
         v4PositionManager: "0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD",
         v4StateView: "0x79E4E3F08f8646aD38d4184098ac78CD3453A906",

@@ -6,23 +6,18 @@ import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";
 import { getPermit2ApproveCalls } from "../calls/Permit2/getPermit2ApproveCalls.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
-import { PathKey } from "../types/PoolKey.js";
-import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
 
 export interface GetSwapCallsParams extends GetCallsParams {
     amountIn: bigint;
     amountOutMinimum: bigint;
     currencyIn: Address;
-    currencyOut: Address;
-    path: PathKey[];
+    commands: CreateCommandParamsGeneric[];
     universalRouter: Address;
-    receiver: Address;
     callTargetBefore?: [Address, bigint, Hex];
     callTargetAfter?: [Address, bigint, Hex];
     routerPayment?: bigint;
-    hookData?: Hex;
     approveExpiration?: number | "MAX_UINT_48";
 }
 
@@ -35,15 +30,11 @@ export async function getSwapCalls(
         chainId,
         account,
         amountIn,
-        amountOutMinimum,
-        path,
+        commands,
         currencyIn,
-        currencyOut,
         universalRouter,
-        receiver,
         callTargetBefore,
         callTargetAfter,
-        hookData,
         approveExpiration,
     } = params;
     const routerPayment = params.routerPayment ?? 0n;
@@ -69,16 +60,7 @@ export async function getSwapCalls(
         routePlanner.addCommand(CommandType.CALL_TARGET, callTargetBefore);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver,
-        amountIn,
-        amountOutMinimum,
-        path,
-        currencyIn,
-        currencyOut,
-        hookData,
-    });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     if (callTargetAfter) {
         routePlanner.addCommand(CommandType.CALL_TARGET, callTargetAfter);
