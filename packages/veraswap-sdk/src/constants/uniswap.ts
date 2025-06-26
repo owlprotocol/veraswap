@@ -285,7 +285,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
         v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
         metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
-        universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f98",
+        universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f984A",
     },
     [avalanche.id]: {
         weth9: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
