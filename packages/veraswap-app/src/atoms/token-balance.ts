@@ -13,6 +13,7 @@ import {
     getUniswapV4Address,
     Currency,
     USD_CURRENCIES,
+    STARGATE_TOKEN_POOLS,
 } from "@owlprotocol/veraswap-sdk";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
 import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
@@ -318,6 +319,20 @@ export const amountOutAtom = atom((get) => {
 
     // TODO: improve how we show amount out
     if (transactionType?.type === "BRIDGE" || transactionType?.type === "SWAP_BRIDGE") {
+        const bridgeCurrencyIn =
+            transactionType.type === "BRIDGE" ? transactionType.currencyIn : transactionType.bridge.currencyIn;
+
+        if (
+            !bridgeCurrencyIn.symbol ||
+            (!bridgeCurrencyIn.isNative && !(bridgeCurrencyIn.symbol in STARGATE_TOKEN_POOLS))
+        ) {
+            // Must be bridging with Hyperlane even though there is a stargate or orbiter quote
+            if (!quoterData) return "";
+
+            amountOut = formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18);
+            return amountOut;
+        }
+
         // TODO: remove orbiter references entirely
         if (stargateQuote && currencyOut) {
             amountOut = formatUnits(
