@@ -8,21 +8,19 @@ import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
-import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
+import { PathKey, PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 
 import { nativeOnChain } from "./constants/tokens.js";
-import {
-    getUniswapV4RouteExactIn,
-    getUniswapV4RouteExactOut,
-    getUniswapV4RoutesWithLiquidity,
-} from "./getUniswapV4Route.js";
+import { getUniswapV4RouteExactOut, getUniswapV4RoutesWithLiquidity } from "./getUniswapV4Route.js";
+import { getUniswapRouteExactIn } from "./quote/getUniswapRoute.js";
+import { CreateCommandParamsGeneric } from "./routerCommands.js";
 
 export interface GetUniswapV4RouteMultichainParams {
     currencyIn: Currency;
     currencyOut: Currency;
     currencyHopsByChain: Record<number, Address[] | undefined>;
     exactAmount: bigint;
-    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address } | undefined>;
+    contractsByChain: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
     poolKeyOptions?: PoolKeyOptions[];
 }
 
@@ -40,7 +38,8 @@ export async function getUniswapV4RouteExactInMultichain(
 ): Promise<{
     currencyIn: Currency;
     currencyOut: Currency;
-    route: PoolKey[];
+    path: readonly PathKey[];
+    commands: CreateCommandParamsGeneric[];
     amountOut: bigint;
     gasEstimate: bigint;
 } | null> {
@@ -107,12 +106,12 @@ export async function getUniswapV4RouteExactInMultichain(
                     }
                 }
 
-                const route = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
+                const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                     chainId,
                     currencyIn: getUniswapV4Address(currIn),
                     currencyOut: getUniswapV4Address(currOut),
                     currencyHops,
-                    exactAmount,
+                    amountIn: exactAmount,
                     contracts,
                     poolKeyOptions,
                 });
@@ -133,6 +132,16 @@ export async function getUniswapV4RouteExactInMultichain(
     return bestRoute;
 }
 
+// TODO: remove this once we have getUniswapRouteExactIn
+export interface GetUniswapV4RouteExactOutMultichainParams {
+    currencyIn: Currency;
+    currencyOut: Currency;
+    currencyHopsByChain: Record<number, Address[] | undefined>;
+    exactAmount: bigint;
+    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address } | undefined>;
+    poolKeyOptions?: PoolKeyOptions[];
+}
+
 /**
  * Get best Uniswap V4 Route for chains where token share a deployment
  * @param queryClient
@@ -143,7 +152,7 @@ export async function getUniswapV4RouteExactInMultichain(
 export async function getUniswapV4RouteExactOutMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetUniswapV4RouteMultichainParams,
+    params: GetUniswapV4RouteExactOutMultichainParams,
 ): Promise<{
     currencyIn: Currency;
     currencyOut: Currency;
@@ -165,6 +174,7 @@ export async function getUniswapV4RouteExactOutMultichain(
                 const contracts = contractsByChain[chainId];
                 if (!contracts) return null; // No uniswap deployment on this chain
 
+                // TODO: Add V3
                 const route = await getUniswapV4RouteExactOut(queryClient, wagmiConfig, {
                     chainId,
                     currencyIn: getUniswapV4Address(currIn),

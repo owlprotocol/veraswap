@@ -40,7 +40,9 @@ import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
+import { getV4SwapCommandParams } from "./swap/getV4SwapCommandParams.js";
 import { PoolKey, PoolKeyAbi, poolKeysToPathExactIn } from "./types/PoolKey.js";
+import { CommandType, CreateCommandParamsGeneric } from "./uniswap/routerCommands.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;
@@ -321,12 +323,21 @@ describe("index.test.ts", function () {
             const amountOutMinimum = amountOutQuoted;
 
             const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
+
+            const swapParams = getV4SwapCommandParams({
+                amountIn,
+                amountOutMinimum,
+                currencyIn: currency0Address,
+                currencyOut: poolKey.currency1,
+                path,
+            });
+            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+
             const swapCalls = getEOASwapCalls({
                 amountIn,
                 amountOutMinimum,
                 currencyIn: currency0Address,
-                currencyOut: currency1Address,
-                path,
+                commands,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
             });
@@ -425,13 +436,20 @@ describe("index.test.ts", function () {
             const amountOutMinimum = amountOutQuoted;
 
             const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
-
-            const batchCalls = getSmartAccountSwapCalls({
+            const swapParams = getV4SwapCommandParams({
                 amountIn,
                 amountOutMinimum,
                 currencyIn: currency0Address,
                 currencyOut: poolKey.currency1,
                 path,
+            });
+            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+
+            const batchCalls = getSmartAccountSwapCalls({
+                amountIn,
+                amountOutMinimum,
+                currencyIn: currency0Address,
+                commands,
                 permitTransferFromData,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,

@@ -1,13 +1,11 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
-import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndHyperlaneSweepBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
@@ -19,12 +17,9 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     destinationChain,
     receiver,
     amountIn,
-    amountOutMinimum,
     currencyIn,
-    currencyOut,
-    path,
+    commands,
     permit2PermitParams,
-    hookData = "0x",
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
@@ -32,12 +27,9 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
-    amountOutMinimum: bigint;
     currencyIn: Address;
-    currencyOut: Address;
-    path: PathKey[];
+    commands: CreateCommandParamsGeneric[];
     permit2PermitParams?: [PermitSingle, Hex];
-    hookData?: Hex;
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -45,16 +37,7 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        amountIn,
-        amountOutMinimum,
-        currencyIn,
-        currencyOut,
-        path,
-        hookData,
-    });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,

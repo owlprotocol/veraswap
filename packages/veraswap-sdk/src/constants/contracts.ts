@@ -1,4 +1,4 @@
-import { zeroAddress } from "viem";
+import { Address, zeroAddress } from "viem";
 import { avalanche } from "viem/chains";
 
 import { arbitrum, base, bsc, opChainL1, optimism, polygon } from "../chains/index.js";
@@ -42,4 +42,4 @@ export const CURRENCY_HOPS = {
     [avalanche.id]: [USDC_AVALANCHE.address, USDT_AVALANCHE.address, zeroAddress],
     [optimism.id]: [USDC_OPTIMISM.address, USDT_OPTIMISM.address, zeroAddress],
     [opChainL1.id]: [getUniswapV4Address(LOCAL_CURRENCIES[6]), zeroAddress], // L34
-};
+} as const satisfies Record<number, Address[]>;

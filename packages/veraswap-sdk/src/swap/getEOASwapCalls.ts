@@ -4,7 +4,7 @@ import { Address, encodeFunctionData, Hex } from "viem";
 import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/index.js";
-import { PathKey } from "../types/PoolKey.js";
+import { CreateCommandParamsGeneric } from "../uniswap/routerCommands.js";
 
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 
@@ -12,16 +12,14 @@ export function getEOASwapCalls({
     amountIn,
     amountOutMinimum,
     currencyIn,
-    currencyOut,
-    path,
+    commands,
     universalRouter,
     approvePermit2 = true,
 }: {
     amountIn: bigint;
     amountOutMinimum: bigint;
     currencyIn: Address;
-    currencyOut: Address;
-    path: PathKey[];
+    commands: CreateCommandParamsGeneric[];
     universalRouter: Address;
     approvePermit2?: boolean;
 }): { to: Address; data: Hex; value: bigint }[] {
@@ -51,8 +49,7 @@ export function getEOASwapCalls({
     const routerExecuteData = getSwapExactInExecuteData({
         universalRouter,
         currencyIn,
-        currencyOut,
-        path,
+        commands,
         amountIn,
         amountOutMinimum,
     });

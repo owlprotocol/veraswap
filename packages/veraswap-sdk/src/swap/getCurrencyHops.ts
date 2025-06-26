@@ -1,12 +1,9 @@
-import { zeroAddress } from "viem";
-import { base, bsc, polygon } from "viem/chains";
+import { Address, zeroAddress } from "viem";
 
-import { USDC_BASE, USDC_BSC, USDC_POLYGON, USDT_BSC, USDT_POLYGON } from "../uniswap/constants/tokens.js";
+import { CURRENCY_HOPS } from "../constants/contracts.js";
 
-export function getCurrencyHops(chainId: number) {
-    if (chainId === bsc.id) return [USDC_BSC.address, USDT_BSC.address, zeroAddress];
-    if (chainId === base.id) return [USDC_BASE.address, zeroAddress];
-    if (chainId === polygon.id) return [USDC_POLYGON.address, USDT_POLYGON.address, zeroAddress];
+export function getCurrencyHops(chainId: number): Address[] {
+    if (chainId in CURRENCY_HOPS) return CURRENCY_HOPS[chainId as keyof typeof CURRENCY_HOPS];
 
     return [zeroAddress];
 }

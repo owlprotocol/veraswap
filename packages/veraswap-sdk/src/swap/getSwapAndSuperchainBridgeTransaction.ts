@@ -1,13 +1,11 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
-import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndSuperchainBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Superchain Interop
@@ -17,12 +15,10 @@ export function getSwapAndSuperchainBridgeTransaction({
     destinationChain,
     receiver,
     amountIn,
-    amountOutMinimum,
     currencyIn,
     currencyOut,
-    path,
+    commands,
     permit2PermitParams,
-    hookData = "0x",
 }: {
     universalRouter: Address;
     destinationChain: number;
@@ -31,7 +27,7 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    commands: CreateCommandParamsGeneric[];
     permit2PermitParams?: [PermitSingle, Hex];
     hookData?: Hex;
 }) {
@@ -41,16 +37,7 @@ export function getSwapAndSuperchainBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: SUPERCHAIN_SWEEP_ADDRESS,
-        amountIn,
-        amountOutMinimum,
-        currencyIn,
-        currencyOut,
-        path,
-        hookData,
-    });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,

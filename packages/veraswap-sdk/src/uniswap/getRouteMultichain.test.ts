@@ -30,8 +30,8 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
 
     const contractsByChain = {
         [opChainL1.id]: {
-            v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
-            v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
+            weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+            metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
         },
     };
     const currencyHopsByChain = {
@@ -75,7 +75,7 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
             expect(flows.length).toBe(1);
 
             const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.path.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -97,7 +97,7 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
             expect(flows.length).toBe(2);
 
             const swap = flows[0] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.path.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -127,7 +127,7 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
             expect(bridge.currencyOut.equals(tokenA_900));
 
             const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.path.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));
@@ -153,7 +153,7 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
             expect(bridgeIn.currencyOut.equals(tokenA_900));
 
             const swap = flows[1] as RouteComponentSwap;
-            expect(swap.route.length).toBe(2);
+            expect(swap.path.length).toBe(2);
             expect(swap.amountOut).toBeGreaterThan(0n);
             expect(swap.currencyIn.equals(tokenA_900));
             expect(swap.currencyOut.equals(tokenB_900));

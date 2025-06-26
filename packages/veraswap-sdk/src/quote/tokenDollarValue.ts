@@ -18,7 +18,7 @@ export async function getTokenDollarValue(
     if (!tokenAddress || !chainId) return 0n;
 
     // TODO: remove all this once we know metaQuoter is always available
-    const metaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter!;
+    const metaQuoter = UNISWAP_CONTRACTS[chainId]!.metaQuoter;
     invariant(metaQuoter, `Meta quoter not found for chain ${chainId}.`);
 
     const hopCurrencies = getCurrencyHops(chainId);

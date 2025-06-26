@@ -6,7 +6,7 @@ import { Address } from "viem";
 
 import { Currency, getSharedChainTokenPairs } from "../../currency/currency.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { RouterCommand } from "../routerCommands.js";
+import { CreateCommandParamsGeneric } from "../routerCommands.js";
 
 import { getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
@@ -35,7 +35,7 @@ export async function getUniswapRouteExactInMultichain(
     currencyOut: Currency;
     amountOut: bigint;
     value: bigint;
-    commands: RouterCommand[];
+    commands: CreateCommandParamsGeneric[];
 } | null> {
     const { currencyIn, currencyOut, amountIn, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");

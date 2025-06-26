@@ -22,8 +22,10 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../constants/uniswap.js";
 import { getKernelAddress } from "../smartaccount/getKernelAddress.js";
 import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
+import { getV4SwapCommandParams } from "../swap/getV4SwapCommandParams.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS, poolKeysToPathExactIn } from "../types/PoolKey.js";
+import { CommandType, CreateCommandParamsGeneric } from "../uniswap/routerCommands.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -196,6 +198,15 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 }),
             ]);
 
+            const swapParams = getV4SwapCommandParams({
+                amountIn: amount,
+                amountOutMinimum,
+                currencyIn,
+                currencyOut,
+                path,
+            });
+            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id, //"opChainA" but we use are mocking on L1 for now
@@ -231,9 +242,7 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     amountIn: amount,
                     amountOutMinimum,
                     currencyIn,
-                    currencyOut,
-                    path,
-                    receiver: recipient,
+                    commands,
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
                 },
             });
