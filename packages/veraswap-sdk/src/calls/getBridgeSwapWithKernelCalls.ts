@@ -33,6 +33,7 @@ import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithK
 export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
     token: Address;
+    tokenSymbol?: string;
     destination: number;
     amount: bigint;
     hookMetadata?: Hex;
@@ -219,8 +220,10 @@ export async function getBridgeSwapWithKernelCalls(
             tokenStandard === "HypERC20Collateral" ||
             tokenStandard === "HypSuperchainERC20Collateral" ||
             tokenStandard === "SuperchainERC20" ||
-            tokenStandard === "NativeToken",
-        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
+            tokenStandard === "NativeToken" ||
+            tokenStandard === "ERC20",
+
+        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20, NativeToken or ERC20`,
     );
 
     // KERNEL ACCOUNT CREATE
@@ -346,12 +349,13 @@ export async function getBridgeSwapWithKernelCalls(
         });
         bridgeCalls = superchainBridgeCalls.calls;
     } else if (params.stargateQuote?.type === "TOKEN") {
-        const { stargateQuote } = params;
+        const { stargateQuote, tokenSymbol } = params;
 
-        const tokenSymbol = params.token;
-        if (!(tokenSymbol in STARGATE_TOKEN_POOLS)) {
-            throw new Error(`Token ${tokenSymbol} is not supported by Stargate`);
-        }
+        invariant(
+            !!tokenSymbol && tokenSymbol in STARGATE_TOKEN_POOLS,
+            `Token ${tokenSymbol} is not supported by Stargate`,
+        );
+
         const stargateTx = getStargateTokenBridgeTransaction({
             srcChain: chainId,
             dstChain: destination,
@@ -362,8 +366,8 @@ export async function getBridgeSwapWithKernelCalls(
         bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
     } else {
         invariant(
-            tokenStandard !== "SuperchainERC20",
-            "SuperchainERC20 is not supported in this function, and this should not be called if withSuperchain is false",
+            tokenStandard !== "SuperchainERC20" && tokenStandard !== "ERC20",
+            "SuperchainERC20 and ERC20 are not supported in this function",
         );
         // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed
