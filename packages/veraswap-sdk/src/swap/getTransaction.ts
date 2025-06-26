@@ -501,6 +501,7 @@ export async function getTransaction(
                 chainId: currencyIn.chainId,
                 token,
                 tokenStandard: getTokenStandard(currencyIn),
+                tokenSymbol: currencyIn.symbol,
                 account: walletAddress,
                 destination: currencyOut.chainId,
                 recipient: walletAddress,
