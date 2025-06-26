@@ -49,8 +49,8 @@ export function WelcomeDialog({ open = false, onOpenChange }: WelcomeDialogProps
                             <div>
                                 <p className="text-base font-medium">Secure & Simple</p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    Veraswap combines Uniswap AMM pools with secure bridging protocols, abstracting all
-                                    the complexity behind a simple interface.
+                                    Veraswap combines Uniswap pools with secure bridging protocols, abstracting all the
+                                    complexity behind a simple interface.
                                 </p>
                             </div>
                         </div>

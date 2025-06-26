@@ -20,13 +20,6 @@ function Index() {
     return (
         <div className="max-w-md mx-auto px-2">
             <MainnetTestnetButtons />
-
-            <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground hover:scale-105 transition-transform duration-300">
-                    Buy Any Token. Any Chain.
-                </h1>
-            </div>
-
             <SwapWidget showTransactionFlow={true} />
         </div>
     );
