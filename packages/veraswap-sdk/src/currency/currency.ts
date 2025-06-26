@@ -107,7 +107,6 @@ export function getSharedChainTokenPairs(currencyA: Currency, currencyB: Currenc
         if (currencyA instanceof Ether) {
             Object.keys(stargateCurrency).forEach((chainIdStr) => {
                 const chainId = Number(chainIdStr);
-                console.log(chainId, nativeOnChain(Number(chainId)).symbol);
                 if (nativeOnChain(Number(chainId)).symbol === "ETH") {
                     currenciesB.push(stargateCurrency[chainId as keyof typeof stargateCurrency]);
                 }
