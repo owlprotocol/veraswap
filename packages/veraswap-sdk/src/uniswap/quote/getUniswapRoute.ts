@@ -156,7 +156,7 @@ export function getRouterCommandsForMultihopQuote(
             [v3SwapCurrencyIn, hop0.fee, hop0.intermediateCurrency, hop1.fee, hop1.intermediateCurrency],
         );
         const unwrapWeth = hop1.intermediateCurrency === weth9;
-        const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
+        const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             unwrapWeth ? ACTION_CONSTANTS.ADDRESS_THIS : recipient, // WETH received to router
             amountIn, // exact amount in
@@ -343,7 +343,7 @@ export function getRouterCommandsForSingleQuote(
             ["address", "uint24", "address"],
             [v3SwapCurrencyIn, poolKey.fee, v3SwapCurrencyOut],
         );
-        const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
+        const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             unwrapWeth ? ACTION_CONSTANTS.ADDRESS_THIS : recipient, // WETH received to router
             amountIn, // exact amount in
