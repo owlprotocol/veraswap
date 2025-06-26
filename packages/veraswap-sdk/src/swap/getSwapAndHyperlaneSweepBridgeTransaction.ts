@@ -1,9 +1,11 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/hyperlane.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
 
@@ -18,8 +20,10 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     receiver,
     amountIn,
     currencyIn,
-    commands,
+    currencyOut,
+    quote,
     permit2PermitParams,
+    contracts,
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
@@ -28,8 +32,12 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     receiver: Address;
     amountIn: bigint;
     currencyIn: Address;
-    commands: CreateCommandParamsGeneric[];
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -37,6 +45,14 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: HYPERLANE_ROUTER_SWEEP_ADDRESS,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(

@@ -3,10 +3,8 @@ import { Address, encodeFunctionData, Hex, padHex, zeroAddress } from "viem";
 import { HypERC20FlashCollateral } from "../artifacts/HypERC20FlashCollateral.js";
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
+import { addCommandsToRoutePlanner, getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndHyperlaneBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
@@ -18,12 +16,11 @@ export function getSwapAndHyperlaneBridgeTransaction({
     destinationChain,
     receiver,
     amountIn,
-    amountOutMinimum,
     currencyIn,
     currencyOut,
-    path,
+    quote,
     permit2PermitParams,
-    hookData = "0x",
+    contracts,
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
@@ -31,12 +28,13 @@ export function getSwapAndHyperlaneBridgeTransaction({
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
-    amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
-    hookData?: Hex;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -50,16 +48,15 @@ export function getSwapAndHyperlaneBridgeTransaction({
         encodeFunctionData({ abi: HypERC20FlashCollateral.abi, functionName: "transferRemoteLock" }),
     ]);
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: bridgeAddress,
+    const commands = getRouterCommandsForQuote({
         amountIn,
-        amountOutMinimum,
+        contracts,
         currencyIn,
         currencyOut,
-        path,
-        hookData,
+        ...quote,
+        recipient: bridgeAddress,
     });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(CommandType.CALL_TARGET, [
         bridgeAddress,

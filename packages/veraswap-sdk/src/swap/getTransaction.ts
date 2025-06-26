@@ -141,13 +141,22 @@ export async function getTransaction(
             ownableSignatureExecutor: Address;
             erc7579Router: Address;
             interchainGasPaymaster: Address;
+            weth9: Address;
         }
     >,
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
     switch (params.type) {
         case "SWAP": {
-            const { currencyIn, commands, amountIn, walletAddress, amountOutMinimum, queryClient, wagmiConfig } =
-                params;
+            const {
+                currencyIn,
+                currencyOut,
+                quote,
+                amountIn,
+                walletAddress,
+                amountOutMinimum,
+                queryClient,
+                wagmiConfig,
+            } = params;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
 
@@ -173,10 +182,12 @@ export async function getTransaction(
             return getSwapExactInExecuteData({
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
                 currencyIn: getUniswapV4Address(currencyIn),
-                commands,
+                currencyOut: getUniswapV4Address(currencyOut),
+                quote,
                 amountIn,
                 amountOutMinimum,
                 permit2PermitParams,
+                contracts: contracts[currencyIn.chainId],
             });
         }
 
@@ -318,7 +329,7 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { currencyIn: swapCurrencyIn, commands, currencyOut: swapCurrencyOut } = swap;
+            const { currencyIn: swapCurrencyIn, quote, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
@@ -349,23 +360,28 @@ export async function getTransaction(
                     destinationChain: bridgeCurrencyOut.chainId,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    commands,
+                    quote,
                     receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
 
                     permit2PermitParams,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
             if (bridgeCurrencyIn.isNative && bridgeCurrencyOut.isNative) {
                 if (stargateQuote) {
                     return getSwapAndStargateETHBridgeTransaction({
-                        commands,
+                        amountIn,
+                        currencyIn: getUniswapV4Address(swapCurrencyIn),
+                        currencyOut: getUniswapV4Address(swapCurrencyOut),
+                        quote,
                         universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                         srcChain: bridgeCurrencyIn.chainId,
                         dstChain: bridgeCurrencyOut.chainId,
                         recipient: walletAddress,
                         permit2PermitParams,
+                        contracts: contracts[swapCurrencyIn.chainId],
                     });
                 }
 
@@ -374,10 +390,14 @@ export async function getTransaction(
                 }
 
                 return getSwapAndOrbiterETHBridgeTransaction({
-                    commands,
+                    amountIn,
+                    currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    quote,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     orbiterQuote,
                     permit2PermitParams,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
@@ -390,13 +410,16 @@ export async function getTransaction(
 
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
+                    amountIn,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
-                    commands,
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
+                    quote,
                     permit2PermitParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
                     recipient: walletAddress,
                     tokenSymbol,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
@@ -412,9 +435,11 @@ export async function getTransaction(
                 destinationChain: bridgeCurrencyOut.chainId,
                 receiver: walletAddress,
                 currencyIn: getUniswapV4Address(swapCurrencyIn),
-                commands,
+                currencyOut: getUniswapV4Address(swapCurrencyOut),
+                quote,
                 permit2PermitParams,
                 amountIn,
+                contracts: contracts[swapCurrencyIn.chainId],
             });
         }
 
@@ -432,7 +457,7 @@ export async function getTransaction(
                 orbiterQuote,
             } = params;
             const { currencyIn, currencyOut, withSuperchain } = bridge;
-            const { currencyIn: swapCurrencyIn, commands } = swap;
+            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, quote } = swap;
 
             if (currencyIn.isNative && !stargateQuote && !orbiterQuote) {
                 throw new Error("Stargate or orbiter params are required for ETH bridging");
@@ -516,9 +541,12 @@ export async function getTransaction(
                     // Adjust amount in if using Stargate or Orbiter to account for fees
                     amountIn: remoteSwapAmountIn,
                     amountOutMinimum,
-                    commands,
+                    receiver: walletAddress,
+                    quote,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
+                    currencyOut: getUniswapV4Address(swapCurrencyOut),
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
+                    contracts: contracts[currencyOut.chainId],
                 },
                 stargateQuote,
                 orbiterQuote,

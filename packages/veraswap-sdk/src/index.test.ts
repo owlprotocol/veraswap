@@ -35,14 +35,12 @@ import { IUniversalRouter } from "./artifacts/IUniversalRouter.js";
 import { quoteExactInputSingle as quoteExactInputSingleAbi } from "./artifacts/IV4Quoter.js";
 import { MockERC20 as ERC20 } from "./artifacts/MockERC20.js";
 import { opChainL1 } from "./chains/index.js";
-import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, V4_SWAP } from "./constants/index.js";
-import { UNISWAP_CONTRACTS } from "./constants/uniswap.js";
+import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48, UNISWAP_CONTRACTS, V4_SWAP } from "./constants/index.js";
 import { getEOASwapCalls } from "./swap/getEOASwapCalls.js";
 import { getPermitTransferFromData } from "./swap/getPermitTransferFromData.js";
 import { getSmartAccountSwapCalls } from "./swap/getSmartAccountSwapCalls.js";
-import { getV4SwapCommandParams } from "./swap/getV4SwapCommandParams.js";
-import { PoolKey, PoolKeyAbi, poolKeysToPathExactIn } from "./types/PoolKey.js";
-import { CommandType, CreateCommandParamsGeneric } from "./uniswap/routerCommands.js";
+import { PoolKey, PoolKeyAbi } from "./types/PoolKey.js";
+import { MetaQuoteBest, MetaQuoteBestMultihop, MetaQuoteBestType } from "./uniswap/index.js";
 
 describe("index.test.ts", function () {
     const chain = opChainL1;
@@ -303,11 +301,13 @@ describe("index.test.ts", function () {
 
             /** *** Get Quote *****/
             const amountIn = 1_000_000n;
-            const [amountOutQuoted] = (await publicClient.readContract({
+            const zeroForOne = true; // true = currency0 -> currency1
+            const hookData = "0x"; // no hooks used in this test
+            const [amountOutQuoted, gasEstimate] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
                 address: uniswapContracts.v4Quoter,
                 functionName: "quoteExactInputSingle",
-                args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
+                args: [{ poolKey, zeroForOne, exactAmount: amountIn, hookData }],
             })) as [bigint, bigint];
 
             const permit2Allowance = await publicClient.readContract({
@@ -322,24 +322,21 @@ describe("index.test.ts", function () {
 
             const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
-
-            const swapParams = getV4SwapCommandParams({
-                amountIn,
-                amountOutMinimum,
-                currencyIn: currency0Address,
-                currencyOut: poolKey.currency1,
-                path,
-            });
-            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+            const quote: MetaQuoteBest = {
+                bestQuoteType: MetaQuoteBestType.Single,
+                bestQuoteMultihop: {} as unknown as MetaQuoteBestMultihop, // not used in this test
+                bestQuoteSingle: { poolKey, variableAmount: amountOutQuoted, gasEstimate, zeroForOne, hookData },
+            };
 
             const swapCalls = getEOASwapCalls({
                 amountIn,
                 amountOutMinimum,
                 currencyIn: currency0Address,
-                commands,
+                currencyOut: poolKey.currency1,
+                quote,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
+                contracts: uniswapContracts,
             });
 
             for (const call of swapCalls) {
@@ -416,11 +413,13 @@ describe("index.test.ts", function () {
             });
 
             /** *** Get Quote *****/
-            const [amountOutQuoted] = (await publicClient.readContract({
+            const zeroForOne = true; // true = currency0 -> currency1
+            const hookData = "0x"; // no hooks used in this test
+            const [amountOutQuoted, gasEstimate] = (await publicClient.readContract({
                 abi: [quoteExactInputSingleAbi],
                 address: uniswapContracts.v4Quoter,
                 functionName: "quoteExactInputSingle",
-                args: [{ poolKey, zeroForOne: true, exactAmount: amountIn, hookData: "0x" }],
+                args: [{ poolKey, zeroForOne, exactAmount: amountIn, hookData }],
             })) as [bigint, bigint];
 
             const permit2Allowance = await publicClient.readContract({
@@ -435,24 +434,22 @@ describe("index.test.ts", function () {
 
             const amountOutMinimum = amountOutQuoted;
 
-            const path = poolKeysToPathExactIn(currency0Address, [poolKey]);
-            const swapParams = getV4SwapCommandParams({
-                amountIn,
-                amountOutMinimum,
-                currencyIn: currency0Address,
-                currencyOut: poolKey.currency1,
-                path,
-            });
-            const commands = [[CommandType.V4_SWAP, [swapParams]]] as CreateCommandParamsGeneric[];
+            const quote: MetaQuoteBest = {
+                bestQuoteType: MetaQuoteBestType.Single,
+                bestQuoteMultihop: {} as unknown as MetaQuoteBestMultihop, // not used in this test
+                bestQuoteSingle: { poolKey, variableAmount: amountOutQuoted, gasEstimate, zeroForOne, hookData },
+            };
 
             const batchCalls = getSmartAccountSwapCalls({
                 amountIn,
                 amountOutMinimum,
                 currencyIn: currency0Address,
-                commands,
+                currencyOut: poolKey.currency1,
+                quote,
                 permitTransferFromData,
                 universalRouter: uniswapContracts.universalRouter,
                 approvePermit2,
+                contracts: uniswapContracts,
             });
 
             const batchDest = batchCalls.map((c) => c.to);

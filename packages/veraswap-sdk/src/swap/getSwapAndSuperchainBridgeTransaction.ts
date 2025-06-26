@@ -1,9 +1,11 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
+import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/supersim.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
 
@@ -17,8 +19,9 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountIn,
     currencyIn,
     currencyOut,
-    commands,
+    quote,
     permit2PermitParams,
+    contracts,
 }: {
     universalRouter: Address;
     destinationChain: number;
@@ -27,9 +30,11 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    commands: CreateCommandParamsGeneric[];
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
-    hookData?: Hex;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -37,6 +42,14 @@ export function getSwapAndSuperchainBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: SUPERCHAIN_SWEEP_ADDRESS,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(

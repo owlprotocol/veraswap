@@ -7,18 +7,24 @@ import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";
 import { getPermit2ApproveCalls } from "../calls/Permit2/getPermit2ApproveCalls.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { CommandType, CreateCommandParamsGeneric, RoutePlanner } from "../uniswap/routerCommands.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 export interface GetSwapCallsParams extends GetCallsParams {
     amountIn: bigint;
     amountOutMinimum: bigint;
     currencyIn: Address;
-    commands: CreateCommandParamsGeneric[];
+    currencyOut: Address;
+    quote: MetaQuoteBest;
     universalRouter: Address;
+    receiver: Address;
     callTargetBefore?: [Address, bigint, Hex];
     callTargetAfter?: [Address, bigint, Hex];
     routerPayment?: bigint;
     approveExpiration?: number | "MAX_UINT_48";
+    contracts: {
+        weth9: Address;
+    };
 }
 
 export async function getSwapCalls(
@@ -30,12 +36,15 @@ export async function getSwapCalls(
         chainId,
         account,
         amountIn,
-        commands,
+        quote,
         currencyIn,
+        currencyOut,
         universalRouter,
+        receiver,
         callTargetBefore,
         callTargetAfter,
         approveExpiration,
+        contracts,
     } = params;
     const routerPayment = params.routerPayment ?? 0n;
 
@@ -60,6 +69,14 @@ export async function getSwapCalls(
         routePlanner.addCommand(CommandType.CALL_TARGET, callTargetBefore);
     }
 
+    const commands = getRouterCommandsForQuote({
+        amountIn,
+        contracts,
+        currencyIn,
+        currencyOut,
+        ...quote,
+        recipient: receiver,
+    });
     addCommandsToRoutePlanner(routePlanner, commands);
 
     if (callTargetAfter) {
