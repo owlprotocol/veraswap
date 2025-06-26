@@ -46,7 +46,9 @@ export async function getUniswapV4RouteExactInMultichain(
     const { currencyIn, currencyOut, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");
 
-    const tokenPairs = getSharedChainTokenPairs(currencyIn, currencyOut);
+    const tokenPairs = getSharedChainTokenPairs(currencyIn, currencyOut).filter(
+        ([currIn]) => currIn.chainId === currencyIn.chainId || currIn.chainId === currencyOut.chainId,
+    );
 
     const routes = (
         await Promise.all(
