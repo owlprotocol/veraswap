@@ -82,16 +82,20 @@ export function getSharedChainTokenPairs(currencyA: Currency, currencyB: Currenc
     // Native Tokens: Assume native tokens are the same (Ether) on all chains
     if (currencyA.isNative) {
         // Add native token for each chain of B
-        //TODO: Assumes all native tokens are the same on all chains
-        invariant(currencyA instanceof Ether, "Native token must be Ether");
-        currenciesB.forEach((currB) => currenciesA.push(Ether.onChain(currB.chainId)));
+        if (currencyA instanceof Ether) {
+            currenciesB.forEach((currB) => currenciesA.push(Ether.onChain(currB.chainId)));
+        } else {
+            currenciesA.push(currencyA); // If it's not Ether, just add it as is
+        }
     }
 
     if (currencyB.isNative) {
         // Add native token for each chain of A
-        //TODO: Assumes all native tokens are the same on all chains
-        invariant(currencyB instanceof Ether, "Native token must be Ether");
-        currenciesA.forEach((currA) => currenciesB.push(Ether.onChain(currA.chainId)));
+        if (currencyB instanceof Ether) {
+            currenciesA.forEach((currA) => currenciesB.push(Ether.onChain(currA.chainId)));
+        } else {
+            currenciesB.push(currencyB); // If it's not Ether, just add it as is
+        }
     }
 
     const result: [Currency, Currency][] = [];
