@@ -40,7 +40,7 @@ export async function getUniswapRouteExactIn(
     path: readonly PathKey[];
     gasEstimate: bigint;
 } | null> {
-    const { currencyIn, amountIn } = params;
+    const { currencyIn, amountIn, contracts } = params;
     const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = await queryClient.fetchQuery(
         getMetaQuoteExactInputQueryOptions(wagmiConfig, params),
     );
@@ -64,12 +64,19 @@ export async function getUniswapRouteExactIn(
 
     if (quoteType === MetaQuoteBestType.Single) {
         const poolKeys = [bestQuoteSingle.poolKey];
+        let currencyInAdjusted = currencyIn;
+
+        if (currencyIn === zeroAddress && poolKeys[0].currency0 !== zeroAddress) {
+            // Get the wrapped currency
+            currencyInAdjusted = contracts.weth9;
+        }
+
         return {
             amountOut,
             quote,
             value,
             gasEstimate,
-            path: poolKeysToPathExactIn(currencyIn, poolKeys),
+            path: poolKeysToPathExactIn(currencyInAdjusted, poolKeys),
         };
     }
 
