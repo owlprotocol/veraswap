@@ -406,7 +406,7 @@ export async function getTransaction(
                     throw new Error(`Stargate token quote is required for ${bridgeCurrencyIn.symbol} bridging`);
                 }
 
-                const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
+                const tokenSymbol = bridgeCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
