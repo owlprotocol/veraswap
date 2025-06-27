@@ -5,6 +5,7 @@ export * from "./disabledQuery.js";
 export * from "./hyperlane.js";
 export * from "./kernelERC7579Router.js";
 export * from "./kernelExecutor.js";
+export * from "./kernelRecovery.js";
 export * from "./kernelSmartAccount.js";
 export * from "./orbiter.js";
 export * from "./prefetch.js";

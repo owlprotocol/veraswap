@@ -11,11 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as RecoveryImport } from './routes/recovery'
 import { Route as PreviewImport } from './routes/preview'
 import { Route as EmbedImport } from './routes/embed'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const RecoveryRoute = RecoveryImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const PreviewRoute = PreviewImport.update({
   id: '/preview',
@@ -60,6 +67,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreviewImport
       parentRoute: typeof rootRoute
     }
+    '/recovery': {
+      id: '/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof RecoveryImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -69,12 +83,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
   '/preview': typeof PreviewRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
   '/preview': typeof PreviewRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRoutesById {
@@ -82,14 +98,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
   '/preview': typeof PreviewRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/embed' | '/preview'
+  fullPaths: '/' | '/embed' | '/preview' | '/recovery'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/embed' | '/preview'
-  id: '__root__' | '/' | '/embed' | '/preview'
+  to: '/' | '/embed' | '/preview' | '/recovery'
+  id: '__root__' | '/' | '/embed' | '/preview' | '/recovery'
   fileRoutesById: FileRoutesById
 }
 
@@ -97,12 +114,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EmbedRoute: typeof EmbedRoute
   PreviewRoute: typeof PreviewRoute
+  RecoveryRoute: typeof RecoveryRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EmbedRoute: EmbedRoute,
   PreviewRoute: PreviewRoute,
+  RecoveryRoute: RecoveryRoute,
 }
 
 export const routeTree = rootRoute
@@ -117,7 +136,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/embed",
-        "/preview"
+        "/preview",
+        "/recovery"
       ]
     },
     "/": {
@@ -128,6 +148,9 @@ export const routeTree = rootRoute
     },
     "/preview": {
       "filePath": "preview.tsx"
+    },
+    "/recovery": {
+      "filePath": "recovery.tsx"
     }
   }
 }
