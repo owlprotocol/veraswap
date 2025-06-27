@@ -17,7 +17,7 @@ import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
 import { TokenStandard } from "../types/Token.js";
-import { MetaQuoteBest } from "../uniswap/index.js";
+import { MetaQuoteBest } from "../uniswap/quote/MetaQuoter.js";
 
 import { GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
