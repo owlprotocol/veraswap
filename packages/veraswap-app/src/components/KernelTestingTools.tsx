@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { useAccount } from "wagmi";
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
-import { formatEther, formatUnits, parseEther, parseUnits, encodeFunctionData } from "viem";
+import { parseEther, parseUnits, encodeFunctionData } from "viem";
 import { transfer as transferAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { getUniswapV4Address, LOCAL_CURRENCIES } from "@owlprotocol/veraswap-sdk";
 import { TestTube, ChevronDown, ChevronRight, Send } from "lucide-react";
@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.js";
 
-// Type guard to check if currency has an address (is a token)
 function isTokenCurrency(currency: Currency): currency is Currency & { address: string } {
     return !currency.isNative && "address" in currency;
 }
@@ -103,7 +102,6 @@ export function KernelTestingTools() {
             </CardHeader>
             {showTesting && (
                 <CardContent className="space-y-6">
-                    {/* Native Token Testing */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Send Native Tokens</h3>
                         <div className="grid gap-4">
@@ -150,7 +148,6 @@ export function KernelTestingTools() {
                         </div>
                     </div>
 
-                    {/* Token Testing */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Send ERC20 Tokens</h3>
                         <div className="grid gap-4">
@@ -235,7 +232,6 @@ export function KernelTestingTools() {
                         </div>
                     </div>
 
-                    {/* Transaction Status */}
                     {(isTestPending || isTestConfirming) && (
                         <div className="p-3 bg-muted rounded-lg">
                             <p className="text-sm">
