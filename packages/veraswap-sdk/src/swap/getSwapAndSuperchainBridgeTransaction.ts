@@ -1,13 +1,13 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/index.js";
+import { SUPERCHAIN_SWEEP_ADDRESS } from "../chains/supersim.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getSuperchainBridgeCallTargetParams } from "./getSuperchainBridgeCallTargetParams.js";
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndSuperchainBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Superchain Interop
@@ -17,12 +17,11 @@ export function getSwapAndSuperchainBridgeTransaction({
     destinationChain,
     receiver,
     amountIn,
-    amountOutMinimum,
     currencyIn,
     currencyOut,
-    path,
+    quote,
     permit2PermitParams,
-    hookData = "0x",
+    contracts,
 }: {
     universalRouter: Address;
     destinationChain: number;
@@ -31,9 +30,11 @@ export function getSwapAndSuperchainBridgeTransaction({
     amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
-    hookData?: Hex;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -41,16 +42,15 @@ export function getSwapAndSuperchainBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: SUPERCHAIN_SWEEP_ADDRESS,
+    const commands = getRouterCommandsForQuote({
         amountIn,
-        amountOutMinimum,
+        contracts,
         currencyIn,
         currencyOut,
-        path,
-        hookData,
+        ...quote,
+        recipient: SUPERCHAIN_SWEEP_ADDRESS,
     });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,

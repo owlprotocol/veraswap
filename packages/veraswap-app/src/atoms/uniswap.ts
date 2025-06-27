@@ -7,7 +7,7 @@ import {
 } from "@owlprotocol/veraswap-sdk";
 import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
-import { UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
+import { CURRENCY_HOPS, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
@@ -35,7 +35,7 @@ export const routeMultichainAtom = atomWithQuery((get) => {
                 currencyOut,
                 exactAmount,
                 contractsByChain: UNISWAP_CONTRACTS,
-                currencyHopsByChain: {},
+                currencyHopsByChain: CURRENCY_HOPS,
             });
 
             console.debug({ route });

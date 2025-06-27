@@ -4,39 +4,36 @@ import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { STARGATE_BRIDGE_SWEEP_ADDRESS, STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { getStargateBridgeAllTokenCallData } from "../stargate/getStargateBridgeAllTokenCallData.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
-
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 export function getSwapAndStargateTokenBridgeTransaction({
     universalRouter,
     amountIn,
-    amountOutMinimum,
     currencyIn,
     currencyOut,
-    path,
+    quote,
     permit2PermitParams,
-    // poolApprovalParams,
-    hookData = "0x",
     dstChain,
     srcChain,
     recipient,
     tokenSymbol,
+    contracts,
 }: {
     universalRouter: Address;
     amountIn: bigint;
-    amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
-    // poolApprovalParams?: [Address, bigint, Hex];
-    hookData?: Hex;
     dstChain: number;
     srcChain: number;
     recipient: Address;
     tokenSymbol: keyof typeof STARGATE_TOKEN_POOLS;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -44,16 +41,15 @@ export function getSwapAndStargateTokenBridgeTransaction({
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: STARGATE_BRIDGE_SWEEP_ADDRESS,
+    const commands = getRouterCommandsForQuote({
         amountIn,
-        amountOutMinimum,
+        contracts,
         currencyIn,
         currencyOut,
-        path,
-        hookData,
+        ...quote,
+        recipient: STARGATE_BRIDGE_SWEEP_ADDRESS,
     });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     const stargateCallData = getStargateBridgeAllTokenCallData({
         dstChain,

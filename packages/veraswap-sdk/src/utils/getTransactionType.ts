@@ -1,6 +1,7 @@
 import { Currency } from "../currency/currency.js";
-import { PathKey, PoolKey } from "../types/PoolKey.js";
+import { PathKey } from "../types/PoolKey.js";
 import { RouteComponent } from "../uniswap/getRouteMultichain.js";
+import { MetaQuoteBest } from "../uniswap/index.js";
 
 import { assetFlowsToTransactionType } from "./getAssetFlows.js";
 
@@ -9,8 +10,8 @@ export interface TransactionTypeSwap {
     chainId: number;
     currencyIn: Currency;
     currencyOut: Currency;
-    route: PoolKey[];
-    path: PathKey[];
+    path: readonly PathKey[];
+    quote: MetaQuoteBest;
     // Not needed here but used for consistency
     withSuperchain?: boolean;
 }

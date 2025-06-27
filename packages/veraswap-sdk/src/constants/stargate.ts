@@ -14,6 +14,21 @@ import {
 } from "viem/chains";
 
 import { StargateBridgeSweep } from "../artifacts/StargateBridgeSweep.js";
+import { Currency } from "../currency/currency.js";
+import {
+    USDC_ARBITRUM,
+    USDC_AVALANCHE,
+    USDC_BASE,
+    USDC_BSC,
+    USDC_MAINNET,
+    USDC_OPTIMISM,
+    USDC_POLYGON,
+    USDT,
+    USDT_AVALANCHE,
+    USDT_BSC,
+    USDT_OPTIMISM,
+    USDT_POLYGON,
+} from "../uniswap/index.js";
 
 // From https://stargateprotocol.gitbook.io/stargate/v2-developer-docs/technical-reference/mainnet-contracts
 export const CHAIN_ID_TO_ENDPOINT_ID = {
@@ -72,3 +87,28 @@ export const STARGATE_BRIDGE_SWEEP_ADDRESS = getDeployDeterministicAddress({
     bytecode: StargateBridgeSweep.bytecode,
     salt: zeroHash,
 });
+
+export const STARGATE_USDC_CURRENCIES = {
+    [arbitrum.id]: USDC_ARBITRUM,
+    [avalanche.id]: USDC_AVALANCHE,
+    [base.id]: USDC_BASE,
+    [bsc.id]: USDC_BSC,
+    [mainnet.id]: USDC_MAINNET,
+    [optimism.id]: USDC_OPTIMISM,
+    [polygon.id]: USDC_POLYGON,
+} satisfies Record<number, Currency>;
+
+export const STARGATE_USDT_CURRENCIES = {
+    [arbitrum.id]: USDC_ARBITRUM,
+    [avalanche.id]: USDT_AVALANCHE,
+    [base.id]: USDC_BASE,
+    [bsc.id]: USDT_BSC,
+    [mainnet.id]: USDT,
+    [optimism.id]: USDT_OPTIMISM,
+    [polygon.id]: USDT_POLYGON,
+} satisfies Record<number, Currency>;
+
+export const STARGATE_CURRENCIES = {
+    USDC: STARGATE_USDC_CURRENCIES,
+    USDT: STARGATE_USDT_CURRENCIES,
+} satisfies Record<string, Record<number, Currency>>;

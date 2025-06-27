@@ -46,15 +46,15 @@ export interface GetRouteTransactionParams {
     contractsByChain: Record<
         number,
         | {
-            execute: Address;
-            kernelFactory: Address;
-            ownableSignatureExecutor: Address;
-            erc7579Router: Address;
-            universalRouter: Address;
-            metaQuoter: Address;
-            weth9: Address;
-            interchainGasPaymaster: Address;
-        }
+              execute: Address;
+              kernelFactory: Address;
+              ownableSignatureExecutor: Address;
+              erc7579Router: Address;
+              universalRouter: Address;
+              metaQuoter: Address;
+              weth9: Address;
+              interchainGasPaymaster: Address;
+          }
         | undefined
     >;
     poolKeyOptions?: PoolKeyOptions[];
@@ -291,6 +291,7 @@ export async function getRouteTransaction(
                     ? (bridge.currencyIn.hyperlaneAddress ?? bridge.currencyIn.address)
                     : getUniswapV4Address(bridge.currencyIn),
                 tokenStandard: getTokenStandard(bridge.currencyIn),
+                tokenSymbol: bridge.currencyIn.symbol,
                 // tokenOutStandard: getTokenStandard(bridge.currencyOut),
                 account: account,
                 destination: bridge.currencyOut.chainId,

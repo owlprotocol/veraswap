@@ -15,16 +15,16 @@ import { SUPERCHAIN_ERC7579_ROUTER } from "../constants/superchain.js";
 import { ERC7579ExecutionMode, ERC7579RouterBaseMessage } from "../smartaccount/ERC7579ExecutorRouter.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
 import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
-import { getStargateTokenBridgeTransaction } from "../stargate/getStargateTokenBridgeTransaction.js";
 import { getSwapCalls, GetSwapCallsParams } from "../swap/getSwapCalls.js";
-import { PathKey } from "../types/PoolKey.js";
 import { TokenStandard } from "../types/Token.js";
+import { MetaQuoteBest } from "../uniswap/quote/MetaQuoter.js";
 
 import { GetCallsReturnType } from "./getCalls.js";
 import { getExecutorRouterSetOwnersCalls } from "./getExecutorRouterSetOwnersCalls.js";
 import { getKernelFactoryCreateAccountCalls } from "./getKernelFactoryCreateAccountCalls.js";
 import { getOwnableExecutorAddOwnerCalls } from "./getOwnableExecutorAddOwnerCalls.js";
 import { getOwnableExecutorExecuteCalls, getOwnableExecutorExecuteData } from "./getOwnableExecutorExecuteCalls.js";
+import { getStargateBridgeWithFunderCalls } from "./getStargateBridgeWithFunderCalls.js";
 import { getSuperchainBridgeWithFunderCalls } from "./getSuperchainBridgeWithFunderCalls.js";
 import { getTransferRemoteWithFunderCalls } from "./getTransferRemoteWithFunderCalls.js";
 import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithKernelCalls.js";
@@ -33,6 +33,7 @@ import { GetTransferRemoteWithKernelCallsParams } from "./getTransferRemoteWithK
 export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWithKernelCallsParams {
     tokenStandard: TokenStandard;
     token: Address;
+    tokenSymbol?: string;
     destination: number;
     amount: bigint;
     hookMetadata?: Hex;
@@ -58,15 +59,17 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
     remoteSwapParams: {
         amountIn: bigint;
         amountOutMinimum: bigint;
-        path: PathKey[];
+        quote: MetaQuoteBest;
         currencyIn: Address;
         currencyOut: Address;
         universalRouter: Address;
         receiver: Address;
         callTargetAfter?: [Address, bigint, Hex];
         routerPayment?: bigint;
-        hookData?: Hex;
         approveExpiration?: number | "MAX_UINT_48";
+        contracts: {
+            weth9: Address;
+        };
     };
     withSuperchain?: boolean;
 }
@@ -217,8 +220,10 @@ export async function getBridgeSwapWithKernelCalls(
             tokenStandard === "HypERC20Collateral" ||
             tokenStandard === "HypSuperchainERC20Collateral" ||
             tokenStandard === "SuperchainERC20" ||
-            tokenStandard === "NativeToken",
-        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20 or NativeToken`,
+            tokenStandard === "NativeToken" ||
+            tokenStandard === "ERC20",
+
+        `Unsupported standard ${tokenStandard}, expected HypERC20, HypERC20Collateral, HypSuperchainERC20Collateral, SuperchainERC20, NativeToken or ERC20`,
     );
 
     // KERNEL ACCOUNT CREATE
@@ -344,24 +349,30 @@ export async function getBridgeSwapWithKernelCalls(
         });
         bridgeCalls = superchainBridgeCalls.calls;
     } else if (params.stargateQuote?.type === "TOKEN") {
-        const { stargateQuote } = params;
+        const { stargateQuote, tokenSymbol } = params;
 
-        const tokenSymbol = params.token;
-        if (!(tokenSymbol in STARGATE_TOKEN_POOLS)) {
-            throw new Error(`Token ${tokenSymbol} is not supported by Stargate`);
-        }
-        const stargateTx = getStargateTokenBridgeTransaction({
-            srcChain: chainId,
-            dstChain: destination,
+        invariant(
+            !!tokenSymbol && tokenSymbol in STARGATE_TOKEN_POOLS,
+            `Token ${tokenSymbol} is not supported by Stargate`,
+        );
+
+        const stargateBridgeCalls = await getStargateBridgeWithFunderCalls(queryClient, wagmiConfig, {
+            chainId,
+            account: kernelAddress,
+            funder: account,
+            token,
             tokenSymbol: tokenSymbol as keyof typeof STARGATE_TOKEN_POOLS,
-            receiver: kernelAddressRemote,
+            destination,
+            recipient: kernelAddressRemote,
+            amount,
             stargateQuote,
         });
-        bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
+
+        bridgeCalls = stargateBridgeCalls.calls;
     } else {
         invariant(
-            tokenStandard !== "SuperchainERC20",
-            "SuperchainERC20 is not supported in this function, and this should not be called if withSuperchain is false",
+            tokenStandard !== "SuperchainERC20" && tokenStandard !== "ERC20",
+            "SuperchainERC20 and ERC20 are not supported in this function",
         );
         // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed

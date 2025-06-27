@@ -4,11 +4,11 @@ import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
 import { Address, encodePacked, Hex, padHex, zeroAddress } from "viem";
 
-import { PoolKeyOptions } from "../../types/PoolKey.js";
-import { ACTION_CONSTANTS, CommandType, createCommand, RouterCommand } from "../routerCommands.js";
+import { PathKey, PoolKeyOptions, poolKeysToPathExactIn } from "../../types/PoolKey.js";
+import { ACTION_CONSTANTS, CommandType, CreateCommandParamsGeneric } from "../routerCommands.js";
 
 import { getMetaQuoteExactInputQueryOptions } from "./getMetaQuoteExactInput.js";
-import { MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
+import { MetaQuoteBest, MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
 const address3 = padHex("0x3", { size: 20 }); // Used as a flag for Uni V3 pools
 
@@ -36,9 +36,11 @@ export async function getUniswapRouteExactIn(
 ): Promise<{
     amountOut: bigint;
     value: bigint;
-    commands: RouterCommand[];
+    quote: MetaQuoteBest;
+    path: readonly PathKey[];
+    gasEstimate: bigint;
 } | null> {
-    const { currencyIn, currencyOut, amountIn, contracts, recipient } = params;
+    const { currencyIn, amountIn, contracts } = params;
     const [bestQuoteSingle, bestQuoteMultihop, bestQuoteType] = await queryClient.fetchQuery(
         getMetaQuoteExactInputQueryOptions(wagmiConfig, params),
     );
@@ -49,22 +51,43 @@ export async function getUniswapRouteExactIn(
         return null;
     }
 
-    // Universal Router planner
     const value = currencyIn === zeroAddress ? amountIn : 0n;
-    const amountOut =
-        quoteType === MetaQuoteBestType.Single ? bestQuoteSingle.variableAmount : bestQuoteMultihop.variableAmount;
-    const commands = getRouterCommandsForQuote({
+
+    const { gasEstimate, variableAmount: amountOut } =
+        quoteType === MetaQuoteBestType.Single ? bestQuoteSingle : bestQuoteMultihop;
+
+    const quote = {
         bestQuoteSingle,
         bestQuoteMultihop,
-        bestQuoteType,
-        currencyIn,
-        currencyOut,
-        amountIn,
-        recipient,
-        contracts,
-    });
+        bestQuoteType: quoteType,
+    };
 
-    return { amountOut, commands, value };
+    if (quoteType === MetaQuoteBestType.Single) {
+        const poolKeys = [bestQuoteSingle.poolKey];
+        let currencyInAdjusted = currencyIn;
+
+        if (currencyIn === zeroAddress && poolKeys[0].currency0 !== zeroAddress) {
+            // Get the wrapped currency
+            currencyInAdjusted = contracts.weth9;
+        }
+
+        return {
+            amountOut,
+            quote,
+            value,
+            gasEstimate,
+            path: poolKeysToPathExactIn(currencyInAdjusted, poolKeys),
+        };
+    }
+
+    // Multihop quote
+    return {
+        amountOut,
+        quote,
+        value,
+        gasEstimate,
+        path: bestQuoteMultihop.path,
+    };
 }
 
 export interface GetRouterCommandsForQuote {
@@ -79,7 +102,7 @@ export interface GetRouterCommandsForQuote {
         weth9: Address;
     };
 }
-export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): RouterCommand[] {
+export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): CreateCommandParamsGeneric[] {
     const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
     if (bestQuoteType === MetaQuoteBestType.None) {
         return [];
@@ -105,11 +128,13 @@ export interface GetRouterCommandsForMultihopQuoteParams {
         weth9: Address;
     };
 }
-export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMultihopQuoteParams): RouterCommand[] {
+export function getRouterCommandsForMultihopQuote(
+    params: GetRouterCommandsForMultihopQuoteParams,
+): CreateCommandParamsGeneric[] {
     //TODO: Is currencyOut even needed here?
     const { currencyIn, amountIn, quote } = params;
     const weth9 = params.contracts.weth9;
-    const commands: RouterCommand[] = [];
+    const commands: CreateCommandParamsGeneric[] = [];
 
     // Multihop quotes
     invariant(quote.path.length === 2, "Multihop quotes should have exactly 2 hops");
@@ -121,9 +146,7 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
         // Wrap ETH to WETH if needed
         const wrapNative = currencyIn === zeroAddress;
         if (wrapNative) {
-            commands.push(
-                createCommand(CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]),
-            );
+            commands.push([CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]]);
         }
 
         // V3 Trade Plan
@@ -133,7 +156,7 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
             [v3SwapCurrencyIn, hop0.fee, hop0.intermediateCurrency, hop1.fee, hop1.intermediateCurrency],
         );
         const unwrapWeth = hop1.intermediateCurrency === weth9;
-        const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
+        const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             unwrapWeth ? ACTION_CONSTANTS.ADDRESS_THIS : recipient, // WETH received to router
             amountIn, // exact amount in
@@ -141,11 +164,11 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
             v3Path,
             !wrapNative, // payerIsUser (WETH received to router)
         ];
-        commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
+        commands.push([CommandType.V3_SWAP_EXACT_IN, v3TradePlan]);
 
         // Unwrap WETH to ETH if needed
         if (unwrapWeth) {
-            commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
+            commands.push([CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]]);
         }
     } else if (hop0.hooks !== address3 && hop1.hooks !== address3) {
         // Multihop V4 -> V4
@@ -164,15 +187,13 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
         } else {
             v4TradePlan.addAction(Actions.TAKE, [hop1.intermediateCurrency, params.recipient, quote.variableAmount]);
         }
-        commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
+        commands.push([CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]);
     } else if (hop0.hooks === address3 && hop1.hooks !== address3) {
         // Mixed Route V3 -> V4
         // Wrap ETH to WETH if needed
         const wrapNative = currencyIn === zeroAddress;
         if (wrapNative) {
-            commands.push(
-                createCommand(CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]),
-            );
+            commands.push([CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]]);
         }
 
         // V3 Trade Plan
@@ -188,12 +209,12 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
             v3Path,
             !wrapNative, // payerIsUser (WETH received to router)
         ];
-        commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
+        commands.push([CommandType.V3_SWAP_EXACT_IN, v3TradePlan]);
 
         // Unwrap WETH to ETH if needed
         const unwrapWeth = hop0.intermediateCurrency === weth9;
         if (unwrapWeth) {
-            commands.push(createCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]));
+            commands.push([CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]]);
         }
 
         // V4 Trade Plan
@@ -224,7 +245,7 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
         } else {
             v4TradePlan.addAction(Actions.TAKE, [hop1.intermediateCurrency, params.recipient, quote.variableAmount]);
         }
-        commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
+        commands.push([CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]);
     } else if (hop0.hooks !== address3 && hop1.hooks === address3) {
         // Mixed Route V4 -> V3
         // Uniswap V4 pool
@@ -254,12 +275,12 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
             ACTION_CONSTANTS.ADDRESS_THIS,
             ACTION_CONSTANTS.OPEN_DELTA,
         ]);
-        commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
+        commands.push([CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]);
 
         // Wrap ETH to WETH if needed
         const wrapNative = hop0.intermediateCurrency === zeroAddress;
         if (wrapNative) {
-            commands.push(createCommand(CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]));
+            commands.push([CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]]);
         }
 
         // V3 Trade Plan
@@ -277,11 +298,11 @@ export function getRouterCommandsForMultihopQuote(params: GetRouterCommandsForMu
             v3Path,
             false, // payerIsUser
         ];
-        commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
+        commands.push([CommandType.V3_SWAP_EXACT_IN, v3TradePlan]);
 
         // Unwrap WETH to ETH if needed
         if (unwrapWeth) {
-            commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
+            commands.push([CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]]);
         }
     }
 
@@ -298,10 +319,12 @@ export interface GetRouterCommandsForSingleQuoteParams {
         weth9: Address;
     };
 }
-export function getRouterCommandsForSingleQuote(params: GetRouterCommandsForSingleQuoteParams): RouterCommand[] {
+export function getRouterCommandsForSingleQuote(
+    params: GetRouterCommandsForSingleQuoteParams,
+): CreateCommandParamsGeneric[] {
     const { currencyIn, currencyOut, amountIn, quote } = params;
     const weth9 = params.contracts.weth9;
-    const commands: RouterCommand[] = [];
+    const commands: CreateCommandParamsGeneric[] = [];
     // Single quotes
     const poolKey = quote.poolKey;
     if (quote.poolKey.hooks === address3) {
@@ -309,9 +332,7 @@ export function getRouterCommandsForSingleQuote(params: GetRouterCommandsForSing
         // Wrap ETH to WETH if needed
         const wrapNative = currencyIn === zeroAddress;
         if (wrapNative) {
-            commands.push(
-                createCommand(CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]),
-            );
+            commands.push([CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]]);
         }
 
         // V3 Trade Plan
@@ -322,7 +343,7 @@ export function getRouterCommandsForSingleQuote(params: GetRouterCommandsForSing
             ["address", "uint24", "address"],
             [v3SwapCurrencyIn, poolKey.fee, v3SwapCurrencyOut],
         );
-        const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
+        const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             unwrapWeth ? ACTION_CONSTANTS.ADDRESS_THIS : recipient, // WETH received to router
             amountIn, // exact amount in
@@ -330,11 +351,11 @@ export function getRouterCommandsForSingleQuote(params: GetRouterCommandsForSing
             v3Path,
             !wrapNative, // payerIsUser (WETH received to router)
         ];
-        commands.push(createCommand(CommandType.V3_SWAP_EXACT_IN, v3TradePlan));
+        commands.push([CommandType.V3_SWAP_EXACT_IN, v3TradePlan]);
 
         // Unwrap WETH to ETH if needed
         if (unwrapWeth) {
-            commands.push(createCommand(CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]));
+            commands.push([CommandType.UNWRAP_WETH, [recipient, quote.variableAmount]]);
         }
     } else {
         // Uniswap V4 pool
@@ -354,7 +375,7 @@ export function getRouterCommandsForSingleQuote(params: GetRouterCommandsForSing
         } else {
             v4TradePlan.addAction(Actions.TAKE, [currencyOut, params.recipient, quote.variableAmount]);
         }
-        commands.push(createCommand(CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]));
+        commands.push([CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]);
     }
 
     return commands;

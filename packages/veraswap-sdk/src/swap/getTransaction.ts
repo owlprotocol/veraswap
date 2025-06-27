@@ -141,6 +141,7 @@ export async function getTransaction(
             ownableSignatureExecutor: Address;
             erc7579Router: Address;
             interchainGasPaymaster: Address;
+            weth9: Address;
         }
     >,
 ): Promise<{ to: Address; data: Hex; value: bigint } | null> {
@@ -149,7 +150,7 @@ export async function getTransaction(
             const {
                 currencyIn,
                 currencyOut,
-                path,
+                quote,
                 amountIn,
                 walletAddress,
                 amountOutMinimum,
@@ -182,10 +183,11 @@ export async function getTransaction(
                 universalRouter: contracts[currencyIn.chainId].universalRouter,
                 currencyIn: getUniswapV4Address(currencyIn),
                 currencyOut: getUniswapV4Address(currencyOut),
-                path,
+                quote,
                 amountIn,
                 amountOutMinimum,
                 permit2PermitParams,
+                contracts: contracts[currencyIn.chainId],
             });
         }
 
@@ -327,7 +329,7 @@ export async function getTransaction(
                 queryClient,
                 wagmiConfig,
             } = params;
-            const { currencyIn: swapCurrencyIn, path, currencyOut: swapCurrencyOut } = swap;
+            const { currencyIn: swapCurrencyIn, quote, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
@@ -358,11 +360,12 @@ export async function getTransaction(
                     destinationChain: bridgeCurrencyOut.chainId,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    path,
+                    quote,
                     receiver: walletAddress,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
 
                     permit2PermitParams,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
@@ -370,15 +373,15 @@ export async function getTransaction(
                 if (stargateQuote) {
                     return getSwapAndStargateETHBridgeTransaction({
                         amountIn,
-                        amountOutMinimum,
                         currencyIn: getUniswapV4Address(swapCurrencyIn),
                         currencyOut: getUniswapV4Address(swapCurrencyOut),
-                        path,
+                        quote,
                         universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                         srcChain: bridgeCurrencyIn.chainId,
                         dstChain: bridgeCurrencyOut.chainId,
                         recipient: walletAddress,
                         permit2PermitParams,
+                        contracts: contracts[swapCurrencyIn.chainId],
                     });
                 }
 
@@ -388,13 +391,13 @@ export async function getTransaction(
 
                 return getSwapAndOrbiterETHBridgeTransaction({
                     amountIn,
-                    amountOutMinimum,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    path,
+                    quote,
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     orbiterQuote,
                     permit2PermitParams,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
@@ -403,20 +406,20 @@ export async function getTransaction(
                     throw new Error(`Stargate token quote is required for ${bridgeCurrencyIn.symbol} bridging`);
                 }
 
-                const tokenSymbol = swapCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
+                const tokenSymbol = bridgeCurrencyIn.symbol as keyof typeof STARGATE_TOKEN_POOLS;
 
                 return getSwapAndStargateTokenBridgeTransaction({
                     universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                     amountIn,
-                    amountOutMinimum,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    path,
+                    quote,
                     permit2PermitParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
                     recipient: walletAddress,
                     tokenSymbol,
+                    contracts: contracts[swapCurrencyIn.chainId],
                 });
             }
 
@@ -433,10 +436,10 @@ export async function getTransaction(
                 receiver: walletAddress,
                 currencyIn: getUniswapV4Address(swapCurrencyIn),
                 currencyOut: getUniswapV4Address(swapCurrencyOut),
-                path,
+                quote,
                 permit2PermitParams,
                 amountIn,
-                amountOutMinimum,
+                contracts: contracts[swapCurrencyIn.chainId],
             });
         }
 
@@ -454,7 +457,7 @@ export async function getTransaction(
                 orbiterQuote,
             } = params;
             const { currencyIn, currencyOut, withSuperchain } = bridge;
-            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, path } = swap;
+            const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, quote } = swap;
 
             if (currencyIn.isNative && !stargateQuote && !orbiterQuote) {
                 throw new Error("Stargate or orbiter params are required for ETH bridging");
@@ -498,6 +501,7 @@ export async function getTransaction(
                 chainId: currencyIn.chainId,
                 token,
                 tokenStandard: getTokenStandard(currencyIn),
+                tokenSymbol: currencyIn.symbol,
                 account: walletAddress,
                 destination: currencyOut.chainId,
                 recipient: walletAddress,
@@ -538,11 +542,12 @@ export async function getTransaction(
                     // Adjust amount in if using Stargate or Orbiter to account for fees
                     amountIn: remoteSwapAmountIn,
                     amountOutMinimum,
-                    path,
+                    receiver: walletAddress,
+                    quote,
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
-                    receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
+                    contracts: contracts[currencyOut.chainId],
                 },
                 stargateQuote,
                 orbiterQuote,

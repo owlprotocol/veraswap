@@ -9,9 +9,10 @@ import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
 import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
 import { anvilClientL1, wagmiConfig } from "../../test/constants.js";
+import { addCommandsToRoutePlanner } from "../addCommandsToRoutePlanner.js";
 import { RoutePlanner } from "../routerCommands.js";
 
-import { getUniswapRouteExactIn } from "./getUniswapRoute.js";
+import { getRouterCommandsForQuote, getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
 //TODO: Add deeper tests with ETH wrap/unwrap
 describe("uniswap/quote/getUniswapRoute.test.ts", function () {
@@ -53,6 +54,12 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOut = tokenL4;
             console.debug({ currencyIn, currencyOut });
             const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -60,14 +67,15 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 currencyOut,
                 currencyHops,
                 amountIn,
-                contracts: {
-                    weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
-                    metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                },
+                contracts,
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -93,6 +101,12 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyIn = tokenA;
             const currencyOut = tokenL3;
             const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -106,8 +120,12 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 },
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -133,6 +151,12 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyIn = tokenA;
             const currencyOut = tokenB;
             const currencyHops = [tokenL4];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -140,14 +164,15 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 currencyOut,
                 currencyHops,
                 amountIn,
-                contracts: {
-                    weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
-                    metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                },
+                contracts,
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -173,6 +198,12 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyIn = tokenA;
             const currencyOut = tokenB;
             const currencyHops = [tokenL3];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -180,14 +211,15 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 currencyOut,
                 currencyHops,
                 amountIn,
-                contracts: {
-                    weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
-                    metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                },
+                contracts,
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -214,6 +246,11 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOut = tokenL3;
             const hopCurrencies = [tokenL34];
 
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -221,14 +258,15 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 currencyOut,
                 currencyHops: hopCurrencies,
                 amountIn,
-                contracts: {
-                    weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
-                    metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                },
+                contracts,
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -254,6 +292,11 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOut = tokenL4;
             const hopCurrencies = [tokenL34];
 
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                 chainId: opChainL1.id,
@@ -261,14 +304,15 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 currencyOut,
                 currencyHops: hopCurrencies,
                 amountIn,
-                contracts: {
-                    weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
-                    metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
-                },
+                contracts,
             });
             expect(route).toBeDefined();
-            const { commands, amountOut, value } = route!;
-            const routePlanner = RoutePlanner.create(commands);
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
 
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);

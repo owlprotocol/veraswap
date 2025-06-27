@@ -3,22 +3,23 @@ import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
 
 import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
-import { Currency, getUniswapV4Address, isMultichainToken } from "../currency/currency.js";
+import { Currency, isMultichainToken } from "../currency/currency.js";
 import { MultichainToken } from "../currency/multichainToken.js";
-import { PathKey, PoolKey, poolKeysToPathExactIn } from "../types/PoolKey.js";
+import { PathKey } from "../types/PoolKey.js";
 
 import {
     getUniswapV4RouteExactInMultichain,
     GetUniswapV4RouteMultichainParams,
 } from "./getUniswapV4RouteMultichain.js";
+import { MetaQuoteBest } from "./quote/MetaQuoter.js";
 
 export interface RouteComponentSwap {
     type: "SWAP";
     chainId: number;
     currencyIn: Currency;
     currencyOut: Currency;
-    route: PoolKey[];
-    path: PathKey[];
+    path: readonly PathKey[];
+    quote: MetaQuoteBest;
     amountOut: bigint;
     gasEstimate: bigint;
 }
@@ -102,15 +103,13 @@ export async function getRouteMultichain(
     // Mixed Bridge/Swap/Bridge
     const flows: RouteComponent[] = [];
 
-    const path = poolKeysToPathExactIn(getUniswapV4Address(route.currencyIn), route.route);
-
     const swap: RouteComponentSwap = {
         type: "SWAP",
         chainId: route.currencyIn.chainId,
         currencyIn: route.currencyIn,
         currencyOut: route.currencyOut,
-        route: route.route,
-        path,
+        path: route.path,
+        quote: route.quote,
         amountOut: route.amountOut,
         gasEstimate: route.gasEstimate,
     };
