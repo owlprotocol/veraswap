@@ -7,7 +7,8 @@ import { GetCallsParams, GetCallsReturnType } from "../calls/getCalls.js";
 import { getPermit2ApproveCalls } from "../calls/Permit2/getPermit2ApproveCalls.js";
 import { CallArgs } from "../smartaccount/ExecLib.js";
 import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
-import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
+import { getRouterCommandsForQuote } from "../uniswap/quote/getUniswapRoute.js";
+import { MetaQuoteBest } from "../uniswap/quote/MetaQuoter.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 export interface GetSwapCallsParams extends GetCallsParams {
