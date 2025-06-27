@@ -133,7 +133,8 @@ describe.skip("uniswap/getRouteMultichain.test.ts", function () {
             expect(swap.currencyOut.equals(tokenB_900));
         });
 
-        test("BRIDGE_SWAP_BRIDGE: different chain, output liquidity", async () => {
+        // TODO: Re-enable this test once we enabled bridge swap bridge in getRouteMultichain
+        test.skip("BRIDGE_SWAP_BRIDGE: different chain, output liquidity", async () => {
             // Tokens are on different chains (901, 902)
             // Liquidity is on a third different chain (900)
             const result = await getRouteMultichain(queryClient, config, {
