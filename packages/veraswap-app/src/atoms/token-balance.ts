@@ -369,7 +369,9 @@ const calculateUsdValueFromQuote = (
     // Default is Ether decimals
     const currencyUsdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 18;
     const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
-    const adjustedQuote = quote * 10n ** BigInt(decimalsDiff);
+
+    // If decimals diff is negative, you need to divide the quote by the absolute decimals difference
+    const adjustedQuote = decimalsDiff > 0 ? quote * 10n ** BigInt(decimalsDiff) : quote / 10n ** BigInt(-decimalsDiff);
 
     const precision = 10000000n;
     const result = (amount * precision) / adjustedQuote;

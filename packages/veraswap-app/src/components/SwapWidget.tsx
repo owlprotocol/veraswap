@@ -318,7 +318,7 @@ export function SwapWidget({
                             amountIn: tokenInAmount!,
                             orbiterQuote,
                             stargateQuote,
-                            amountOutMinimum: adjustedAmountOutMinimum!,
+                            amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
                             bridgePayment,
                             queryClient,
