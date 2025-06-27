@@ -15,11 +15,10 @@ import { config } from "@/config.js";
 
 export const kernelInitDataAtom = atomWithQuery((get) => {
     const account = get(accountAtom);
-    const chain = get(chainInAtom);
-    if (!account?.address || !chain) return disabledQueryOptions as any;
+    if (!account?.address) return disabledQueryOptions as any;
 
     //Note: This doesn't actually matter rn
-    const client = getClient(config, { chainId: chain.id }) as Client<Transport, Chain>;
+    const client = getClient(config, { chainId: 1 }) as Client<Transport, Chain>;
     if (!client.chain.id) return disabledQueryAtom as any;
 
     return kernelInitDataQueryOptions({ owner: account.address, client });

@@ -4,3 +4,4 @@ export * from "./ExecLib.js";
 export * from "./getKernelAddress.js";
 export * from "./getKernelInitData.js";
 export * from "./LibClone.js";
+export * from "./recovery.js";

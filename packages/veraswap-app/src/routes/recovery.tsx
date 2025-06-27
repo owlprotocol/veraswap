@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { useAccount } from "wagmi";
+import { useAccount, useSendTransaction, useSwitchChain } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { formatEther, formatUnits } from "viem";
 import {
@@ -13,14 +13,19 @@ import {
     ChevronRight,
     CheckCircle,
 } from "lucide-react";
-import { useState } from "react";
-import { allKernelAccountsAtom, hasStuckFundsAtom, totalStuckFundsAtom } from "@/atoms/kernelRecovery.js";
-import { useKernelRecovery } from "@/hooks/useKernelRecovery.js";
-import { KernelTestingTools } from "@/components/KernelTestingTools.js";
+import { useState, useEffect } from "react";
+import { useWaitForTransactionReceipt } from "wagmi";
+import { createRecoveryCalls } from "@owlprotocol/veraswap-sdk";
+import { getOwnableExecutorExecuteCalls, LOCAL_KERNEL_CONTRACTS } from "@owlprotocol/veraswap-sdk";
+import { useQueryClient } from "@tanstack/react-query";
+import { allKernelAccountsAtom, stuckFundsAtom } from "@/atoms/kernelRecovery.js";
+// import { KernelTestingTools } from "@/components/KernelTestingTools.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.js";
+import { useToast } from "@/components/ui/use-toast.js";
+import { config } from "@/config.js";
 
 export const Route = createFileRoute("/recovery")({
     component: RecoveryPage,
@@ -30,23 +35,37 @@ function RecoveryPage() {
     const { address: walletAddress } = useAccount();
     const { openConnectModal } = useConnectModal();
     const kernelAccounts = useAtomValue(allKernelAccountsAtom);
-    const hasStuckFunds = useAtomValue(hasStuckFundsAtom);
-    const totalStuckFunds = useAtomValue(totalStuckFundsAtom);
-    const [expandedChains, setExpandedChains] = useState<Set<number>>(new Set());
-    const { recoverFunds, recoverAllFunds, isPending, isSuccess, error, hash, receipt } = useKernelRecovery();
+    const stuckFunds = useAtomValue(stuckFundsAtom);
+    const [expandedChains, setExpandedChains] = useState<Record<number, boolean>>({});
+    const { data: hash, sendTransaction, isPending, error } = useSendTransaction();
+    const { toast } = useToast();
+    const { switchChainAsync } = useSwitchChain();
+    const queryClient = useQueryClient();
+
+    const { isSuccess } = useWaitForTransactionReceipt({
+        hash,
+    });
+
+    useEffect(() => {
+        if (isSuccess && hash) {
+            toast({
+                title: "Recovery Successful",
+                description: "Your funds have been recovered successfully!",
+                variant: "default",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSuccess, hash]);
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
 
     const toggleChainExpansion = (chainId: number) => {
-        const newExpanded = new Set(expandedChains);
-        if (newExpanded.has(chainId)) {
-            newExpanded.delete(chainId);
-        } else {
-            newExpanded.add(chainId);
-        }
-        setExpandedChains(newExpanded);
+        setExpandedChains((prev) => ({
+            ...prev,
+            [chainId]: !prev[chainId],
+        }));
     };
 
     const deployedKernelAccounts = kernelAccounts.filter((account) => account.isDeployed);
@@ -57,30 +76,43 @@ function RecoveryPage() {
             amount: token.balance,
         }));
 
-        await recoverFunds({
-            chainId: account.chainId,
-            kernelAddress: account.kernelAddress,
-            nativeAmount: account.balance > 0n ? account.balance : undefined,
-            tokenTransfers: tokenTransfers.length > 0 ? tokenTransfers : undefined,
-        });
-    };
+        try {
+            await switchChainAsync({ chainId: account.chainId });
 
-    const handleRecoverAll = async () => {
-        // Prepare the kernel accounts data for recovery
-        const kernelAccountsForRecovery = deployedKernelAccounts.map((account) => ({
-            chainId: account.chainId,
-            kernelAddress: account.kernelAddress,
-            nativeAmount: account.balance > 0n ? account.balance : undefined,
-            tokenTransfers: account.tokenBalances.map((token) => ({
-                tokenAddress: token.tokenAddress,
-                amount: token.balance,
-            })),
-        }));
+            const recoveryCalls = createRecoveryCalls(walletAddress!, {
+                chainId: account.chainId,
+                kernelAddress: account.kernelAddress,
+                nativeAmount: account.balance > 0n ? account.balance : undefined,
+                tokenTransfers: tokenTransfers.length > 0 ? tokenTransfers : undefined,
+            });
 
-        // Call the recoverAllFunds function
-        await recoverAllFunds({
-            kernelAccounts: kernelAccountsForRecovery,
-        });
+            if (recoveryCalls.length === 0) {
+                toast({
+                    title: "No Funds to Recover",
+                    description: "No funds found to recover on this chain.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const executeCalls = await getOwnableExecutorExecuteCalls(queryClient, config, {
+                chainId: account.chainId,
+                account: walletAddress!,
+                calls: recoveryCalls,
+                executor: LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor,
+                owner: walletAddress!,
+                kernelAddress: account.kernelAddress,
+                value: 0n,
+            });
+
+            sendTransaction(executeCalls.calls[0]);
+        } catch (error) {
+            toast({
+                title: "Recovery Failed",
+                description: error instanceof Error ? error.message : "An unexpected error occurred",
+                variant: "destructive",
+            });
+        }
     };
 
     if (!walletAddress) {
@@ -119,10 +151,9 @@ function RecoveryPage() {
             </div>
 
             <div className="space-y-6">
-                {/* Testing Section */}
-                <KernelTestingTools />
+                {/* <KernelTestingTools /> */}
 
-                {!hasStuckFunds && deployedKernelAccounts.length > 0 && (
+                {!stuckFunds.hasStuckFunds && deployedKernelAccounts.length > 0 && (
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center gap-3">
@@ -140,7 +171,7 @@ function RecoveryPage() {
                     </Card>
                 )}
 
-                {hasStuckFunds && (
+                {stuckFunds.hasStuckFunds && (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -150,23 +181,17 @@ function RecoveryPage() {
                             <CardDescription>Total value across all chains</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <div className="text-2xl font-bold">{formatEther(totalStuckFunds.native)} ETH</div>
-                                    <div className="text-sm text-muted-foreground">
-                                        <div>Total native balance across all chains</div>
-                                        {totalStuckFunds.tokenCount > 0 && (
-                                            <div>
-                                                {totalStuckFunds.tokenCount} token
-                                                {totalStuckFunds.tokenCount !== 1 ? "s" : ""} with balances
-                                            </div>
-                                        )}
-                                    </div>
+                            <div className="space-y-1">
+                                <div className="text-2xl font-bold">{formatEther(stuckFunds.native)} ETH</div>
+                                <div className="text-sm text-muted-foreground">
+                                    <div>Total native balance across all chains</div>
+                                    {stuckFunds.tokenCount > 0 && (
+                                        <div>
+                                            {stuckFunds.tokenCount} token
+                                            {stuckFunds.tokenCount !== 1 ? "s" : ""} with balances
+                                        </div>
+                                    )}
                                 </div>
-                                <Button variant="default" onClick={handleRecoverAll} disabled={isPending}>
-                                    <ArrowRight className="h-4 w-4 mr-2" />
-                                    Recover All
-                                </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -229,7 +254,7 @@ function RecoveryPage() {
                                     <TableBody>
                                         {deployedKernelAccounts.map((account) => {
                                             const hasTokens = account.tokenBalances.length > 0;
-                                            const isExpanded = expandedChains.has(account.chainId);
+                                            const isExpanded = expandedChains[account.chainId] || false;
 
                                             return (
                                                 <>
@@ -384,8 +409,6 @@ function RecoveryPage() {
                         </Card>
                     )}
                 </div>
-
-                {/* Recovery Status */}
                 {isPending && (
                     <Card>
                         <CardContent className="p-4">
@@ -393,17 +416,11 @@ function RecoveryPage() {
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                                 <p className="text-sm">Sending recovery transaction...</p>
                             </div>
-                            {hash && <p className="text-xs text-muted-foreground mt-1">Hash: {hash.slice(0, 10)}...</p>}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {isSuccess && (
-                    <Card>
-                        <CardContent className="p-4 bg-green-50 border border-green-200">
-                            <p className="text-sm text-green-800">
-                                Recovery successful! Your funds have been transferred back to your wallet.
-                            </p>
+                            {hash && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Hash: {(hash as string).slice(0, 10)}...
+                                </p>
+                            )}
                         </CardContent>
                     </Card>
                 )}
