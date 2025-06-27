@@ -11,10 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as RecoveryImport } from './routes/recovery'
 import { Route as EmbedImport } from './routes/embed'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const RecoveryRoute = RecoveryImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const EmbedRoute = EmbedImport.update({
   id: '/embed',
@@ -46,6 +53,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedImport
       parentRoute: typeof rootRoute
     }
+    '/recovery': {
+      id: '/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof RecoveryImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +68,41 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/recovery': typeof RecoveryRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/embed'
+  fullPaths: '/' | '/embed' | '/recovery'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/embed'
-  id: '__root__' | '/' | '/embed'
+  to: '/' | '/embed' | '/recovery'
+  id: '__root__' | '/' | '/embed' | '/recovery'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EmbedRoute: typeof EmbedRoute
+  RecoveryRoute: typeof RecoveryRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EmbedRoute: EmbedRoute,
+  RecoveryRoute: RecoveryRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +116,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/embed"
+        "/embed",
+        "/recovery"
       ]
     },
     "/": {
@@ -105,6 +125,9 @@ export const routeTree = rootRoute
     },
     "/embed": {
       "filePath": "embed.tsx"
+    },
+    "/recovery": {
+      "filePath": "recovery.tsx"
     }
   }
 }
