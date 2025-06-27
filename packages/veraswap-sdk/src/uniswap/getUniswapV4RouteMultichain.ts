@@ -5,9 +5,15 @@ import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
+import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
+import {
+    StargateTokenQuoteParams,
+    stargateTokenQuoteQueryOptions,
+    StargateTokenSymbol,
+} from "../query/stargateTokenQuote.js";
 import { PathKey, PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 
 import { nativeOnChain } from "./constants/tokens.js";
@@ -61,6 +67,7 @@ export async function getUniswapV4RouteExactInMultichain(
                 if (!contracts) return null; // No uniswap deployment on this chain
 
                 let exactAmount = params.exactAmount;
+                // Check if we need to bridge native ETH
                 if (currencyIn.chainId !== currIn.chainId && currencyIn.isNative && currencyIn.symbol === "ETH") {
                     if (currIn.chainId === 900 || currIn.chainId === 901 || currIn.chainId === 902) {
                         // No stargate or orbiter on local chains
@@ -105,6 +112,34 @@ export async function getUniswapV4RouteExactInMultichain(
                         if (!orbiterQuoteResult) return null;
 
                         exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                    }
+                    // Check if we can bridge the token with Stargate
+                } else if (
+                    currencyIn.chainId !== currIn.chainId &&
+                    currencyIn.symbol &&
+                    currencyIn.symbol in STARGATE_TOKEN_POOLS
+                ) {
+                    const tokenPools = STARGATE_TOKEN_POOLS[currencyIn.symbol as StargateTokenSymbol];
+
+                    // If there is no pool on both chains, assume we are not bridging with Stargate (maybe Hyperlane?)
+                    if (currencyIn.chainId in tokenPools && currIn.chainId in tokenPools) {
+                        // Address doesn't matter for quote
+                        const quoteReceiver = "0x0000000000000000000000000000000000000001";
+                        const stargateTokenQuoteParams: StargateTokenQuoteParams = {
+                            amount: exactAmount,
+                            tokenSymbol: currencyIn.symbol as StargateTokenSymbol,
+                            srcChain: currencyIn.chainId,
+                            dstChain: currIn.chainId,
+                            receiver: quoteReceiver,
+                        };
+                        const stargateQuoteResult = await queryClient
+                            .fetchQuery(stargateTokenQuoteQueryOptions(wagmiConfig, stargateTokenQuoteParams))
+                            .catch(() => null);
+
+                        // We expect to bridge with Stargate, but no quote found
+                        if (!stargateQuoteResult) return null;
+
+                        exactAmount = BigInt(stargateQuoteResult.minAmountLD);
                     }
                 }
 
