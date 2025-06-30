@@ -150,10 +150,14 @@ export function getRouterCommandsForMultihopQuote(
         }
 
         // V3 Trade Plan
-        const v3SwapCurrencyIn = wrapNative ? weth9 : currencyIn;
+        const v3SwapCurrencyIn = currencyIn === zeroAddress ? weth9 : currencyIn;
+        const v3SwapCurrencyIntermediate =
+            hop0.intermediateCurrency === zeroAddress ? weth9 : hop0.intermediateCurrency;
+        const v3SwapCurrencyOutput = hop1.intermediateCurrency === zeroAddress ? weth9 : hop1.intermediateCurrency;
+
         const v3Path = encodePacked(
             ["address", "uint24", "address", "uint24", "address"],
-            [v3SwapCurrencyIn, hop0.fee, hop0.intermediateCurrency, hop1.fee, hop1.intermediateCurrency],
+            [v3SwapCurrencyIn, hop0.fee, v3SwapCurrencyIntermediate, hop1.fee, v3SwapCurrencyOutput],
         );
         const unwrapWeth = hop1.intermediateCurrency === weth9;
         const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
@@ -198,9 +202,11 @@ export function getRouterCommandsForMultihopQuote(
 
         // V3 Trade Plan
         const v3SwapCurrencyIn = wrapNative ? weth9 : currencyIn;
+        const v3SwapCurrencyIntermediate =
+            hop0.intermediateCurrency === zeroAddress ? weth9 : hop0.intermediateCurrency;
         const v3Path = encodePacked(
             ["address", "uint24", "address"],
-            [v3SwapCurrencyIn, hop0.fee, hop0.intermediateCurrency],
+            [v3SwapCurrencyIn, hop0.fee, v3SwapCurrencyIntermediate],
         );
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             ACTION_CONSTANTS.ADDRESS_THIS, // recipient
@@ -285,9 +291,10 @@ export function getRouterCommandsForMultihopQuote(
 
         // V3 Trade Plan
         const v3SwapCurrencyIn = wrapNative ? weth9 : hop0.intermediateCurrency;
+        const v3SwapCurrencyOutput = hop1.intermediateCurrency === zeroAddress ? weth9 : hop1.intermediateCurrency;
         const v3Path = encodePacked(
             ["address", "uint24", "address"],
-            [v3SwapCurrencyIn, hop1.fee, hop1.intermediateCurrency],
+            [v3SwapCurrencyIn, hop1.fee, v3SwapCurrencyOutput],
         );
         const unwrapWeth = hop1.intermediateCurrency === weth9;
         const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
