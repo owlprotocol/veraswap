@@ -421,7 +421,15 @@ export const bestTokenDollarValueAtomFamily = atomFamily(
                 const quote = get(tokenDollarValueAtomFamily({ currency, chainId: currency.chainId }));
                 const usdDecimals = USD_CURRENCIES[currency.chainId]?.decimals ?? 6;
                 const decimalsDiff = 18 - usdDecimals;
-                const normalizedValue = quote.data ? quote.data * 10n ** BigInt(decimalsDiff) : undefined;
+
+                let normalizedValue: bigint | undefined = undefined;
+                if (quote.data) {
+                    normalizedValue =
+                        decimalsDiff > 0
+                            ? quote.data * 10n ** BigInt(decimalsDiff)
+                            : quote.data / 10n ** BigInt(-decimalsDiff);
+                }
+
                 return {
                     currency,
                     normalizedValue,
