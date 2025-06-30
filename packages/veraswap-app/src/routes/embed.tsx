@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { SwapWidget } from "@/components/SwapWidget.js";
+import { useTheme } from "@/components/theme-provider.js";
 
 export const Route = createFileRoute("/embed")({
     validateSearch: z.object({
@@ -11,12 +12,18 @@ export const Route = createFileRoute("/embed")({
         chainIdOut: z.coerce.number().optional(),
         bgColor: z.string().optional(),
         pinnedTokens: z.string().optional(),
+        mode: z.enum(["dark", "light"]).optional(),
     }),
     component: Widget,
 });
 
 function Widget() {
-    const { bgColor } = Route.useSearch();
+    const { bgColor, mode } = Route.useSearch();
+    const { setTheme } = useTheme();
+
+    if (mode) {
+        setTheme(mode);
+    }
 
     return (
         <div
