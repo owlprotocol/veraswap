@@ -140,9 +140,9 @@ export const TokenSelector = ({
                             </div>
                         </>
                     ) : (
-                        <span className="text-gray-500 dark:text-gray-400">Select Token</span>
+                        <span className="text-muted-foreground">Select Token</span>
                     )}
-                    <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
             </DialogTrigger>
 

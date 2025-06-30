@@ -648,9 +648,9 @@ export function SwapWidget({
             <Card className="w-full backdrop-blur-sm shadow-xl">
                 <CardContent className="p-2 space-y-2">
                     <div className="space-y-2">
-                        <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                        <div className="rounded-2xl bg-muted p-4 border-2 border-transparent hover:border-border transition-colors">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500 dark:text-gray-400">From</span>
+                                <span className="text-sm text-muted-foreground">From</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
@@ -665,7 +665,7 @@ export function SwapWidget({
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold",
                                         "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                                        "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
+                                        "hover:bg-muted/50 rounded-lg transition-colors",
                                     )}
                                     placeholder="0"
                                     disabled={!currencyIn}
@@ -673,7 +673,7 @@ export function SwapWidget({
                                 {currencyIn && chainId && !currencyIn.isNative && (
                                     <button
                                         onClick={() => importToken(currencyIn)}
-                                        className="flex items-center gap-1 text-sm"
+                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                         type="button"
                                     >
                                         <Wallet size={20} /> +
@@ -681,7 +681,7 @@ export function SwapWidget({
                                 )}
                                 <TokenSelector selectingTokenIn={true} isEmbedded={isEmbedded} />
                             </div>
-                            <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex justify-between text-xs text-muted-foreground">
                                 <div>{!!tokenInUsdValue && <span>≈ ${tokenInUsdValue.toFixed(2)}</span>}</div>
                                 <div className="space-x-2">
                                     <span>Balance: {tokenInBalanceFormatted}</span>
@@ -711,9 +711,9 @@ export function SwapWidget({
                             </Button>
                         </div>
 
-                        <div className="rounded-2xl bg-gray-50 dark:bg-gray-700 p-4 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors">
+                        <div className="rounded-2xl bg-muted p-4 border-2 border-transparent hover:border-border transition-colors">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-500 dark:text-gray-400">To</span>
+                                <span className="text-sm text-muted-foreground">To</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
@@ -722,7 +722,7 @@ export function SwapWidget({
                                     className={cn(
                                         "border-0 bg-transparent text-3xl font-semibold p-0",
                                         "ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
-                                        "hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors",
+                                        "hover:bg-muted/50 rounded-lg transition-colors",
                                     )}
                                     placeholder={
                                         !!quoterError
@@ -736,7 +736,7 @@ export function SwapWidget({
                                 {currencyOut && chainId && !currencyOut.isNative && (
                                     <button
                                         onClick={() => importToken(currencyOut)}
-                                        className="flex items-center gap-1 text-xs"
+                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                                         type="button"
                                     >
                                         <Wallet size={20} /> +
@@ -744,7 +744,7 @@ export function SwapWidget({
                                 )}
                                 <TokenSelector isEmbedded={isEmbedded} />
                             </div>
-                            <div className="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex justify-between text-xs text-muted-foreground">
                                 <div>{!!tokenOutUsdValue && <span>≈ ${tokenOutUsdValue.toFixed(2)}</span>}</div>
                                 <div className="space-x-1 align-right">
                                     <span>Balance: {tokenOutBalanceFormatted}</span>

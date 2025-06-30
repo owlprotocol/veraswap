@@ -125,10 +125,10 @@ function StepCard({ step, url, isEmbedded }: { step: TransactionStep; url?: stri
             className={cn(
                 "border-2 transition-all duration-200 group",
                 isEmbedded ? "p-1" : "p-0",
-                step.status === "processing" && "border-blue-500 shadow-md",
-                step.status === "success" && "border-green-500",
-                step.status === "error" && "border-red-500",
-                url && "hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer",
+                step.status === "processing" && "border-primary shadow-md",
+                step.status === "success" && "border-success",
+                step.status === "error" && "border-destructive",
+                url && "hover:bg-muted cursor-pointer",
             )}
         >
             <CardHeader className={cn(isEmbedded ? "pb-1 px-2" : "pb-2")}>
@@ -151,7 +151,7 @@ function StepCard({ step, url, isEmbedded }: { step: TransactionStep; url?: stri
             <CardContent className={isEmbedded ? "pt-0 px-2 pb-1" : "pt-0"}>
                 {step.status === "processing" && (
                     <div className="w-full rounded-full h-2.5">
-                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2.5 rounded-full animate-pulse w-full"></div>
+                        <div className="bg-gradient-to-r from-primary to-accent h-2.5 rounded-full animate-pulse w-full"></div>
                     </div>
                 )}
             </CardContent>
@@ -172,12 +172,12 @@ function StatusIcon({ status, isEmbedded }: { status: TransactionStep["status"];
 
     switch (status) {
         case "pending":
-            return <div className={cn("rounded-full bg-gray-300 dark:bg-gray-600", iconSize)} />;
+            return <div className={cn("rounded-full bg-muted-foreground/30", iconSize)} />;
         case "processing":
-            return <Loader2 className={cn("text-blue-500 animate-spin", iconSize)} />;
+            return <Loader2 className={cn("text-primary animate-spin", iconSize)} />;
         case "success":
-            return <CheckCircle className={cn("text-green-500", iconSize)} />;
+            return <CheckCircle className={cn("text-success", iconSize)} />;
         case "error":
-            return <XCircle className={cn("text-red-500", iconSize)} />;
+            return <XCircle className={cn("text-destructive", iconSize)} />;
     }
 }

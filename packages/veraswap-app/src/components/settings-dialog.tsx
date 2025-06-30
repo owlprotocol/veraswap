@@ -113,7 +113,7 @@ function SlippageSettings() {
             </div>
 
             {hasHighSlippage && (
-                <div className="flex items-start gap-2.5 p-3 text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-900/50">
+                <div className="flex items-start gap-2.5 p-3 text-xs bg-warning/10 text-warning-foreground rounded-md border border-warning/20">
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <div>
                         <p className="font-medium">High slippage warning</p>
