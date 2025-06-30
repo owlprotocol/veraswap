@@ -33,15 +33,12 @@ contract V2QuoterTest is Test {
         (address _weth9, ) = WETHUtils.getOrEtch(WETHUtils.opStackPreDeploy);
         LocalTokens memory tokens = LocalTokensLibrary.deploy(_weth9);
 
-        // Uniswap V2 Factory
-        (address v2Factory, ) = UniswapV2FactoryUtils.getOrCreate2(address(0));
+        // (address v2Factory, ) = UniswapV2FactoryUtils.getOrCreate2(address(0));
 
-        // TODO: Add v2 factory to deployment & universal router parameters
         // Uniswap Contracts
-        // UniswapContracts memory contracts = ContractsUniswapLibrary.deploy(_weth9);
-
+        UniswapContracts memory contracts = ContractsUniswapLibrary.deploy(_weth9);
         // Create V2 Pools
-        pools = LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(v2Factory), tokens);
+        pools = LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(contracts.v2Factory), tokens);
 
         assertNotEq(address(pools.liq2_tokenA), address(0), "L2 Token A pool not created");
 
