@@ -4,7 +4,7 @@ import { Config } from "@wagmi/core";
 import invariant from "tiny-invariant";
 import { Address, padHex } from "viem";
 
-import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
+import { CHAIN_ID_TO_ENDPOINT_ID, STARGATE_CURRENCIES, STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { StargateSendParam } from "../types/StargateSendParam.js";
 
 import { stargateGetFee } from "./stargateGetFee.js";
@@ -23,7 +23,8 @@ export interface StargateTokenQuoteParams {
 export interface StargateTokenQuote {
     type: "TOKEN";
     amount: bigint;
-    minAmountLD: bigint;
+    minAmountLD: bigint; // Amount in Local Decimals
+    minAmountOut: bigint; // Amount adjusted for remote token decimals
     fee: bigint;
 }
 
@@ -66,6 +67,18 @@ export async function stargateTokenQuote(
         .div(fullPercent)
         .toBigInt();
 
+    let minAmountOut = minAmountLD;
+
+    const currencies = STARGATE_CURRENCIES[tokenSymbol];
+    const srcCurrency = currencies[srcChain as keyof typeof currencies];
+    const dstCurrency = currencies[dstChain as keyof typeof currencies];
+
+    if (srcCurrency.decimals !== dstCurrency.decimals) {
+        const decimalsDiff = dstCurrency.decimals - srcCurrency.decimals;
+        minAmountOut =
+            decimalsDiff > 0 ? minAmountLD * 10n ** BigInt(decimalsDiff) : minAmountLD / 10n ** BigInt(-decimalsDiff);
+    }
+
     const sendParam = {
         dstEid: CHAIN_ID_TO_ENDPOINT_ID[dstChain as keyof typeof CHAIN_ID_TO_ENDPOINT_ID],
         to: padHex(receiver, { size: 32 }),
@@ -81,5 +94,5 @@ export async function stargateTokenQuote(
     // Amount too low
     if (nativeFee === null) return null;
 
-    return { type: "TOKEN", amount, fee: nativeFee, minAmountLD };
+    return { type: "TOKEN", amount, fee: nativeFee, minAmountLD, minAmountOut };
 }

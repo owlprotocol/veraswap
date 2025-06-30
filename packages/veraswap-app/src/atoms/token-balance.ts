@@ -336,7 +336,7 @@ export const amountOutAtom = atom((get) => {
         // TODO: remove orbiter references entirely
         if (stargateQuote && currencyOut) {
             amountOut = formatUnits(
-                stargateQuote.type === "ETH" ? stargateQuote.minAmountLDFeeRemoved : stargateQuote.minAmountLD,
+                stargateQuote.type === "ETH" ? stargateQuote.minAmountLDFeeRemoved : stargateQuote.minAmountOut,
                 currencyOut.decimals,
             );
         } else if (orbiterRouter && orbiterQuote && currencyOut) {

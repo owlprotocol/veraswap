@@ -139,7 +139,7 @@ export async function getUniswapV4RouteExactInMultichain(
                         // We expect to bridge with Stargate, but no quote found
                         if (!stargateQuoteResult) return null;
 
-                        exactAmount = BigInt(stargateQuoteResult.minAmountLD);
+                        exactAmount = BigInt(stargateQuoteResult.minAmountOut);
                     }
                 }
 
