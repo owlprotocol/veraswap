@@ -295,7 +295,7 @@ export function getRouterCommandsForMultihopQuote(
             [v3SwapCurrencyIn, hop1.fee, v3SwapCurrencyOutput],
         );
         const unwrapWeth = hop1.intermediateCurrency === weth9;
-        const recipient = ACTION_CONSTANTS.MSG_SENDER ?? params.recipient;
+        const recipient = params.recipient ?? ACTION_CONSTANTS.MSG_SENDER;
         const v3TradePlan: [Address, bigint, bigint, Hex, boolean] = [
             unwrapWeth ? ACTION_CONSTANTS.ADDRESS_THIS : recipient, // WETH received to router
             ACTION_CONSTANTS.CONTRACT_BALANCE,
