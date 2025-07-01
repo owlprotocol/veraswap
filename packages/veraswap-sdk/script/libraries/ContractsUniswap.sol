@@ -107,6 +107,8 @@ library ContractsUniswapLibrary {
         contracts.v4Quoter = v4Quoter;
         // Universal Periphery
         (address metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
+            contracts.v2Factory,
+            contracts.pairInitCodeHash,
             contracts.v3Factory,
             contracts.poolInitCodeHash,
             contracts.v4PoolManager,
@@ -160,6 +162,8 @@ library ContractsUniswapLibrary {
                     //TODO: Is it ok to deploy this if only V4 is enabled? (Note: if v3 is enabled, v4 is assumed to be enabled)
                     // => Seems fine as contract just skips not existant pools though there is a slight gas penalty
                     (address metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
+                        contracts.v2Factory,
+                        contracts.pairInitCodeHash,
                         contracts.v3Factory,
                         contracts.poolInitCodeHash,
                         contracts.v4PoolManager,

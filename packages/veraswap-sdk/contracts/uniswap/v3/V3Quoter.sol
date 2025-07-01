@@ -14,9 +14,9 @@ import {V3QuoterBase} from "./V3QuoterBase.sol";
 contract V3Quoter is IV3Quoter, V3QuoterBase {
     using QuoterRevert for *;
 
-    /// @param _factory The address of the Uniswap V3 factory contract
-    /// @param _poolInitCodeHash The init code hash of the V3 pool
-    constructor(address _factory, bytes32 _poolInitCodeHash) V3QuoterBase(_factory, _poolInitCodeHash) {}
+    /// @param _v3Factory The address of the Uniswap V3 v3Factory contract
+    /// @param _v3PoolInitCodeHash The init code hash of the V3 pool
+    constructor(address _v3Factory, bytes32 _v3PoolInitCodeHash) V3QuoterBase(_v3Factory, _v3PoolInitCodeHash) {}
 
     /// @inheritdoc IV3Quoter
     function quoteExactInputSingle(

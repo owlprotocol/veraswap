@@ -18,7 +18,7 @@ contract V3MetaQuoter is V3MetaQuoterBase, IV3MetaQuoter {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
-    constructor(address _factory, bytes32 _poolInitCodeHash) V3MetaQuoterBase(_factory, _poolInitCodeHash) {}
+    constructor(address _v3Factory, bytes32 _v3PoolInitCodeHash) V3MetaQuoterBase(_v3Factory, _v3PoolInitCodeHash) {}
 
     /// @inheritdoc IV3MetaQuoter
     function metaQuoteExactInputSingle(

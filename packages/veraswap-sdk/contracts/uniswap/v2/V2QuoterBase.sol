@@ -10,25 +10,25 @@ import {V2PoolKey, V2PoolKeyLibrary} from "./V2PoolKey.sol";
 
 abstract contract V2QuoterBase {
     /// @notice The address of the Uniswap V2 factory contract
-    address public immutable factory;
+    address public immutable v2Factory;
     /// @notice The init code hash of the V2 pool
-    bytes32 public immutable pairInitCodeHash;
+    bytes32 public immutable v2PoolInitCodeHash;
 
-    error PoolDoesNotExist(address pool);
+    error V2PoolDoesNotExist(address pool);
 
-    /// @param _factory The address of the Uniswap V2 factory contract
-    /// @param _pairInitCodeHash The init code hash of the V2 pool
-    constructor(address _factory, bytes32 _pairInitCodeHash) {
-        factory = _factory;
-        pairInitCodeHash = _pairInitCodeHash;
+    /// @param _v2Factory The address of the Uniswap V2 v2Factory contract
+    /// @param _v2PoolInitCodeHash The init code hash of the V2 pool
+    constructor(address _v2Factory, bytes32 _v2PoolInitCodeHash) {
+        v2Factory = _v2Factory;
+        v2PoolInitCodeHash = _v2PoolInitCodeHash;
     }
 
     function _quoteExactInputSingle(
         IV2Quoter.QuoteExactSingleParams memory params
     ) internal view returns (uint256 amountOut) {
-        address pair = params.poolKey.computeAddress(factory, pairInitCodeHash);
+        address pair = params.poolKey.computeAddress(v2Factory, v2PoolInitCodeHash);
         if (pair.code.length == 0) {
-            revert PoolDoesNotExist(pair);
+            revert V2PoolDoesNotExist(pair);
         }
 
         (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pair).getReserves();
@@ -66,9 +66,9 @@ abstract contract V2QuoterBase {
     function _quoteExactOutputSingle(
         IV2Quoter.QuoteExactSingleParams memory params
     ) internal view returns (uint256 amountIn) {
-        address pair = params.poolKey.computeAddress(factory, pairInitCodeHash);
+        address pair = params.poolKey.computeAddress(v2Factory, v2PoolInitCodeHash);
         if (pair.code.length == 0) {
-            revert PoolDoesNotExist(pair);
+            revert V2PoolDoesNotExist(pair);
         }
 
         (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pair).getReserves();

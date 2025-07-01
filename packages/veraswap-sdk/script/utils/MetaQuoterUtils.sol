@@ -11,30 +11,39 @@ library MetaQuoterUtils {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     function getDeployBytecode(
-        address factory,
-        bytes32 poolInitCodeHash,
-        address poolManager,
+        address v2Factory,
+        bytes32 v2PoolInitCodeHash,
+        address v3Factory,
+        bytes32 v3PoolInitCodeHash,
+        address v4PoolManager,
         address weth9
     ) internal pure returns (bytes memory) {
         return
-            abi.encodePacked(type(MetaQuoter).creationCode, abi.encode(factory, poolInitCodeHash, poolManager, weth9));
+            abi.encodePacked(
+                type(MetaQuoter).creationCode,
+                abi.encode(v2Factory, v2PoolInitCodeHash, v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9)
+            );
     }
 
     function getOrCreate2(
-        address factory,
-        bytes32 poolInitCodeHash,
-        address poolManager,
+        address v2Factory,
+        bytes32 v2PoolInitCodeHash,
+        address v3Factory,
+        bytes32 v3PoolInitCodeHash,
+        address v4PoolManager,
         address weth9
     ) internal returns (address addr, bool exists) {
         (addr, exists) = Create2Utils.getAddressExists(
-            getDeployBytecode(factory, poolInitCodeHash, poolManager, weth9)
+            getDeployBytecode(v2Factory, v2PoolInitCodeHash, v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9)
         );
         if (!exists) {
             address deployed = address(
                 new MetaQuoter{salt: Create2Utils.BYTES32_ZERO}(
-                    factory,
-                    poolInitCodeHash,
-                    IPoolManager(poolManager),
+                    v2Factory,
+                    v2PoolInitCodeHash,
+                    v3Factory,
+                    v3PoolInitCodeHash,
+                    IPoolManager(v4PoolManager),
                     weth9
                 )
             );

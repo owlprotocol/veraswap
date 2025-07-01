@@ -17,17 +17,17 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     using QuoterRevert for *;
 
     /// @notice The address of the Uniswap V3 factory contract
-    address public immutable factory;
+    address public immutable v3Factory;
     /// @notice The init code hash of the V3 pool
-    bytes32 public immutable poolInitCodeHash;
+    bytes32 public immutable v3PoolInitCodeHash;
 
     error PoolDoesNotExist(address pool);
 
-    /// @param _factory The address of the Uniswap V3 factory contract
-    /// @param _poolInitCodeHash The init code hash of the V3 pool
-    constructor(address _factory, bytes32 _poolInitCodeHash) {
-        factory = _factory;
-        poolInitCodeHash = _poolInitCodeHash;
+    /// @param _v3Factory The address of the Uniswap V3 factory contract
+    /// @param _v3PoolInitCodeHash The init code hash of the V3 pool
+    constructor(address _v3Factory, bytes32 _v3PoolInitCodeHash) {
+        v3Factory = _v3Factory;
+        v3PoolInitCodeHash = _v3PoolInitCodeHash;
     }
 
     /// @inheritdoc IUniswapV3SwapCallback
@@ -38,7 +38,7 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (V3PoolKey memory poolKey, bool isExactInput) = abi.decode(data, (V3PoolKey, bool));
-        V3CallbackValidation.verifyCallback(poolKey, factory, poolInitCodeHash);
+        V3CallbackValidation.verifyCallback(poolKey, v3Factory, v3PoolInitCodeHash);
 
         (uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (uint256(amount0Delta), uint256(-amount1Delta))
@@ -54,7 +54,7 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     function _quoteExactInputSingleReason(
         IV3Quoter.QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
+        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(v3Factory, v3PoolInitCodeHash));
         if (address(pool).code.length == 0) {
             // Pool does not exist, revert early
             reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));
@@ -82,7 +82,7 @@ abstract contract V3QuoterBase is IUniswapV3SwapCallback {
     function _quoteExactOutputSingleReason(
         IV3Quoter.QuoteExactSingleParams memory params
     ) internal returns (bytes memory reason, uint256 gasEstimate) {
-        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(factory, poolInitCodeHash));
+        IUniswapV3Pool pool = IUniswapV3Pool(params.poolKey.computeAddress(v3Factory, v3PoolInitCodeHash));
         if (address(pool).code.length == 0) {
             // Pool does not exist, revert early
             reason = abi.encodeWithSelector(PoolDoesNotExist.selector, address(pool));

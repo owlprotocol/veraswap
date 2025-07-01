@@ -8,9 +8,9 @@ import {V2PoolKey, V2PoolKeyLibrary} from "./V2PoolKey.sol";
 import {V2QuoterBase} from "./V2QuoterBase.sol";
 
 contract V2Quoter is IV2Quoter, V2QuoterBase {
-    /// @param _factory The address of the Uniswap V2 factory contract
-    /// @param _pairInitCodeHash The init code hash of the V2 pool
-    constructor(address _factory, bytes32 _pairInitCodeHash) V2QuoterBase(_factory, _pairInitCodeHash) {}
+    /// @param _v2Factory The address of the Uniswap V2 factory contract
+    /// @param _v2PoolInitCodeHash The init code hash of the V2 pool
+    constructor(address _v2Factory, bytes32 _v2PoolInitCodeHash) V2QuoterBase(_v2Factory, _v2PoolInitCodeHash) {}
 
     /// @inheritdoc IV2Quoter
     function quoteExactInputSingle(QuoteExactSingleParams memory params) external view returns (uint256 amountOut) {
