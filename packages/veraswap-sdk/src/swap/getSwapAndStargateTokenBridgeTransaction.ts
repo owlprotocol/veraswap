@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, Hex } from "viem";
+import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
 import { STARGATE_BRIDGE_SWEEP_ADDRESS, STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
@@ -14,6 +14,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
     currencyIn,
     currencyOut,
     quote,
+    stargateQuoteFee,
     permit2PermitParams,
     dstChain,
     srcChain,
@@ -26,6 +27,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
     currencyIn: Address;
     currencyOut: Address;
     quote: MetaQuoteBest;
+    stargateQuoteFee: bigint;
     permit2PermitParams?: [PermitSingle, Hex];
     dstChain: number;
     srcChain: number;
@@ -36,6 +38,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
     };
 }) {
     const routePlanner = new RoutePlanner();
+
+    routePlanner.addCommand(CommandType.TRANSFER, [zeroAddress, STARGATE_BRIDGE_SWEEP_ADDRESS, stargateQuoteFee]);
 
     if (permit2PermitParams) {
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
@@ -62,6 +66,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
 
+    const isNative = currencyIn === zeroAddress;
+
     return {
         to: universalRouter,
         data: encodeFunctionData({
@@ -69,6 +75,6 @@ export function getSwapAndStargateTokenBridgeTransaction({
             functionName: "execute",
             args: [routePlanner.commands, routePlanner.inputs, routerDeadline],
         }),
-        value: 0n,
+        value: isNative ? amountIn + stargateQuoteFee : stargateQuoteFee,
     };
 }

@@ -41,6 +41,8 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
 }) {
     const routePlanner = new RoutePlanner();
 
+    routePlanner.addCommand(CommandType.CALL_TARGET, [HYPERLANE_ROUTER_SWEEP_ADDRESS, bridgePayment, "0x"]);
+
     if (permit2PermitParams) {
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }

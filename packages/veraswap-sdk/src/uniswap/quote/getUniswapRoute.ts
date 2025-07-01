@@ -216,6 +216,7 @@ export function getRouterCommandsForMultihopQuote(
         commands.push([CommandType.V3_SWAP_EXACT_IN, v3TradePlan]);
 
         // Unwrap WETH to ETH if needed
+        // TODO: check, is intermediateCurrency not zeroAddress?
         const unwrapWeth = hop0.intermediateCurrency === weth9;
         if (unwrapWeth) {
             commands.push([CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]]);

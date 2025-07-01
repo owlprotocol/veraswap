@@ -39,7 +39,7 @@ contract DeployMainnet is Script {
                 uint256 allowance = IERC20(erc20).allowance(hypTokenRouterSweep, hypERC20Collateral);
                 if (allowance == 0) {
                     // Approve all
-                    HypTokenRouterSweep(hypTokenRouterSweep).approveAll(erc20, hypERC20Collateral);
+                    HypTokenRouterSweep(payable(hypTokenRouterSweep)).approveAll(erc20, hypERC20Collateral);
                 }
             }
         } else {

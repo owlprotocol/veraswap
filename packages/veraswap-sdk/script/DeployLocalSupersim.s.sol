@@ -61,7 +61,7 @@ contract DeployLocalSupersim is Script {
             // Deploy core contracts
             console2.log("Deploying contracts on chain: ", chains[i]);
             // TODO: Use setCode or etch to match pre-deploy addresses
-            (address weth9, ) = WETHUtils.getOrCreate2();
+            (address weth9,) = WETHUtils.getOrCreate2();
             CoreContracts memory contracts = ContractsCoreLibrary.deploy(weth9);
             vm.stopBroadcast();
             chainContracts[chainIds[i]] = contracts;
@@ -75,38 +75,30 @@ contract DeployLocalSupersim is Script {
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             (address tokenA, address tokenB) = deployTokensAndPools(
-                contracts.uniswap.universalRouter,
-                contracts.uniswap.v4PositionManager,
-                contracts.uniswap.v4StateView
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
             );
             tokens[chainIds[0]][keccak256("MockERC20A")] = tokenA;
             tokens[chainIds[0]][keccak256("MockERC20B")] = tokenB;
 
-            (address hypERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenA,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenA,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenA, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenA:", hypERC20CollateralTokenA);
 
-            (address hypERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenB,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenB,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenB, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenB:", hypERC20CollateralTokenB);
             tokens[chainIds[0]][keccak256("A")] = hypERC20CollateralTokenA;
             tokens[chainIds[0]][keccak256("B")] = hypERC20CollateralTokenB;
 
             // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
             if (IERC20(tokenA).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenA) == 0) {
-                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenA,
-                    hypERC20CollateralTokenA
+                HypTokenRouterSweep(payable(contracts.hyperlane.hypTokenRouterSweep)).approveAll(
+                    tokenA, hypERC20CollateralTokenA
                 );
             }
             if (IERC20(tokenB).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenB) == 0) {
-                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenB,
-                    hypERC20CollateralTokenB
+                HypTokenRouterSweep(payable(contracts.hyperlane.hypTokenRouterSweep)).approveAll(
+                    tokenB, hypERC20CollateralTokenB
                 );
             }
             vm.stopBroadcast();
@@ -119,9 +111,9 @@ contract DeployLocalSupersim is Script {
             CoreContracts storage contracts = chainContracts[chainIds[i]];
 
             // Deploy HypERC20 tokens for A and B
-            (address hypERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token A", "A");
+            (address hypERC20TokenA,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token A", "A");
             console2.log("hypERC20TokenA:", hypERC20TokenA);
-            (address hypERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token B", "B");
+            (address hypERC20TokenB,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token B", "B");
             console2.log("hypERC20TokenB:", hypERC20TokenB);
             tokens[chainIds[i]][keccak256("A")] = hypERC20TokenA;
             tokens[chainIds[i]][keccak256("B")] = hypERC20TokenB;
@@ -162,62 +154,48 @@ contract DeployLocalSupersim is Script {
             uint32 chainL1Domain = uint32(chainIds[0]);
             uint32 chainOpADomain = uint32(chainIds[1]);
 
-            (address mailboxL1, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainL1Domain);
-            (address mailboxOpA, ) = HyperlaneMockMailboxUtils.getOrCreate2(chainOpADomain);
+            (address mailboxL1,) = HyperlaneMockMailboxUtils.getOrCreate2(chainL1Domain);
+            (address mailboxOpA,) = HyperlaneMockMailboxUtils.getOrCreate2(chainOpADomain);
             MockMailbox(mailboxL1).addRemoteMailbox(chainOpADomain, MockMailbox(mailboxOpA));
             MockMailbox(mailboxOpA).addRemoteMailbox(chainL1Domain, MockMailbox(mailboxL1));
             // MockMailbox HypERC20Collateral
-            (address hypMockERC20CollateralTokenA, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokens[chainIds[0]][keccak256("MockERC20A")],
-                mailboxL1
-            );
-            (address hypMockERC20CollateralTokenB, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokens[chainIds[0]][keccak256("MockERC20B")],
-                mailboxL1
-            );
+            (address hypMockERC20CollateralTokenA,) =
+                HypERC20CollateralUtils.getOrCreate2(tokens[chainIds[0]][keccak256("MockERC20A")], mailboxL1);
+            (address hypMockERC20CollateralTokenB,) =
+                HypERC20CollateralUtils.getOrCreate2(tokens[chainIds[0]][keccak256("MockERC20B")], mailboxL1);
             // MockMaibox HypERC20
-            (address hypMockERC20TokenA, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
-            (address hypMockERC20TokenB, ) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
+            (address hypMockERC20TokenA,) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token A", "A");
+            (address hypMockERC20TokenB,) = HypERC20Utils.getOrCreate2(18, mailboxOpA, 0, "Token B", "B");
             IERC20(hypMockERC20TokenA).approve(address(Permit2Utils.permit2), type(uint256).max);
             IERC20(hypMockERC20TokenB).approve(address(Permit2Utils.permit2), type(uint256).max);
             // Enroll remote routers
             TokenRouter(hypMockERC20CollateralTokenA).enrollRemoteRouter(
-                chainOpADomain,
-                bytes32(uint256(uint160(hypMockERC20TokenA)))
+                chainOpADomain, bytes32(uint256(uint160(hypMockERC20TokenA)))
             );
             TokenRouter(hypMockERC20CollateralTokenB).enrollRemoteRouter(
-                chainOpADomain,
-                bytes32(uint256(uint160(hypMockERC20TokenB)))
+                chainOpADomain, bytes32(uint256(uint160(hypMockERC20TokenB)))
             );
             TokenRouter(hypMockERC20TokenA).enrollRemoteRouter(
-                chainL1Domain,
-                bytes32(uint256(uint160(hypMockERC20CollateralTokenA)))
+                chainL1Domain, bytes32(uint256(uint160(hypMockERC20CollateralTokenA)))
             );
             TokenRouter(hypMockERC20TokenB).enrollRemoteRouter(
-                chainL1Domain,
-                bytes32(uint256(uint160(hypMockERC20CollateralTokenB)))
+                chainL1Domain, bytes32(uint256(uint160(hypMockERC20CollateralTokenB)))
             );
             // ERC7579ExecutorRouter
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             // L1 Executor Router
             ERC7579ExecutorRouterUtils.getOrCreate2(
-                mailboxL1,
-                address(0),
-                contracts.ownableSignatureExecutor,
-                contracts.kernelFactory
+                mailboxL1, address(0), contracts.ownableSignatureExecutor, contracts.kernelFactory
             );
 
             // New implementations to avoid collisions
-            (address ownableSignatureExecutorOpA, ) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
-            (address kernelFactoryOpA, ) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
+            (address ownableSignatureExecutorOpA,) = OwnableSignatureExecutorUtils.getOrCreate2(bytes32(uint256(901)));
+            (address kernelFactoryOpA,) = KernelFactoryUtils.getOrCreate2(contracts.kernel, bytes32(uint256(901)));
 
             // OPA Executor Router
             ERC7579ExecutorRouterUtils.getOrCreate2(
-                mailboxOpA,
-                address(0),
-                ownableSignatureExecutorOpA,
-                kernelFactoryOpA
+                mailboxOpA, address(0), ownableSignatureExecutorOpA, kernelFactoryOpA
             );
 
             vm.stopBroadcast();
@@ -234,7 +212,7 @@ contract DeployLocalSupersim is Script {
 
                 MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
-                (address superchainTokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+                (address superchainTokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
                 tokens[chainIds[1]][keccak256("C")] = superchainTokenC;
                 console2.log("Deployed Superchain Token C on OPChainA:", superchainTokenC);
 
@@ -250,10 +228,8 @@ contract DeployLocalSupersim is Script {
                     contractsA.uniswap.v4StateView
                 );
 
-                (address hypERC20CollateralTokenC, ) = HypERC20CollateralUtils.getOrCreate2(
-                    superchainTokenC,
-                    contractsA.hyperlane.mailbox
-                );
+                (address hypERC20CollateralTokenC,) =
+                    HypERC20CollateralUtils.getOrCreate2(superchainTokenC, contractsA.hyperlane.mailbox);
                 console2.log("hypERC20CollateralTokenC on OPChainA:", hypERC20CollateralTokenC);
                 tokens[chainIds[1]][keccak256("CollateralC")] = hypERC20CollateralTokenC;
 
@@ -268,14 +244,12 @@ contract DeployLocalSupersim is Script {
 
                 MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
 
-                (address superchainTokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+                (address superchainTokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
                 tokens[chainIds[2]][keccak256("D")] = superchainTokenD;
                 console2.log("Deployed Superchain Token D on OPChainB:", superchainTokenD);
 
-                (address hypERC20CollateralTokenD, ) = HypERC20CollateralUtils.getOrCreate2(
-                    superchainTokenD,
-                    contractsB.hyperlane.mailbox
-                );
+                (address hypERC20CollateralTokenD,) =
+                    HypERC20CollateralUtils.getOrCreate2(superchainTokenD, contractsB.hyperlane.mailbox);
                 console2.log("hypERC20CollateralTokenD on OPChainB:", hypERC20CollateralTokenD);
                 tokens[chainIds[2]][keccak256("CollateralD")] = hypERC20CollateralTokenD;
 
@@ -288,23 +262,13 @@ contract DeployLocalSupersim is Script {
                 vm.startBroadcast();
                 CoreContracts storage contractsL1 = chainContracts[chainIds[0]];
 
-                (address hypERC20TokenC, ) = HypERC20Utils.getOrCreate2(
-                    18,
-                    contractsL1.hyperlane.mailbox,
-                    0,
-                    "Token C",
-                    "C"
-                );
+                (address hypERC20TokenC,) =
+                    HypERC20Utils.getOrCreate2(18, contractsL1.hyperlane.mailbox, 0, "Token C", "C");
                 console2.log("hypERC20TokenC on localhost:", hypERC20TokenC);
                 tokens[chainIds[0]][keccak256("C")] = hypERC20TokenC;
 
-                (address hypERC20TokenD, ) = HypERC20Utils.getOrCreate2(
-                    18,
-                    contractsL1.hyperlane.mailbox,
-                    0,
-                    "Token D",
-                    "D"
-                );
+                (address hypERC20TokenD,) =
+                    HypERC20Utils.getOrCreate2(18, contractsL1.hyperlane.mailbox, 0, "Token D", "D");
                 console2.log("hypERC20TokenD on localhost:", hypERC20TokenD);
                 tokens[chainIds[0]][keccak256("D")] = hypERC20TokenD;
 
@@ -362,49 +326,35 @@ contract DeployLocalSupersim is Script {
         }
     }
 
-    function deployTestUSDCPool(
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address testUSDC) {
-        (testUSDC, ) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
+    function deployTestUSDCPool(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address testUSDC)
+    {
+        (testUSDC,) = MockERC20Utils.getOrCreate2("Test USD Coin", "tUSDC", 18);
 
         PoolUtils.setupToken(IERC20(testUSDC), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPoolWithLiquidityMultiplier(
-            testUSDC,
-            address(0),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView),
-            10
+            testUSDC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
         );
         console2.log("Test USD Coin:", testUSDC);
         console2.log("Deployed Token and pool");
     }
 
-    function deployTokensAndPools(
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address tokenA, address tokenB) {
-        (tokenA, ) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
-        (tokenB, ) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
+    function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenA, address tokenB)
+    {
+        (tokenA,) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
+        (tokenB,) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
 
         PoolUtils.setupToken(IERC20(tokenA), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenB), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenA, tokenB, IPositionManager(v4PositionManager), IStateView(v4StateView));
         PoolUtils.deployPoolWithLiquidityMultiplier(
-            tokenA,
-            address(0),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView),
-            10
+            tokenA, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
         );
         PoolUtils.deployPoolWithLiquidityMultiplier(
-            tokenB,
-            address(0),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView),
-            10
+            tokenB, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
         );
 
         console2.log("Token A:", tokenA);
@@ -412,30 +362,21 @@ contract DeployLocalSupersim is Script {
         console2.log("Deployed Tokens and pool");
     }
 
-    function deploySuperchainTokenAndPools(
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address tokenC, address tokenD) {
-        (tokenC, ) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
-        (tokenD, ) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
+    function deploySuperchainTokenAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenC, address tokenD)
+    {
+        (tokenC,) = MockSuperchainERC20Utils.getOrCreate2("Token C", "C", 18);
+        (tokenD,) = MockSuperchainERC20Utils.getOrCreate2("Token D", "D", 18);
 
         PoolUtils.setupToken(IERC20(tokenC), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.setupToken(IERC20(tokenD), IPositionManager(v4PositionManager), IUniversalRouter(router));
         PoolUtils.deployPool(tokenC, tokenD, IPositionManager(v4PositionManager), IStateView(v4StateView));
         PoolUtils.deployPoolWithLiquidityMultiplier(
-            tokenC,
-            address(0),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView),
-            10
+            tokenC, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
         );
         PoolUtils.deployPoolWithLiquidityMultiplier(
-            tokenD,
-            address(0),
-            IPositionManager(v4PositionManager),
-            IStateView(v4StateView),
-            10
+            tokenD, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 10
         );
 
         console2.log("Token C:", tokenC);

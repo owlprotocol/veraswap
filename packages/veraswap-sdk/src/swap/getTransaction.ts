@@ -414,6 +414,7 @@ export async function getTransaction(
                     currencyIn: getUniswapV4Address(swapCurrencyIn),
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     quote,
+                    stargateQuoteFee: stargateQuote.fee,
                     permit2PermitParams,
                     dstChain: bridgeCurrencyOut.chainId,
                     srcChain: bridgeCurrencyIn.chainId,
