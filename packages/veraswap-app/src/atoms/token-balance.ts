@@ -363,20 +363,25 @@ export const amountOutAtom = atom((get) => {
 const calculateUsdValueFromQuote = (
     amount: bigint,
     quote: bigint,
-    quoteUsdDecimals: number,
-    chainId: number,
+    quoteCurrencyDecimals: number,
+    currencyDecimals: number,
 ): number => {
     // Default is Ether decimals
-    const currencyUsdDecimals = USD_CURRENCIES[chainId]?.decimals ?? 18;
-    const decimalsDiff = currencyUsdDecimals - quoteUsdDecimals;
+    const decimalsDiff = currencyDecimals - quoteCurrencyDecimals;
+
+    const precision = 10000000n;
+    const precisionNumber = 10000000;
+
+    if (decimalsDiff === 0) {
+        return Number((amount * precision) / quote) / precisionNumber;
+    }
 
     // If decimals diff is negative, you need to divide the quote by the absolute decimals difference
     const adjustedQuote = decimalsDiff > 0 ? quote * 10n ** BigInt(decimalsDiff) : quote / 10n ** BigInt(-decimalsDiff);
 
-    const precision = 10000000n;
     const result = (amount * precision) / adjustedQuote;
 
-    return Number(result) / 10000000;
+    return Number(result) / precisionNumber;
 };
 
 // Gets token price in USD
@@ -450,6 +455,7 @@ export const bestTokenDollarValueAtomFamily = atomFamily(
                 return {
                     quote: bestQuote.quote,
                     usdDecimals: bestQuote.usdDecimals,
+                    currencyDecimals: bestQuote.currency.decimals,
                 };
             }
 
@@ -459,7 +465,7 @@ export const bestTokenDollarValueAtomFamily = atomFamily(
             }
         }),
     (a, b) => a === b,
-) as unknown as AtomFamily<string, Atom<{ quote: bigint; usdDecimals: number } | undefined>>;
+) as unknown as AtomFamily<string, Atom<{ quote: bigint; usdDecimals: number; currencyDecimals: number } | undefined>>;
 
 bestTokenDollarValueAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000);
 
@@ -474,8 +480,8 @@ export const currencyUsdBalanceAtomFamily = atomFamily(
             const bestQuoteData = get(bestTokenDollarValueAtomFamily(currency.symbol));
             if (!balanceQuery.data || !bestQuoteData) return undefined;
 
-            const { quote, usdDecimals } = bestQuoteData;
-            return calculateUsdValueFromQuote(balanceQuery.data, quote, usdDecimals, currency.chainId);
+            const { quote, currencyDecimals: quoteCurrencyDecimals } = bestQuoteData;
+            return calculateUsdValueFromQuote(balanceQuery.data, quote, quoteCurrencyDecimals, currency.decimals);
         }),
     (a, b) => a.account === b.account && a.currency.equals(b.currency),
 );
@@ -519,8 +525,8 @@ export const tokenInUsdValueAtom = atom((get) => {
     const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyIn.symbol));
     if (!bestQuoteData) return undefined;
 
-    const { quote, usdDecimals } = bestQuoteData;
-    return calculateUsdValueFromQuote(tokenInAmount, quote, usdDecimals, currencyIn.chainId);
+    const { quote, currencyDecimals: quoteCurrencyDecimals } = bestQuoteData;
+    return calculateUsdValueFromQuote(tokenInAmount, quote, quoteCurrencyDecimals, currencyIn.decimals);
 });
 
 export const tokenOutUsdValueAtom = atom((get) => {
@@ -532,7 +538,7 @@ export const tokenOutUsdValueAtom = atom((get) => {
     const bestQuoteData = get(bestTokenDollarValueAtomFamily(currencyOut.symbol));
     if (!bestQuoteData) return undefined;
 
-    const { quote, usdDecimals } = bestQuoteData;
+    const { quote, currencyDecimals: quoteCurrencyDecimals } = bestQuoteData;
     const amountOutBigInt = parseUnits(amountOut, currencyOut.decimals);
-    return calculateUsdValueFromQuote(amountOutBigInt, quote, usdDecimals, currencyOut.chainId);
+    return calculateUsdValueFromQuote(amountOutBigInt, quote, quoteCurrencyDecimals, currencyOut.decimals);
 });
