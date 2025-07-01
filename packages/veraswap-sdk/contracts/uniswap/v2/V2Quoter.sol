@@ -19,30 +19,7 @@ contract V2Quoter is IV2Quoter, V2QuoterBase {
 
     /// @inheritdoc IV2Quoter
     function quoteExactInput(QuoteExactParams memory params) external view returns (uint256 amountOut) {
-        Currency exactCurrency = params.exactCurrency;
-        uint128 exactAmount = params.exactAmount;
-
-        uint256 idx = 0;
-        while (true) {
-            V2PoolKey memory poolKey = V2PoolKeyLibrary.getPoolKey(exactCurrency, params.path[idx]);
-
-            QuoteExactSingleParams memory quoteParams = QuoteExactSingleParams({
-                poolKey: poolKey,
-                exactAmount: exactAmount,
-                zeroForOne: exactCurrency == poolKey.currency0
-            });
-            uint256 amount = _quoteExactInputSingle(quoteParams);
-
-            if (idx == params.path.length - 1) {
-                // last path element, return final amount
-                return (amount);
-            } else {
-                // update the exact currency and amount for the next iteration
-                exactCurrency = params.path[idx];
-                exactAmount = uint128(amount);
-                idx++;
-            }
-        }
+        amountOut = _quoteExactInput(params);
     }
 
     /// @inheritdoc IV2Quoter
@@ -52,29 +29,6 @@ contract V2Quoter is IV2Quoter, V2QuoterBase {
 
     /// @inheritdoc IV2Quoter
     function quoteExactOutput(QuoteExactParams memory params) external view returns (uint256 amountIn) {
-        Currency exactCurrency = params.exactCurrency;
-        uint128 exactAmount = params.exactAmount;
-
-        uint256 idx = params.path.length - 1;
-        while (true) {
-            V2PoolKey memory poolKey = V2PoolKeyLibrary.getPoolKey(exactCurrency, params.path[idx]);
-
-            QuoteExactSingleParams memory quoteParams = QuoteExactSingleParams({
-                poolKey: poolKey,
-                exactAmount: exactAmount,
-                zeroForOne: exactCurrency == poolKey.currency0
-            });
-            uint256 amount = _quoteExactOutputSingle(quoteParams);
-
-            if (idx == 0) {
-                // last path element, return final amount
-                return (amount);
-            } else {
-                // update the exact currency and amount for the next iteration
-                exactCurrency = params.path[idx];
-                exactAmount = uint128(amount);
-                idx--;
-            }
-        }
+        amountIn = _quoteExactOutput(params);
     }
 }
