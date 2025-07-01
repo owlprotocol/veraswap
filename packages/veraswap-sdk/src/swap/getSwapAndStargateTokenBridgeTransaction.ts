@@ -39,7 +39,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
 }) {
     const routePlanner = new RoutePlanner();
 
-    routePlanner.addCommand(CommandType.TRANSFER, [zeroAddress, STARGATE_BRIDGE_SWEEP_ADDRESS, stargateQuoteFee]);
+    routePlanner.addCommand(CommandType.CALL_TARGET, [STARGATE_BRIDGE_SWEEP_ADDRESS, stargateQuoteFee, "0x"]);
 
     if (permit2PermitParams) {
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
