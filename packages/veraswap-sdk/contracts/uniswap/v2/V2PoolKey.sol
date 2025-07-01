@@ -44,7 +44,7 @@ library V2PoolKeyLibrary {
                         abi.encodePacked(
                             hex"ff",
                             factory,
-                            keccak256(abi.encode(key.currency0, key.currency1)),
+                            keccak256(abi.encodePacked(key.currency0, key.currency1)),
                             pairInitCodeHash
                         )
                     )

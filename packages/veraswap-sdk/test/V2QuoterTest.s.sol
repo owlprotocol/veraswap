@@ -12,6 +12,10 @@ import {WETH} from "solmate/src/tokens/WETH.sol";
 import {WETHUtils} from "../script/utils/WETHUtils.sol";
 // Uniswap V2 Core
 import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import {V2PoolKey, V2PoolKeyLibrary} from "../contracts/uniswap/v2/V2PoolKey.sol";
+// Uniswap V2 Periphery
+import {IV2Quoter} from "../contracts/uniswap/v2/IV2Quoter.sol";
+import {V2QuoterUtils} from "../script/utils/V2QuoterUtils.sol";
 // Uniswap V4 Core
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 // Uniswap V4 Periphery
@@ -30,6 +34,7 @@ contract V2QuoterTest is Test {
 
     uint128 constant amount = 0.01 ether;
 
+    // Tokens
     Currency internal constant eth = Currency.wrap(address(0));
     Currency internal weth9;
     Currency internal liq34;
@@ -39,9 +44,13 @@ contract V2QuoterTest is Test {
     Currency internal tokenA;
     Currency internal tokenB;
 
+    // Uniswap Contracts
+    UniswapContracts internal contracts;
+    // Uniswap V2
+    IV2Quoter internal v2Quoter;
+    LocalV2Pools v2Pools;
+    // Uniswap Universal Router
     IUniversalRouter internal router;
-
-    LocalV2Pools pools;
 
     function setUp() public {
         // Sets proper address for Create2 & transaction sender
@@ -61,21 +70,35 @@ contract V2QuoterTest is Test {
         tokenB = Currency.wrap(address(tokens.tokenB));
 
         // Uniswap Contracts
-        UniswapContracts memory contracts = ContractsUniswapLibrary.deploy(_weth9);
+        contracts = ContractsUniswapLibrary.deploy(_weth9);
         router = IUniversalRouter(contracts.universalRouter);
         tokens.permit2Approve(contracts.universalRouter);
-
-        // Create V2 Pools
-        pools = LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(contracts.v2Factory), tokens);
+        // Uniswap V2
+        (address _v2Quoter, ) = V2QuoterUtils.getOrCreate2(contracts.v2Factory, contracts.pairInitCodeHash);
+        v2Quoter = IV2Quoter(_v2Quoter);
+        v2Pools = LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(contracts.v2Factory), tokens);
     }
 
     function testExactInputSingle_A_L2() public {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // PoolKey
+        (Currency currency0, Currency currency1) = currencyIn < currencyOut
+            ? (currencyIn, currencyOut)
+            : (currencyOut, currencyIn);
+        V2PoolKey memory poolKey = V2PoolKey({currency0: currency0, currency1: currency1});
+
+        // V2 Quote
+        bool zeroForOne = currency0 == currencyIn;
+        IV2Quoter.QuoteExactSingleParams memory quoteParams = IV2Quoter.QuoteExactSingleParams({
+            poolKey: poolKey,
+            exactAmount: amount,
+            zeroForOne: zeroForOne
+        });
+        uint256 amountOut = v2Quoter.quoteExactInputSingle(quoteParams);
 
         // V2 Swap
         // Encode V2 Swap
-        // bytes memory path = abi.encodePacked(Currency.unwrap(currencyIn), Currency.unwrap(currencyOut));
         address[] memory path = new address[](2);
         path[0] = Currency.unwrap(currencyIn);
         path[1] = Currency.unwrap(currencyOut);
@@ -83,7 +106,7 @@ contract V2QuoterTest is Test {
         bytes memory v2Swap = abi.encode(
             ActionConstants.MSG_SENDER, // recipient
             amount,
-            uint256(0), // amountOutMinimum
+            amountOut, // amountOutMinimum
             path,
             true // payerIsUser
         );
@@ -98,7 +121,7 @@ contract V2QuoterTest is Test {
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
-        assertLt(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap); // Input balance decreased
-        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
     }
 }
