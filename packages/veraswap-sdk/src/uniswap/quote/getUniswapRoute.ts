@@ -120,7 +120,6 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
 
 export interface GetRouterCommandsForMultihopQuoteParams {
     currencyIn: Address;
-    currencyOut: Address;
     amountIn: bigint;
     quote: MetaQuoteBestMultihop;
     recipient?: Address;
@@ -131,7 +130,6 @@ export interface GetRouterCommandsForMultihopQuoteParams {
 export function getRouterCommandsForMultihopQuote(
     params: GetRouterCommandsForMultihopQuoteParams,
 ): CreateCommandParamsGeneric[] {
-    //TODO: Is currencyOut even needed here?
     const { currencyIn, amountIn, quote } = params;
     const weth9 = params.contracts.weth9;
     const commands: CreateCommandParamsGeneric[] = [];
