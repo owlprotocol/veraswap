@@ -286,7 +286,7 @@ export function getRouterCommandsForMultihopQuote(
         // Wrap ETH to WETH if needed
         const wrapNative = hop0.intermediateCurrency === zeroAddress;
         if (wrapNative) {
-            commands.push([CommandType.UNWRAP_WETH, [ACTION_CONSTANTS.ADDRESS_THIS, 0n]]);
+            commands.push([CommandType.WRAP_ETH, [ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.CONTRACT_BALANCE]]);
         }
 
         // V3 Trade Plan
