@@ -143,7 +143,7 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
             });
         }
         if (v2AmountOut > 0) {
-            quotes[v4Quotes.length + v3Quotes.length] = MetaQuoteExactSingleResult({
+            quotes[quotes.length - 1] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: currency0,
                     currency1: currency1,
@@ -230,7 +230,7 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
             });
         }
         if (v2AmountIn > 0) {
-            quotes[v4Quotes.length + v3Quotes.length] = MetaQuoteExactSingleResult({
+            quotes[quotes.length - 1] = MetaQuoteExactSingleResult({
                 poolKey: PoolKey({
                     currency0: currency0,
                     currency1: currency1,
