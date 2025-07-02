@@ -242,7 +242,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
         });
     });
 
-    describe("Mixed V3 -> V4", () => {
+    describe("Mixed V4 -> V3", () => {
         test("L4 -> L34 -> L3", async () => {
             const currencyIn = tokenL4;
             const currencyOut = tokenL3;
@@ -288,7 +288,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
     });
-    describe("Mixed V4 -> V3", () => {
+    describe("Mixed V3 -> V4", () => {
         test("L3 -> L34 -> L4", async () => {
             const currencyIn = tokenL3;
             const currencyOut = tokenL4;
