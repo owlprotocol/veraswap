@@ -380,6 +380,53 @@ contract MetaQuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
     }
 
+    // A (variable) -> L2 (exact)
+    function testExactOutputSingle_A_L2() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // Quote
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: currencyOut,
+            variableCurrency: currencyIn,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutputSingle(
+            metaQuoteParams
+        );
+        assertEq(metaQuoteResults.length, 1); // 1 pool
+        assertEq(address(metaQuoteResults[0].poolKey.hooks), address(2)); // V2 Pool
+
+        IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            uint256(quote.variableAmount), // amountInMaximum
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_OUT));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
+    }
+
     // A (variable) -> L3 (exact)
     function testExactOutputSingle_A_L3() public {
         // Currency
