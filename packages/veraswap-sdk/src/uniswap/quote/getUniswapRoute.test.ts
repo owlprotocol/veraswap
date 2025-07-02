@@ -287,6 +287,51 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
+
+        test("A -> ETH -> Z", async () => {
+            const currencyIn = tokenA;
+            const currencyOut = tokenZ;
+            const hopCurrencies = [zeroAddress];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
+            // Route
+            const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                chainId: opChainL1.id,
+                currencyIn,
+                currencyOut,
+                currencyHops: hopCurrencies,
+                amountIn,
+                contracts,
+            });
+            expect(route).toBeDefined();
+            const { quote, amountOut, value } = route!;
+
+            const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
+
+            //Execute
+            const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
+            const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const hash = await anvilClientL1.writeContract({
+                abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
+                address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                value,
+                functionName: "execute",
+                args: [routePlanner.commands, routePlanner.inputs, deadline],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+            const currencyInBalanceAfterSwap = await getBalance(currencyIn);
+            const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+        });
     });
     describe("Mixed V3 -> V4", () => {
         test("L3 -> L34 -> L4", async () => {
