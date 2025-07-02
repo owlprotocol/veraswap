@@ -11,6 +11,8 @@ import {Permit2Utils} from "../script/utils/Permit2Utils.sol";
 // WETH9
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {WETHUtils} from "../script/utils/WETHUtils.sol";
+// Uniswap V2 Core
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 // Uniswap V3 Core
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {V3PositionManagerMock} from "../contracts/uniswap/v3/V3PositionManagerMock.sol";
@@ -58,11 +60,13 @@ contract MetaQuoterTest is Test {
     // Liquid tokens
     // eth/weth: Has V3 and V4 pools with all tokens
     // liq34: Has V3 and V4 pools with all tokens
+    // liq2: Has V2 pools with all tokens
     // liq3: Has V3 pools with all tokens
     // liq4: Has V4 pools with all tokens
     Currency internal constant eth = Currency.wrap(address(0));
     Currency internal weth9;
     Currency internal liq34;
+    Currency internal liq2;
     Currency internal liq3;
     Currency internal liq4;
     Currency internal tokenA;
@@ -82,8 +86,10 @@ contract MetaQuoterTest is Test {
         // Tokens
         weth9 = Currency.wrap(address(tokens.weth9));
         liq34 = Currency.wrap(address(tokens.liq34));
+        liq2 = Currency.wrap(address(tokens.liq2));
         liq3 = Currency.wrap(address(tokens.liq3));
         liq4 = Currency.wrap(address(tokens.liq4));
+
         tokenA = Currency.wrap(address(tokens.tokenA));
         tokenB = Currency.wrap(address(tokens.tokenB));
 
@@ -99,6 +105,8 @@ contract MetaQuoterTest is Test {
             V3PositionManagerMock(contracts.v3NFTPositionManager),
             tokens
         );
+        // Create V2 Pools
+        LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(contracts.v2Factory), tokens);
     }
 
     function getDefaultPoolKeyOptions()
@@ -114,6 +122,53 @@ contract MetaQuoterTest is Test {
     }
 
     /***** Exact Single Quotes *****/
+    // A (exact) -> L2 (variable)
+    function testExactInputSingle_A_L2() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // Quote
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: currencyIn,
+            variableCurrency: currencyOut,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInputSingle(
+            metaQuoteParams
+        );
+        assertEq(metaQuoteResults.length, 1); // 1 pool
+        assertEq(address(metaQuoteResults[0].poolKey.hooks), address(2)); // V2 Pool
+
+        IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            uint256(quote.variableAmount), // amountOutMinimum
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
+    }
+
     // A (exact) -> L3 (variable)
     function testExactInputSingle_A_L3() public {
         // Currency
@@ -229,9 +284,10 @@ contract MetaQuoterTest is Test {
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInputSingle(
             metaQuoteParams
         );
-        assertEq(metaQuoteResults.length, 2); // 2 pools
+        assertEq(metaQuoteResults.length, 3); // 3 pools
         assertEq(address(metaQuoteResults[0].poolKey.hooks), address(0)); // V4 Pool
         assertEq(address(metaQuoteResults[1].poolKey.hooks), address(3)); // V3 Pool
+        assertEq(address(metaQuoteResults[2].poolKey.hooks), address(2)); // V2 Pool
 
         IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
@@ -283,9 +339,10 @@ contract MetaQuoterTest is Test {
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInputSingle(
             metaQuoteParams
         );
-        assertEq(metaQuoteResults.length, 2); // 2 pools
+        assertEq(metaQuoteResults.length, 3); // 3 pools
         assertEq(address(metaQuoteResults[0].poolKey.hooks), address(0)); // V4 Pool
         assertEq(address(metaQuoteResults[1].poolKey.hooks), address(3)); // V3 Pool
+        assertEq(address(metaQuoteResults[2].poolKey.hooks), address(2)); // V2 Pool
 
         IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
@@ -321,6 +378,53 @@ contract MetaQuoterTest is Test {
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
+    }
+
+    // A (variable) -> L2 (exact)
+    function testExactOutputSingle_A_L2() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // Quote
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: currencyOut,
+            variableCurrency: currencyIn,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutputSingle(
+            metaQuoteParams
+        );
+        assertEq(metaQuoteResults.length, 1); // 1 pool
+        assertEq(address(metaQuoteResults[0].poolKey.hooks), address(2)); // V2 Pool
+
+        IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            uint256(quote.variableAmount), // amountInMaximum
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_OUT));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
     }
 
     // A (variable) -> L3 (exact)
@@ -438,9 +542,10 @@ contract MetaQuoterTest is Test {
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutputSingle(
             metaQuoteParams
         );
-        assertEq(metaQuoteResults.length, 2); // 2 pools
+        assertEq(metaQuoteResults.length, 3); // 3 pools
         assertEq(address(metaQuoteResults[0].poolKey.hooks), address(0)); // V4 Pool
         assertEq(address(metaQuoteResults[1].poolKey.hooks), address(3)); // V3 Pool
+        assertEq(address(metaQuoteResults[2].poolKey.hooks), address(2)); // V2 Pool
 
         IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
         assertGt(quote.variableAmount, 0);
@@ -492,9 +597,10 @@ contract MetaQuoterTest is Test {
         IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutputSingle(
             metaQuoteParams
         );
-        assertEq(metaQuoteResults.length, 2); // 2 pools
+        assertEq(metaQuoteResults.length, 3); // 3 pools
         assertEq(address(metaQuoteResults[0].poolKey.hooks), address(0)); // V4 Pool
         assertEq(address(metaQuoteResults[1].poolKey.hooks), address(3)); // V3 Pool
+        assertEq(address(metaQuoteResults[2].poolKey.hooks), address(2)); // V2 Pool
 
         IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
         assertGt(quote.variableAmount, 0);

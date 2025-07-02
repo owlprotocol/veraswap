@@ -18,6 +18,8 @@ import { MetaQuoter } from "../artifacts/MetaQuoter.js";
 import { PoolManager } from "../artifacts/PoolManager.js";
 import { PositionManager } from "../artifacts/PositionManager.js";
 import { StateView } from "../artifacts/StateView.js";
+import { UniswapV2Factory } from "../artifacts/UniswapV2Factory.js";
+import { UniswapV2Pair } from "../artifacts/UniswapV2Pair.js";
 import { UniswapV3Factory } from "../artifacts/UniswapV3Factory.js";
 import { UniswapV3Pool } from "../artifacts/UniswapV3Pool.js";
 import { UniversalRouter } from "../artifacts/UniversalRouter.js";
@@ -49,6 +51,17 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         bytecode: WETH.bytecode,
         salt: zeroHash,
     });
+
+    // Uniswap V2 Core
+    const v2Factory = getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            abi: UniswapV2Factory.abi,
+            bytecode: UniswapV2Factory.bytecode,
+            args: [zeroAddress],
+        }),
+        salt: zeroHash,
+    });
+    const v2PairInitCodeHash = keccak256(UniswapV2Pair.bytecode);
 
     // Uniswap V3 Core
     const v3Factory = getDeployDeterministicAddress({
@@ -103,9 +116,9 @@ export function getUniswapContracts(params?: { owner?: Address }) {
     const routerParams = {
         permit2,
         weth9,
-        v2Factory: unsupported,
+        v2Factory,
         v3Factory,
-        pairInitCodeHash: zeroHash,
+        pairInitCodeHash: v2PairInitCodeHash,
         poolInitCodeHash: v3PoolInitCodeHash,
         v4PoolManager,
         v3NFTPositionManager: unsupported,
@@ -123,13 +136,15 @@ export function getUniswapContracts(params?: { owner?: Address }) {
         bytecode: encodeDeployData({
             abi: MetaQuoter.abi,
             bytecode: MetaQuoter.bytecode,
-            args: [v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9],
+            args: [v2Factory, v2PairInitCodeHash, v3Factory, v3PoolInitCodeHash, v4PoolManager, weth9],
         }),
         salt: zeroHash,
     });
 
     return {
         weth9,
+        v2Factory,
+        v2PairInitCodeHash,
         v3Factory,
         v3PoolInitCodeHash,
         v4PoolManager,
@@ -147,6 +162,8 @@ export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 //TODO: Add metaquoter address (compute using poolManager address)
 export interface UniswapContracts {
     weth9?: Address;
+    v2Factory?: Address;
+    v2PairInitCodeHash?: Hash;
     v3Factory?: Address;
     v3PoolInitCodeHash?: Hash;
     v4PoolManager: Address;

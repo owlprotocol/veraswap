@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.26;
 
+// Uniswap V2 Core
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 // Uniswap V3 Core
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -60,6 +63,17 @@ struct LocalV3Pools {
     IUniswapV3Pool liq34_liq4;
     IUniswapV3Pool liq3_tokenA;
     IUniswapV3Pool liq3_tokenB;
+}
+
+struct LocalV2Pools {
+    IUniswapV2Pair weth_tokenA;
+    IUniswapV2Pair weth_tokenB;
+    // IUniswapV2Pair weth_liq2;
+    IUniswapV2Pair liq34_tokenA;
+    IUniswapV2Pair liq34_tokenB;
+    // IUniswapV2Pair liq34_liq2;
+    IUniswapV2Pair liq2_tokenA;
+    IUniswapV2Pair liq2_tokenB;
 }
 
 library LocalPoolsLibrary {
@@ -143,5 +157,31 @@ library LocalPoolsLibrary {
         // L3
         pools.liq3_tokenA = PoolUtils.createV3Pool(liq3, tokenA, v3Factory, v3PositionManager, 10 ether);
         pools.liq3_tokenB = PoolUtils.createV3Pool(liq3, tokenB, v3Factory, v3PositionManager, 10 ether);
+    }
+
+    /**
+     * Deploys local V2 pools for testing purposes. Assumes that contracts and tokens are all deployed
+     * @param v2Factory Uniswap V2 factory
+     * @param tokens Local tokens
+     */
+    function deployV2Pools(
+        IUniswapV2Factory v2Factory,
+        LocalTokens memory tokens
+    ) internal returns (LocalV2Pools memory pools) {
+        Currency weth9 = Currency.wrap(address(tokens.weth9));
+        Currency liq34 = Currency.wrap(address(tokens.liq34));
+        Currency liq2 = Currency.wrap(address(tokens.liq2));
+        Currency tokenA = Currency.wrap(address(tokens.tokenA));
+        Currency tokenB = Currency.wrap(address(tokens.tokenB));
+
+        // WETH
+        pools.weth_tokenA = PoolUtils.createV2Pool(weth9, tokenA, v2Factory, 10 ether);
+        pools.weth_tokenB = PoolUtils.createV2Pool(weth9, tokenB, v2Factory, 10 ether);
+        // L34
+        pools.liq34_tokenA = PoolUtils.createV2Pool(liq34, tokenA, v2Factory, 10 ether);
+        pools.liq34_tokenB = PoolUtils.createV2Pool(liq34, tokenB, v2Factory, 10 ether);
+        // L2
+        pools.liq2_tokenA = PoolUtils.createV2Pool(liq2, tokenA, v2Factory, 10 ether);
+        pools.liq2_tokenB = PoolUtils.createV2Pool(liq2, tokenB, v2Factory, 10 ether);
     }
 }

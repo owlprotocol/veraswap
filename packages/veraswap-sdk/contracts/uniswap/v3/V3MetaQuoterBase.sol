@@ -16,7 +16,7 @@ abstract contract V3MetaQuoterBase is V3QuoterBase {
     using QuoterRevert for *;
     using ParseBytes for bytes;
 
-    constructor(address _factory, bytes32 _poolInitCodeHash) V3QuoterBase(_factory, _poolInitCodeHash) {}
+    constructor(address _v3Factory, bytes32 _v3PoolInitCodeHash) V3QuoterBase(_v3Factory, _v3PoolInitCodeHash) {}
 
     function _metaQuoteExactInputSingle(
         IV3MetaQuoter.MetaQuoteExactSingleParams memory params

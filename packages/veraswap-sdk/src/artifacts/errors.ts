@@ -203,6 +203,7 @@ export const errors = [
         ],
     },
     { type: "error", name: "PoolDoesNotExist", inputs: [{ name: "pool", type: "address", internalType: "address" }] },
+    { type: "error", name: "V2PoolDoesNotExist", inputs: [{ name: "pool", type: "address", internalType: "address" }] },
     { type: "error", name: "ContractUnlocked", inputs: [] },
     { type: "error", name: "NegativeBalanceDelta", inputs: [] },
     { type: "error", name: "TargetIsHook", inputs: [] },

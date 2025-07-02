@@ -4,6 +4,10 @@ pragma solidity ^0.8.26;
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import {IUniswapV2Pair} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -46,6 +50,28 @@ library PoolUtils {
         );
         // Approve UniversalRouter using Permit2
         IAllowanceTransfer(PERMIT2).approve(address(token), address(router), type(uint160).max, type(uint48).max);
+    }
+
+    function createV2Pool(
+        Currency currencyA,
+        Currency currencyB,
+        IUniswapV2Factory v2Factory,
+        uint256 amount
+    ) internal returns (IUniswapV2Pair pair) {
+        address tokenA = Currency.unwrap(currencyA);
+        address tokenB = Currency.unwrap(currencyB);
+        // 1. Ensure the pair exists (or create it)
+        pair = IUniswapV2Pair(v2Factory.getPair(tokenA, tokenB));
+        if (address(pair) == address(0)) {
+            pair = IUniswapV2Pair(v2Factory.createPair(tokenA, tokenB));
+        }
+        // 2. Send tokens
+        IERC20(tokenA).transfer(address(pair), amount);
+        IERC20(tokenB).transfer(address(pair), amount);
+        // 3. Mint LP tokens to the sender
+        //    - On first liquidity, MINIMUM_LIQUIDITY (1000) is locked to address(0).
+        //    - Subsequent liquidity mints proportionally.
+        pair.mint(msg.sender);
     }
 
     function createV3Pool(
