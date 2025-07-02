@@ -171,10 +171,10 @@ library LocalPoolsLibrary {
      * @param v2Factory Uniswap V2 factory
      * @param tokens Local tokens
      */
-    function deployV2Pools(
-        IUniswapV2Factory v2Factory,
-        LocalTokens memory tokens
-    ) internal returns (LocalV2Pools memory pools) {
+    function deployV2Pools(IUniswapV2Factory v2Factory, LocalTokens memory tokens)
+        internal
+        returns (LocalV2Pools memory pools)
+    {
         Currency weth9 = Currency.wrap(address(tokens.weth9));
         Currency liq34 = Currency.wrap(address(tokens.liq34));
         Currency liq2 = Currency.wrap(address(tokens.liq2));
