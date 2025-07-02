@@ -12,6 +12,11 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     // WETH
     "out/IWETH9.sol/*.json",
     "out/WETH.sol/*.json",
+    // Uniswap V2
+    "out/IUniswapV2Factory.sol/*.json",
+    "artifacts/UniswapV2Factory.sol/*.json",
+    "out/IUniswapV2Pair.sol/*.json",
+    "artifacts/UniswapV2Pair.sol/*.json",
     // Uniswap V3
     "out/IUniswapV3Factory.sol/*.json",
     "out/UniswapV3Factory.sol/*.json",

@@ -96,6 +96,60 @@ export const events = [
     },
     {
         type: "event",
+        name: "PairCreated",
+        inputs: [
+            { name: "token0", type: "address", indexed: true, internalType: "address" },
+            { name: "token1", type: "address", indexed: true, internalType: "address" },
+            { name: "pair", type: "address", indexed: false, internalType: "address" },
+            { name: "", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Burn",
+        inputs: [
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "amount0", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amount1", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Mint",
+        inputs: [
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "amount0", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amount1", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Swap",
+        inputs: [
+            { name: "sender", type: "address", indexed: true, internalType: "address" },
+            { name: "amount0In", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amount1In", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amount0Out", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "amount1Out", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "to", type: "address", indexed: true, internalType: "address" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "Sync",
+        inputs: [
+            { name: "reserve0", type: "uint112", indexed: false, internalType: "uint112" },
+            { name: "reserve1", type: "uint112", indexed: false, internalType: "uint112" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
         name: "FeeAmountEnabled",
         inputs: [
             { name: "fee", type: "uint24", indexed: true, internalType: "uint24" },
