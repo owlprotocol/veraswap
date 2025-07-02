@@ -5,8 +5,6 @@ import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
 
 // WETH9
 import {WETHUtils} from "../../script/utils/WETHUtils.sol";
-// Uniswap V2 Core
-import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 // Uniswap V3 Core
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {V3PositionManagerMock} from "../../contracts/uniswap/v3/V3PositionManagerMock.sol";
@@ -24,16 +22,13 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 // Pools
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
-contract MetaQuoterMixedTest is MetaQuoterBaseTest {
-    IUniswapV2Factory internal v2Factory;
+contract MetaQuoterV3V4Test is MetaQuoterBaseTest {
     IUniswapV3Factory internal v3Factory;
     V3PositionManagerMock internal v3PositionManager;
     IPositionManager internal v4PositionManager;
 
     function setUp() public override {
         super.setUp();
-        // Uniswap V2 Factory
-        v2Factory = IUniswapV2Factory(contracts.v2Factory);
         // Uniswap V3 Factory
         v3Factory = IUniswapV3Factory(contracts.v3Factory);
         v3PositionManager = V3PositionManagerMock(contracts.v3NFTPositionManager);
