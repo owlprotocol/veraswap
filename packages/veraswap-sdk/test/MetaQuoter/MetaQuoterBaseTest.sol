@@ -79,4 +79,9 @@ contract MetaQuoterBaseTest is Test {
         defaultPoolKeyOptions[2] = IV4MetaQuoter.PoolKeyOptions({fee: 3_000, tickSpacing: 60, hooks: address(0)});
         defaultPoolKeyOptions[3] = IV4MetaQuoter.PoolKeyOptions({fee: 10_000, tickSpacing: 200, hooks: address(0)});
     }
+
+    function _mapCurrencyToWeth9(Currency currency) internal view returns (Currency) {
+        // If the currency is the native token, map it to WETH9
+        return currency.isAddressZero() ? weth9 : currency;
+    }
 }
