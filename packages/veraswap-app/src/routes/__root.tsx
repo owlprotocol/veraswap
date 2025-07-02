@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Menu, AlertTriangle } from "lucide-react";
+import { Menu, AlertTriangle, HelpCircle, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
 import { VeraFundButton } from "@/components/VeraFundButton.js";
@@ -12,6 +12,7 @@ export const Route = createRootRoute({
 });
 function RootComponent() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
     const location = useLocation();
 
     const isEmbedRoute = location.pathname.startsWith("/embed");
@@ -30,6 +31,14 @@ function RootComponent() {
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
                         {/* TODO: add back later? */}
                         {/* <VeraFundButton /> */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowWelcomeDialog(true)}
+                            className="text-muted-foreground hover:text-foreground"
+                        >
+                            <HelpCircle className="w-5 h-5" />
+                        </Button>
                         <ThemeSwitcher />
                         <ConnectButton showBalance={false} accountStatus="address" chainStatus="icon" />
                     </div>
@@ -46,6 +55,14 @@ function RootComponent() {
                         }`}
                     >
                         <div className="px-4 flex flex-col items-center space-y-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowWelcomeDialog(true)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                <HelpCircle className="w-4 h-4" />
+                            </Button>
                             <VeraFundButton />
                             <ConnectButton showBalance={false} accountStatus="address" chainStatus="full" />
                         </div>
@@ -54,10 +71,7 @@ function RootComponent() {
                 <div className="bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-600 dark:text-yellow-400">
                     <div className="mx-auto px-4 py-2 flex items-center justify-center gap-2 text-sm">
                         <AlertTriangle className="w-4 h-4" />
-                        <span>
-                            Veraswap is currently in beta. Use at your own risk. By using this application, you accept
-                            all associated risks.
-                        </span>
+                        <span>Veraswap is currently in beta and pending an audit.</span>
                     </div>
                 </div>
             </header>
@@ -65,7 +79,23 @@ function RootComponent() {
             <main className="pt-28 pb-8">
                 <Outlet />
             </main>
-            <WelcomeDialog />
+
+            <footer className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm border-t header-background">
+                <div className="mx-auto px-4 py-3 flex items-center justify-center">
+                    <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+                        <a
+                            href="https://veraswap.io"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2"
+                        >
+                            <span>Visit veraswap.io</span>
+                        </a>
+                    </Button>
+                </div>
+            </footer>
+
+            <WelcomeDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog} />
         </div>
     );
 }

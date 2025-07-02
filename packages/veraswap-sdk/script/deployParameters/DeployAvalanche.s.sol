@@ -24,7 +24,8 @@ library DeployAvalanche {
             universalRouter: address(0)
         });
 
-        HyperlaneDeployParams memory hyperlane = HyperlaneDeployParams({mailbox: address(0)});
+        HyperlaneDeployParams memory hyperlane =
+            HyperlaneDeployParams({mailbox: 0xFf06aFcaABaDDd1fb08371f9ccA15D73D51FeBD6});
 
         params = DeployParams({uniswap: uniswap, hyperlane: hyperlane});
     }

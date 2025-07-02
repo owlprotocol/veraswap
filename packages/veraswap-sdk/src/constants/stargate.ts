@@ -3,6 +3,7 @@ import { Address, zeroHash } from "viem";
 import {
     arbitrum,
     arbitrumSepolia,
+    avalanche,
     base,
     bsc,
     mainnet,
@@ -17,6 +18,7 @@ import { StargateBridgeSweep } from "../artifacts/StargateBridgeSweep.js";
 // From https://stargateprotocol.gitbook.io/stargate/v2-developer-docs/technical-reference/mainnet-contracts
 export const CHAIN_ID_TO_ENDPOINT_ID = {
     [arbitrum.id]: 30110,
+    [avalanche.id]: 30106,
     [base.id]: 30184,
     [mainnet.id]: 30101,
     [optimism.id]: 30111,
@@ -41,6 +43,7 @@ export const STARGATE_POOL_NATIVE = {
 
 export const STARGATE_POOL_USDC = {
     [arbitrum.id]: "0xe8CDF27AcD73a434D661C84887215F7598e7d0d3",
+    [avalanche.id]: "0x5634c4a5FEd09819E3c46D86A965Dd9447d86e47",
     [base.id]: "0x27a16dc786820B16E5c9028b75B99F6f604b5d26",
     [bsc.id]: "0x962Bd449E630b0d928f308Ce63f1A21F02576057",
     [mainnet.id]: "0xc026395860Db2d07ee33e05fE50ed7bD583189C7",
@@ -50,6 +53,7 @@ export const STARGATE_POOL_USDC = {
 
 export const STARGATE_POOL_USDT = {
     [arbitrum.id]: "0xcE8CcA271Ebc0533920C83d39F417ED6A0abB7D0",
+    [avalanche.id]: "0x12dC9256Acc9895B076f6638D628382881e62CeE",
     [bsc.id]: "0x138EB30f73BC423c6455C53df6D89CB01d9eBc63",
     [mainnet.id]: "0x933597a323Eb81cAe705C5bC29985172fd5A3973",
     [optimism.id]: "0x19cFCE47eD54a88614648DC3f19A5980097007dD",

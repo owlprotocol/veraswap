@@ -69,7 +69,7 @@ contract DeployMainnet is Script {
     }
 
     function run() external virtual {
-        string[] memory chains = new string[](7);
+        string[] memory chains = new string[](8);
         chains[0] = "base";
         chains[1] = "optimism";
         chains[2] = "superseed";
@@ -77,6 +77,8 @@ contract DeployMainnet is Script {
         chains[4] = "bsc";
         chains[5] = "mainnet";
         chains[6] = "polygon";
+        chains[7] = "avalanche";
+        // chains[8] = "apechain";
         // chains[4] = "unichain";
 
         (uint256[] memory chainIds, uint256[] memory forks) = MultichainFork.getForks(chains);
@@ -135,12 +137,13 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[5]].push(0xC59336D8edDa9722B4f1Ec104007191Ec16f7087); // ezETH
         hypERC20CollateralTokens[chainIds[5]].push(0x235E11459c8C21B2656484F8c6a7418242cfBde0); // ATH
         hypERC20CollateralTokens[chainIds[5]].push(0x1731Fe5aED11f397C88aC2551384aF8E346Fc699); // ZEUS
+        hypERC20CollateralTokens[chainIds[5]].push(0xD971CDfFaC53d9DF56bad78E01711272C0570fb9); // UNDEAD
         // hypERC20CollateralTokens[chainIds[5]].push(0xA7Db85E2925e3fec7C33A20d87CC895C948e62b3); // USDT
 
+        stargateTokenAndPools[chainIds[5]].push(
+            [0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, 0xc026395860Db2d07ee33e05fE50ed7bD583189C7]
+        ); // USDC
         // stargateTokenAndPools[chainIds[5]].push(
-        //     [0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48, 0xc026395860Db2d07ee33e05fE50ed7bD583189C7]
-        // ); // USDC
-        // stargateTokenAndPools[chainIds[6]].push(
         //     [0xdAC17F958D2ee523a2206206994597C13D831ec7, 0x933597a323Eb81cAe705C5bC29985172fd5A3973]
         // ); // USDT
 
@@ -152,6 +155,14 @@ contract DeployMainnet is Script {
         ); // USDC
         stargateTokenAndPools[chainIds[6]].push(
             [0xc2132D05D31c914a87C6611C10748AEb04B58e8F, 0xd47b03ee6d86Cf251ee7860FB2ACf9f91B9fD4d7]
+        ); // USDT
+
+        // Avalanche
+        stargateTokenAndPools[chainIds[7]].push(
+            [0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E, 0x5634c4a5FEd09819E3c46D86A965Dd9447d86e47]
+        ); // USDC
+        stargateTokenAndPools[chainIds[7]].push(
+            [0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7, 0x12dC9256Acc9895B076f6638D628382881e62CeE]
         ); // USDT
 
         for (uint256 i = 0; i < chains.length; i++) {
