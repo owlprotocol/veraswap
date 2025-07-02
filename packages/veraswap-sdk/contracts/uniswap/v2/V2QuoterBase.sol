@@ -8,6 +8,9 @@ import {IV2Quoter} from "./IV2Quoter.sol";
 import {V2QuoterLibrary} from "./V2QuoterLibrary.sol";
 import {V2PoolKey, V2PoolKeyLibrary} from "./V2PoolKey.sol";
 
+// Inspired by Uniswap V2 quoting in UniversalRouter V2 module
+// https://github.com/Uniswap/universal-router/blob/main/contracts/modules/uniswap/v2/UniswapV2Library.sol#L90
+// https://github.com/Uniswap/universal-router/blob/main/contracts/modules/uniswap/v2/V2SwapRouter.sol#L31
 abstract contract V2QuoterBase {
     /// @notice The address of the Uniswap V2 factory contract
     address public immutable v2Factory;
