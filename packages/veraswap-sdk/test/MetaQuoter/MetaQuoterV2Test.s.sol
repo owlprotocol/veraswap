@@ -1,0 +1,127 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity ^0.8.26;
+
+import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
+
+// Uniswap V2 Core
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+// Uniswap V4 Core
+import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
+// Uniswap V4 Periphery
+import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
+import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
+import {IV4MetaQuoter} from "../../contracts/uniswap/IV4MetaQuoter.sol";
+// Uniswap Universal Router
+import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
+// Pools
+import {PoolUtils} from "../../script/utils/PoolUtils.sol";
+
+contract MetaQuoterV2Test is MetaQuoterBaseTest {
+    IUniswapV2Factory internal v2Factory;
+
+    function setUp() public override {
+        super.setUp();
+        // Uniswap V2 Factory
+        v2Factory = IUniswapV2Factory(contracts.v2Factory);
+    }
+
+    /***** Exact Single Quotes *****/
+    // A (exact) -> L2 (variable)
+    function testExactInputSingle_A_L2() public {
+        PoolUtils.createV2Pool(tokenA, liq2, v2Factory, 10 ether);
+
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // Quote
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: currencyIn,
+            variableCurrency: currencyOut,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactInputSingle(
+            metaQuoteParams
+        );
+        assertEq(metaQuoteResults.length, 1); // 1 pool
+        assertEq(address(metaQuoteResults[0].poolKey.hooks), address(2)); // V2 Pool
+
+        IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            uint256(quote.variableAmount), // amountOutMinimum
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + quote.variableAmount); // Output balance increased by variable amount
+    }
+
+    // A (variable) -> L2 (exact)
+    function testExactOutputSingle_A_L2() public {
+        PoolUtils.createV2Pool(tokenA, liq2, v2Factory, 10 ether);
+
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
+        // Quote
+        IV4MetaQuoter.MetaQuoteExactSingleParams memory metaQuoteParams = IV4MetaQuoter.MetaQuoteExactSingleParams({
+            exactCurrency: currencyOut,
+            variableCurrency: currencyIn,
+            exactAmount: amount,
+            poolKeyOptions: getDefaultPoolKeyOptions()
+        });
+        IV4MetaQuoter.MetaQuoteExactSingleResult[] memory metaQuoteResults = metaQuoter.metaQuoteExactOutputSingle(
+            metaQuoteParams
+        );
+        assertEq(metaQuoteResults.length, 1); // 1 pool
+        assertEq(address(metaQuoteResults[0].poolKey.hooks), address(2)); // V2 Pool
+
+        IV4MetaQuoter.MetaQuoteExactSingleResult memory quote = metaQuoteResults[0];
+        assertGt(quote.variableAmount, 0);
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            uint256(quote.variableAmount), // amountInMaximum
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_OUT));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quote.variableAmount); // Input balance decreased by variable amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + metaQuoteParams.exactAmount); // Output balance increased by exact amount
+    }
+}
