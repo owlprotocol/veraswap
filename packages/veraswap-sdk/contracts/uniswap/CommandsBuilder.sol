@@ -79,8 +79,8 @@ library CommandsBuilderLibrary {
         }
 
         // Reset Variables
+        builder.currCurrencyIn = builder.currPath[builder.currPathLen - 1].intermediateCurrency; // Update input currency to last path currency
         builder.currPathLen = 0; // Reset currPath
-        builder.currCurrencyIn = swapPath[swapPath.length - 1]; // Update input currency to last path currency
     }
 
     function buildV3Swap(
@@ -134,8 +134,8 @@ library CommandsBuilderLibrary {
         }
 
         // Reset Variables
+        builder.currCurrencyIn = builder.currPath[builder.currPathLen - 1].intermediateCurrency; // Update input currency to last path currency
         builder.currPathLen = 0; // Reset currPath
-        builder.currCurrencyIn = builder.currPath[builder.currPath.length - 1].intermediateCurrency; // Update input currency to last path currency
     }
 
     function buildV4Swap(
@@ -169,17 +169,23 @@ library CommandsBuilderLibrary {
             builder.currPathLen > 1 ? uint8(Actions.SWAP_EXACT_IN) : uint8(Actions.SWAP_EXACT_IN_SINGLE), // Swap
             uint8(Actions.TAKE_ALL) // Take output
         );
+        // Settle: Open delta for currencyIn
         v4ActionParams[0] = abi.encode(
             currencyIn,
             builder.commandsLen == 0 ? uint128(amountIn) : ActionConstants.CONTRACT_BALANCE, // amountIn: if first command
             builder.commandsLen == 0 // payerIsUser: if first command
-        ); // Open delta for currencyIn
-
+        );
+        // Swap: if single swap use ExactInputSingleParams, else use ExactInputParams
         if (builder.currPathLen > 1) {
+            PathKey[] memory path = new PathKey[](builder.currPathLen);
+            for (uint i = 0; i < builder.currPathLen; i++) {
+                path[i] = builder.currPath[i];
+            }
+
             v4ActionParams[1] = abi.encode(
                 IV4Router.ExactInputParams({
                     currencyIn: currencyIn,
-                    path: builder.currPath,
+                    path: path,
                     amountIn: builder.commandsLen == 0 ? uint128(amountIn) : ActionConstants.OPEN_DELTA, // amountIn: if first command
                     amountOutMinimum: isLastSwap ? uint128(amountOutMinimum) : 0 // amountOutMinimum: if last swap
                 })
@@ -204,7 +210,10 @@ library CommandsBuilderLibrary {
             );
         }
 
+        // Take: Take output currency
+        Currency pathOut = builder.currPath[builder.currPathLen - 1].intermediateCurrency;
         v4ActionParams[2] = abi.encode(
+            pathOut, // pathOut: last path currency
             (isLastSwap && !(currencyOut == weth)) ? recipient : ActionConstants.ADDRESS_THIS, // recipient: if last swap & no wrap
             isLastSwap ? uint128(amountOutMinimum) : 0 // amountOutMinimum: if last path
         );
@@ -222,8 +231,8 @@ library CommandsBuilderLibrary {
         }
 
         // Reset Variables
+        builder.currCurrencyIn = pathOut; // Update input currency to last path currency
         builder.currPathLen = 0; // Reset currPath
-        builder.currCurrencyIn = builder.currPath[builder.currPath.length - 1].intermediateCurrency; // Update input currency to last path currency
     }
 
     /// @notice Builds a list of commands for an exact input swap and handles native token wrapping/unwrapping
