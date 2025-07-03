@@ -191,8 +191,8 @@ function EmbedPreview() {
                     </p>
                 </div>
 
-                <div className="flex flex-row gap-8 items-start">
-                    <div className="space-y-4 max-w-[500px]">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                    <div className="w-full md:max-w-[500px] space-y-4">
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between w-full">
@@ -217,6 +217,7 @@ function EmbedPreview() {
                                         height="450"
                                         title="Veraswap Widget"
                                         style={{ background: "transparent" }}
+                                        className="w-full"
                                     />
                                 </div>
                                 <Button onClick={resetTheme} variant="outline" className="w-full mt-4">
@@ -256,7 +257,7 @@ function EmbedPreview() {
                             </CardContent>
                         </Card>
                     </div>
-                    <div className="flex-1">
+                    <div className="w-full">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Theme Customization</CardTitle>
@@ -274,7 +275,7 @@ function EmbedPreview() {
                                                     if (!config) return null;
                                                     return (
                                                         <div key={key} className="flex flex-col items-center">
-                                                            <span className="text-sm font-medium text-foreground mb-1 text-center">
+                                                            <span className="text-base font-medium text-foreground mb-2 text-center">
                                                                 {config.label}
                                                             </span>
                                                             <div className="flex items-center gap-3">
@@ -284,7 +285,7 @@ function EmbedPreview() {
                                                                     onChange={(e) =>
                                                                         handleHexChange(key, e.target.value)
                                                                     }
-                                                                    className="w-10 h-10 border border-border shadow-sm cursor-pointer transition-all hover:shadow-md hover:border-primary rounded-md bg-white"
+                                                                    className="w-10 h-10 border border-border shadow-sm cursor-pointer transition-all hover:shadow-md hover:border-primary rounded-md bg-transparent"
                                                                     style={{ appearance: "none", padding: 0 }}
                                                                 />
                                                                 <Input
@@ -297,7 +298,7 @@ function EmbedPreview() {
                                                                     className="font-mono text-xs w-24 px-2 py-1 text-center"
                                                                 />
                                                             </div>
-                                                            <span className="text-xs text-muted-foreground text-center leading-tight mt-1">
+                                                            <span className="text-sm text-muted-foreground text-center mt-2">
                                                                 {config.description}
                                                             </span>
                                                         </div>
