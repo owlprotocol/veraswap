@@ -428,6 +428,11 @@ export async function getTransaction(
                 ? (bridgeCurrencyIn.hyperlaneAddress ?? bridgeCurrencyIn.address)
                 : getUniswapV4Address(bridgeCurrencyIn);
 
+            const swapChainId = swapCurrencyIn.chainId;
+            if (!bridgePayment && !(swapChainId === 900 || swapChainId === 901 || swapChainId === 902)) {
+                throw new Error("Bridge payment is required for Hyperlane bridge transactions on non-local chains");
+            }
+
             return getSwapAndHyperlaneSweepBridgeTransaction({
                 universalRouter: contracts[swapCurrencyIn.chainId].universalRouter,
                 bridgeAddress: hyperlaneBridgeAddress,
