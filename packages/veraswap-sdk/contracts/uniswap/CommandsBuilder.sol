@@ -152,7 +152,7 @@ library CommandsBuilderLibrary {
         }
         // Input: unwrap if needed
         if (builder.currCurrencyIn == weth) {
-            // Wrap native token
+            // Unwrap weth
             builder.commands[builder.commandsLen] = uint8(Commands.UNWRAP_WETH);
             builder.commandInputs[builder.commandsLen] = abi.encode(
                 ActionConstants.ADDRESS_THIS,
@@ -241,23 +241,25 @@ library CommandsBuilderLibrary {
         builder.currPathLen = 0; // Reset currPath
     }
 
-    /// @notice Builds a list of commands for an exact input swap and handles native token wrapping/unwrapping
-    /// @dev This algorithm handles various edge cases for building commands for Uniswap v2/v3/v4 swaps.
-    ///     Here is a high-level overview of the logic:
-    ///     - Input: currencyIn + list of path keys to swap (hook used to determine protocol version, assumes intermediateCurrency is supported in that protocol version)
-    ///     - Loop through path keys, keep track of the contiuous protocol version
-    ///     - When the protocol version changes / we reach the end, build a swap command for the appropriate version
-    ///     - payerIsUser depends of if this is the first command (true, else false)
-    ///     - receiver depends of if this is the last swap (input receiver, else ADDRESS_THIS)
-    ///     - WETH/ETH wrap/unwrap for swap input depends on cached currencyIn and if it is unsuitable for this protocol version
-    ///     - WETH/ETH wrap/unwrap for swap output depends if this is last swap & user wants the alternative representation (hence why the additional currencyOut param even though this is also in general same as last pathKey)
-    /// @param weth currency used for wrapping/unwraping native tokens ERC20
-    /// @param currencyIn input currency for the swap (used to check input wrap/unwrap)
-    /// @param currencyOut output currency for the swap (used to check output wrap/unwrap)
-    /// @param path the path to use for the swap, input currency is ignored, hook address is also used as a flag for v2/v3 (address(2)/address(3))
-    /// @param amountIn amount of input tokens to swap
-    /// @param amountOutMinimum minimum amount of output tokens to receive
-    /// @param recipient final recipient of the output tokens
+    /**
+     * @notice Builds a list of commands for an exact input swap and handles native token wrapping/unwrapping
+     * @dev This algorithm handles various edge cases for building commands for Uniswap v2/v3/v4 swaps.
+     *     Here is a high-level overview of the logic:
+     *     - Input: currencyIn + list of path keys to swap (hook used to determine protocol version, assumes intermediateCurrency is supported in that protocol version)
+     *     - Loop through path keys, keep track of the contiuous protocol version
+     *     - When the protocol version changes / we reach the end, build a swap command for the appropriate version
+     *     - payerIsUser depends of if this is the first command (true, else false)
+     *     - receiver depends of if this is the last swap (input receiver, else ADDRESS_THIS)
+     *     - WETH/ETH wrap/unwrap for swap input depends on cached currencyIn and if it is unsuitable for this protocol version
+     *     - WETH/ETH wrap/unwrap for swap output depends if this is last swap & user wants the alternative representation (hence why the additional currencyOut param even though this is also in general same as last pathKey)
+     * @param weth currency used for wrapping/unwraping native tokens ERC20
+     * @param currencyIn input currency for the swap (used to check input wrap/unwrap)
+     * @param currencyOut output currency for the swap (used to check output wrap/unwrap)
+     * @param path the path to use for the swap, input currency is ignored, hook address is also used as a flag for v2/v3 (address(2)/address(3))
+     * @param amountIn amount of input tokens to swap
+     * @param amountOutMinimum minimum amount of output tokens to receive
+     * @param recipient final recipient of the output tokens
+     **/
     function getSwapExactInCommands(
         Currency weth,
         Currency currencyIn,
@@ -294,7 +296,7 @@ library CommandsBuilderLibrary {
 
         // Loop through path
         for (uint i = 0; i < path.length; i++) {
-            bool isLastPath = i == path.length - 1; // Check if last path
+            bool isLastPathKey = i == path.length - 1; // Check if last path key
             uint256 protocolVersion = address(path[i].hooks) == address(2)
                 ? 2 // V2
                 : address(path[i].hooks) == address(3)
@@ -309,19 +311,18 @@ library CommandsBuilderLibrary {
                 } else if (builder.currProtocolVersion == 3) {
                     buildV3Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
                     builder.currProtocolVersion = protocolVersion;
-                } else if (builder.currProtocolVersion == 4) {
+                } else {
                     buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
                     builder.currProtocolVersion = protocolVersion;
                 }
-                // Note: If this is first path key (currProtocolVersion == 0), none of the above conditions will execute as to be expected
             }
 
             // Create or extend current path
             builder.currPath[builder.currPathLen] = path[i];
             builder.currPathLen++;
 
-            if (isLastPath) {
-                // Lasth path key: build final swap command
+            if (isLastPathKey) {
+                // Last path key: build final swap command
                 if (protocolVersion == 2) {
                     buildV2Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, true);
                 } else if (protocolVersion == 3) {
