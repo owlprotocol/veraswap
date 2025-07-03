@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { useEffect } from "react";
 import { SwapWidget } from "@/components/SwapWidget.js";
 import { useTheme, ThemeProvider } from "@/components/theme-provider.js";
 import { hexThemeToHSL } from "@/utils/themeUtils.js";
@@ -32,6 +33,34 @@ export const Route = createFileRoute("/embed")({
 function Widget() {
     const searchParams = Route.useSearch();
     const { setTheme } = useTheme();
+
+    useEffect(() => {
+        function handleMessage(event: MessageEvent) {
+            if (event.data?.type === "themeUpdate") {
+                const { theme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut } = event.data;
+                const url = new URL(window.location.href);
+
+                Object.entries(theme).forEach(([key, value]) => {
+                    if (value) {
+                        url.searchParams.set(key, value as string);
+                    } else {
+                        url.searchParams.delete(key);
+                    }
+                });
+
+                if (mode) url.searchParams.set("mode", mode);
+                if (currencyIn) url.searchParams.set("currencyIn", currencyIn);
+                if (chainIdIn) url.searchParams.set("chainIdIn", chainIdIn.toString());
+                if (currencyOut) url.searchParams.set("currencyOut", currencyOut);
+                if (chainIdOut) url.searchParams.set("chainIdOut", chainIdOut.toString());
+
+                window.history.replaceState(null, "", url);
+            }
+        }
+
+        window.addEventListener("message", handleMessage);
+        return () => window.removeEventListener("message", handleMessage);
+    }, []);
 
     if (searchParams.mode) {
         setTheme(searchParams.mode);

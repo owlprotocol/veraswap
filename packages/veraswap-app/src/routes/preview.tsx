@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Copy, ExternalLink, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js";
@@ -84,6 +84,7 @@ function EmbedPreview() {
     const [chainIdIn, setChainIdIn] = useState<number | undefined>(undefined);
     const [currencyOut, setCurrencyOut] = useState<string | undefined>(undefined);
     const [chainIdOut, setChainIdOut] = useState<number | undefined>(undefined);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -91,21 +92,39 @@ function EmbedPreview() {
             if (value) params.set(key, value);
         });
         if (hexTheme["card"]) {
+            hexTheme["modal"] = hexTheme["card"];
             params.set("modal", hexTheme["card"]);
         }
         if (hexTheme["card-foreground"]) {
+            hexTheme["modal-foreground"] = hexTheme["card-foreground"];
             params.set("modal-foreground", hexTheme["card-foreground"]);
         }
         if (mode) {
             params.set("mode", mode);
         }
         if (currencyIn) params.set("currencyIn", currencyIn);
-        if (chainIdIn) params.set("chainIdIn", String(chainIdIn));
+        if (chainIdIn) params.set("chainIdIn", chainIdIn.toString());
         if (currencyOut) params.set("currencyOut", currencyOut);
-        if (chainIdOut) params.set("chainIdOut", String(chainIdOut));
+        if (chainIdOut) params.set("chainIdOut", chainIdOut.toString());
+
         const baseUrl = `${window.location.origin}/embed`;
         const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
         setEmbedUrl(url);
+
+        if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage(
+                {
+                    type: "themeUpdate",
+                    theme: hexTheme,
+                    mode,
+                    currencyIn,
+                    chainIdIn,
+                    currencyOut,
+                    chainIdOut,
+                },
+                "*",
+            );
+        }
     }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut]);
 
     useEffect(() => {
@@ -157,6 +176,9 @@ function EmbedPreview() {
         setChainIdIn(undefined);
         setCurrencyOut(undefined);
         setChainIdOut(undefined);
+        if (iframeRef.current) {
+            iframeRef.current.src = `${window.location.origin}/embed`;
+        }
     };
 
     return (
@@ -189,8 +211,8 @@ function EmbedPreview() {
                             <CardContent>
                                 <div className="border rounded-lg overflow-hidden">
                                     <iframe
-                                        key={embedUrl}
-                                        src={embedUrl}
+                                        ref={iframeRef}
+                                        src={`${window.location.origin}/embed`}
                                         width="450"
                                         height="450"
                                         title="Veraswap Widget"
