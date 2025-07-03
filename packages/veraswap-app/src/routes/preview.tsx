@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { Copy, ExternalLink, Sun, Moon } from "lucide-react";
+import { Copy, ExternalLink, Sun, Moon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Input } from "@/components/ui/input.js";
@@ -85,6 +85,7 @@ function EmbedPreview() {
     const [currencyOut, setCurrencyOut] = useState<string | undefined>(undefined);
     const [chainIdOut, setChainIdOut] = useState<number | undefined>(undefined);
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [iframeLoaded, setIframeLoaded] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -111,21 +112,10 @@ function EmbedPreview() {
         const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
         setEmbedUrl(url);
 
-        if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage(
-                {
-                    type: "themeUpdate",
-                    theme: hexTheme,
-                    mode,
-                    currencyIn,
-                    chainIdIn,
-                    currencyOut,
-                    chainIdOut,
-                },
-                "*",
-            );
+        if (iframeLoaded && iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.history.replaceState(null, "", url);
         }
-    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut]);
+    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, iframeLoaded]);
 
     useEffect(() => {
         function handleMessage(event: MessageEvent) {
@@ -209,7 +199,12 @@ function EmbedPreview() {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="border rounded-lg overflow-hidden">
+                                <div className="border rounded-lg overflow-hidden relative">
+                                    {!iframeLoaded && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                        </div>
+                                    )}
                                     <iframe
                                         ref={iframeRef}
                                         src={`${window.location.origin}/embed`}
@@ -218,6 +213,7 @@ function EmbedPreview() {
                                         title="Veraswap Widget"
                                         style={{ background: "transparent" }}
                                         className="w-full"
+                                        onLoad={() => setIframeLoaded(true)}
                                     />
                                 </div>
                                 <Button onClick={resetTheme} variant="outline" className="w-full mt-4">
