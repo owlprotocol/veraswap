@@ -257,7 +257,7 @@ export function getSwapExactInCommands({
     amountIn,
     amountOutMinimum,
     recipient,
-}: GetSwapExactInCommandsParams) {
+}: GetSwapExactInCommandsParams): [commands: CommandType[], commandInputs: any[]] {
     // Check pathOut == currencyOut (or WETH/ETH)
     const pathOut = path[path.length - 1].intermediateCurrency;
     if (!(pathOut == currencyOut)) {
@@ -358,4 +358,6 @@ export function getSwapExactInCommands({
             }
         }
     }
+
+    return [builder.commands, builder.commandInputs];
 }
