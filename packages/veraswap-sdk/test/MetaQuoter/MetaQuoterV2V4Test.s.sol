@@ -5,14 +5,11 @@ import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
 
 // WETH9
 import {WETHUtils} from "../../script/utils/WETHUtils.sol";
-// Uniswap V2 Core
-import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 // Uniswap V4 Core
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 // Uniswap V4 Periphery
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
-import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
 import {IV4MetaQuoter} from "../../contracts/uniswap/IV4MetaQuoter.sol";
@@ -22,17 +19,6 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
 contract MetaQuoterV2V4Test is MetaQuoterBaseTest {
-    IUniswapV2Factory internal v2Factory;
-    IPositionManager internal v4PositionManager;
-
-    function setUp() public override {
-        super.setUp();
-        // Uniswap V2 Factory
-        v2Factory = IUniswapV2Factory(contracts.v2Factory);
-        // Uniswap V4 Position Manager
-        v4PositionManager = IPositionManager(contracts.v4PositionManager);
-    }
-
     /***** V2 -> V4  *****/
     // A -> L4 -> B (ERC20-only)
     function test_V2V4_A_L4_B() public {

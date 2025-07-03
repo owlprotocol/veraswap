@@ -10,7 +10,6 @@ import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 // Uniswap V4 Periphery
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
-import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
 import {IV4MetaQuoter} from "../../contracts/uniswap/IV4MetaQuoter.sol";
@@ -20,14 +19,6 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
 contract MetaQuoterV4Test is MetaQuoterBaseTest {
-    IPositionManager internal v4PositionManager;
-
-    function setUp() public override {
-        super.setUp();
-        // Uniswap V4 Position Manager
-        v4PositionManager = IPositionManager(contracts.v4PositionManager);
-    }
-
     /***** Exact Single Quotes *****/
     // A (exact) -> L4 (variable)
     function testExactInputSingle_A_L4() public {

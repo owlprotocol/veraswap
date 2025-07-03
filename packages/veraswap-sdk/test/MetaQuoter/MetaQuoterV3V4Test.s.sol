@@ -5,15 +5,11 @@ import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
 
 // WETH9
 import {WETHUtils} from "../../script/utils/WETHUtils.sol";
-// Uniswap V3 Core
-import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import {V3PositionManagerMock} from "../../contracts/uniswap/v3/V3PositionManagerMock.sol";
 // Uniswap V4 Core
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 // Uniswap V4 Periphery
 import {IV4Router} from "@uniswap/v4-periphery/src/interfaces/IV4Router.sol";
-import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {Actions} from "@uniswap/v4-periphery/src/libraries/Actions.sol";
 import {ActionConstants} from "@uniswap/v4-periphery/src/libraries/ActionConstants.sol";
 import {IV4MetaQuoter} from "../../contracts/uniswap/IV4MetaQuoter.sol";
@@ -23,19 +19,6 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
 contract MetaQuoterV3V4Test is MetaQuoterBaseTest {
-    IUniswapV3Factory internal v3Factory;
-    V3PositionManagerMock internal v3PositionManager;
-    IPositionManager internal v4PositionManager;
-
-    function setUp() public override {
-        super.setUp();
-        // Uniswap V3 Factory
-        v3Factory = IUniswapV3Factory(contracts.v3Factory);
-        v3PositionManager = V3PositionManagerMock(contracts.v3NFTPositionManager);
-        // Uniswap V4 Position Manager
-        v4PositionManager = IPositionManager(contracts.v4PositionManager);
-    }
-
     /***** V3 -> V4  *****/
     // A -> L4 -> B (ERC20-only)
     function test_V3V4_A_L4_B() public {

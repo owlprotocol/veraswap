@@ -3,9 +3,6 @@ pragma solidity ^0.8.26;
 
 import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
 
-// Uniswap V3 Core
-import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import {V3PositionManagerMock} from "../../contracts/uniswap/v3/V3PositionManagerMock.sol";
 // Uniswap V4 Core
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
@@ -19,16 +16,6 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
 contract MetaQuoterV3Test is MetaQuoterBaseTest {
-    IUniswapV3Factory internal v3Factory;
-    V3PositionManagerMock internal v3PositionManager;
-
-    function setUp() public override {
-        super.setUp();
-        // Uniswap V3 Factory
-        v3Factory = IUniswapV3Factory(contracts.v3Factory);
-        v3PositionManager = V3PositionManagerMock(contracts.v3NFTPositionManager);
-    }
-
     // A (exact) -> L3 (variable)
     function testExactInputSingle_A_L3() public {
         PoolUtils.createV3Pool(tokenA, liq3, v3Factory, v3PositionManager, 10 ether);
