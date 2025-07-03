@@ -255,12 +255,12 @@ library CommandsBuilderLibrary {
         // Check pathOut == currencyOut (or WETH/ETH)
         Currency pathOut = path[path.length - 1].intermediateCurrency;
         if (!(pathOut == currencyOut)) {
-            if (pathOut.isAddressZero() && !(currencyOut == weth)) {
-                revert InvalidPathOutput(pathOut, currencyOut);
-            } else if (pathOut == weth && !(currencyOut.isAddressZero())) {
+            // Check WETH/ETH acceptable for currencyOut/pathOut
+            if (
+                !((pathOut.isAddressZero() && currencyOut == weth) || (pathOut == weth && currencyOut.isAddressZero()))
+            ) {
                 revert InvalidPathOutput(pathOut, currencyOut);
             }
-            revert InvalidPathOutput(pathOut, currencyOut);
         }
 
         CommandsBuilder memory builder;
