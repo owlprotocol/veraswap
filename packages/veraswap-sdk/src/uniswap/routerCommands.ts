@@ -14,7 +14,7 @@ export const ACTION_CONSTANTS = {
     MSG_SENDER: "0x0000000000000000000000000000000000000001",
     ADDRESS_THIS: "0x0000000000000000000000000000000000000002",
     CONTRACT_BALANCE: hexToBigInt("0x8000000000000000000000000000000000000000000000000000000000000000"),
-    OPEN_DELTA: 0,
+    OPEN_DELTA: 0n,
 } as const;
 
 /**
@@ -70,15 +70,15 @@ export interface ParamType {
 
 export type CommandDefinition =
     | {
-          parser: Parser.Abi;
-          params: ParamType[];
-      }
+        parser: Parser.Abi;
+        params: ParamType[];
+    }
     | {
-          parser: Parser.V4Actions;
-      }
+        parser: Parser.V4Actions;
+    }
     | {
-          parser: Parser.V3Actions;
-      };
+        parser: Parser.V3Actions;
+    };
 
 const ALLOW_REVERT_FLAG = 0x80;
 const REVERTIBLE_COMMANDS = new Set<CommandType>([CommandType.EXECUTE_SUB_PLAN]);
