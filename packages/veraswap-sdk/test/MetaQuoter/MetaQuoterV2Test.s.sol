@@ -3,8 +3,6 @@ pragma solidity ^0.8.26;
 
 import {MetaQuoterBaseTest} from "./MetaQuoterBaseTest.sol";
 
-// Uniswap V2 Core
-import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 // Uniswap V4 Core
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
@@ -18,14 +16,6 @@ import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.s
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
 
 contract MetaQuoterV2Test is MetaQuoterBaseTest {
-    IUniswapV2Factory internal v2Factory;
-
-    function setUp() public override {
-        super.setUp();
-        // Uniswap V2 Factory
-        v2Factory = IUniswapV2Factory(contracts.v2Factory);
-    }
-
     /***** Exact Single Quotes *****/
     // A (exact) -> L2 (variable)
     function testExactInputSingle_A_L2() public {
