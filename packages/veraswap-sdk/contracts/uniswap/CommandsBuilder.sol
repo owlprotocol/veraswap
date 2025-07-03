@@ -242,6 +242,15 @@ library CommandsBuilderLibrary {
     }
 
     /// @notice Builds a list of commands for an exact input swap and handles native token wrapping/unwrapping
+    /// @dev This algorithm handles various edge cases for building commands for Uniswap v2/v3/v4 swaps.
+    ///     Here is a high-level overview of the logic:
+    ///     - Input: currencyIn + list of path keys to swap (hook used to determine protocol version, assumes intermediateCurrency is supported in that protocol version)
+    ///     - Loop through path keys, keep track of the contiuous protocol version
+    ///     - When the protocol version changes / we reach the end, build a swap command for the appropriate version
+    ///     - payerIsUser depends of if this is the first command (true, else false)
+    ///     - receiver depends of if this is the last swap (input receiver, else ADDRESS_THIS)
+    ///     - WETH/ETH wrap/unwrap for swap input depends on cached currencyIn and if it is unsuitable for this protocol version
+    ///     - WETH/ETH wrap/unwrap for swap output depends if this is last swap & user wants the alternative representation (hence why the additional currencyOut param even though this is also in general same as last pathKey)
     /// @param weth currency used for wrapping/unwraping native tokens ERC20
     /// @param currencyIn input currency for the swap (used to check input wrap/unwrap)
     /// @param currencyOut output currency for the swap (used to check output wrap/unwrap)
