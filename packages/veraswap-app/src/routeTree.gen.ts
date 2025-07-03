@@ -11,10 +11,17 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as PreviewImport } from './routes/preview'
 import { Route as EmbedImport } from './routes/embed'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const PreviewRoute = PreviewImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const EmbedRoute = EmbedImport.update({
   id: '/embed',
@@ -46,6 +53,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedImport
       parentRoute: typeof rootRoute
     }
+    '/preview': {
+      id: '/preview'
+      path: '/preview'
+      fullPath: '/preview'
+      preLoaderRoute: typeof PreviewImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +68,41 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/preview': typeof PreviewRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/preview': typeof PreviewRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/embed': typeof EmbedRoute
+  '/preview': typeof PreviewRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/embed'
+  fullPaths: '/' | '/embed' | '/preview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/embed'
-  id: '__root__' | '/' | '/embed'
+  to: '/' | '/embed' | '/preview'
+  id: '__root__' | '/' | '/embed' | '/preview'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EmbedRoute: typeof EmbedRoute
+  PreviewRoute: typeof PreviewRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EmbedRoute: EmbedRoute,
+  PreviewRoute: PreviewRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +116,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/embed"
+        "/embed",
+        "/preview"
       ]
     },
     "/": {
@@ -105,6 +125,9 @@ export const routeTree = rootRoute
     },
     "/embed": {
       "filePath": "embed.tsx"
+    },
+    "/preview": {
+      "filePath": "preview.tsx"
     }
   }
 }

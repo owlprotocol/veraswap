@@ -53,7 +53,6 @@ export const TokenSelector = ({
     const [currencyOut, setCurrencyOut] = useAtom(currencyOutAtom);
     const chainIn = useAtomValue(chainInAtom);
     const chainOut = useAtomValue(chainOutAtom);
-    const chain = selectingTokenIn ? chainIn : chainOut;
 
     const currentToken = selectingTokenIn ? currencyIn : currencyOut;
     const currentTokenSymbol = currentToken?.symbol || null;
@@ -92,6 +91,17 @@ export const TokenSelector = ({
         }
         setExpandedSymbol(null);
         setIsOpen(false);
+        if (isEmbedded) {
+            window.parent.postMessage(
+                {
+                    type: "tokenChange",
+                    selectingTokenIn,
+                    symbol: currency.symbol,
+                    chainId: currency.chainId,
+                },
+                "*",
+            );
+        }
     };
 
     const toggleSymbolExpansion = (symbol: string) => {
@@ -121,11 +131,10 @@ export const TokenSelector = ({
         >
             <DialogTrigger asChild>
                 <Button
-                    variant="outline"
+                    variant="secondary"
                     className={cn(
                         "h-14 gap-3 pl-4 pr-3.5",
-                        "rounded-xl border-2",
-                        "shadow-sm hover:shadow-md transition-all",
+                        "rounded-lg bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/60 transition-colors",
                     )}
                 >
                     {currentToken ? (
@@ -133,16 +142,16 @@ export const TokenSelector = ({
                             <TokenBadge currency={currentToken} />
                             <div>
                                 <div className="font-semibold">{currentToken.symbol}</div>
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-secondary-foreground">
                                     {chains.find((c) => c.id === currentToken.chainId)?.name ??
                                         `Chain ${currentToken.chainId}`}
                                 </div>
                             </div>
                         </>
                     ) : (
-                        <span className="text-muted-foreground">Select Token</span>
+                        <span className="text-secondary-foreground">Select Token</span>
                     )}
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 text-secondary-foreground" />
                 </Button>
             </DialogTrigger>
 
@@ -257,7 +266,7 @@ const PopularTokens = ({
                 return (
                     <button
                         key={symbol}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                        className="flex items-center gap-2 p-2 rounded-lg bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-colors"
                         onClick={() => onExpand(symbol)}
                     >
                         <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">

@@ -136,7 +136,7 @@ export function SettingsDialog({ isEmbedded = false }: { isEmbedded?: boolean })
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="secondary" size="sm">
                     <Settings2 className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
