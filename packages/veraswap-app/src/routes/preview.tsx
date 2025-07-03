@@ -90,6 +90,12 @@ function EmbedPreview() {
         Object.entries(hexTheme).forEach(([key, value]) => {
             if (value) params.set(key, value);
         });
+        if (hexTheme["card"]) {
+            params.set("modal", hexTheme["card"]);
+        }
+        if (hexTheme["card-foreground"]) {
+            params.set("modal-foreground", hexTheme["card-foreground"]);
+        }
         if (mode) {
             params.set("mode", mode);
         }
