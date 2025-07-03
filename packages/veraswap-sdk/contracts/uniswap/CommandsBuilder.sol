@@ -167,7 +167,7 @@ library CommandsBuilderLibrary {
         v4Actions = abi.encodePacked(
             uint8(Actions.SETTLE), // Settle input
             builder.currPathLen > 1 ? uint8(Actions.SWAP_EXACT_IN) : uint8(Actions.SWAP_EXACT_IN_SINGLE), // Swap
-            uint8(Actions.TAKE_ALL) // Take output
+            isLastSwap ? uint8(Actions.TAKE_ALL) : uint8(Actions.TAKE) // Take all: if last swap
         );
         // Settle: Open delta for currencyIn
         v4ActionParams[0] = abi.encode(
@@ -211,12 +211,18 @@ library CommandsBuilderLibrary {
         }
 
         // Take: Take output currency
-        Currency pathOut = builder.currPath[builder.currPathLen - 1].intermediateCurrency;
-        v4ActionParams[2] = abi.encode(
-            pathOut, // pathOut: last path currency
-            (isLastSwap && !(currencyOut == weth)) ? recipient : ActionConstants.ADDRESS_THIS, // recipient: if last swap & no wrap
-            isLastSwap ? uint128(amountOutMinimum) : 0 // amountOutMinimum: if last path
-        );
+        Currency pathOut = builder.currPath[builder.currPathLen - 1].intermediateCurrency; // last currency of current path
+        if (isLastSwap) {
+            // Take All (most often to recipient)
+            v4ActionParams[2] = abi.encode(
+                pathOut,
+                (!(currencyOut == weth)) ? recipient : ActionConstants.ADDRESS_THIS, // recipient: if last swap & no wrap
+                uint128(amountOutMinimum) // amountOutMinimum: if last swap
+            );
+        } else {
+            // Take (funds received to router)
+            v4ActionParams[2] = abi.encode(pathOut, ActionConstants.ADDRESS_THIS, ActionConstants.OPEN_DELTA);
+        }
 
         bytes memory swap = abi.encode(v4Actions, v4ActionParams);
         builder.commands[builder.commandsLen] = uint8(Commands.V4_SWAP);
