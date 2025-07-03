@@ -18,7 +18,7 @@ library CommandsBuilderLibrary {
     error InvalidProtocolVersion(uint256 version, uint256 expected);
     error InvalidPathOutput(Currency pathLast, Currency currencyOut);
 
-    // @notice Struct to hold commands, and other cache fields that are updated as we build the commands
+    /// @dev Struct to hold commands, and other cache fields that are updated as we build the commands
     struct CommandsBuilder {
         // Path grouping
         Currency currCurrencyIn;
@@ -292,68 +292,42 @@ library CommandsBuilderLibrary {
         builder.commands = new uint8[](2 * path.length + 1); // upper-bound assumes wrap/unwrap between each swap
         builder.commandInputs = new bytes[](2 * path.length + 1);
 
+        // Loop through path
         for (uint i = 0; i < path.length; i++) {
             bool isLastPath = i == path.length - 1; // Check if last path
-            // Loop through path
-            if (address(path[i].hooks) == address(2)) {
-                // V2
-                if (builder.currProtocolVersion == 3) {
-                    // Build V3 Path
-                    buildV3Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V2 Path
-                    builder.currProtocolVersion = 2;
-                } else if (builder.currProtocolVersion == 4) {
-                    // Build V4 Path
-                    buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V3 Path
-                    builder.currProtocolVersion = 2;
-                }
-                // Create or extend V2 Path
-                builder.currPath[builder.currPathLen] = path[i];
-                builder.currPathLen++;
-                // Build V2 Swap
-                if (isLastPath) {
-                    buildV2Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, isLastPath);
-                }
-            } else if (address(path[i].hooks) == address(3)) {
-                // V3
+            uint256 protocolVersion = address(path[i].hooks) == address(2)
+                ? 2 // V2
+                : address(path[i].hooks) == address(3)
+                    ? 3 // V3
+                    : 4; // V4
+
+            if (protocolVersion != builder.currProtocolVersion) {
+                // Protocol version change: build swap & update current protocol version
                 if (builder.currProtocolVersion == 2) {
-                    // Build V2 Path
                     buildV2Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V3 Path
-                    builder.currProtocolVersion = 3;
-                } else if (builder.currProtocolVersion == 4) {
-                    // Build V4 Path
-                    buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V3 Path
-                    builder.currProtocolVersion = 3;
-                }
-                // Create or extend V3 Path
-                builder.currPath[builder.currPathLen] = path[i];
-                builder.currPathLen++;
-                // Build V3 Swap
-                if (isLastPath) {
-                    buildV3Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, isLastPath);
-                }
-            } else {
-                // V4
-                if (builder.currProtocolVersion == 2) {
-                    // Build V2 Path
-                    buildV2Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V4 Path
-                    builder.currProtocolVersion = 4;
+                    builder.currProtocolVersion = protocolVersion;
                 } else if (builder.currProtocolVersion == 3) {
-                    // Build V3 Path
                     buildV3Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
-                    // Create V4 Path
-                    builder.currProtocolVersion = 4;
+                    builder.currProtocolVersion = protocolVersion;
+                } else if (builder.currProtocolVersion == 4) {
+                    buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, false);
+                    builder.currProtocolVersion = protocolVersion;
                 }
-                // Create or extend V4 Path
-                builder.currPath[builder.currPathLen] = path[i];
-                builder.currPathLen++;
-                // Build V4 Swap
-                if (isLastPath) {
-                    buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, isLastPath);
+                // Note: If this is first path key (currProtocolVersion == 0), none of the above conditions will execute as to be expected
+            }
+
+            // Create or extend current path
+            builder.currPath[builder.currPathLen] = path[i];
+            builder.currPathLen++;
+
+            if (isLastPath) {
+                // Lasth path key: build final swap command
+                if (protocolVersion == 2) {
+                    buildV2Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, true);
+                } else if (protocolVersion == 3) {
+                    buildV3Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, true);
+                } else {
+                    buildV4Swap(builder, weth, currencyOut, amountIn, amountOutMinimum, recipient, true);
                 }
             }
         }
