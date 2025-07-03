@@ -230,7 +230,7 @@ library CommandsBuilderLibrary {
         builder.commandsLen++;
         // Output: wrap if needed
         if (isLastSwap && currencyOut == weth) {
-            // If last path, unwrap native token
+            // If last path, wrap native token
             builder.commands[builder.commandsLen] = uint8(Commands.WRAP_ETH);
             builder.commandInputs[builder.commandsLen] = abi.encode(recipient, ActionConstants.CONTRACT_BALANCE);
             builder.commandsLen++;
