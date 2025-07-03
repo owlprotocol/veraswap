@@ -257,6 +257,7 @@ export function getSwapExactInCommands({
     amountIn,
     amountOutMinimum,
     recipient,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: GetSwapExactInCommandsParams): [commands: CommandType[], commandInputs: any[]] {
     // Check pathOut == currencyOut (or WETH/ETH)
     const pathOut = path[path.length - 1].intermediateCurrency;
