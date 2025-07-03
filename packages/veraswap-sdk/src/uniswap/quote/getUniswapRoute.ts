@@ -189,8 +189,7 @@ function getMultihopV4ToV4Commands({
     quoteVariableAmount: bigint;
     path: Path;
     recipient?: Address;
-}) {
-    const commands: CreateCommandParamsGeneric[] = [];
+}): CreateCommandParamsGeneric[] {
     const [, hop1] = path;
 
     const v4TradePlan = new V4Planner();
@@ -208,9 +207,8 @@ function getMultihopV4ToV4Commands({
     } else {
         v4TradePlan.addAction(Actions.TAKE, [hop1.intermediateCurrency, recipient, quoteVariableAmount]);
     }
-    commands.push([CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]);
 
-    return commands;
+    return [[CommandType.V4_SWAP, [v4TradePlan.finalize() as Hex]]];
 }
 
 function getMultihopV3ToV4Commands({

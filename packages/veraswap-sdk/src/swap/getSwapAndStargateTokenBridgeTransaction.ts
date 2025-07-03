@@ -59,7 +59,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
         dstChain,
         srcChain,
         recipient,
-        tokenAddress: currencyIn,
+        tokenAddress: currencyOut,
         tokenSymbol: tokenSymbol,
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [STARGATE_BRIDGE_SWEEP_ADDRESS, 0n, stargateCallData]);

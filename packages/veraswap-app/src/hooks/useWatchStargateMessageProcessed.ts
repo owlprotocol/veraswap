@@ -1,18 +1,35 @@
 import { Address, Chain, createPublicClient, Hex, http, zeroAddress } from "viem";
 import { useWatchContractEvent } from "wagmi";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { OFTReceived } from "@owlprotocol/veraswap-sdk/artifacts/IStargate";
-import { STARGATE_POOL_NATIVE } from "@owlprotocol/veraswap-sdk";
+import {
+    STARGATE_POOL_NATIVE,
+    STARGATE_TOKEN_POOLS,
+    StargateETHQuote,
+    StargateTokenQuote,
+} from "@owlprotocol/veraswap-sdk";
 
 export function useWatchStargateMessageProcessed(
+    stargateQuote: StargateETHQuote | StargateTokenQuote | undefined | null,
     messageId: Hex | null,
     chainOut: Chain | null,
     setRemoteTransactionHash: (txHash: Hex) => void,
     remoteTransactionHash: Hex | null,
     toAddress: Address | null,
 ) {
-    const address = STARGATE_POOL_NATIVE[chainOut?.id ?? 0] ?? zeroAddress;
-    const args = { guid: messageId ?? "0x", toAddress: toAddress ?? zeroAddress };
+    let address: Address = zeroAddress;
+    if (stargateQuote && chainOut) {
+        if (stargateQuote.type === "TOKEN") {
+            address = STARGATE_TOKEN_POOLS[stargateQuote.tokenSymbol][chainOut.id];
+        } else {
+            address = STARGATE_POOL_NATIVE[chainOut.id];
+        }
+    }
+
+    const args = useMemo(
+        () => ({ guid: messageId ?? "0x", toAddress: toAddress ?? zeroAddress }),
+        [messageId, toAddress],
+    );
 
     // TODO: handle USDC too
     useWatchContractEvent({
@@ -21,7 +38,7 @@ export function useWatchStargateMessageProcessed(
         chainId: chainOut?.id ?? 0,
         address,
         args,
-        enabled: !!chainOut && !!chainOut.rpcUrls.default.webSocket && !!messageId,
+        enabled: !!stargateQuote && !!chainOut && !!chainOut.rpcUrls.default.webSocket && !!messageId,
         strict: true,
         onLogs: (logs) => {
             setRemoteTransactionHash(logs[0].transactionHash);
@@ -30,7 +47,13 @@ export function useWatchStargateMessageProcessed(
 
     // This is a workaround for watching Superchain messages without websocket
     useEffect(() => {
-        if (!chainOut || !!chainOut.rpcUrls.default.webSocket || !messageId || !!remoteTransactionHash) {
+        if (
+            !!stargateQuote ||
+            !chainOut ||
+            !!chainOut.rpcUrls.default.webSocket ||
+            !messageId ||
+            !!remoteTransactionHash
+        ) {
             return;
         }
 
@@ -69,8 +92,14 @@ export function useWatchStargateMessageProcessed(
         };
 
         stargateWatchRoutineWithRetries();
-
-        // setRemoteTransactionHash
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chainOut, chainOut?.id, messageId, remoteTransactionHash]);
+    }, [
+        address,
+        args,
+        chainOut,
+        chainOut?.id,
+        messageId,
+        remoteTransactionHash,
+        setRemoteTransactionHash,
+        stargateQuote,
+    ]);
 }

@@ -25,6 +25,7 @@ export interface StargateTokenQuote {
     amount: bigint;
     minAmountLD: bigint; // Amount in Local Decimals
     minAmountOut: bigint; // Amount adjusted for remote token decimals
+    tokenSymbol: StargateTokenSymbol;
     fee: bigint;
 }
 
@@ -94,5 +95,5 @@ export async function stargateTokenQuote(
     // Amount too low
     if (nativeFee === null) return null;
 
-    return { type: "TOKEN", amount, fee: nativeFee, minAmountLD, minAmountOut };
+    return { type: "TOKEN", amount, fee: nativeFee, minAmountLD, minAmountOut, tokenSymbol };
 }

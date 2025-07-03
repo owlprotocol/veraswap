@@ -222,6 +222,7 @@ export function SwapWidget({
         (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress;
 
     useWatchStargateMessageProcessed(
+        stargateQuote,
         stargateBridgeMessageId,
         chainOut,
         setBridgeRemoteTransactionHash,
