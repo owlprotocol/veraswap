@@ -49,6 +49,7 @@ export async function getBasketQuotes(
     const quotes = await Promise.all(
         basketTokens.map(async (token) => {
             const exactAmountIn = (exactAmount * BigInt(token.weight)) / BigInt(totalWeights);
+            // TODO: use getUniswapRouteExactIn
             const quote = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
                 chainId,
                 currencyIn,

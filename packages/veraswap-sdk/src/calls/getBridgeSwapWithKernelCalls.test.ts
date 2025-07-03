@@ -24,6 +24,7 @@ import { getKernelInitData } from "../smartaccount/getKernelInitData.js";
 import { installOwnableExecutor } from "../smartaccount/OwnableExecutor.js";
 import { MOCK_MAILBOX_CONTRACTS, MOCK_MAILBOX_TOKENS } from "../test/constants.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS, poolKeysToPathExactIn } from "../types/PoolKey.js";
+import { MetaQuoteBest, MetaQuoteBestSingle, MetaQuoteBestType } from "../uniswap/index.js";
 import { processNextInboundMessage } from "../utils/MockMailbox.js";
 
 import { getBridgeSwapWithKernelCalls } from "./getBridgeSwapWithKernelCalls.js";
@@ -196,6 +197,16 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                 }),
             ]);
 
+            const quote: MetaQuoteBest = {
+                bestQuoteType: MetaQuoteBestType.Multihop,
+                bestQuoteMultihop: {
+                    path,
+                    variableAmount: amountOutMinimum,
+                    gasEstimate: 0n, // not used in this test
+                },
+                bestQuoteSingle: {} as unknown as MetaQuoteBestSingle, // not used in this test
+            };
+
             // Bridge Swap => opChainA -> opChainL1
             const bridgeSwapCalls = await getBridgeSwapWithKernelCalls(queryClient, config, {
                 chainId: opChainL1.id, //"opChainA" but we use are mocking on L1 for now
@@ -232,9 +243,10 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     amountOutMinimum,
                     currencyIn,
                     currencyOut,
-                    path,
+                    quote,
                     receiver: recipient,
                     universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                    contracts: LOCAL_UNISWAP_CONTRACTS,
                 },
             });
             expect(bridgeSwapCalls.calls.length).toBe(1);

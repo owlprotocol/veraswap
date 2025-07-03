@@ -1,13 +1,13 @@
 import { Address, encodeFunctionData, Hex, zeroAddress } from "viem";
 
 import { IUniversalRouter } from "../artifacts/IUniversalRouter.js";
-import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
+import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/hyperlane.js";
 import { PermitSingle } from "../types/AllowanceTransfer.js";
-import { PathKey } from "../types/PoolKey.js";
+import { addCommandsToRoutePlanner } from "../uniswap/addCommandsToRoutePlanner.js";
+import { getRouterCommandsForQuote, MetaQuoteBest } from "../uniswap/index.js";
 import { CommandType, RoutePlanner } from "../uniswap/routerCommands.js";
 
 import { getHyperlaneSweepBridgeCallTargetParams } from "./getHyperlaneSweepBridgeCallTargetParams.js";
-import { getV4SwapCommandParams } from "./getV4SwapCommandParams.js";
 
 /**
  * getSwapAndHyperlaneSweepBridgeTransaction generates a transaction for the Uniswap Router to swap tokens and bridge them to another chain using Hyperlane
@@ -19,12 +19,11 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     destinationChain,
     receiver,
     amountIn,
-    amountOutMinimum,
     currencyIn,
     currencyOut,
-    path,
+    quote,
     permit2PermitParams,
-    hookData = "0x",
+    contracts,
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
@@ -32,29 +31,31 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     destinationChain: number;
     receiver: Address;
     amountIn: bigint;
-    amountOutMinimum: bigint;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    quote: MetaQuoteBest;
     permit2PermitParams?: [PermitSingle, Hex];
-    hookData?: Hex;
+    contracts: {
+        weth9: Address;
+    };
 }) {
     const routePlanner = new RoutePlanner();
+
+    routePlanner.addCommand(CommandType.CALL_TARGET, [HYPERLANE_ROUTER_SWEEP_ADDRESS, bridgePayment, "0x"]);
 
     if (permit2PermitParams) {
         routePlanner.addCommand(CommandType.PERMIT2_PERMIT, permit2PermitParams);
     }
 
-    const v4SwapParams = getV4SwapCommandParams({
-        receiver: HYPERLANE_ROUTER_SWEEP_ADDRESS,
+    const commands = getRouterCommandsForQuote({
         amountIn,
-        amountOutMinimum,
+        contracts,
         currencyIn,
         currencyOut,
-        path,
-        hookData,
+        ...quote,
+        recipient: HYPERLANE_ROUTER_SWEEP_ADDRESS,
     });
-    routePlanner.addCommand(CommandType.V4_SWAP, [v4SwapParams]);
+    addCommandsToRoutePlanner(routePlanner, commands);
 
     routePlanner.addCommand(
         CommandType.CALL_TARGET,

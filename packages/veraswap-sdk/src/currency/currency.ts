@@ -1,6 +1,9 @@
 import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
+import { STARGATE_CURRENCIES } from "../constants/stargate.js";
+import { nativeOnChain } from "../uniswap/index.js";
+
 import { Ether } from "./ether.js";
 import { MultichainToken } from "./multichainToken.js";
 import { type NativeCurrency } from "./nativeCurrency.js";
@@ -79,19 +82,73 @@ export function getSharedChainTokenPairs(currencyA: Currency, currencyB: Currenc
         currenciesB.push(currencyB);
     }
 
+    if (currencyA.symbol && currencyA.symbol in STARGATE_CURRENCIES) {
+        const stargateCurrency = STARGATE_CURRENCIES[currencyA.symbol as keyof typeof STARGATE_CURRENCIES];
+
+        if (currencyB instanceof Ether) {
+            Object.keys(stargateCurrency).forEach((chainIdStr) => {
+                const chainId = Number(chainIdStr);
+                if (nativeOnChain(Number(chainId)).symbol === "ETH") {
+                    currenciesA.push(stargateCurrency[chainId as keyof typeof stargateCurrency]);
+                }
+            });
+        } else {
+            currenciesB.forEach((currB) => {
+                if (currB.chainId in stargateCurrency) {
+                    currenciesA.push(stargateCurrency[currB.chainId as keyof typeof stargateCurrency]);
+                }
+            });
+        }
+    }
+
+    if (currencyB.symbol && currencyB.symbol in STARGATE_CURRENCIES) {
+        const stargateCurrency = STARGATE_CURRENCIES[currencyB.symbol as keyof typeof STARGATE_CURRENCIES];
+
+        if (currencyA instanceof Ether) {
+            Object.keys(stargateCurrency).forEach((chainIdStr) => {
+                const chainId = Number(chainIdStr);
+                if (nativeOnChain(Number(chainId)).symbol === "ETH") {
+                    currenciesB.push(stargateCurrency[chainId as keyof typeof stargateCurrency]);
+                }
+            });
+        } else {
+            currenciesA.forEach((currA) => {
+                if (currA.chainId in stargateCurrency) {
+                    currenciesB.push(stargateCurrency[currA.chainId as keyof typeof stargateCurrency]);
+                }
+            });
+        }
+    }
+
     // Native Tokens: Assume native tokens are the same (Ether) on all chains
     if (currencyA.isNative) {
         // Add native token for each chain of B
-        //TODO: Assumes all native tokens are the same on all chains
-        invariant(currencyA instanceof Ether, "Native token must be Ether");
-        currenciesB.forEach((currB) => currenciesA.push(Ether.onChain(currB.chainId)));
+        if (currencyA instanceof Ether) {
+            currenciesB.forEach((currB) => {
+                const { chainId } = currB;
+                const native = nativeOnChain(chainId);
+                if (native.symbol === "ETH") {
+                    currenciesA.push(native);
+                }
+            });
+        } else {
+            currenciesA.push(currencyA); // If it's not Ether, just add it as is
+        }
     }
 
     if (currencyB.isNative) {
         // Add native token for each chain of A
-        //TODO: Assumes all native tokens are the same on all chains
-        invariant(currencyB instanceof Ether, "Native token must be Ether");
-        currenciesA.forEach((currA) => currenciesB.push(Ether.onChain(currA.chainId)));
+        if (currencyB instanceof Ether) {
+            currenciesA.forEach((currA) => {
+                const { chainId } = currA;
+                const native = nativeOnChain(chainId);
+                if (native.symbol === "ETH") {
+                    currenciesB.push(native);
+                }
+            });
+        } else {
+            currenciesB.push(currencyB); // If it's not Ether, just add it as is
+        }
     }
 
     const result: [Currency, Currency][] = [];

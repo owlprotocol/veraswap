@@ -307,6 +307,8 @@ export interface RouterCommand {
     encodedInput: Hex;
 }
 
+export type CreateCommandParamsGeneric = [CommandType, readonly any[]];
+
 export function createCommand<T extends CommandType>(
     type: T,
     parameters: AbiParametersToPrimitiveTypes<(typeof COMMAND_DEFINITION)[T]["params"]>,

@@ -36,11 +36,7 @@ import {
     erc7579RouterKernelIsOwnerChainInQueryAtom,
     erc7579RouterKernelIsOwnerChainOutQueryAtom,
 } from "./kernelERC7579Router.js";
-import {
-    hypERC20CollateralWrappedTokenQueryAtom,
-    igpQuotePaymentQueryAtom,
-    tokenRouterQuoteGasPaymentQueryAtom,
-} from "./hyperlane.js";
+import { igpQuotePaymentQueryAtom, tokenRouterQuoteGasPaymentQueryAtom } from "./hyperlane.js";
 
 export const prefetchQueriesAtom = atom((get) => [
     // Kernel
@@ -78,7 +74,6 @@ export const prefetchQueriesAtom = atom((get) => [
     get(tokenInPermit2AllowanceKernelToUniswapRouterQueryAtom),
     get(tokenOutPermit2AllowanceKernelToUniswapRouterQueryAtom),
     // Hyperlane
-    get(hypERC20CollateralWrappedTokenQueryAtom),
     get(tokenRouterQuoteGasPaymentQueryAtom),
     get(igpQuotePaymentQueryAtom),
 ]);

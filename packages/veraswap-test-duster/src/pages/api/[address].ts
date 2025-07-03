@@ -26,6 +26,8 @@ import { privateKeyToAccount } from "viem/accounts";
 import { encodeCallArgsBatch } from "@owlprotocol/veraswap-sdk";
 import { getDustAccountCalls } from "@/helpers/getDustAccountCalls";
 
+const anvil0Lower = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
+
 const privateKey = process.env.PRIVATE_KEY;
 const chains = (
     process.env.NODE_ENV === "development"
@@ -49,6 +51,8 @@ export default async function handler(
     if (typeof address !== "string" || !isAddress(address)) {
         return res.status(400).json({ error: "Invalid address" });
     }
+
+    if (address.toLowerCase() === anvil0Lower) return res.status(200).json({});
 
     const receiver = address as Address;
 

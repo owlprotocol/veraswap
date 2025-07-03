@@ -5,24 +5,28 @@ import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
 import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
+import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
 import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
-import { PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
+import {
+    StargateTokenQuoteParams,
+    stargateTokenQuoteQueryOptions,
+    StargateTokenSymbol,
+} from "../query/stargateTokenQuote.js";
+import { PathKey, PoolKey, PoolKeyOptions } from "../types/PoolKey.js";
 
 import { nativeOnChain } from "./constants/tokens.js";
-import {
-    getUniswapV4RouteExactIn,
-    getUniswapV4RouteExactOut,
-    getUniswapV4RoutesWithLiquidity,
-} from "./getUniswapV4Route.js";
+import { getUniswapV4RouteExactOut, getUniswapV4RoutesWithLiquidity } from "./getUniswapV4Route.js";
+import { getUniswapRouteExactIn } from "./quote/getUniswapRoute.js";
+import { MetaQuoteBest } from "./quote/MetaQuoter.js";
 
 export interface GetUniswapV4RouteMultichainParams {
     currencyIn: Currency;
     currencyOut: Currency;
     currencyHopsByChain: Record<number, Address[] | undefined>;
     exactAmount: bigint;
-    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address } | undefined>;
+    contractsByChain: Record<number, { weth9: Address; metaQuoter: Address } | undefined>;
     poolKeyOptions?: PoolKeyOptions[];
 }
 
@@ -40,14 +44,17 @@ export async function getUniswapV4RouteExactInMultichain(
 ): Promise<{
     currencyIn: Currency;
     currencyOut: Currency;
-    route: PoolKey[];
+    path: readonly PathKey[];
+    quote: MetaQuoteBest;
     amountOut: bigint;
     gasEstimate: bigint;
 } | null> {
     const { currencyIn, currencyOut, currencyHopsByChain, contractsByChain, poolKeyOptions } = params;
     invariant(currencyIn.equals(currencyOut) === false, "Cannot swap same token");
 
-    const tokenPairs = getSharedChainTokenPairs(currencyIn, currencyOut);
+    const tokenPairs = getSharedChainTokenPairs(currencyIn, currencyOut).filter(
+        ([currIn]) => currIn.chainId === currencyIn.chainId || currIn.chainId === currencyOut.chainId,
+    );
 
     const routes = (
         await Promise.all(
@@ -60,6 +67,7 @@ export async function getUniswapV4RouteExactInMultichain(
                 if (!contracts) return null; // No uniswap deployment on this chain
 
                 let exactAmount = params.exactAmount;
+                // Check if we need to bridge native ETH
                 if (currencyIn.chainId !== currIn.chainId && currencyIn.isNative && currencyIn.symbol === "ETH") {
                     if (currIn.chainId === 900 || currIn.chainId === 901 || currIn.chainId === 902) {
                         // No stargate or orbiter on local chains
@@ -105,14 +113,42 @@ export async function getUniswapV4RouteExactInMultichain(
 
                         exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
                     }
+                    // Check if we can bridge the token with Stargate
+                } else if (
+                    currencyIn.chainId !== currIn.chainId &&
+                    currencyIn.symbol &&
+                    currencyIn.symbol in STARGATE_TOKEN_POOLS
+                ) {
+                    const tokenPools = STARGATE_TOKEN_POOLS[currencyIn.symbol as StargateTokenSymbol];
+
+                    // If there is no pool on both chains, assume we are not bridging with Stargate (maybe Hyperlane?)
+                    if (currencyIn.chainId in tokenPools && currIn.chainId in tokenPools) {
+                        // Address doesn't matter for quote
+                        const quoteReceiver = "0x0000000000000000000000000000000000000001";
+                        const stargateTokenQuoteParams: StargateTokenQuoteParams = {
+                            amount: exactAmount,
+                            tokenSymbol: currencyIn.symbol as StargateTokenSymbol,
+                            srcChain: currencyIn.chainId,
+                            dstChain: currIn.chainId,
+                            receiver: quoteReceiver,
+                        };
+                        const stargateQuoteResult = await queryClient
+                            .fetchQuery(stargateTokenQuoteQueryOptions(wagmiConfig, stargateTokenQuoteParams))
+                            .catch(() => null);
+
+                        // We expect to bridge with Stargate, but no quote found
+                        if (!stargateQuoteResult) return null;
+
+                        exactAmount = BigInt(stargateQuoteResult.minAmountOut);
+                    }
                 }
 
-                const route = await getUniswapV4RouteExactIn(queryClient, wagmiConfig, {
+                const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
                     chainId,
                     currencyIn: getUniswapV4Address(currIn),
                     currencyOut: getUniswapV4Address(currOut),
                     currencyHops,
-                    exactAmount,
+                    amountIn: exactAmount,
                     contracts,
                     poolKeyOptions,
                 });
@@ -133,6 +169,16 @@ export async function getUniswapV4RouteExactInMultichain(
     return bestRoute;
 }
 
+// TODO: remove this once we have getUniswapRouteExactIn
+export interface GetUniswapV4RouteExactOutMultichainParams {
+    currencyIn: Currency;
+    currencyOut: Currency;
+    currencyHopsByChain: Record<number, Address[] | undefined>;
+    exactAmount: bigint;
+    contractsByChain: Record<number, { v4StateView: Address; v4Quoter: Address } | undefined>;
+    poolKeyOptions?: PoolKeyOptions[];
+}
+
 /**
  * Get best Uniswap V4 Route for chains where token share a deployment
  * @param queryClient
@@ -143,7 +189,7 @@ export async function getUniswapV4RouteExactInMultichain(
 export async function getUniswapV4RouteExactOutMultichain(
     queryClient: QueryClient,
     wagmiConfig: Config,
-    params: GetUniswapV4RouteMultichainParams,
+    params: GetUniswapV4RouteExactOutMultichainParams,
 ): Promise<{
     currencyIn: Currency;
     currencyOut: Currency;
@@ -165,6 +211,7 @@ export async function getUniswapV4RouteExactOutMultichain(
                 const contracts = contractsByChain[chainId];
                 if (!contracts) return null; // No uniswap deployment on this chain
 
+                // TODO: Add V3
                 const route = await getUniswapV4RouteExactOut(queryClient, wagmiConfig, {
                     chainId,
                     currencyIn: getUniswapV4Address(currIn),

@@ -1,8 +1,9 @@
 import { Address } from "viem";
-import { arbitrum, base, bsc, mainnet, optimism, polygon } from "viem/chains";
+import { arbitrum, avalanche, base, bsc, mainnet, optimism, polygon } from "viem/chains";
 
 import {
     USDC_ARBITRUM,
+    USDC_AVALANCHE,
     USDC_BASE,
     USDC_BSC,
     USDC_MAINNET,
@@ -17,4 +18,5 @@ export const USD_CURRENCIES = {
     [base.id]: { address: USDC_BASE.address, decimals: USDC_BASE.decimals },
     [polygon.id]: { address: USDC_POLYGON.address, decimals: USDC_POLYGON.decimals },
     [arbitrum.id]: { address: USDC_ARBITRUM.address, decimals: USDC_ARBITRUM.decimals },
+    [avalanche.id]: { address: USDC_AVALANCHE.address, decimals: USDC_AVALANCHE.decimals },
 } as const as Record<number, { address: Address; decimals: number } | undefined>;

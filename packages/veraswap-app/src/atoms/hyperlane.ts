@@ -1,17 +1,13 @@
 import { LOCAL_HYPERLANE_CONTRACTS, isMultichainToken } from "@owlprotocol/veraswap-sdk";
-import {
-    HypERC20Collateral,
-    IInterchainGasPaymaster,
-    GasRouter,
-    InterchainGasPaymaster,
-} from "@owlprotocol/veraswap-sdk/artifacts";
+import { IInterchainGasPaymaster, GasRouter, InterchainGasPaymaster } from "@owlprotocol/veraswap-sdk/artifacts";
 import { atom, Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { Address, numberToHex } from "viem";
 import { readContractQueryOptions } from "wagmi/query";
 import { mapKeys } from "lodash-es";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { chainInAtom, chainOutAtom, currencyInAtom } from "./tokens.js";
+import { chainInAtom, chainOutAtom } from "./tokens.js";
+import { transactionTypeAtom } from "./uniswap.js";
 import { config } from "@/config.js";
 import { hyperlaneRegistryOptions } from "@/hooks/hyperlaneRegistry.js";
 
@@ -91,42 +87,25 @@ export const hyperlaneMailboxChainOut = atom((get) => {
     return hyperlaneRegistry.addresses[chainOut.id]?.mailbox ?? null;
 });
 
-export const hypERC20CollateralWrappedTokenQueryAtom = atomWithQuery((get) => {
-    const currencyIn = get(currencyInAtom);
-
-    if (!currencyIn) return disabledQueryOptions as any;
-
-    if (
-        isMultichainToken(currencyIn) &&
-        currencyIn.hyperlaneAddress != null &&
-        currencyIn.hyperlaneAddress != currencyIn.address
-    ) {
-        // HypERC20Collateral
-        return readContractQueryOptions(config, {
-            chainId: currencyIn.chainId,
-            address: currencyIn.hyperlaneAddress,
-            abi: HypERC20Collateral.abi,
-            functionName: "wrappedToken",
-            args: [],
-        });
-    }
-
-    return disabledQueryOptions as any;
-}) as Atom<AtomWithQueryResult<Address>>;
-
 export const tokenRouterQuoteGasPaymentQueryAtom = atomWithQuery((get) => {
-    const currencyIn = get(currencyInAtom);
     const chainOut = get(chainOutAtom);
+    const transactionType = get(transactionTypeAtom);
 
-    if (!currencyIn || !chainOut) return disabledQueryOptions as any;
-    if (!isMultichainToken(currencyIn) || !currencyIn.hyperlaneAddress) {
+    if (!chainOut || !transactionType || !(transactionType.type === "SWAP_BRIDGE" || transactionType.type === "BRIDGE"))
+        return disabledQueryOptions as any;
+
+    const { currencyIn: bridgeCurrencyIn } =
+        transactionType.type === "SWAP_BRIDGE" ? transactionType.bridge : transactionType;
+
+    // Only get quote if we are bridging with Hyperlane
+    if (!isMultichainToken(bridgeCurrencyIn) || !bridgeCurrencyIn.hyperlaneAddress) {
         return disabledQueryOptions as any;
     }
 
     // Hyperlane Token
     return readContractQueryOptions(config, {
-        chainId: currencyIn.chainId,
-        address: currencyIn.hyperlaneAddress,
+        chainId: bridgeCurrencyIn.chainId,
+        address: bridgeCurrencyIn.hyperlaneAddress,
         abi: GasRouter.abi,
         functionName: "quoteGasPayment",
         args: [chainOut.id],

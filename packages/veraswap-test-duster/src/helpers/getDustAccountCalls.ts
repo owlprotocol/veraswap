@@ -29,14 +29,13 @@ export async function getDustAccountCalls({
 }): Promise<CallArgs[]> {
     const calls: CallArgs[] = [];
 
-    // Dust with Multichain tokens
     let filteredTokens = currencies.filter(
         (token) =>
-            (isMultichainToken(token) &&
-                token.chainId === client.chain?.id &&
-                (token.standard === "ERC20" ||
-                    token.standard === "SuperERC20")) ||
-            (token instanceof Token && token.symbol === "tUSDC")
+            token.chainId === client.chain.id &&
+            token instanceof Token &&
+            (!isMultichainToken(token) ||
+                token.standard === "ERC20" ||
+                token.standard === "SuperERC20")
     ) as (Token | MultichainToken)[];
 
     if (
@@ -47,6 +46,7 @@ export async function getDustAccountCalls({
         // Dev environment, check if tokens exist
         const filteredTokenExists = await Promise.all(
             filteredTokens.map(async (token) => {
+                console.log({ token, chainId: client.chain.id });
                 const code = await client.getCode({ address: token.address });
                 return !!code;
             })

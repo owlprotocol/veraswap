@@ -5,7 +5,7 @@ import { IAllowanceTransfer } from "../artifacts/IAllowanceTransfer.js";
 import { IERC20 } from "../artifacts/IERC20.js";
 import { MAX_UINT_160, MAX_UINT_256, MAX_UINT_48 } from "../constants/index.js";
 import { PermitTransferFromData } from "../types/PermitTransferFromData.js";
-import { PathKey } from "../types/PoolKey.js";
+import { MetaQuoteBest } from "../uniswap/index.js";
 
 import { getSwapExactInExecuteData } from "./getSwapExactInExecuteData.js";
 
@@ -15,9 +15,10 @@ export function getSmartAccountSwapCalls({
     permitTransferFromData,
     currencyIn,
     currencyOut,
-    path,
+    quote,
     universalRouter,
     approvePermit2 = true,
+    contracts,
 }: {
     amountIn: bigint;
     amountOutMinimum: bigint;
@@ -25,9 +26,12 @@ export function getSmartAccountSwapCalls({
     permitTransferFromData: PermitTransferFromData;
     currencyIn: Address;
     currencyOut: Address;
-    path: PathKey[];
+    quote: MetaQuoteBest;
     universalRouter: Address;
     approvePermit2?: boolean;
+    contracts: {
+        weth9: Address;
+    };
 }): { to: Address; data: Hex; value: bigint }[] {
     const permitTransferFromDataFormatted = {
         to: permitTransferFromData.dest,
@@ -62,9 +66,10 @@ export function getSmartAccountSwapCalls({
         universalRouter,
         currencyIn,
         currencyOut,
-        path,
+        quote,
         amountIn,
         amountOutMinimum,
+        contracts,
     });
 
     if (approvePermit2) {

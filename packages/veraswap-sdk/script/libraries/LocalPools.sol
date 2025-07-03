@@ -19,11 +19,14 @@ import {PoolUtils} from "../utils/PoolUtils.sol";
 import {UniswapContracts} from "../Structs.sol";
 import {LocalTokens} from "./LocalTokens.sol";
 
-/** Deploys Uniswap Pools for local environment such as tests and scripts */
+/**
+ * Deploys Uniswap Pools for local environment such as tests and scripts
+ */
 // Tokens
 // ETH, L34: Connected to A/B with V3/V4
 // L3: Connected to A/B with V3, ETH/L34 with V4
 // L4: Connected to A/B with V4, ETH/L34 with V3
+// Z: only connected to ETH with V3, used for testing mixed multi-hop routes
 
 // V3/V4 paths
 // A/B -> liq34/ETH
@@ -32,6 +35,7 @@ import {LocalTokens} from "./LocalTokens.sol";
 // V3-only paths
 // A/B -> liq3
 // A -> liq3 -> B
+// Ζ -> ΕΤΗ
 
 // V4-only paths
 // A/B -> liq4
@@ -57,6 +61,7 @@ struct LocalV4Pools {
 struct LocalV3Pools {
     IUniswapV3Pool weth_tokenA;
     IUniswapV3Pool weth_tokenB;
+    IUniswapV3Pool weth_tokenZ;
     IUniswapV3Pool weth_liq4;
     IUniswapV3Pool liq34_tokenA;
     IUniswapV3Pool liq34_tokenB;
@@ -82,10 +87,10 @@ library LocalPoolsLibrary {
      * @param v4PositionManager Uniswap V4 position manager
      * @param tokens Local tokens
      */
-    function deployV4Pools(
-        IPositionManager v4PositionManager,
-        LocalTokens memory tokens
-    ) internal returns (LocalV4Pools memory pools) {
+    function deployV4Pools(IPositionManager v4PositionManager, LocalTokens memory tokens)
+        internal
+        returns (LocalV4Pools memory pools)
+    {
         Currency eth = Currency.wrap(address(0));
         Currency liq34 = Currency.wrap(address(tokens.liq34));
         Currency liq3 = Currency.wrap(address(tokens.liq3));
@@ -133,10 +138,12 @@ library LocalPoolsLibrary {
         Currency liq4 = Currency.wrap(address(tokens.liq4));
         Currency tokenA = Currency.wrap(address(tokens.tokenA));
         Currency tokenB = Currency.wrap(address(tokens.tokenB));
+        Currency tokenZ = Currency.wrap(address(tokens.tokenZ));
 
         // WETH
         pools.weth_tokenA = PoolUtils.createV3Pool(weth9, tokenA, v3Factory, v3PositionManager, 10 ether);
         pools.weth_tokenB = PoolUtils.createV3Pool(weth9, tokenB, v3Factory, v3PositionManager, 10 ether);
+        pools.weth_tokenZ = PoolUtils.createV3Pool(weth9, tokenZ, v3Factory, v3PositionManager, 10 ether);
         pools.weth_liq4 = PoolUtils.createV3Pool(
             weth9,
             liq4, //for mixed route test ETH -> liq4 -> A
@@ -164,10 +171,10 @@ library LocalPoolsLibrary {
      * @param v2Factory Uniswap V2 factory
      * @param tokens Local tokens
      */
-    function deployV2Pools(
-        IUniswapV2Factory v2Factory,
-        LocalTokens memory tokens
-    ) internal returns (LocalV2Pools memory pools) {
+    function deployV2Pools(IUniswapV2Factory v2Factory, LocalTokens memory tokens)
+        internal
+        returns (LocalV2Pools memory pools)
+    {
         Currency weth9 = Currency.wrap(address(tokens.weth9));
         Currency liq34 = Currency.wrap(address(tokens.liq34));
         Currency liq2 = Currency.wrap(address(tokens.liq2));

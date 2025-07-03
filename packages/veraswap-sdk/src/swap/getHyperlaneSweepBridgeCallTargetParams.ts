@@ -1,6 +1,6 @@
 import { Address, encodeFunctionData, Hex, padHex } from "viem";
 
-import { HypTokenRouterSweep } from "../artifacts/HypTokenRouterSweep.js";
+import { transferRemote_address_uint32_bytes32_uint256 } from "../artifacts/HypTokenRouterSweep.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../constants/index.js";
 
 export function getHyperlaneSweepBridgeCallTargetParams({
@@ -16,11 +16,11 @@ export function getHyperlaneSweepBridgeCallTargetParams({
 }) {
     return [
         HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        bridgePayment,
+        0n,
         encodeFunctionData({
-            abi: HypTokenRouterSweep.abi,
+            abi: [transferRemote_address_uint32_bytes32_uint256],
             functionName: "transferRemote",
-            args: [bridgeAddress, destinationChain, padHex(receiver, { size: 32 })],
+            args: [bridgeAddress, destinationChain, padHex(receiver, { size: 32 }), bridgePayment],
         }),
     ] as readonly [Address, bigint, Hex];
 }

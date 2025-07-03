@@ -24,28 +24,30 @@ contract HypTokenRouterSweep {
         return IERC20(token).approve(address(spender), MAX_INT);
     }
 
-    /// @notice Call TokenRouter with `transferRemote` using this contract's full balance. (msg.value is forwarded for relay payment)
+    /// @notice Call TokenRouter with `transferRemote` using this contract's full balance. (bridgePayment is forwarded for relay payment)
     /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
     /// @param router The TokenRouter
     /// @param destination The identifier of the destination chain.
     /// @param recipient The address of the recipient on the destination chain.
+    /// @param bridgePayment The amount of native token to be sent for the relay payment.
     /// @return messageId The identifier of the dispatched message.
-    function transferRemote(
-        address router,
-        uint32 destination,
-        bytes32 recipient
-    ) external payable returns (bytes32 messageId) {
+    function transferRemote(address router, uint32 destination, bytes32 recipient, uint256 bridgePayment)
+        external
+        payable
+        returns (bytes32 messageId)
+    {
         uint256 balance = TokenRouter(router).balanceOf(address(this));
         if (balance == 0) revert BalanceZero();
 
-        return TokenRouter(router).transferRemote{value: msg.value}(destination, recipient, balance);
+        return TokenRouter(router).transferRemote{value: bridgePayment}(destination, recipient, balance);
     }
 
-    /// @notice Call TokenRouter with `transferRemote` using this contract's full balance. (msg.value is forwarded for relay payment)
+    /// @notice Call TokenRouter with `transferRemote` using this contract's full balance. (bridgePayment is forwarded for relay payment)
     /// @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between transactions as they can be taken by anyone
     /// @param router The TokenRouter
     /// @param destination The identifier of the destination chain.
     /// @param recipient The address of the recipient on the destination chain.
+    /// @param bridgePayment The amount of native token to be sent for the relay payment.
     /// @param hookMetadata The metadata passed into the hook
     /// @param hook The post dispatch hook to be called by the Mailbox
     /// @return messageId The identifier of the dispatched message.
@@ -53,13 +55,17 @@ contract HypTokenRouterSweep {
         address router,
         uint32 destination,
         bytes32 recipient,
+        uint256 bridgePayment,
         bytes calldata hookMetadata,
         address hook
     ) external payable returns (bytes32 messageId) {
         uint256 balance = TokenRouter(router).balanceOf(address(this));
         if (balance == 0) revert BalanceZero();
 
-        return
-            TokenRouter(router).transferRemote{value: msg.value}(destination, recipient, balance, hookMetadata, hook);
+        return TokenRouter(router).transferRemote{value: bridgePayment}(
+            destination, recipient, balance, hookMetadata, hook
+        );
     }
+
+    receive() external payable {}
 }

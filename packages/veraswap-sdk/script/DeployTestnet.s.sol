@@ -66,7 +66,9 @@ contract DeployTestnet is DeployCoreContracts {
             chainContracts[chainIds[i]] = contracts;
         }
 
-        /***** Main Fork *****/
+        /**
+         * Main Fork ****
+         */
         // Create HypERC20Collateral for token C and D
         {
             vm.selectFork(forks[0]);
@@ -74,56 +76,52 @@ contract DeployTestnet is DeployCoreContracts {
             CoreContracts storage contracts = chainContracts[chainIds[0]];
 
             (address tokenC, address tokenD) = deployTokensAndPools(
-                contracts.uniswap.universalRouter,
-                contracts.uniswap.v4PositionManager,
-                contracts.uniswap.v4StateView
+                contracts.uniswap.universalRouter, contracts.uniswap.v4PositionManager, contracts.uniswap.v4StateView
             );
-            (address hypERC20CollateralTokenC, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenC,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenC,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenC, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenC:", hypERC20CollateralTokenC);
 
-            (address hypERC20CollateralTokenD, ) = HypERC20CollateralUtils.getOrCreate2(
-                tokenD,
-                contracts.hyperlane.mailbox
-            );
+            (address hypERC20CollateralTokenD,) =
+                HypERC20CollateralUtils.getOrCreate2(tokenD, contracts.hyperlane.mailbox);
             console2.log("hypERC20CollateralTokenD:", hypERC20CollateralTokenD);
             tokens[chainIds[0]][keccak256("C")] = hypERC20CollateralTokenC;
             tokens[chainIds[0]][keccak256("D")] = hypERC20CollateralTokenD;
 
             // Configure sweeper to approveAll (token: ERC20, spender: HypERC20Collateral)
             if (IERC20(tokenC).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenC) == 0) {
-                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenC,
-                    hypERC20CollateralTokenC
+                HypTokenRouterSweep(payable(contracts.hyperlane.hypTokenRouterSweep)).approveAll(
+                    tokenC, hypERC20CollateralTokenC
                 );
             }
             if (IERC20(tokenD).allowance(contracts.hyperlane.hypTokenRouterSweep, hypERC20CollateralTokenD) == 0) {
-                HypTokenRouterSweep(contracts.hyperlane.hypTokenRouterSweep).approveAll(
-                    tokenD,
-                    hypERC20CollateralTokenD
+                HypTokenRouterSweep(payable(contracts.hyperlane.hypTokenRouterSweep)).approveAll(
+                    tokenD, hypERC20CollateralTokenD
                 );
             }
             vm.stopBroadcast();
         }
 
-        /***** Remote Fork(s) Deploy Tokens *****/
+        /**
+         * Remote Fork(s) Deploy Tokens ****
+         */
         for (uint256 i = 1; i < chains.length; i++) {
             vm.selectFork(forks[i]);
             vm.startBroadcast();
             CoreContracts storage contracts = chainContracts[chainIds[i]];
 
-            (address hypERC20TokenC, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token C", "C");
+            (address hypERC20TokenC,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token C", "C");
             console2.log("hypERC20TokenC:", hypERC20TokenC);
-            (address hypERC20TokenD, ) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token D", "D");
+            (address hypERC20TokenD,) = HypERC20Utils.getOrCreate2(18, contracts.hyperlane.mailbox, 0, "Token D", "D");
             console2.log("hypERC20TokenD:", hypERC20TokenD);
             tokens[chainIds[i]][keccak256("C")] = hypERC20TokenC;
             tokens[chainIds[i]][keccak256("D")] = hypERC20TokenD;
             vm.stopBroadcast();
         }
 
-        /***** Enroll Tokens *****/
+        /**
+         * Enroll Tokens ****
+         */
         for (uint256 i = 0; i < chains.length; i++) {
             vm.selectFork(forks[i]);
             vm.startBroadcast();
@@ -147,13 +145,12 @@ contract DeployTestnet is DeployCoreContracts {
         }
     }
 
-    function deployTokensAndPools(
-        address router,
-        address v4PositionManager,
-        address v4StateView
-    ) internal returns (address tokenC, address tokenD) {
-        (tokenC, ) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
-        (tokenD, ) = MockERC20Utils.getOrCreate2("Token D", "D", 18);
+    function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
+        internal
+        returns (address tokenC, address tokenD)
+    {
+        (tokenC,) = MockERC20Utils.getOrCreate2("Token C", "C", 18);
+        (tokenD,) = MockERC20Utils.getOrCreate2("Token D", "D", 18);
 
         /*
         address token0 = tokenC;

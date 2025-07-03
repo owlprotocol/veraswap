@@ -90,12 +90,16 @@ function createMockERC20Token(
         chainId,
         name,
         symbol,
+        displayName,
+        displaySymbol,
         decimals,
         logoURI,
     }: {
         chainId: number;
         name: string;
         symbol: string;
+        displayName?: string;
+        displaySymbol?: string;
         decimals: number;
         logoURI?: string;
     },
@@ -105,8 +109,8 @@ function createMockERC20Token(
     return MultichainToken.createERC20({
         chainId,
         address,
-        name,
-        symbol,
+        name: displayName ?? name,
+        symbol: displaySymbol ?? symbol,
         decimals: 18,
         hypERC20Collateral: getHypERC20CollateralAddress({
             erc20: address,
@@ -121,12 +125,16 @@ export function createMockERC20ConnectedTokens(
         chainId,
         name,
         symbol,
+        displayName,
+        displaySymbol,
         decimals,
         logoURI,
     }: {
         chainId: number;
         name: string;
         symbol: string;
+        displayName?: string;
+        displaySymbol?: string;
         decimals: number;
         logoURI?: string;
     },
@@ -141,6 +149,8 @@ export function createMockERC20ConnectedTokens(
             chainId,
             name,
             symbol,
+            displayName,
+            displaySymbol,
             decimals,
             logoURI,
         },
@@ -165,8 +175,8 @@ export function createMockERC20ConnectedTokens(
         return MultichainToken.createHypERC20({
             chainId,
             address,
-            name,
-            symbol,
+            name: displayName ?? name,
+            symbol: displaySymbol ?? symbol,
             decimals,
             logoURI,
         });
@@ -272,6 +282,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
             chainId: opChainL1.id,
             name: "Token A",
             symbol: "A",
+            displayName: "Alberto",
             decimals: 18,
             logoURI:
                 "https://i0.wp.com/musically.com/wp-content/uploads/2024/11/Pedro-the-Raccoon.png?resize=1568%2C1176&ssl=1",
@@ -283,6 +294,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
             chainId: opChainL1.id,
             name: "Token B",
             symbol: "B",
+            displayName: "Berenice",
             decimals: 18,
             logoURI:
                 "https://static.the-independent.com/2024/10/08/14/moodeng-crypto-price-prediction-memecoin.jpg?quality=75&width=1368&crop=3%3A2%2Csmart&auto=webp",
@@ -313,6 +325,17 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
         decimals: 18,
         logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
     }),
+    ...createMockERC20ConnectedTokens(
+        {
+            chainId: opChainL1.id,
+            name: "Token Z",
+            symbol: "Z",
+            displayName: "Zoe",
+            decimals: 18,
+            logoURI: "https://assets.kraken.com/marketing/web/icons-uni-webp/s_samo.webp",
+        },
+        localMailboxByChain,
+    ),
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),
