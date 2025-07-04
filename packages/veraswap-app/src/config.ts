@@ -1,6 +1,15 @@
 import { http, createStorage, createConfig, webSocket } from "wagmi";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
-import { coinbaseWallet, metaMaskWallet, walletConnectWallet, uniswapWallet } from "@rainbow-me/rainbowkit/wallets";
+import {
+    coinbaseWallet,
+    metaMaskWallet,
+    walletConnectWallet,
+    uniswapWallet,
+    okxWallet,
+    binanceWallet,
+    trustWallet,
+    phantomWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 import { ChainWithMetadata, localChains, mainnetChains, testnetChains } from "@owlprotocol/veraswap-sdk/chains";
 import { Chain } from "viem";
 
@@ -17,7 +26,16 @@ export const chains = (import.meta.env.MODE === "development"
 const wallets =
     import.meta.env.MODE === "development"
         ? [metaMaskWallet]
-        : [metaMaskWallet, coinbaseWallet, walletConnectWallet, uniswapWallet];
+        : [
+              metaMaskWallet,
+              coinbaseWallet,
+              walletConnectWallet,
+              uniswapWallet,
+              okxWallet,
+              binanceWallet,
+              trustWallet,
+              phantomWallet,
+          ];
 
 export const connectors = connectorsForWallets(
     [
