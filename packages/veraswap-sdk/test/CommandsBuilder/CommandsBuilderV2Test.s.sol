@@ -140,6 +140,82 @@ contract CommandsBuilderV2Test is UniswapBaseTest {
         assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased
     }
 
+    // A -> WETH
+    function test_V2_A_WETH() public {
+        PoolUtils.createV2Pool(tokenA, weth9, v2Factory, 10 ether);
+
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenA, weth9);
+        PathKey[] memory path = new PathKey[](1);
+        path[0] = PathKey({
+            intermediateCurrency: weth9,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(address(2)),
+            hookData: ""
+        });
+
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            path,
+            amountIn,
+            0, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
+        );
+        assertEq(commands.length, 1);
+        assertEq(commands[0], bytes1(uint8(Commands.V2_SWAP_EXACT_IN)));
+
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(commands, commandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased
+    }
+
+    // WETH -> A
+    function test_V2_WETH_A() public {
+        PoolUtils.createV2Pool(weth9, tokenA, v2Factory, 10 ether);
+
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (weth9, tokenA);
+        PathKey[] memory path = new PathKey[](1);
+        path[0] = PathKey({
+            intermediateCurrency: tokenA,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: IHooks(address(2)),
+            hookData: ""
+        });
+
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            path,
+            amountIn,
+            0, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
+        );
+        assertEq(commands.length, 1);
+        assertEq(commands[0], bytes1(uint8(Commands.V2_SWAP_EXACT_IN)));
+
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute{value: amountIn}(commands, commandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+        assertGt(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap); // Output balance increased
+    }
+
     // A -> L2 -> B
     function test_V2_A_L2_B() public {
         PoolUtils.createV2Pool(tokenA, liq2, v2Factory, 10 ether);
