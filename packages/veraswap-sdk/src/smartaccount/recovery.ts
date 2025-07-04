@@ -29,7 +29,7 @@ export function createRecoveryCalls(walletAddress: Address, params: RecoveryPara
     }
 
     if (tokenTransfers) {
-        for (const { tokenAddress, amount } of tokenTransfers) {
+        tokenTransfers.forEach(({ tokenAddress, amount }) => {
             if (amount > 0n) {
                 calls.push({
                     to: tokenAddress,
@@ -40,7 +40,7 @@ export function createRecoveryCalls(walletAddress: Address, params: RecoveryPara
                     account: kernelAddress,
                 });
             }
-        }
+        });
     }
 
     return calls;

@@ -88,7 +88,7 @@ export const allKernelAccountsAtom = atom((get) => {
     const kernelAccounts: KernelAccountInfo[] = [];
     const factoryAddress = LOCAL_KERNEL_CONTRACTS.kernelFactory;
 
-    for (const chain of chains) {
+    chains.forEach((chain) => {
         const { data: kernelAddress } = get(
             kernelFactoryGetAddressAtomFamily({
                 chainId: chain.id,
@@ -125,7 +125,7 @@ export const allKernelAccountsAtom = atom((get) => {
                 currency: Currency;
             }> = [];
 
-            for (const currency of allChainCurrencies) {
+            allChainCurrencies.forEach((currency) => {
                 if (!currency.isNative) {
                     const { data: tokenBalance } = get(
                         tokenBalanceAtomFamily({
@@ -145,7 +145,7 @@ export const allKernelAccountsAtom = atom((get) => {
                         });
                     }
                 }
-            }
+            });
 
             kernelAccounts.push({
                 chainId: chain.id,
@@ -156,7 +156,7 @@ export const allKernelAccountsAtom = atom((get) => {
                 tokenBalances,
             });
         }
-    }
+    });
 
     return kernelAccounts;
 });
