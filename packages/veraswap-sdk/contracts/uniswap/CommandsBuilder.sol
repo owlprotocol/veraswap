@@ -152,12 +152,15 @@ library CommandsBuilderLibrary {
         }
         // Input: unwrap if needed
         if (builder.currCurrencyIn == weth) {
+            if (builder.commandsLen == 0) {
+                // Transfer WETH if first command
+                builder.commands[builder.commandsLen] = uint8(Commands.PERMIT2_TRANSFER_FROM);
+                builder.commandInputs[builder.commandsLen] = abi.encode(weth, ActionConstants.ADDRESS_THIS, amountIn);
+                builder.commandsLen++;
+            }
             // Unwrap weth
             builder.commands[builder.commandsLen] = uint8(Commands.UNWRAP_WETH);
-            builder.commandInputs[builder.commandsLen] = abi.encode(
-                ActionConstants.ADDRESS_THIS,
-                builder.commandsLen == 0 ? amountIn : 0 // amountIn: if first command
-            );
+            builder.commandInputs[builder.commandsLen] = abi.encode(ActionConstants.ADDRESS_THIS, 0);
             builder.commandsLen++;
         }
         // Swap
@@ -211,7 +214,6 @@ library CommandsBuilderLibrary {
         }
 
         // Take: Take output currency
-        // TODO: BUG Reproduce!!! ( A - B in UI) (end v4???)
         Currency pathOut = builder.currPath[builder.currPathLen - 1].intermediateCurrency; // last currency of current path
         v4ActionParams[2] = abi.encode(
             pathOut,
