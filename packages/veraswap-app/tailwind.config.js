@@ -63,6 +63,10 @@ module.exports = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                modal: {
+                    DEFAULT: "hsl(var(--modal))",
+                    foreground: "hsl(var(--modal-foreground))",
+                },
             },
             borderRadius: {
                 lg: "var(--radius)",

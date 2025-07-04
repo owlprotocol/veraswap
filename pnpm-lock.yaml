@@ -486,6 +486,9 @@ importers:
       '@vercel/analytics':
         specifier: ^1.1.2
         version: 1.5.0(next@15.2.0(@babel/core@7.26.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      chroma-js:
+        specifier: ^3.1.2
+        version: 3.1.2
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -559,6 +562,9 @@ importers:
       '@tanstack/router-vite-plugin':
         specifier: ^1.30.0
         version: 1.111.12(@tanstack/react-router@1.111.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(vite@5.4.14(@types/node@20.17.19))
+      '@types/chroma-js':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@types/lodash-es':
         specifier: 4.17.12
         version: 4.17.12
@@ -5064,6 +5070,9 @@ packages:
   '@types/chai@5.2.0':
     resolution: {integrity: sha512-FWnQYdrG9FAC8KgPVhDFfrPL1FBsL3NtIt2WsxKvwu/61K6HiuDF3xAb7c7w/k9ML2QOUHcwTgU7dKLFPK6sBg==}
 
+  '@types/chroma-js@3.1.1':
+    resolution: {integrity: sha512-SFCr4edNkZ1bGaLzGz7rgR1bRzVX4MmMxwsIa3/Bh6ose8v+hRpneoizHv0KChdjxaXyjRtaMq7sCuZSzPomQA==}
+
   '@types/cli-progress@3.11.6':
     resolution: {integrity: sha512-cE3+jb9WRlu+uOSAugewNpITJDt1VF8dHOopPO4IABFc3SXYL5WE/+PTz/FCdZRRfIujiWW3n3aMbv1eIGVRWA==}
 
@@ -6356,6 +6365,9 @@ packages:
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
+
+  chroma-js@3.1.2:
+    resolution: {integrity: sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==}
 
   ci-info@2.0.0:
     resolution: {integrity: sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==}
@@ -18607,6 +18619,8 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
 
+  '@types/chroma-js@3.1.1': {}
+
   '@types/cli-progress@3.11.6':
     dependencies:
       '@types/node': 20.17.24
@@ -20607,6 +20621,8 @@ snapshots:
   chownr@1.1.4: {}
 
   chownr@3.0.0: {}
+
+  chroma-js@3.1.2: {}
 
   ci-info@2.0.0: {}
 
