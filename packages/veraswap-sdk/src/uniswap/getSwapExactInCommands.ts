@@ -61,7 +61,7 @@ function buildV2Swap({
         swapPath.push(pathKey.intermediateCurrency);
     }
     const swap = [
-        isLastSwap ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
+        isLastSwap && currencyOut != zeroAddress ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
         builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
         isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last path
         swapPath,
@@ -108,13 +108,13 @@ function buildV3Swap({
     }
     const swapPath: Hex = encodePacked(swapPathTypes, swapPathValues);
 
-    const swap = [
-        isLastSwap ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
+    const swap: [Address, bigint, bigint, Hex, boolean] = [
+        isLastSwap && currencyOut != zeroAddress ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
         builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
         isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last path
         swapPath,
         builder.commands.length == 0, // payerIsUser: if first command
-    ] as const;
+    ];
     builder.commands.push(CommandType.V3_SWAP_EXACT_IN);
     builder.commandInputs.push(swap);
     // Output: unwrap if needed
@@ -189,9 +189,9 @@ function buildV4Swap({
             {
                 poolKey,
                 zeroForOne,
-                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
+                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.OPEN_DELTA, // amountIn: if first command
                 amountOutMinimum: isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last swap
-                hoookData: pathKey.hookData,
+                hookData: pathKey.hookData,
             },
         ]);
     }
@@ -205,7 +205,7 @@ function buildV4Swap({
     ]);
 
     builder.commands.push(CommandType.V4_SWAP);
-    builder.commandInputs.push(v4TradePlan.finalize());
+    builder.commandInputs.push([v4TradePlan.finalize()]);
 
     // Output: wrap if needed
     if (isLastSwap && currencyOut === weth) {
