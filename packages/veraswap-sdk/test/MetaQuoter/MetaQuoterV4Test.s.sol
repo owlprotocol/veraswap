@@ -17,6 +17,7 @@ import {IV4MetaQuoter} from "../../contracts/uniswap/IV4MetaQuoter.sol";
 import {Commands} from "@uniswap/universal-router/contracts/libraries/Commands.sol";
 // Pools
 import {PoolUtils} from "../../script/utils/PoolUtils.sol";
+import {CommandsBuilderLibrary} from "../../contracts/uniswap/CommandsBuilder.sol";
 
 contract MetaQuoterV4Test is MetaQuoterBaseTest {
     /***** Exact Single Quotes *****/
@@ -376,33 +377,21 @@ contract MetaQuoterV4Test is MetaQuoterBaseTest {
         assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
         assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
 
-        // V4 Swap
-        // Encode V4 Swap Actions
-        bytes memory v4Actions = abi.encodePacked(
-            uint8(Actions.SWAP_EXACT_IN),
-            uint8(Actions.SETTLE_ALL),
-            uint8(Actions.TAKE_ALL)
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            quote.path,
+            metaQuoteParams.exactAmount, // amountIn
+            quote.variableAmount, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
         );
-        bytes[] memory v4ActionParams = new bytes[](3);
-        v4ActionParams[0] = abi.encode(
-            IV4Router.ExactInputParams({
-                currencyIn: metaQuoteParams.exactCurrency,
-                path: quote.path,
-                amountIn: metaQuoteParams.exactAmount,
-                amountOutMinimum: uint128(quote.variableAmount)
-            })
-        ); // Swap
-        v4ActionParams[1] = abi.encode(currencyIn, metaQuoteParams.exactAmount); // Settle input
-        v4ActionParams[2] = abi.encode(currencyOut, quote.variableAmount); // Take output
-        // Encode Universal Router Commands
-        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V4_SWAP));
-        bytes[] memory routerCommandInputs = new bytes[](1);
-        routerCommandInputs[0] = abi.encode(v4Actions, v4ActionParams);
+
         // Execute Swap
         uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
         uint256 deadline = block.timestamp + 20;
-        router.execute(routerCommands, routerCommandInputs, deadline);
+        router.execute(commands, commandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
@@ -433,33 +422,21 @@ contract MetaQuoterV4Test is MetaQuoterBaseTest {
         assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
         assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
 
-        // V4 Swap
-        // Encode V4 Swap Actions
-        bytes memory v4Actions = abi.encodePacked(
-            uint8(Actions.SWAP_EXACT_IN),
-            uint8(Actions.SETTLE_ALL),
-            uint8(Actions.TAKE_ALL)
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            quote.path,
+            metaQuoteParams.exactAmount, // amountIn
+            quote.variableAmount, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
         );
-        bytes[] memory v4ActionParams = new bytes[](3);
-        v4ActionParams[0] = abi.encode(
-            IV4Router.ExactInputParams({
-                currencyIn: metaQuoteParams.exactCurrency,
-                path: quote.path,
-                amountIn: metaQuoteParams.exactAmount,
-                amountOutMinimum: uint128(quote.variableAmount)
-            })
-        ); // Swap
-        v4ActionParams[1] = abi.encode(currencyIn, metaQuoteParams.exactAmount); // Settle input
-        v4ActionParams[2] = abi.encode(currencyOut, quote.variableAmount); // Take output
-        // Encode Universal Router Commands
-        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V4_SWAP));
-        bytes[] memory routerCommandInputs = new bytes[](1);
-        routerCommandInputs[0] = abi.encode(v4Actions, v4ActionParams);
+
         // Execute Swap
         uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
         uint256 deadline = block.timestamp + 20;
-        router.execute(routerCommands, routerCommandInputs, deadline);
+        router.execute(commands, commandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
@@ -490,33 +467,21 @@ contract MetaQuoterV4Test is MetaQuoterBaseTest {
         assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
         assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
 
-        // V4 Swap
-        // Encode V4 Swap Actions
-        bytes memory v4Actions = abi.encodePacked(
-            uint8(Actions.SWAP_EXACT_IN),
-            uint8(Actions.SETTLE_ALL),
-            uint8(Actions.TAKE_ALL)
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            quote.path,
+            metaQuoteParams.exactAmount, // amountIn
+            quote.variableAmount, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
         );
-        bytes[] memory v4ActionParams = new bytes[](3);
-        v4ActionParams[0] = abi.encode(
-            IV4Router.ExactInputParams({
-                currencyIn: metaQuoteParams.exactCurrency,
-                path: quote.path,
-                amountIn: metaQuoteParams.exactAmount,
-                amountOutMinimum: uint128(quote.variableAmount)
-            })
-        ); // Swap
-        v4ActionParams[1] = abi.encode(currencyIn, metaQuoteParams.exactAmount); // Settle input
-        v4ActionParams[2] = abi.encode(currencyOut, quote.variableAmount); // Take output
-        // Encode Universal Router Commands
-        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V4_SWAP));
-        bytes[] memory routerCommandInputs = new bytes[](1);
-        routerCommandInputs[0] = abi.encode(v4Actions, v4ActionParams);
+
         // Execute Swap
         uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
         uint256 deadline = block.timestamp + 20;
-        router.execute{value: metaQuoteParams.exactAmount}(routerCommands, routerCommandInputs, deadline);
+        router.execute{value: metaQuoteParams.exactAmount}(commands, commandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount
@@ -547,33 +512,21 @@ contract MetaQuoterV4Test is MetaQuoterBaseTest {
         assertEq(address(quote.path[0].hooks), address(0)); // V4 Pool
         assertEq(address(quote.path[1].hooks), address(0)); // V4 Pool
 
-        // V4 Swap
-        // Encode V4 Swap Actions
-        bytes memory v4Actions = abi.encodePacked(
-            uint8(Actions.SWAP_EXACT_IN),
-            uint8(Actions.SETTLE_ALL),
-            uint8(Actions.TAKE_ALL)
+        (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
+            weth9,
+            currencyIn,
+            currencyOut,
+            quote.path,
+            metaQuoteParams.exactAmount, // amountIn
+            quote.variableAmount, // amountOutMinimum
+            ActionConstants.MSG_SENDER // recipient
         );
-        bytes[] memory v4ActionParams = new bytes[](3);
-        v4ActionParams[0] = abi.encode(
-            IV4Router.ExactInputParams({
-                currencyIn: metaQuoteParams.exactCurrency,
-                path: quote.path,
-                amountIn: metaQuoteParams.exactAmount,
-                amountOutMinimum: uint128(quote.variableAmount)
-            })
-        ); // Swap
-        v4ActionParams[1] = abi.encode(currencyIn, metaQuoteParams.exactAmount); // Settle input
-        v4ActionParams[2] = abi.encode(currencyOut, quote.variableAmount); // Take output
-        // Encode Universal Router Commands
-        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V4_SWAP));
-        bytes[] memory routerCommandInputs = new bytes[](1);
-        routerCommandInputs[0] = abi.encode(v4Actions, v4ActionParams);
+
         // Execute Swap
         uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
         uint256 deadline = block.timestamp + 20;
-        router.execute(routerCommands, routerCommandInputs, deadline);
+        router.execute(commands, commandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - metaQuoteParams.exactAmount); // Input balance decreased by exact amount

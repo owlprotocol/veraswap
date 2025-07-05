@@ -54,9 +54,14 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
         weth9 = _weth9;
     }
 
-    function _mapCurrencyToWeth9(Currency currency) internal view returns (Currency) {
-        // If the currency is the native token, map it to WETH9
+    function _mapNativeToWeth(Currency currency) internal view returns (Currency) {
+        // If the currency is native token, map it to WETH
         return currency.isAddressZero() ? Currency.wrap(weth9) : currency;
+    }
+
+    function _mapWethToNative(Currency currency) internal view returns (Currency) {
+        // If the currency is weth token, map it to native token
+        return currency == Currency.wrap(weth9) ? Currency.wrap(address(0)) : currency;
     }
 
     function quoteV2ExactInputSingle(
@@ -77,13 +82,20 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
         // V4 Quotes
         MetaQuoteExactSingleResult[] memory v4Quotes;
         if (address(poolManager) != address(0)) {
-            v4Quotes = super._metaQuoteExactInputSingle(params);
+            v4Quotes = super._metaQuoteExactInputSingle(
+                MetaQuoteExactSingleParams({
+                    exactCurrency: _mapWethToNative(params.exactCurrency),
+                    variableCurrency: _mapWethToNative(params.variableCurrency),
+                    exactAmount: params.exactAmount,
+                    poolKeyOptions: params.poolKeyOptions
+                })
+            );
         } else {
             v4Quotes = new MetaQuoteExactSingleResult[](0); // No V4 quotes if v4PoolManager is not set
         }
         // V3 Quotes
-        Currency exactCurrency = _mapCurrencyToWeth9(params.exactCurrency); // V2,V3 use WETH for native token
-        Currency variableCurrency = _mapCurrencyToWeth9(params.variableCurrency); // V2,V3 use WETH for native token
+        Currency exactCurrency = _mapNativeToWeth(params.exactCurrency); // V2,V3 use WETH for native token
+        Currency variableCurrency = _mapNativeToWeth(params.variableCurrency); // V2,V3 use WETH for native token
 
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes;
         if (v3Factory != address(0)) {
@@ -165,13 +177,20 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
         // V4 Quotes
         MetaQuoteExactSingleResult[] memory v4Quotes;
         if (address(poolManager) != address(0)) {
-            v4Quotes = super._metaQuoteExactOutputSingle(params);
+            v4Quotes = super._metaQuoteExactOutputSingle(
+                MetaQuoteExactSingleParams({
+                    exactCurrency: _mapWethToNative(params.exactCurrency),
+                    variableCurrency: _mapWethToNative(params.variableCurrency),
+                    exactAmount: params.exactAmount,
+                    poolKeyOptions: params.poolKeyOptions
+                })
+            );
         } else {
             v4Quotes = new MetaQuoteExactSingleResult[](0); // No V4 quotes if v4PoolManager is not set
         }
         // V3 Quotes
-        Currency exactCurrency = _mapCurrencyToWeth9(params.exactCurrency); // V2,V3 use WETH for native token
-        Currency variableCurrency = _mapCurrencyToWeth9(params.variableCurrency); // V2,V3 use WETH for native token
+        Currency exactCurrency = _mapNativeToWeth(params.exactCurrency); // V2,V3 use WETH for native token
+        Currency variableCurrency = _mapNativeToWeth(params.variableCurrency); // V2,V3 use WETH for native token
 
         IV3MetaQuoter.MetaQuoteExactSingleResult[] memory v3Quotes;
         if (v3Factory != address(0)) {
@@ -243,6 +262,212 @@ contract MetaQuoter is IV4MetaQuoter, V2QuoterBase, V3MetaQuoterBase, V4MetaQuot
                 variableAmount: v2AmountIn,
                 gasEstimate: 0 // Gas estimate is not available for V2 quotes
             });
+        }
+    }
+
+    function _metaQuoteExactInput(
+        IV4MetaQuoter.MetaQuoteExactParams memory params
+    ) internal override returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
+        // Find best swap route for each hop currency
+        uint256 quoteResultsCount = 0; // Count of non-reverting quotes
+        IV4MetaQuoter.MetaQuoteExactResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactResult[](
+            params.hopCurrencies.length
+        );
+
+        for (uint256 k = 0; k < params.hopCurrencies.length; k++) {
+            // Quote Input -> Intermediate
+            IV4MetaQuoter.MetaQuoteExactSingleParams memory quoteInputToIntermediateParams = IV4MetaQuoter
+                .MetaQuoteExactSingleParams({
+                    exactCurrency: params.exactCurrency,
+                    variableCurrency: params.hopCurrencies[k],
+                    exactAmount: params.exactAmount,
+                    poolKeyOptions: params.poolKeyOptions
+                });
+            IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteInputToIntermediate = _metaQuoteExactInputSingle(
+                quoteInputToIntermediateParams
+            );
+            if (quoteInputToIntermediate.length == 0) {
+                // No valid quote for Input -> Intermediate, skip
+                continue;
+            }
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory quoteInputToIntermediateBest = quoteInputToIntermediate[0];
+            for (uint256 i = 1; i < quoteInputToIntermediate.length; i++) {
+                // Find largest output
+                if (quoteInputToIntermediate[i].variableAmount > quoteInputToIntermediateBest.variableAmount) {
+                    quoteInputToIntermediateBest = quoteInputToIntermediate[i];
+                }
+            }
+
+            // Quote Intermediate -> Output
+            IV4MetaQuoter.MetaQuoteExactSingleParams memory quoteIntermediateToOutputParams = IV4MetaQuoter
+                .MetaQuoteExactSingleParams({
+                    exactCurrency: params.hopCurrencies[k],
+                    variableCurrency: params.variableCurrency,
+                    exactAmount: uint128(quoteInputToIntermediateBest.variableAmount), // assume < 2^128
+                    poolKeyOptions: params.poolKeyOptions
+                });
+            IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteIntermediateToOutput = _metaQuoteExactInputSingle(
+                quoteIntermediateToOutputParams
+            );
+            if (quoteIntermediateToOutput.length == 0) {
+                // No valid quote for Intermediate -> Output, skip
+                continue;
+            }
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory quoteIntermediateToOutputBest = quoteIntermediateToOutput[
+                0
+            ];
+            for (uint256 i = 1; i < quoteIntermediateToOutput.length; i++) {
+                // Find largest output
+                if (quoteIntermediateToOutput[i].variableAmount > quoteIntermediateToOutputBest.variableAmount) {
+                    quoteIntermediateToOutputBest = quoteIntermediateToOutput[i];
+                }
+            }
+            // Construct path
+            // Input -> Intermediate -> Output
+            PathKey[] memory path = new PathKey[](2);
+            PathKey memory pathKeyIntermediate = PathKey({
+                intermediateCurrency: address(quoteInputToIntermediateBest.poolKey.hooks) == address(2) ||
+                    address(quoteInputToIntermediateBest.poolKey.hooks) == address(3)
+                    ? _mapNativeToWeth(params.hopCurrencies[k])
+                    : _mapWethToNative(params.hopCurrencies[k]), // Map to WETH if V2 or V3, to ETH if V4
+                fee: quoteInputToIntermediateBest.poolKey.fee,
+                tickSpacing: quoteInputToIntermediateBest.poolKey.tickSpacing,
+                hooks: quoteInputToIntermediateBest.poolKey.hooks,
+                hookData: quoteInputToIntermediateBest.hookData
+            });
+            PathKey memory pathKeyOutput = PathKey({
+                intermediateCurrency: address(quoteIntermediateToOutputBest.poolKey.hooks) == address(2) ||
+                    address(quoteIntermediateToOutputBest.poolKey.hooks) == address(3)
+                    ? _mapNativeToWeth(params.variableCurrency)
+                    : _mapWethToNative(params.variableCurrency), // Map to WETH if V2 or V3, to ETH if V4
+                fee: quoteIntermediateToOutputBest.poolKey.fee,
+                tickSpacing: quoteIntermediateToOutputBest.poolKey.tickSpacing,
+                hooks: quoteIntermediateToOutputBest.poolKey.hooks,
+                hookData: quoteIntermediateToOutputBest.hookData
+            });
+            path[0] = pathKeyIntermediate;
+            path[1] = pathKeyOutput;
+            // Construct quote
+            IV4MetaQuoter.MetaQuoteExactResult memory quote = IV4MetaQuoter.MetaQuoteExactResult({
+                path: path,
+                variableAmount: quoteIntermediateToOutputBest.variableAmount,
+                gasEstimate: quoteInputToIntermediateBest.gasEstimate + quoteIntermediateToOutputBest.gasEstimate // Not as accurate as direct multihop quote
+            });
+            quoteResultsCount++;
+            quoteResults[k] = quote;
+        }
+
+        // Filter out empty results
+        swaps = new IV4MetaQuoter.MetaQuoteExactResult[](quoteResultsCount);
+        uint256 swapsIndex = 0;
+        for (uint256 i = 0; i < quoteResults.length; i++) {
+            if (quoteResults[i].gasEstimate != 0) {
+                swaps[swapsIndex] = quoteResults[i]; //non-zero quote
+                swapsIndex++;
+            }
+        }
+    }
+
+    function _metaQuoteExactOutput(
+        IV4MetaQuoter.MetaQuoteExactParams memory params
+    ) internal override returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
+        // Find best swap route for each hop currency
+        uint256 quoteResultsCount = 0; // Count of non-reverting quotes
+        IV4MetaQuoter.MetaQuoteExactResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactResult[](
+            params.hopCurrencies.length
+        );
+
+        for (uint256 k = 0; k < params.hopCurrencies.length; k++) {
+            // Quote Output -> Intermediate
+            IV4MetaQuoter.MetaQuoteExactSingleParams memory quoteOutputToIntermediateParams = IV4MetaQuoter
+                .MetaQuoteExactSingleParams({
+                    exactCurrency: params.exactCurrency,
+                    variableCurrency: params.hopCurrencies[k],
+                    exactAmount: params.exactAmount,
+                    poolKeyOptions: params.poolKeyOptions
+                });
+            IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteOutputToIntermediate = _metaQuoteExactOutputSingle(
+                quoteOutputToIntermediateParams
+            );
+            if (quoteOutputToIntermediate.length == 0) {
+                // No valid quote for Output -> Intermediate, skip
+                continue;
+            }
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory quoteOutputToIntermediateBest = quoteOutputToIntermediate[
+                0
+            ];
+            for (uint256 i = 1; i < quoteOutputToIntermediate.length; i++) {
+                // Find smallest input
+                if (quoteOutputToIntermediate[i].variableAmount < quoteOutputToIntermediateBest.variableAmount) {
+                    quoteOutputToIntermediateBest = quoteOutputToIntermediate[i];
+                }
+            }
+
+            // Quote Intermediate -> Input
+            IV4MetaQuoter.MetaQuoteExactSingleParams memory quoteIntermediateToInputParams = IV4MetaQuoter
+                .MetaQuoteExactSingleParams({
+                    exactCurrency: params.hopCurrencies[k],
+                    variableCurrency: params.variableCurrency,
+                    exactAmount: uint128(quoteOutputToIntermediateBest.variableAmount), // assume < 2^128
+                    poolKeyOptions: params.poolKeyOptions
+                });
+            IV4MetaQuoter.MetaQuoteExactSingleResult[] memory quoteIntermediateToInput = _metaQuoteExactOutputSingle(
+                quoteIntermediateToInputParams
+            );
+            if (quoteIntermediateToInput.length == 0) {
+                // No valid quote for Intermediate -> Input, skip
+                continue;
+            }
+            IV4MetaQuoter.MetaQuoteExactSingleResult memory quoteIntermediateToInputBest = quoteIntermediateToInput[0];
+            for (uint256 i = 1; i < quoteIntermediateToInput.length; i++) {
+                // Find smallest input
+                if (quoteIntermediateToInput[i].variableAmount < quoteIntermediateToInputBest.variableAmount) {
+                    quoteIntermediateToInputBest = quoteIntermediateToInput[i];
+                }
+            }
+            // Construct path
+            // Input -> Intermediate -> Output
+            PathKey[] memory path = new PathKey[](2);
+            PathKey memory pathKeyInput = PathKey({
+                intermediateCurrency: address(quoteIntermediateToInputBest.poolKey.hooks) == address(2) ||
+                    address(quoteIntermediateToInputBest.poolKey.hooks) == address(3)
+                    ? _mapNativeToWeth(params.variableCurrency)
+                    : _mapWethToNative(params.variableCurrency), // Map to WETH if V2 or V3, to ETH if V4
+                fee: quoteIntermediateToInputBest.poolKey.fee,
+                tickSpacing: quoteIntermediateToInputBest.poolKey.tickSpacing,
+                hooks: quoteIntermediateToInputBest.poolKey.hooks,
+                hookData: quoteIntermediateToInputBest.hookData
+            });
+            PathKey memory pathKeyIntermediate = PathKey({
+                intermediateCurrency: address(quoteOutputToIntermediateBest.poolKey.hooks) == address(2) ||
+                    address(quoteOutputToIntermediateBest.poolKey.hooks) == address(3)
+                    ? _mapNativeToWeth(params.hopCurrencies[k])
+                    : _mapWethToNative(params.hopCurrencies[k]), // Map to WETH if V2 or V3, to ETH if V4
+                fee: quoteOutputToIntermediateBest.poolKey.fee,
+                tickSpacing: quoteOutputToIntermediateBest.poolKey.tickSpacing,
+                hooks: quoteOutputToIntermediateBest.poolKey.hooks,
+                hookData: quoteOutputToIntermediateBest.hookData
+            });
+            path[0] = pathKeyInput;
+            path[1] = pathKeyIntermediate;
+            // Construct quote
+            IV4MetaQuoter.MetaQuoteExactResult memory quote = IV4MetaQuoter.MetaQuoteExactResult({
+                path: path,
+                variableAmount: quoteIntermediateToInputBest.variableAmount,
+                gasEstimate: quoteOutputToIntermediateBest.gasEstimate + quoteIntermediateToInputBest.gasEstimate // Not as accurate as direct multihop quote
+            });
+            quoteResultsCount++;
+            quoteResults[k] = quote;
+        }
+
+        // Filter out empty results
+        swaps = new IV4MetaQuoter.MetaQuoteExactResult[](quoteResultsCount);
+        uint256 swapsIndex = 0;
+        for (uint256 i = 0; i < quoteResults.length; i++) {
+            if (quoteResults[i].gasEstimate != 0) {
+                swaps[swapsIndex] = quoteResults[i]; //non-zero quote
+                swapsIndex++;
+            }
         }
     }
 }

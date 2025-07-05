@@ -27,8 +27,13 @@ contract MetaQuoterBaseTest is UniswapBaseTest {
         defaultPoolKeyOptions[3] = IV4MetaQuoter.PoolKeyOptions({fee: 10_000, tickSpacing: 200, hooks: address(0)});
     }
 
-    function _mapCurrencyToWeth9(Currency currency) internal view returns (Currency) {
-        // If the currency is the native token, map it to WETH9
+    function _mapNativeToWeth(Currency currency) internal view returns (Currency) {
+        // If the currency is native token, map it to WETH
         return currency.isAddressZero() ? weth9 : currency;
+    }
+
+    function _mapWethToNative(Currency currency) internal view returns (Currency) {
+        // If the currency is weth token, map it to native token
+        return currency == weth9 ? Currency.wrap(address(0)) : currency;
     }
 }

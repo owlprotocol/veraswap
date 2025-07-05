@@ -1,15 +1,18 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
 import { Config } from "@wagmi/core";
+import { zip } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, encodePacked, Hex, padHex, zeroAddress } from "viem";
 
 import { PathKey, PoolKeyOptions, poolKeysToPathExactIn } from "../../types/PoolKey.js";
+import { getSwapExactInCommands } from "../getSwapExactInCommands.js";
 import { ACTION_CONSTANTS, CommandType, CreateCommandParamsGeneric } from "../routerCommands.js";
 
 import { getMetaQuoteExactInputQueryOptions } from "./getMetaQuoteExactInput.js";
 import { MetaQuoteBest, MetaQuoteBestMultihop, MetaQuoteBestSingle, MetaQuoteBestType } from "./MetaQuoter.js";
 
+const address2 = padHex("0x2", { size: 20 }); // Used as a flag for Uni V3 pools
 const address3 = padHex("0x3", { size: 20 }); // Used as a flag for Uni V3 pools
 
 export interface GetUniswapRouteParams {
@@ -108,6 +111,63 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
         return [];
     } else if (bestQuoteType === MetaQuoteBestType.Single) {
         // Single quotes
+        const pathKey: PathKey = {
+            intermediateCurrency:
+                bestQuoteSingle.poolKey.hooks === address2 || bestQuoteSingle.poolKey.hooks === address3
+                    ? params.currencyOut === zeroAddress
+                        ? params.contracts.weth9
+                        : params.currencyOut // Map ETH to WETH if V2/V3
+                    : params.currencyOut === params.contracts.weth9
+                        ? zeroAddress
+                        : params.currencyOut, // Map WETH to ETH if V4
+            fee: bestQuoteSingle.poolKey.fee,
+            tickSpacing: bestQuoteSingle.poolKey.tickSpacing,
+            hooks: bestQuoteSingle.poolKey.hooks,
+            hookData: bestQuoteSingle.hookData,
+        };
+        const [commands, commandInputs] = getSwapExactInCommands({
+            weth: params.contracts.weth9,
+            currencyIn: params.currencyIn,
+            currencyOut: params.currencyOut,
+            path: [pathKey],
+            amountIn: params.amountIn,
+            amountOutMinimum: bestQuoteSingle.variableAmount,
+            recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
+        });
+        const commandsWithInputs: CreateCommandParamsGeneric[] = zip(
+            commands,
+            commandInputs,
+        ) as CreateCommandParamsGeneric[];
+        return commandsWithInputs;
+    } else if (bestQuoteType === MetaQuoteBestType.Multihop) {
+        // Multihop quotes
+        const [commands, commandInputs] = getSwapExactInCommands({
+            weth: params.contracts.weth9,
+            currencyIn: params.currencyIn,
+            currencyOut: params.currencyOut,
+            path: bestQuoteMultihop.path as PathKey[],
+            amountIn: params.amountIn,
+            amountOutMinimum: bestQuoteMultihop.variableAmount,
+            recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
+        });
+        const commandsWithInputs: CreateCommandParamsGeneric[] = zip(
+            commands,
+            commandInputs,
+        ) as CreateCommandParamsGeneric[];
+        return commandsWithInputs;
+    } else {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
+    }
+}
+
+/*
+export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): CreateCommandParamsGeneric[] {
+    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
+    if (bestQuoteType === MetaQuoteBestType.None) {
+        return [];
+    } else if (bestQuoteType === MetaQuoteBestType.Single) {
+        // Single quotes
         return getRouterCommandsForSingleQuote({ ...params, quote: bestQuoteSingle });
     } else if (bestQuoteType === MetaQuoteBestType.Multihop) {
         // Multihop quotes
@@ -117,6 +177,7 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
         throw new Error(`Invalid MetaQuoteBestType: ${bestQuoteType}`);
     }
 }
+*/
 
 const isEthOrWeth = (currency: Address, weth9: Address) => currency === zeroAddress || currency === weth9;
 

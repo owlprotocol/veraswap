@@ -339,6 +339,14 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     Ether.onChain(opChainL1.id),
     Ether.onChain(opChainA.id),
     Ether.onChain(opChainB.id),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockERC20Address({ name: "Liquid V2", symbol: "L2", decimals: 18 }),
+        name: "Liquid V2",
+        symbol: "L2",
+        decimals: 18,
+        logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    }),
 ];
 
 // const testnetMailboxByChain: Record<number, Address> = {
