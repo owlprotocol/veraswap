@@ -708,6 +708,39 @@ export const MAINNET_CURRENCIES = [
     })(),
     nativeOnChain(bsc.id),
     nativeOnChain(polygon.id),
+    new Token({
+        chainId: base.id,
+        address: "0x4F9Fd6Be4a90f2620860d680c0d4d5Fb53d1A825",
+        name: "aixbt by Virtuals",
+        symbol: "AIXBT",
+        decimals: 18,
+        logoURI: "https://coin-images.coingecko.com/coins/images/51784/large/3.png?1731981138",
+    }),
+    // https://app.uniswap.org/explore/tokens/base/0x7a8a5012022bccbf3ea4b03cd2bb5583d915fb1a
+    new Token({
+        chainId: base.id,
+        address: "0x7A8A5012022BCCBf3EA4b03cD2bb5583d915fb1A",
+        name: "Chuck",
+        symbol: "CHUCK",
+        decimals: 18,
+        logoURI: "https://coin-images.coingecko.com/coins/images/37468/large/1000030138.jpg?1714457112",
+    }),
+    new Token({
+        chainId: base.id,
+        address: "0x02537463e57a44f861Ee861Ba4F590C413f984a6",
+        name: "Broak on Base",
+        symbol: "BROAK",
+        decimals: 18,
+        logoURI: "https://coin-images.coingecko.com/coins/images/56016/large/Logo_for_Coin_Gecko.png?1748023295",
+    }),
+    new Token({
+        chainId: base.id,
+        address: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
+        name: "Virtual Protocol",
+        symbol: "VIRTUAL",
+        decimals: 18,
+        logoURI: "https://coin-images.coingecko.com/coins/images/34057/large/LOGOMARK.png?1708356054",
+    }),
 ];
 
 export const LOCAL_POOLS = {
