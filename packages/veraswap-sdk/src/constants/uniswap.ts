@@ -187,7 +187,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
         v4Quoter: "0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227",
         universalRouter: "0x6fc36029136a0c9585306190387597d14f4c80a2",
-        metaQuoter: "0x177109CaE87d41fE3c3d2CE7e7cc47D7d436c515",
+        metaQuoter: "0x67f8b206AA266cFBd2571BC037c2b75a497eFb56",
     },
     [optimismSepolia.id]: {
         weth9: "0x4200000000000000000000000000000000000006",
@@ -196,7 +196,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
         universalRouter: "0x5fb0c37c53ccf5445ef0bac4eea32da4258d5278",
-        metaQuoter: "0xDdB56165FAd0595418479771aec342f57fded1e1",
+        metaQuoter: "0x18757a64C39abF30073A8789B738e214d402c862",
     },
     [baseSepolia.id]: {
         weth9: zeroAddress,
@@ -205,33 +205,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
         universalRouter: "0x2a229f4f81d0b9a434584d6ebc2ffa9e30b8d82d",
-        metaQuoter: "0xDdB56165FAd0595418479771aec342f57fded1e1",
-    },
-    // TODO: add when uniswap supports
-    // [superseed.id]: {
-    //     v4PoolManager: "",
-    //     v4PositionManager: "",
-    //     v4StateView: "",
-    //     v4Quoter: "",
-    //     universalRouter: "",
-    // },
-    [interopDevnet0.id]: {
-        weth9: zeroAddress,
-        v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
-        v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
-        v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
-        v4Quoter: "0x7C594D9B533ac43D3595dd4117549111Ec48F8B2",
-        universalRouter: "0xB148BD2eE7211748b83BEf0a5728eD8EC675E1dc",
-        metaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
-    },
-    [interopDevnet1.id]: {
-        weth9: zeroAddress,
-        v4PoolManager: "0x9131B9084E6017Be19c6a0ef23f73dbB1Bf41f96",
-        v4PositionManager: "0x4498FE0b1DF6B476453440664A16E269B7587D0F",
-        v4StateView: "0xF3c2E547e8da2052E2fC997ee94d54FbE59a6375",
-        v4Quoter: "0x7C594D9B533ac43D3595dd4117549111Ec48F8B2",
-        universalRouter: "0xB148BD2eE7211748b83BEf0a5728eD8EC675E1dc",
-        metaQuoter: "0x5C6B308959cbc4955af33Dd23Ac5ed6b9fd16664",
+        metaQuoter: "0xB2E4AfE0A98648BF15FAa641Dbf39b4330ea64A4",
     },
     [arbitrum.id]: {
         weth9: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
@@ -240,7 +214,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0xE751D8E8020B9AD1D2bb2CEd95EFA97fbd2F0A45",
         v4Quoter: "0x6e69C93152cFF1229E247CDB2153341cA39FE189",
         universalRouter: "0x5D188c9e6222DA351770bdf93517dCa70419e60A",
-        metaQuoter: "0xBb87bCE5D03818cb068062aB8b1172864c88F35D",
+        metaQuoter: "0x35282e02E79c1B9a9e1868BD036b0f59F66E1dB5",
     },
     [base.id]: {
         weth9: "0x4200000000000000000000000000000000000006",
@@ -249,7 +223,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x4DA860C1bA78a330391fE9c1106841389F1aEC01",
         v4Quoter: "0x613DB448fd6980dc84416B95380a8eaeC581DbE1",
         universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
-        metaQuoter: "0x3f7e9263EDbC8c3ef2Be66b785114b4558722494",
+        metaQuoter: "0x5A3eab693473e7c9428B369166D99646c02BF15d",
     },
     [bsc.id]: {
         weth9: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
@@ -258,7 +232,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0xD676ec87044B939D152499469889f5fB3a77D1E0",
         v4Quoter: "0xa889Eca9eDfa9d6048055098D1E8d0C5eC9676d8",
         universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
-        metaQuoter: "0x2D5aB88B9d3eF1f3D37a39b0905F1d0C1CA6C547",
+        metaQuoter: "0xC4A74061393F6C8eAC741d7b58048Ab37C240be4",
     },
     [optimism.id]: {
         weth9: "0x4200000000000000000000000000000000000006",
@@ -267,7 +241,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x97337d1C732FC10C809Ac28C6d2D787c8cA2dFC9",
         v4Quoter: "0x4Bf033864D62d35c0513039e3b20995b4D490Cd9",
         universalRouter: "0x0ad4F5c45F4ad1BcB1c0284dFe9bAb22dC08Dccc",
-        metaQuoter: "0x7750F8480Ee52a810C12999e4CDAF5694736543a",
+        metaQuoter: "0x190c54d59411b824254333Cac660c5D542ad935f",
     },
     [polygon.id]: {
         weth9: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
@@ -276,7 +250,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x425BbF3cF4df231Da3F29555f72dD8F29465E4ee",
         v4Quoter: "0x2829D6f74c1ddaD51e528a270E8e8038AD56b59A",
         universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
-        metaQuoter: "0xe48C996c741328069Ca0230AE326bBf93794602d",
+        metaQuoter: "0x3F66162deD98f81A0551FD18E0755c490ab5E68f",
     },
     [mainnet.id]: {
         weth9: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -285,7 +259,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
         v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
         metaQuoter: "0x0c3AfCa344bdE793336ea16622dF9C62eED7355c",
-        universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f984A",
+        universalRouter: "0xA5Cd4AdC77b140443448841172dDD307D7c420D8",
     },
     [avalanche.id]: {
         weth9: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
@@ -293,7 +267,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0xB74b1F14d2754AcfcbBe1a221023a5cf50Ab8ACD",
         v4StateView: "0x79E4E3F08f8646aD38d4184098ac78CD3453A906",
         v4Quoter: "0x4BCb913C9b582b93E5D2f2F7885A05592AEf7ADa",
-        metaQuoter: "0xe56Bfc2D8b2f1dBd91d63324bDfc0F7eeC8E4b7C",
+        metaQuoter: "0xFC1Fa23A71F590D63eE900a843ea9E3f046D26EA",
         universalRouter: "0x677C26Dc148f42dF110859B0053e5a2d2E2Ec1d3",
     },
 } as const;
