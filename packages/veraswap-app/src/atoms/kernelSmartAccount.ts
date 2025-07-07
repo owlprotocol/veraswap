@@ -24,6 +24,7 @@ export const kernelInitDataAtom = atomWithQuery((get) => {
     return kernelInitDataQueryOptions({ owner: account.address, client });
 }) as unknown as Atom<AtomWithQueryResult<Hex>>;
 
+// TODO: remove
 export const kernelFactoryGetAddressAtomFamily = atomFamily(
     ({
         chainId,
@@ -56,7 +57,7 @@ export const kernelFactoryGetAddressAtomFamily = atomFamily(
 >;
 // https://jotai.org/docs/utilities/family#caveat-memory-leaks
 kernelFactoryGetAddressAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
-
+// TODO: remove
 export const kernelAddressChainInQueryAtom = atom((get) => {
     const chainIn = get(chainInAtom);
     const { data: initData } = get(kernelInitDataAtom);
@@ -104,3 +105,18 @@ export const kernelBytecodeChainOutQueryAtom = atomWithQuery((get) => {
         address,
     });
 }) as Atom<AtomWithQueryResult<Hex>>;
+
+export const kernelAddressQueryAtom = atomWithQuery<Address>((get) => {
+    const { data: initData } = get(kernelInitDataAtom);
+    const factoryAddress = LOCAL_KERNEL_CONTRACTS.kernelFactory;
+
+    if (!initData || !factoryAddress) return disabledQueryOptions as any;
+
+    return readContractQueryOptions(config, {
+        chainId: 1,
+        address: factoryAddress,
+        abi: KernelFactory.abi,
+        functionName: "getAddress",
+        args: [initData, zeroHash],
+    });
+}) as Atom<AtomWithQueryResult<Address>>;

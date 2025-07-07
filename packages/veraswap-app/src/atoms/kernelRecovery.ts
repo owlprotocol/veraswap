@@ -1,7 +1,7 @@
 import { atom, Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
-import { Address, Chain, zeroHash, Hash, Hex } from "viem";
-import { LOCAL_KERNEL_CONTRACTS, LOCAL_CURRENCIES, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
+import { Address, Chain, Hex } from "viem";
+import { LOCAL_CURRENCIES, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { getBytecodeQueryOptions, readContractQueryOptions, getBalanceQueryOptions } from "@wagmi/core/query";
 import { atomFamily } from "jotai/utils";
 import { AtomFamily } from "jotai/vanilla/utils/atomFamily";
@@ -10,7 +10,7 @@ import { balanceOf as balanceOfAbi } from "@owlprotocol/veraswap-sdk/artifacts/I
 import { accountAtom } from "./account.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
 import { currenciesAtom } from "./chains.js";
-import { kernelInitDataAtom, kernelFactoryGetAddressAtomFamily } from "./kernelSmartAccount.js";
+import { kernelInitDataAtom, kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { chains } from "@/config.js";
 import { config } from "@/config.js";
 
@@ -82,80 +82,69 @@ export const allKernelAccountsAtom = atom((get) => {
     const account = get(accountAtom);
     const { data: initData } = get(kernelInitDataAtom);
     const allCurrencies = get(currenciesAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
-    if (!account?.address || !initData) return [];
+    if (!account?.address || !initData || !kernelAddress) return [];
 
     const kernelAccounts: KernelAccountInfo[] = [];
-    const factoryAddress = LOCAL_KERNEL_CONTRACTS.kernelFactory;
 
     chains.forEach((chain) => {
-        const { data: kernelAddress } = get(
-            kernelFactoryGetAddressAtomFamily({
+        const { data: bytecode } = get(
+            kernelDeploymentStatusAtomFamily({
                 chainId: chain.id,
-                factoryAddress,
-                initData,
-                initSalt: zeroHash,
+                address: kernelAddress,
             }),
         );
 
-        if (kernelAddress) {
-            const { data: bytecode } = get(
-                kernelDeploymentStatusAtomFamily({
-                    chainId: chain.id,
-                    address: kernelAddress,
-                }),
-            );
-
-            const { data: balance } = get(
-                kernelBalanceAtomFamily({
-                    chainId: chain.id,
-                    address: kernelAddress,
-                }),
-            );
-
-            const chainCurrencies = allCurrencies.filter((currency) => currency.chainId === chain.id);
-            const localChainCurrencies = LOCAL_CURRENCIES.filter((currency) => currency.chainId === chain.id);
-            const allChainCurrencies = [...chainCurrencies, ...localChainCurrencies];
-
-            const tokenBalances: Array<{
-                tokenAddress: Address;
-                symbol: string;
-                decimals: number;
-                balance: bigint;
-                currency: Currency;
-            }> = [];
-
-            allChainCurrencies.forEach((currency) => {
-                if (!currency.isNative) {
-                    const { data: tokenBalance } = get(
-                        tokenBalanceAtomFamily({
-                            chainId: chain.id,
-                            address: kernelAddress,
-                            tokenAddress: getUniswapV4Address(currency),
-                        }),
-                    );
-
-                    if (tokenBalance && tokenBalance > 0n) {
-                        tokenBalances.push({
-                            tokenAddress: currency.address,
-                            symbol: currency.symbol || "Unknown",
-                            decimals: currency.decimals || 18,
-                            balance: tokenBalance,
-                            currency,
-                        });
-                    }
-                }
-            });
-
-            kernelAccounts.push({
+        const { data: balance } = get(
+            kernelBalanceAtomFamily({
                 chainId: chain.id,
-                chain,
-                kernelAddress,
-                isDeployed: Boolean(bytecode),
-                balance: balance?.value || 0n,
-                tokenBalances,
-            });
-        }
+                address: kernelAddress,
+            }),
+        );
+
+        const chainCurrencies = allCurrencies.filter((currency) => currency.chainId === chain.id);
+        const localChainCurrencies = LOCAL_CURRENCIES.filter((currency) => currency.chainId === chain.id);
+        const allChainCurrencies = [...chainCurrencies, ...localChainCurrencies];
+
+        const tokenBalances: Array<{
+            tokenAddress: Address;
+            symbol: string;
+            decimals: number;
+            balance: bigint;
+            currency: Currency;
+        }> = [];
+
+        allChainCurrencies.forEach((currency) => {
+            if (!currency.isNative) {
+                const { data: tokenBalance } = get(
+                    tokenBalanceAtomFamily({
+                        chainId: chain.id,
+                        address: kernelAddress,
+                        tokenAddress: getUniswapV4Address(currency),
+                    }),
+                );
+
+                if (tokenBalance && tokenBalance > 0n) {
+                    tokenBalances.push({
+                        tokenAddress: currency.address,
+                        symbol: currency.symbol || "Unknown",
+                        decimals: currency.decimals || 18,
+                        balance: tokenBalance,
+                        currency,
+                    });
+                }
+            }
+        });
+
+        kernelAccounts.push({
+            chainId: chain.id,
+            chain,
+            kernelAddress,
+            isDeployed: Boolean(bytecode),
+            balance: balance?.value || 0n,
+            tokenBalances,
+        });
     });
 
     return kernelAccounts;

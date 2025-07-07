@@ -3,6 +3,7 @@ import { atom } from "jotai";
 import {
     kernelAddressChainInQueryAtom,
     kernelAddressChainOutQueryAtom,
+    kernelAddressQueryAtom,
     kernelBytecodeChainInQueryAtom,
     kernelBytecodeChainOutQueryAtom,
     kernelInitDataAtom,
@@ -43,6 +44,7 @@ export const prefetchQueriesAtom = atom((get) => [
     get(kernelInitDataAtom),
     get(kernelAddressChainInQueryAtom),
     get(kernelAddressChainOutQueryAtom),
+    get(kernelAddressQueryAtom),
     get(kernelBytecodeChainInQueryAtom),
     get(kernelBytecodeChainOutQueryAtom),
     // Executor
