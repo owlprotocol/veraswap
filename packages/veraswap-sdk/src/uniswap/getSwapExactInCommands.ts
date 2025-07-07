@@ -166,7 +166,7 @@ function buildV4Swap({
             {
                 currencyIn,
                 path: builder.currPath,
-                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
+                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.OPEN_DELTA, // amountIn: if first command
                 amountOutMinimum: isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last swap
             },
         ]);
