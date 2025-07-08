@@ -4,8 +4,8 @@ import { RegistryToken } from "../types/RegistryToken.js";
 import { convertRegistryTokens } from "../utils/index.js";
 
 const registryTokenUrls = {
-    mainnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens.mainnet.json",
-    testnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/main/tokens.testnet.json",
+    mainnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.mainnet.json",
+    testnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.testnet.json",
 };
 
 export function registryTokenQueryKey(chainsType: "mainnet" | "testnet" | "local") {
