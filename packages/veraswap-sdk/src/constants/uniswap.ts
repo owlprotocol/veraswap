@@ -26,7 +26,6 @@ import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { WETH } from "../artifacts/WETH.js";
-import { interopDevnet0, interopDevnet1 } from "../chains/interopDevnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
 export const V4_SWAP = 0x10;
