@@ -121,12 +121,12 @@ export const TokenSelector = ({
         <Dialog
             open={isOpen}
             onOpenChange={(open) => {
-                requestAnimationFrame(() => {
-                    rowVirtualizer.scrollToIndex(0);
-                    rowVirtualizer.measure();
-                });
                 setIsOpen(open);
-                if (!open) setExpandedSymbol(null);
+                if (open && currentTokenSymbol) {
+                    requestAnimationFrame(() => {
+                        setExpandedSymbol(currentTokenSymbol);
+                    });
+                }
             }}
         >
             <DialogTrigger asChild>
