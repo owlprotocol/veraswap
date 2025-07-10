@@ -118,8 +118,8 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
                         ? params.contracts.weth9
                         : params.currencyOut // Map ETH to WETH if V2/V3
                     : params.currencyOut === params.contracts.weth9
-                        ? zeroAddress
-                        : params.currencyOut, // Map WETH to ETH if V4
+                      ? zeroAddress
+                      : params.currencyOut, // Map WETH to ETH if V4
             fee: bestQuoteSingle.poolKey.fee,
             tickSpacing: bestQuoteSingle.poolKey.tickSpacing,
             hooks: bestQuoteSingle.poolKey.hooks,
