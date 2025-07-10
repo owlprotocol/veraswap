@@ -1,5 +1,6 @@
 import { localChains, mainnetChains, testnetChains } from "../chains/chainType.js";
 import { CURRENCIES, localSupersimCurrencies } from "../constants/index.js";
+import { Currency, isToken } from "../currency/currency.js";
 import { RegistryToken } from "../types/RegistryToken.js";
 import { convertRegistryTokens } from "../utils/index.js";
 
@@ -7,6 +8,20 @@ const registryTokenUrls = {
     mainnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.mainnet.json",
     testnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.testnet.json",
 };
+
+function deduplicateTokens(tokens: Currency[]): Currency[] {
+    const seen = new Map<string, Currency>();
+    for (const token of tokens) {
+        if (token.isNative) {
+            const key = `${token.chainId}-native`;
+            if (!seen.has(key)) seen.set(key, token);
+        } else if (isToken(token)) {
+            const key = `${token.chainId}-${token.address}`;
+            if (!seen.has(key)) seen.set(key, token);
+        }
+    }
+    return Array.from(seen.values());
+}
 
 export function registryTokenQueryKey(chainsType: "mainnet" | "testnet" | "local") {
     return ["registryTokens", chainsType];
@@ -51,7 +66,7 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
             });
 
             const converted = convertRegistryTokens(filteredTokens);
-            return [...converted, ...localCurrencies];
+            return deduplicateTokens([...converted, ...localCurrencies]);
         },
         staleTime: 5 * 60 * 1000,
     };
