@@ -152,7 +152,7 @@ contract V4MetaQuoterBase is V4QuoterBase {
 
     function _metaQuoteExactInput(
         IV4MetaQuoter.MetaQuoteExactParams memory params
-    ) internal returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
+    ) internal virtual returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
         // Find best swap route for each hop currency
         uint256 quoteResultsCount = 0; // Count of non-reverting quotes
         IV4MetaQuoter.MetaQuoteExactResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactResult[](
@@ -249,7 +249,7 @@ contract V4MetaQuoterBase is V4QuoterBase {
 
     function _metaQuoteExactOutput(
         IV4MetaQuoter.MetaQuoteExactParams memory params
-    ) internal returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
+    ) internal virtual returns (IV4MetaQuoter.MetaQuoteExactResult[] memory swaps) {
         // Find best swap route for each hop currency
         uint256 quoteResultsCount = 0; // Count of non-reverting quotes
         IV4MetaQuoter.MetaQuoteExactResult[] memory quoteResults = new IV4MetaQuoter.MetaQuoteExactResult[](

@@ -61,7 +61,7 @@ function buildV2Swap({
         swapPath.push(pathKey.intermediateCurrency);
     }
     const swap = [
-        isLastSwap ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
+        isLastSwap && currencyOut != zeroAddress ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
         builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
         isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last path
         swapPath,
@@ -108,13 +108,13 @@ function buildV3Swap({
     }
     const swapPath: Hex = encodePacked(swapPathTypes, swapPathValues);
 
-    const swap = [
-        isLastSwap ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
+    const swap: [Address, bigint, bigint, Hex, boolean] = [
+        isLastSwap && currencyOut != zeroAddress ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no unwrap
         builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
         isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last path
         swapPath,
         builder.commands.length == 0, // payerIsUser: if first command
-    ] as const;
+    ];
     builder.commands.push(CommandType.V3_SWAP_EXACT_IN);
     builder.commandInputs.push(swap);
     // Output: unwrap if needed
@@ -142,9 +142,14 @@ function buildV4Swap({
     }
     // Input: unwrap if needed
     if (builder.currCurrencyIn === weth) {
+        if (builder.commands.length == 0) {
+            // Transfer WETH if first command
+            builder.commands.push(CommandType.PERMIT2_TRANSFER_FROM);
+            builder.commandInputs.push([weth, ACTION_CONSTANTS.ADDRESS_THIS, amountIn]);
+        }
         // Unwrap weth
         builder.commands.push(CommandType.UNWRAP_WETH);
-        builder.commandInputs.push([ACTION_CONSTANTS.ADDRESS_THIS, builder.commands.length == 0 ? amountIn : 0]); // amountIn: if first command
+        builder.commandInputs.push([ACTION_CONSTANTS.ADDRESS_THIS, 0]);
     }
     // Swap
     const currencyIn = builder.currCurrencyIn === weth ? zeroAddress : builder.currCurrencyIn;
@@ -161,7 +166,7 @@ function buildV4Swap({
             {
                 currencyIn,
                 path: builder.currPath,
-                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
+                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.OPEN_DELTA, // amountIn: if first command
                 amountOutMinimum: isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last swap
             },
         ]);
@@ -184,29 +189,23 @@ function buildV4Swap({
             {
                 poolKey,
                 zeroForOne,
-                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.CONTRACT_BALANCE, // amountIn: if first command
+                amountIn: builder.commands.length == 0 ? amountIn : ACTION_CONSTANTS.OPEN_DELTA, // amountIn: if first command
                 amountOutMinimum: isLastSwap ? amountOutMinimum : 0n, // amountOutMinimum: if last swap
-                hoookData: pathKey.hookData,
+                hookData: pathKey.hookData,
             },
         ]);
     }
 
     // Take: Take output currency
     const pathOut = builder.currPath[builder.currPath.length - 1].intermediateCurrency; // last currency of current path
-    if (isLastSwap) {
-        // Take All (most often to recipient)
-        v4TradePlan.addAction(Actions.TAKE_ALL, [
-            pathOut,
-            currencyOut != weth ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no wrap
-            amountOutMinimum, // amountOutMinimum: if last swap
-        ]);
-    } else {
-        // Take (funds received to router)
-        v4TradePlan.addAction(Actions.TAKE, [pathOut, ACTION_CONSTANTS.ADDRESS_THIS, ACTION_CONSTANTS.OPEN_DELTA]);
-    }
+    v4TradePlan.addAction(Actions.TAKE, [
+        pathOut,
+        isLastSwap && currencyOut != weth ? recipient : ACTION_CONSTANTS.ADDRESS_THIS, // recipient: if last swap & no wrap
+        isLastSwap ? amountOutMinimum : ACTION_CONSTANTS.OPEN_DELTA, // amountOutMinimum: if last swap
+    ]);
 
     builder.commands.push(CommandType.V4_SWAP);
-    builder.commandInputs.push(v4TradePlan.finalize());
+    builder.commandInputs.push([v4TradePlan.finalize()]);
 
     // Output: wrap if needed
     if (isLastSwap && currencyOut === weth) {
