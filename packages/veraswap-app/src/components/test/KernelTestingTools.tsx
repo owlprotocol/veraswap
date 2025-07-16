@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { useAccount } from "wagmi";
 import { useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther, parseUnits, encodeFunctionData } from "viem";
+import { parseEther, parseUnits, encodeFunctionData, Address } from "viem";
 import { transfer as transferAbi } from "@owlprotocol/veraswap-sdk/artifacts/IERC20";
 import { getUniswapV4Address, LOCAL_CURRENCIES } from "@owlprotocol/veraswap-sdk";
 import { TestTube, ChevronDown, ChevronRight, Send } from "lucide-react";
@@ -44,7 +44,7 @@ export function KernelTestingTools() {
             const amount = parseEther(testAmount);
 
             sendTransaction({
-                to: kernelAddress as `0x${string}`,
+                to: kernelAddress as Address,
                 value: amount,
                 chainId,
             });
@@ -69,10 +69,10 @@ export function KernelTestingTools() {
             const amount = parseUnits(testTokenAmount, selectedCurrency.decimals || 18);
 
             sendTransaction({
-                to: selectedToken as `0x${string}`,
+                to: selectedToken as Address,
                 data: encodeFunctionData({
                     abi: [transferAbi],
-                    args: [kernelAddress as `0x${string}`, amount],
+                    args: [kernelAddress as Address, amount],
                 }),
                 chainId,
             });

@@ -1,8 +1,6 @@
 import { atom } from "jotai";
 
 import {
-    kernelAddressChainInQueryAtom,
-    kernelAddressChainOutQueryAtom,
     kernelAddressQueryAtom,
     kernelBytecodeChainInQueryAtom,
     kernelBytecodeChainOutQueryAtom,
@@ -42,8 +40,6 @@ import { igpQuotePaymentQueryAtom, tokenRouterQuoteGasPaymentQueryAtom } from ".
 export const prefetchQueriesAtom = atom((get) => [
     // Kernel
     get(kernelInitDataAtom),
-    get(kernelAddressChainInQueryAtom),
-    get(kernelAddressChainOutQueryAtom),
     get(kernelAddressQueryAtom),
     get(kernelBytecodeChainInQueryAtom),
     get(kernelBytecodeChainOutQueryAtom),

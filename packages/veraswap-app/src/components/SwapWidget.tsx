@@ -56,7 +56,6 @@ import {
     chainsTypeAtom,
     getSwapStepMessage,
     kernelInitDataAtom,
-    kernelAddressChainOutQueryAtom,
     isDisabledStep,
     prefetchQueriesAtom,
     tokenRouterQuoteGasPaymentQueryAtom,
@@ -76,6 +75,7 @@ import {
     tokenInUsdValueAtom,
     tokenOutUsdValueAtom,
     superchainSwapMessageIdAtom,
+    kernelAddressQueryAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -133,7 +133,8 @@ export function SwapWidget({
     const { data: bridgePayment } = useAtomValue(tokenRouterQuoteGasPaymentQueryAtom);
 
     const { data: kernelSmartAccountInitData } = useAtomValue(kernelInitDataAtom);
-    const { data: kernelAddressChainOut } = useAtomValue(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = useAtomValue(kernelAddressQueryAtom);
+
     const { data: quoterData, error: quoterError, isLoading: isQuoterLoading } = useAtomValue(routeMultichainAtom);
 
     const [tokenInAmountInput, setTokenInAmountInput] = useAtom(tokenInAmountInputAtom);
@@ -218,8 +219,7 @@ export function SwapWidget({
         swapRemoteTransactionHash,
     );
 
-    const bridgeToAddress =
-        (transactionType?.type === "BRIDGE_SWAP" ? kernelAddressChainOut : walletAddress) ?? zeroAddress;
+    const bridgeToAddress = (transactionType?.type === "BRIDGE_SWAP" ? kernelAddress : walletAddress) ?? zeroAddress;
 
     useWatchStargateMessageProcessed(
         stargateQuote,

@@ -20,7 +20,7 @@ import { getTokenDollarValueQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { groupBy } from "lodash-es";
 import { accountAtom } from "./account.js";
 import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
-import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
+import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
 import { orbiterQuoteAtom, orbiterRouterAtom } from "./orbiter.js";
@@ -146,7 +146,7 @@ export const tokenInAccountBalanceAtom = atom<bigint | null>((get) => {
 
 export const tokenInKernelBalanceQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
-    const { data: account } = get(kernelAddressChainInQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     return get(currencyBalanceAtomFamily({ currency, account }));
@@ -162,7 +162,7 @@ export const tokenOutAccountBalanceQueryAtom = atom((get) => {
 
 export const tokenOutKernelBalanceQueryAtom = atom((get) => {
     const currency = get(currencyOutAtom);
-    const { data: account } = get(kernelAddressChainOutQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     return get(currencyBalanceAtomFamily({ currency, account }));
@@ -172,7 +172,7 @@ export const tokenOutKernelBalanceQueryAtom = atom((get) => {
 export const tokenInAllowanceAccountToKernelQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
     const account = get(accountAtom);
-    const { data: spender } = get(kernelAddressChainInQueryAtom);
+    const { data: spender } = get(kernelAddressQueryAtom);
     if (!currency || !account?.address || !spender) return get(disabledQueryAtom) as any;
 
     return get(tokenAllowanceAtomFamily({ currency, account: account.address, spender }));
@@ -192,7 +192,7 @@ export const tokenInAllowanceAccountToPermit2Atom = atom<bigint | null>((get) =>
 
 export const tokenInAllowanceKernelToPermit2QueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
-    const { data: account } = get(kernelAddressChainInQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     return get(tokenAllowanceAtomFamily({ currency, account, spender: PERMIT2_ADDRESS }));
@@ -200,7 +200,7 @@ export const tokenInAllowanceKernelToPermit2QueryAtom = atom((get) => {
 
 export const tokenInAllowanceKernelToHypERC20CollateralQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
-    const { data: account } = get(kernelAddressChainInQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
 
     if (!currency || !account || "collateralAddress" in currency) {
         return get(disabledQueryAtom) as any;
@@ -211,7 +211,7 @@ export const tokenInAllowanceKernelToHypERC20CollateralQueryAtom = atom((get) =>
 
 export const tokenOutAllowanceKernelToPermit2QueryAtom = atom((get) => {
     const currency = get(currencyOutAtom);
-    const { data: account } = get(kernelAddressChainOutQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     return get(tokenAllowanceAtomFamily({ currency, account, spender: PERMIT2_ADDRESS }));
@@ -221,7 +221,7 @@ export const tokenOutAllowanceKernelToPermit2QueryAtom = atom((get) => {
 export const tokenInPermit2AllowanceAccountToKernelQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
     const account = get(accountAtom);
-    const { data: spender } = get(kernelAddressChainInQueryAtom);
+    const { data: spender } = get(kernelAddressQueryAtom);
     if (!currency || !account?.address || !spender) return get(disabledQueryAtom) as any;
 
     return get(tokenPermit2AllowanceAtomFamily({ currency, account: account.address, spender }));
@@ -241,7 +241,7 @@ export const tokenInPermit2AllowanceAccountToUniswapRouterQueryAtom = atom((get)
 
 export const tokenInPermit2AllowanceKernelToUniswapRouterQueryAtom = atom((get) => {
     const currency = get(currencyInAtom);
-    const { data: account } = get(kernelAddressChainInQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     const uniswapContracts = UNISWAP_CONTRACTS[currency.chainId];
@@ -253,7 +253,7 @@ export const tokenInPermit2AllowanceKernelToUniswapRouterQueryAtom = atom((get) 
 
 export const tokenOutPermit2AllowanceKernelToUniswapRouterQueryAtom = atom((get) => {
     const currency = get(currencyOutAtom);
-    const { data: account } = get(kernelAddressChainOutQueryAtom);
+    const { data: account } = get(kernelAddressQueryAtom);
     if (!currency || !account) return get(disabledQueryAtom) as any;
 
     const uniswapContracts = UNISWAP_CONTRACTS[currency.chainId];

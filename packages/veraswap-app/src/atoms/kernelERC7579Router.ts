@@ -6,17 +6,17 @@ import { ERC7579ExecutorRouter } from "@owlprotocol/veraswap-sdk/artifacts";
 import { chainInAtom, chainOutAtom } from "./tokens.js";
 
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { accountAtom } from "./account.js";
+import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { config } from "@/config.js";
 
 export const erc7579RouterAccountIsOwnerChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
     const account = get(accountAtom);
-    const { data: kernelAddressChainIn } = get(kernelAddressChainInQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
-    if (!chainIn || !chainOut || !kernelAddressChainIn || !account?.address) {
+    if (!chainIn || !chainOut || !kernelAddress || !account?.address) {
         return disabledQueryOptions as any;
     }
 
@@ -32,7 +32,7 @@ export const erc7579RouterAccountIsOwnerChainInQueryAtom = atomWithQuery((get) =
         address: erc7579RouterIn,
         abi: ERC7579ExecutorRouter.abi,
         functionName: "owners",
-        args: [kernelAddressChainIn, chainOut.id, erc7579RouterOut, account.address],
+        args: [kernelAddress, chainOut.id, erc7579RouterOut, account.address],
     });
 }) as Atom<AtomWithQueryResult<boolean>>;
 
@@ -40,9 +40,9 @@ export const erc7579RouterAccountIsOwnerChainOutQueryAtom = atomWithQuery((get) 
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
     const account = get(accountAtom);
-    const { data: kernelAddressChainOut } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
-    if (!chainIn || !chainOut || !kernelAddressChainOut || !account?.address) {
+    if (!chainIn || !chainOut || !kernelAddress || !account?.address) {
         return disabledQueryOptions as any;
     }
 
@@ -58,17 +58,16 @@ export const erc7579RouterAccountIsOwnerChainOutQueryAtom = atomWithQuery((get) 
         address: erc7579RouterOut,
         abi: ERC7579ExecutorRouter.abi,
         functionName: "owners",
-        args: [kernelAddressChainOut, chainIn.id, erc7579RouterIn, account.address],
+        args: [kernelAddress, chainIn.id, erc7579RouterIn, account.address],
     });
 }) as Atom<AtomWithQueryResult<boolean>>;
 
 export const erc7579RouterKernelIsOwnerChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
-    const { data: kernelAddressChainIn } = get(kernelAddressChainInQueryAtom);
-    const { data: kernelAddressChainOut } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
-    if (!chainIn || !chainOut || !kernelAddressChainIn || !kernelAddressChainOut) {
+    if (!chainIn || !chainOut || !kernelAddress) {
         return disabledQueryOptions as any;
     }
 
@@ -84,17 +83,16 @@ export const erc7579RouterKernelIsOwnerChainInQueryAtom = atomWithQuery((get) =>
         address: erc7579RouterIn,
         abi: ERC7579ExecutorRouter.abi,
         functionName: "owners",
-        args: [kernelAddressChainIn, chainOut.id, erc7579RouterOut, kernelAddressChainOut],
+        args: [kernelAddress, chainOut.id, erc7579RouterOut, kernelAddress],
     });
 }) as Atom<AtomWithQueryResult<boolean>>;
 
 export const erc7579RouterKernelIsOwnerChainOutQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
     const chainOut = get(chainOutAtom);
-    const { data: kernelAddressChainIn } = get(kernelAddressChainInQueryAtom);
-    const { data: kernelAddressChainOut } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
-    if (!chainIn || !chainOut || !kernelAddressChainOut || !kernelAddressChainIn) {
+    if (!chainIn || !chainOut || !kernelAddress) {
         return disabledQueryOptions as any;
     }
 
@@ -110,6 +108,6 @@ export const erc7579RouterKernelIsOwnerChainOutQueryAtom = atomWithQuery((get) =
         address: erc7579RouterOut,
         abi: ERC7579ExecutorRouter.abi,
         functionName: "owners",
-        args: [kernelAddressChainOut, chainIn.id, erc7579RouterIn, kernelAddressChainIn],
+        args: [kernelAddress, chainIn.id, erc7579RouterIn, kernelAddress],
     });
 }) as Atom<AtomWithQueryResult<boolean>>;

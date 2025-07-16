@@ -7,8 +7,8 @@ import { CallArgs } from "./ExecLib.js";
 export interface RecoveryParams {
     chainId: number;
     kernelAddress: Address;
-    nativeAmount?: bigint;
-    tokenTransfers?: {
+    nativeAmount: bigint;
+    tokenTransfers: {
         tokenAddress: Address;
         amount: bigint;
     }[];
@@ -19,7 +19,7 @@ export function createRecoveryCalls(walletAddress: Address, params: RecoveryPara
 
     const calls: (CallArgs & { account: Address })[] = [];
 
-    if (nativeAmount && nativeAmount > 0n) {
+    if (nativeAmount > 0n) {
         calls.push({
             to: walletAddress,
             data: "0x",
@@ -28,20 +28,18 @@ export function createRecoveryCalls(walletAddress: Address, params: RecoveryPara
         });
     }
 
-    if (tokenTransfers) {
-        tokenTransfers.forEach(({ tokenAddress, amount }) => {
-            if (amount > 0n) {
-                calls.push({
-                    to: tokenAddress,
-                    data: encodeFunctionData({
-                        abi: [transferAbi],
-                        args: [walletAddress, amount],
-                    }),
-                    account: kernelAddress,
-                });
-            }
-        });
-    }
+    tokenTransfers.forEach(({ tokenAddress, amount }) => {
+        if (amount > 0n) {
+            calls.push({
+                to: tokenAddress,
+                data: encodeFunctionData({
+                    abi: [transferAbi],
+                    args: [walletAddress, amount],
+                }),
+                account: kernelAddress,
+            });
+        }
+    });
 
     return calls;
 }

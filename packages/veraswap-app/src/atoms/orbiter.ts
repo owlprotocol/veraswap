@@ -14,8 +14,8 @@ import { zeroAddress, Address, parseUnits } from "viem";
 import { chainInAtom, chainOutAtom, tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
 import { accountAtom } from "./account.js";
-import { kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
+import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 
 const orbiterRoutersMainnet = atomWithQuery(() => orbiterRoutersQueryOptions(true));
 const orbiterRoutersTestnet = atomWithQuery(() => orbiterRoutersQueryOptions(false));
@@ -115,12 +115,12 @@ export const orbiterQuoteAtom = atomWithQuery((get) => {
     if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount)
         return disabledQueryOptions;
 
-    const kernelAddressChainOut = get(kernelAddressChainOutQueryAtom).data;
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
     // Kernel address is only used when bridging and then swapping
     const targetRecipient =
         transactionType.type === "BRIDGE_SWAP"
-            ? kernelAddressChainOut
+            ? kernelAddress
             : (account.address ?? "0x0000000000000000000000000000000000000001");
 
     if (!targetRecipient) return disabledQueryOptions as any;

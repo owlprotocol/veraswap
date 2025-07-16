@@ -12,9 +12,9 @@ import { Atom } from "jotai";
 import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
 import { accountAtom } from "./account.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
 import { chainInAtom, chainOutAtom, currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
 import { transactionTypeAtom, routeMultichainAtom } from "./uniswap.js";
+import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { config } from "@/config.js";
 
 export const stargateQuoteAtom = atomWithQuery((get) => {
@@ -34,14 +34,14 @@ export const stargateQuoteAtom = atomWithQuery((get) => {
     if (!currencyIn || !currencyOut || !chainIn || !chainOut || !transactionType || !tokenInAmount)
         return disabledQueryOptions;
 
-    const kernelAddressChainOut = get(kernelAddressChainOutQueryAtom).data;
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
 
     if (transactionType.type === "SWAP") return disabledQueryOptions as any;
 
     // Kernel address is only used when bridging and then swapping
     const receiver =
         transactionType.type === "BRIDGE_SWAP"
-            ? kernelAddressChainOut
+            ? kernelAddress
             : (account.address ?? "0x0000000000000000000000000000000000000001");
 
     if (!receiver) return disabledQueryOptions as any;

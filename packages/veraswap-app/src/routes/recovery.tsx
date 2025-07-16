@@ -18,8 +18,7 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import { createRecoveryCalls } from "@owlprotocol/veraswap-sdk";
 import { getOwnableExecutorExecuteCalls, LOCAL_KERNEL_CONTRACTS } from "@owlprotocol/veraswap-sdk";
 import { useQueryClient } from "@tanstack/react-query";
-import { allKernelAccountsAtom, stuckFundsAtom } from "@/atoms/kernelRecovery.js";
-// import { KernelTestingTools } from "@/components/KernelTestingTools.js";
+import { allKernelAccountsAtom, stuckFundsAtom, KernelAccountInfo } from "@/atoms/kernelRecovery.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
@@ -70,8 +69,8 @@ function RecoveryPage() {
 
     const deployedKernelAccounts = kernelAccounts.filter((account) => account.isDeployed);
 
-    const handleRecoverFunds = async (account: any) => {
-        const tokenTransfers = account.tokenBalances.map((token: any) => ({
+    const handleRecoverFunds = async (account: KernelAccountInfo) => {
+        const tokenTransfers = account.tokenBalances.map((token) => ({
             tokenAddress: token.tokenAddress,
             amount: token.balance,
         }));
@@ -82,8 +81,8 @@ function RecoveryPage() {
             const recoveryCalls = createRecoveryCalls(walletAddress!, {
                 chainId: account.chainId,
                 kernelAddress: account.kernelAddress,
-                nativeAmount: account.balance > 0n ? account.balance : undefined,
-                tokenTransfers: tokenTransfers.length > 0 ? tokenTransfers : undefined,
+                nativeAmount: account.balance,
+                tokenTransfers,
             });
 
             if (recoveryCalls.length === 0) {
@@ -151,8 +150,6 @@ function RecoveryPage() {
             </div>
 
             <div className="space-y-6">
-                {/* <KernelTestingTools /> */}
-
                 {!stuckFunds.hasStuckFunds && deployedKernelAccounts.length > 0 && (
                     <Card>
                         <CardContent className="p-6">
