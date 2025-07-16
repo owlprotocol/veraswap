@@ -759,6 +759,18 @@ export function SwapWidget({
                     >
                         {getSwapStepMessage(swapStep, transactionType)}
                     </Button>
+                    {isEmbedded && (
+                        <div className="text-center mt-2 text-sm">
+                            Powered by{" "}
+                            <Button
+                                variant="link"
+                                className="p-0 h-auto font-bold"
+                                onClick={() => window.open("https://veraswap.io", "_blank", "noopener,noreferrer")}
+                            >
+                                Veraswap
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             {showTransactionFlow && transactionType && <TransactionFlow transaction={transactionType} />}
