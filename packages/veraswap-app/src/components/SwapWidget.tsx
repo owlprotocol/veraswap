@@ -19,7 +19,7 @@ import {
     MAX_UINT_256,
 } from "@owlprotocol/veraswap-sdk";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
@@ -30,6 +30,7 @@ import {
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { track } from "@vercel/analytics";
 import {
     sendTransactionMutationAtom,
     swapInvertAtom,
@@ -411,6 +412,55 @@ export function SwapWidget({
                             title: "Transaction Failed",
                             description: "Your transaction has failed. Please try again.",
                             variant: "destructive",
+                        });
+                    },
+                    onSettled: (hash, error) => {
+                        const amountOutUnits = parseUnits(amountOut!, currencyOut!.decimals);
+
+                        // Ignore USD value for non-mainnet networks since it is fake
+                        const tokenInUsdValueAdjusted = networkType === "mainnet" ? (tokenInUsdValue ?? 0) : 0;
+                        const tokenOutUsdValueAdjusted = networkType === "mainnet" ? (tokenOutUsdValue ?? 0) : 0;
+
+                        if (networkType === "local") {
+                            console.debug({
+                                transactionType: transactionType.type,
+                                transactionHasError: !!error,
+                                networkType,
+                                hash: hash ?? "",
+                                currencyInSymbol: currencyIn.symbol ?? "",
+                                currencyInAddress: getUniswapV4Address(currencyIn),
+                                currencyInChainId: currencyIn.chainId,
+                                currencyInAmount: tokenInAmount!.toString(),
+                                currencyInDecimals: currencyIn.decimals,
+                                tokenInUsdValue: tokenInUsdValueAdjusted,
+                                currencyOutSymbol: currencyOut!.symbol ?? "",
+                                currencyOutAddress: getUniswapV4Address(currencyOut!),
+                                currencyOutChainId: currencyOut!.chainId,
+                                currencyOutAmount: amountOutUnits.toString(),
+                                currencyOutDecimals: currencyOut!.decimals,
+                                tokenOutUsdValue: tokenOutUsdValueAdjusted,
+                            });
+
+                            return;
+                        }
+
+                        track("Execute Transaction", {
+                            transactionType: transactionType.type,
+                            transactionHasError: !!error,
+                            networkType,
+                            hash: hash ?? "",
+                            currencyInSymbol: currencyIn.symbol ?? "",
+                            currencyInAddress: getUniswapV4Address(currencyIn),
+                            currencyInChainId: currencyIn.chainId,
+                            currencyInAmount: tokenInAmount!.toString(),
+                            currencyInDecimals: currencyIn.decimals,
+                            tokenInUsdValue: tokenInUsdValueAdjusted,
+                            currencyOutSymbol: currencyOut!.symbol ?? "",
+                            currencyOutAddress: getUniswapV4Address(currencyOut!),
+                            currencyOutChainId: currencyOut!.chainId,
+                            currencyOutAmount: amountOutUnits.toString(),
+                            currencyOutDecimals: currencyOut!.decimals,
+                            tokenOutUsdValue: tokenOutUsdValueAdjusted,
                         });
                     },
                 },
