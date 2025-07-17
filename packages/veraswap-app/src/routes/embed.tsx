@@ -1,8 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { useSetAtom } from "jotai";
+import { Token } from "@owlprotocol/veraswap-sdk";
+import { Address, isAddress } from "viem";
+import { useEffect } from "react";
 import { SwapWidget } from "@/components/SwapWidget.js";
 import { useTheme, ThemeProvider } from "@/components/theme-provider.js";
 import { hexThemeToHSL } from "@/utils/themeUtils.js";
+import { customCurrenciesAtom } from "@/atoms/chains.js";
+
+const CustomTokenSchema = z.object({
+    address: z.string().refine((val) => isAddress(val), {
+        message: "Invalid address",
+    }),
+    chainId: z.number(),
+    symbol: z.string(),
+    name: z.string(),
+    decimals: z.number(),
+    logoURI: z.string().optional(),
+});
 
 export const Route = createFileRoute("/embed")({
     validateSearch: z.object({
@@ -12,6 +28,16 @@ export const Route = createFileRoute("/embed")({
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
         pinnedTokens: z.string().optional(),
+        customTokens: z
+            .string()
+            .transform((str) => {
+                try {
+                    return z.array(CustomTokenSchema).parse(JSON.parse(str));
+                } catch {
+                    return [];
+                }
+            })
+            .optional(),
         mode: z.enum(["dark", "light"]).optional(),
         primary: z.string().optional(),
         "primary-foreground": z.string().optional(),
@@ -32,10 +58,29 @@ export const Route = createFileRoute("/embed")({
 function Widget() {
     const searchParams = Route.useSearch();
     const { setTheme } = useTheme();
+    const setCustomTokens = useSetAtom(customCurrenciesAtom);
 
-    if (searchParams.mode) {
-        setTheme(searchParams.mode);
-    }
+    useEffect(() => {
+        if (searchParams.mode) {
+            setTheme(searchParams.mode);
+        }
+        if (searchParams.customTokens) {
+            const tokens = searchParams.customTokens.map(
+                (token) =>
+                    new Token({
+                        address: token.address as Address,
+                        chainId: token.chainId,
+                        symbol: token.symbol,
+                        name: token.name,
+                        decimals: token.decimals,
+                        logoURI: token.logoURI,
+                    }),
+            );
+            setCustomTokens(tokens);
+        } else {
+            setCustomTokens([]);
+        }
+    }, [searchParams, setTheme, setCustomTokens]);
 
     const hexThemeRaw = {
         primary: searchParams.primary,
