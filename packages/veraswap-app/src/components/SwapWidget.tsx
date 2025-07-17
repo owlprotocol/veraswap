@@ -416,22 +416,27 @@ export function SwapWidget({
                     onSettled: (hash, error) => {
                         const amountOutUnits = parseUnits(amountOut!, currencyOut!.decimals);
 
+                        // Ignore USD value for non-mainnet networks since it is fake
+                        const tokenInUsdValueAdjusted = networkType === "mainnet" ? (tokenInUsdValue ?? 0) : 0;
+                        const tokenOutUsdValueAdjusted = networkType === "mainnet" ? (tokenOutUsdValue ?? 0) : 0;
+
                         track("Execute Transaction", {
                             transactionType: transactionType.type,
                             transactionHasError: !!error,
+                            networkType,
                             hash: hash ?? "",
                             currencyInSymbol: currencyIn.symbol ?? "",
                             currencyInAddress: getUniswapV4Address(currencyIn),
                             currencyInChainId: currencyIn.chainId,
                             currencyInAmount: tokenInAmount!.toString(),
                             currencyInDecimals: currencyIn.decimals,
-                            tokenInUsdValue: tokenInUsdValue ?? 0,
+                            tokenInUsdValue: tokenInUsdValueAdjusted,
                             currencyOutSymbol: currencyOut!.symbol ?? "",
                             currencyOutAddress: getUniswapV4Address(currencyOut!),
                             currencyOutChainId: currencyOut!.chainId,
                             currencyOutAmount: amountOutUnits.toString(),
                             currencyOutDecimals: currencyOut!.decimals,
-                            tokenOutUsdValue: tokenOutUsdValue ?? 0,
+                            tokenOutUsdValue: tokenOutUsdValueAdjusted,
                         });
                     },
                 },
