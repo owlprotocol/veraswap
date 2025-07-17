@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
 import { localChains, mainnetChains, testnetChains } from "@owlprotocol/veraswap-sdk/chains";
-import { Currency } from "@owlprotocol/veraswap-sdk";
+import { Currency, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { registryTokensQueryOptions } from "@owlprotocol/veraswap-sdk";
 import { currencyInAtom, currencyOutAtom } from "./tokens.js";
@@ -34,6 +34,8 @@ export const chainsAtom = atom<ChainWithMetadata[]>((get) => {
 
 const includeSupersim = import.meta.env.MODE === "development" && import.meta.env.VITE_SUPERSIM === "true";
 
+export const customCurrenciesAtom = atom<Currency[]>([]);
+
 export const currenciesQueryAtom = atomWithQuery((get) => {
     const chainsType = get(chainsTypeAtom);
     return registryTokensQueryOptions(chainsType, includeSupersim);
@@ -41,5 +43,21 @@ export const currenciesQueryAtom = atomWithQuery((get) => {
 
 export const currenciesAtom = atom<Currency[]>((get) => {
     const queryResult = get(currenciesQueryAtom);
-    return queryResult.data ?? [];
+    const customTokens = get(customCurrenciesAtom);
+    const registryTokens = queryResult.data ?? [];
+
+    // Prevent duplicates
+    const tokenMap = new Map<string, Currency>();
+
+    customTokens.forEach((token) => {
+        const key = `${getUniswapV4Address(token).toLowerCase()}-${token.chainId}`;
+        tokenMap.set(key, token);
+    });
+
+    registryTokens.forEach((token) => {
+        const key = `${getUniswapV4Address(token).toLowerCase()}-${token.chainId}`;
+        tokenMap.set(key, token);
+    });
+
+    return Array.from(tokenMap.values());
 });

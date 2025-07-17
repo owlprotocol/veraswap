@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { Copy, ExternalLink, Sun, Moon, Loader2 } from "lucide-react";
+import { Token } from "@owlprotocol/veraswap-sdk";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Input } from "@/components/ui/input.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { useTheme } from "@/components/theme-provider.js";
 import { Switch } from "@/components/ui/switch.js";
+import { CustomTokenManager } from "@/components/CustomTokenManager.js";
 
 export const Route = createFileRoute("/preview")({
     component: EmbedPreview,
@@ -84,6 +86,7 @@ function EmbedPreview() {
     const [chainIdIn, setChainIdIn] = useState<number | undefined>(undefined);
     const [currencyOut, setCurrencyOut] = useState<string | undefined>(undefined);
     const [chainIdOut, setChainIdOut] = useState<number | undefined>(undefined);
+    const [customTokens, setCustomTokens] = useState<Token[]>([]);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [iframeLoaded, setIframeLoaded] = useState(false);
 
@@ -108,6 +111,18 @@ function EmbedPreview() {
         if (currencyOut) params.set("currencyOut", currencyOut);
         if (chainIdOut) params.set("chainIdOut", chainIdOut.toString());
 
+        if (customTokens.length > 0) {
+            const tokenData = customTokens.map((token) => ({
+                address: token.address,
+                chainId: token.chainId,
+                symbol: token.symbol,
+                name: token.name,
+                decimals: token.decimals,
+                logoURI: token.logoURI ?? undefined,
+            }));
+            params.set("customTokens", JSON.stringify(tokenData));
+        }
+
         const baseUrl = `${window.location.origin}/embed`;
         const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
         setEmbedUrl(url);
@@ -115,7 +130,7 @@ function EmbedPreview() {
         if (iframeLoaded && iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.history.replaceState(null, "", url);
         }
-    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, iframeLoaded]);
+    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, customTokens, iframeLoaded]);
 
     useEffect(() => {
         function handleMessage(event: MessageEvent) {
@@ -166,6 +181,7 @@ function EmbedPreview() {
         setChainIdIn(undefined);
         setCurrencyOut(undefined);
         setChainIdOut(undefined);
+        setCustomTokens([]);
         if (iframeRef.current) {
             iframeRef.current.src = `${window.location.origin}/embed`;
         }
@@ -254,6 +270,7 @@ function EmbedPreview() {
                                 </div>
                             </CardContent>
                         </Card>
+                        <CustomTokenManager tokens={customTokens} onTokensChange={setCustomTokens} />
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
