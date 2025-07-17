@@ -49,17 +49,10 @@ export const getSwapStepMessage = (swapStep: SwapStep, transactionType: Transact
 
     if (!transactionType) return swapStep;
 
-    if (transactionType.type === "SWAP") {
-        return "Execute Swap";
-    }
     if (transactionType.type === "BRIDGE") {
-        return "Execute Bridge";
-    }
-    if (transactionType.type === "SWAP_BRIDGE") {
-        return "Execute Swap and Bridge";
-    }
-    if (transactionType.type === "BRIDGE_SWAP") {
-        return "Execute Bridge and Swap";
+        return "Bridge";
+    } else {
+        return "Swap";
     }
 };
 

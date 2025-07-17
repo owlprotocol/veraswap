@@ -25,8 +25,8 @@ export function TransactionSteps({ transactionType, currencyIn, chainIn, chainOu
         SWAP: [`Confirm swap transaction on ${chainIn.name}`],
         BRIDGE: [`Confirm bridge transaction from ${chainIn.name} to ${chainOut.name}`],
         BRIDGE_SWAP: [
-            `Confirm smart account execution on ${chainIn.name}`,
-            `Confirm smart account execution on ${chainOut.name}`,
+            `Sign to initialize smart wallet on ${chainIn.name} and ${chainOut.name} (one-time)`,
+            `Confirm transaction to bridge and swap tokens`,
         ],
         SWAP_BRIDGE: [`Confirm transaction to swap and bridge from ${chainIn.name} to ${chainOut.name}`],
     };
