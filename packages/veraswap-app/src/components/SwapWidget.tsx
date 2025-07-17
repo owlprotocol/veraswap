@@ -19,7 +19,7 @@ import {
     MAX_UINT_256,
 } from "@owlprotocol/veraswap-sdk";
 import { IERC20 } from "@owlprotocol/veraswap-sdk/artifacts";
-import { encodeFunctionData, formatUnits, zeroAddress } from "viem";
+import { encodeFunctionData, formatUnits, parseUnits, zeroAddress } from "viem";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import {
@@ -30,6 +30,7 @@ import {
 } from "@owlprotocol/veraswap-sdk/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { track } from "@vercel/analytics";
 import {
     sendTransactionMutationAtom,
     swapInvertAtom,
@@ -410,6 +411,27 @@ export function SwapWidget({
                             title: "Transaction Failed",
                             description: "Your transaction has failed. Please try again.",
                             variant: "destructive",
+                        });
+                    },
+                    onSettled: (hash, error) => {
+                        const amountOutUnits = parseUnits(amountOut!, currencyOut!.decimals);
+
+                        track("Execute Transaction", {
+                            transactionType: transactionType.type,
+                            transactionHasError: !!error,
+                            hash: hash ?? "",
+                            currencyInSymbol: currencyIn.symbol ?? "",
+                            currencyInAddress: getUniswapV4Address(currencyIn),
+                            currencyInChainId: currencyIn.chainId,
+                            currencyInAmount: tokenInAmount!.toString(),
+                            currencyInDecimals: currencyIn.decimals,
+                            tokenInUsdValue: tokenInUsdValue ?? 0,
+                            currencyOutSymbol: currencyOut!.symbol ?? "",
+                            currencyOutAddress: getUniswapV4Address(currencyOut!),
+                            currencyOutChainId: currencyOut!.chainId,
+                            currencyOutAmount: amountOutUnits.toString(),
+                            currencyOutDecimals: currencyOut!.decimals,
+                            tokenOutUsdValue: tokenOutUsdValue ?? 0,
                         });
                     },
                 },
