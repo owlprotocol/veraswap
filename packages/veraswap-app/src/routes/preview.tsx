@@ -171,6 +171,23 @@ function EmbedPreview() {
         }
     };
 
+    const copyHtmlCode = async () => {
+        const htmlCode = `<iframe\n  src="${embedUrl}"\n  width="450"\n  height="450"\n  title="Veraswap Widget"\n/>`;
+        try {
+            await navigator.clipboard.writeText(htmlCode);
+            toast({
+                title: "HTML code copied!",
+                description: "The iframe code has been copied to your clipboard.",
+            });
+        } catch (err) {
+            toast({
+                title: "Failed to copy",
+                description: "Please copy the code manually.",
+                variant: "destructive",
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background p-4">
             <div className="mx-auto max-w-7xl">
@@ -241,7 +258,7 @@ function EmbedPreview() {
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle>HTML Code</CardTitle>
-                                    <Button onClick={copyToClipboard} size="icon">
+                                    <Button onClick={copyHtmlCode} size="icon">
                                         <Copy className="h-4 w-4" />
                                     </Button>
                                 </div>
