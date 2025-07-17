@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
     return (
-        <div className="max-w-md mx-auto px-2">
+        <div className="max-w-md mx-auto px-2 mb-8">
             <MainnetTestnetButtons />
             <SwapWidget showTransactionFlow={true} />
         </div>

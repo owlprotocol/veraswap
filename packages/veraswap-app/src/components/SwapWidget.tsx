@@ -84,6 +84,7 @@ import { cn } from "@/lib/utils.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { TransactionStatusModal } from "@/components/TransactionStatusModal.js";
 import { TokenSelector } from "@/components/token-selector.js";
+import { TransactionSteps } from "@/components/TransactionSteps.js";
 import { config } from "@/config.js";
 import { useDustAccount, useWatchHyperlaneMessageProcessed, useWatchStargateMessageProcessed } from "@/hooks/index.js";
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
@@ -752,6 +753,14 @@ export function SwapWidget({
                             </div>
                         </div>
                     </div>
+                    {transactionType && swapStep !== SwapStep.APPROVE_PERMIT2 && (
+                        <TransactionSteps
+                            transactionType={transactionType}
+                            currencyIn={currencyIn!}
+                            chainIn={chainIn!}
+                            chainOut={chainOut!}
+                        />
+                    )}
                     <Button
                         disabled={isDisabledStep(swapStep)}
                         className="w-full h-10 text-base rounded-lg shadow-lg transition-all"
@@ -759,6 +768,18 @@ export function SwapWidget({
                     >
                         {getSwapStepMessage(swapStep, transactionType)}
                     </Button>
+                    {isEmbedded && (
+                        <div className="text-center mt-2 text-sm">
+                            Powered by{" "}
+                            <Button
+                                variant="link"
+                                className="p-0 h-auto font-bold"
+                                onClick={() => window.open("https://veraswap.io", "_blank", "noopener,noreferrer")}
+                            >
+                                Veraswap
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             {showTransactionFlow && transactionType && <TransactionFlow transaction={transactionType} />}
