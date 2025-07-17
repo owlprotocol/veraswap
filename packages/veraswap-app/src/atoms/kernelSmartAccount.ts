@@ -15,76 +15,33 @@ import { config } from "@/config.js";
 
 export const kernelInitDataAtom = atomWithQuery((get) => {
     const account = get(accountAtom);
-    const chain = get(chainInAtom);
-    if (!account?.address || !chain) return disabledQueryOptions as any;
+    if (!account?.address) return disabledQueryOptions as any;
 
-    //Note: This doesn't actually matter rn
-    const client = getClient(config, { chainId: chain.id }) as Client<Transport, Chain>;
+    // Hardcode chain id since kernel address is the same on all chains
+    const client = getClient(config, { chainId: 1 }) as Client<Transport, Chain>;
     if (!client.chain.id) return disabledQueryAtom as any;
 
     return kernelInitDataQueryOptions({ owner: account.address, client });
 }) as unknown as Atom<AtomWithQueryResult<Hex>>;
 
-export const kernelFactoryGetAddressAtomFamily = atomFamily(
-    ({
-        chainId,
-        factoryAddress,
-        initData,
-        initSalt,
-    }: {
-        chainId: number;
-        factoryAddress: Address;
-        initData: Hex;
-        initSalt: Hash;
-    }) =>
-        atomWithQuery<Address>(() => {
-            return readContractQueryOptions(config, {
-                chainId,
-                address: factoryAddress,
-                abi: KernelFactory.abi,
-                functionName: "getAddress",
-                args: [initData, initSalt],
-            }) as any;
-        }),
-    (a, b) =>
-        a.chainId === b.chainId &&
-        a.factoryAddress === b.factoryAddress &&
-        a.initData === b.initData &&
-        a.initSalt === b.initSalt,
-) as unknown as AtomFamily<
-    { chainId: number; factoryAddress: Address; initData: Hex; initSalt: Hash },
-    Atom<AtomWithQueryResult<Address>>
->;
-// https://jotai.org/docs/utilities/family#caveat-memory-leaks
-kernelFactoryGetAddressAtomFamily.setShouldRemove((createdAt) => Date.now() - createdAt > 5 * 60 * 1000); //same as tanstack query gcTime
-
-export const kernelAddressChainInQueryAtom = atom((get) => {
-    const chainIn = get(chainInAtom);
+export const kernelAddressQueryAtom = atomWithQuery<Address>((get) => {
     const { data: initData } = get(kernelInitDataAtom);
     const factoryAddress = LOCAL_KERNEL_CONTRACTS.kernelFactory;
 
-    if (!chainIn || !initData || !factoryAddress) return get(disabledQueryAtom) as any;
-
-    return get(
-        kernelFactoryGetAddressAtomFamily({ chainId: chainIn.id, factoryAddress, initData, initSalt: zeroHash }),
-    );
-}) as Atom<AtomWithQueryResult<Address>>;
-
-export const kernelAddressChainOutQueryAtom = atom((get) => {
-    const chainOut = get(chainOutAtom);
-    const { data: initData } = get(kernelInitDataAtom);
-    const factoryAddress = LOCAL_KERNEL_CONTRACTS.kernelFactory;
-
-    if (!chainOut || !initData || !factoryAddress) return get(disabledQueryAtom) as any;
-
-    return get(
-        kernelFactoryGetAddressAtomFamily({ chainId: chainOut.id, factoryAddress, initData, initSalt: zeroHash }),
-    );
+    if (!initData || !factoryAddress) return disabledQueryOptions as any;
+    // Hardcode chain id since kernel address is the same on all chains
+    return readContractQueryOptions(config, {
+        chainId: 1,
+        address: factoryAddress,
+        abi: KernelFactory.abi,
+        functionName: "getAddress",
+        args: [initData, zeroHash],
+    });
 }) as Atom<AtomWithQueryResult<Address>>;
 
 export const kernelBytecodeChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
-    const { data: address } = get(kernelAddressChainInQueryAtom);
+    const { data: address } = get(kernelAddressQueryAtom);
 
     if (!chainIn || !address) return disabledQueryOptions as any;
 
@@ -96,7 +53,7 @@ export const kernelBytecodeChainInQueryAtom = atomWithQuery((get) => {
 
 export const kernelBytecodeChainOutQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
-    const { data: address } = get(kernelAddressChainOutQueryAtom);
+    const { data: address } = get(kernelAddressQueryAtom);
 
     if (!chainOut || !address) return disabledQueryOptions as any;
 

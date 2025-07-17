@@ -7,12 +7,13 @@ import { OwnableSignatureExecutor } from "@owlprotocol/veraswap-sdk/artifacts/Ow
 import { chainInAtom, chainOutAtom } from "./tokens.js";
 
 import { disabledQueryOptions } from "./disabledQuery.js";
-import { kernelAddressChainInQueryAtom, kernelAddressChainOutQueryAtom } from "./kernelSmartAccount.js";
+import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { config } from "@/config.js";
 
 export const executorIsInitializedChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
-    const { data: kernelAddress } = get(kernelAddressChainInQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
+
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainIn || !kernelAddress || !executor) return disabledQueryOptions as any;
@@ -28,7 +29,7 @@ export const executorIsInitializedChainInQueryAtom = atomWithQuery((get) => {
 
 export const executorIsInitializedChainOutQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
-    const { data: kernelAddress } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainOut || !kernelAddress || !executor) return disabledQueryOptions as any;
@@ -44,7 +45,8 @@ export const executorIsInitializedChainOutQueryAtom = atomWithQuery((get) => {
 
 export const executorGetOwnersChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
-    const { data: kernelAddress } = get(kernelAddressChainInQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
+
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainIn || !kernelAddress || !executor) return disabledQueryOptions as any;
@@ -60,7 +62,7 @@ export const executorGetOwnersChainInQueryAtom = atomWithQuery((get) => {
 
 export const executorGetOwnersChainOutQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
-    const { data: kernelAddress } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainOut || !kernelAddress || !executor) return disabledQueryOptions as any;
@@ -76,7 +78,7 @@ export const executorGetOwnersChainOutQueryAtom = atomWithQuery((get) => {
 
 export const executorGetNonceChainInQueryAtom = atomWithQuery((get) => {
     const chainIn = get(chainInAtom);
-    const { data: kernelAddress } = get(kernelAddressChainInQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainIn || !kernelAddress || !executor) return disabledQueryOptions as any;
@@ -92,7 +94,7 @@ export const executorGetNonceChainInQueryAtom = atomWithQuery((get) => {
 
 export const executorGetNonceChainOutQueryAtom = atomWithQuery((get) => {
     const chainOut = get(chainOutAtom);
-    const { data: kernelAddress } = get(kernelAddressChainOutQueryAtom);
+    const { data: kernelAddress } = get(kernelAddressQueryAtom);
     const executor = LOCAL_KERNEL_CONTRACTS.ownableSignatureExecutor;
 
     if (!chainOut || !kernelAddress || !executor) return disabledQueryOptions as any;
