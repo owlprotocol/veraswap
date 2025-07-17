@@ -420,6 +420,29 @@ export function SwapWidget({
                         const tokenInUsdValueAdjusted = networkType === "mainnet" ? (tokenInUsdValue ?? 0) : 0;
                         const tokenOutUsdValueAdjusted = networkType === "mainnet" ? (tokenOutUsdValue ?? 0) : 0;
 
+                        if (networkType === "local") {
+                            console.debug({
+                                transactionType: transactionType.type,
+                                transactionHasError: !!error,
+                                networkType,
+                                hash: hash ?? "",
+                                currencyInSymbol: currencyIn.symbol ?? "",
+                                currencyInAddress: getUniswapV4Address(currencyIn),
+                                currencyInChainId: currencyIn.chainId,
+                                currencyInAmount: tokenInAmount!.toString(),
+                                currencyInDecimals: currencyIn.decimals,
+                                tokenInUsdValue: tokenInUsdValueAdjusted,
+                                currencyOutSymbol: currencyOut!.symbol ?? "",
+                                currencyOutAddress: getUniswapV4Address(currencyOut!),
+                                currencyOutChainId: currencyOut!.chainId,
+                                currencyOutAmount: amountOutUnits.toString(),
+                                currencyOutDecimals: currencyOut!.decimals,
+                                tokenOutUsdValue: tokenOutUsdValueAdjusted,
+                            });
+
+                            return;
+                        }
+
                         track("Execute Transaction", {
                             transactionType: transactionType.type,
                             transactionHasError: !!error,
