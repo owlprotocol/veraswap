@@ -29,12 +29,16 @@ export const Route = createFileRoute("/embed")({
         chainIdOut: z.coerce.number().optional(),
         pinnedTokens: z.string().optional(),
         customTokens: z
-            .string()
-            .transform((str) => {
-                try {
-                    return z.array(CustomTokenSchema).parse(JSON.parse(str));
-                } catch {
-                    return [];
+            .union([z.string(), z.array(CustomTokenSchema)])
+            .transform((val) => {
+                if (typeof val === "string") {
+                    try {
+                        return z.array(CustomTokenSchema).parse(JSON.parse(val));
+                    } catch {
+                        return [];
+                    }
+                } else {
+                    return val;
                 }
             })
             .optional(),
