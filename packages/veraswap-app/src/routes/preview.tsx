@@ -208,7 +208,7 @@ function EmbedPreview() {
         <div className="min-h-screen bg-background p-4">
             <div className="mx-auto max-w-7xl">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold">Embed Widget Theme Customizer</h1>
+                    <h1 className="text-3xl font-bold">Embed iFrame Theme Customizer</h1>
                     <p className="text-muted-foreground mt-2">
                         Customize your widget's theme with hex colors and see it live in the iframe
                     </p>
