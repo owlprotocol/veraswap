@@ -36,9 +36,11 @@ const contractsByChain =
     );
 */
 
+const VIRTUALS_BASE = "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b";
+
 export const CURRENCY_HOPS = {
     [bsc.id]: [USDC_BSC.address, USDT_BSC.address, zeroAddress],
-    [base.id]: [USDC_BASE.address, zeroAddress],
+    [base.id]: [USDC_BASE.address, VIRTUALS_BASE, zeroAddress],
     [polygon.id]: [USDC_POLYGON.address, USDT_POLYGON.address, zeroAddress],
     [mainnet.id]: [USDC_MAINNET.address, USDT.address, zeroAddress],
     [arbitrum.id]: [USDC_ARBITRUM.address, USDT_ARBITRUM_ONE.address, zeroAddress],
