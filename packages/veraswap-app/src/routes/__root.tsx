@@ -32,8 +32,8 @@ function RootComponent() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                     >
-                        <img src="/logo.svg" alt="Veraswap Logo" className="h-10 w-10" />
-                        <img src="/Veraswap.svg" alt="Veraswap" className="h-6 mt-1" />
+                        <img src="/logo.svg" alt="Veraswap Logo" className="h-10 w-10 invert dark:invert-0" />
+                        <img src="/Veraswap.svg" alt="Veraswap" className="h-6 mt-1 invert dark:invert-0" />
                     </a>
 
                     <div className="hidden md:flex flex-1 justify-end items-center gap-2">
