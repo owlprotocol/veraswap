@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { Copy, ExternalLink, Sun, Moon, Loader2 } from "lucide-react";
-import { Token } from "@owlprotocol/veraswap-sdk";
+import { Token, CustomList } from "@owlprotocol/veraswap-sdk";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Input } from "@/components/ui/input.js";
 import { useToast } from "@/components/ui/use-toast.js";
 import { useTheme } from "@/components/theme-provider.js";
 import { Switch } from "@/components/ui/switch.js";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.js";
 import { CustomTokenManager } from "@/components/CustomTokenManager.js";
 
 export const Route = createFileRoute("/preview")({
@@ -87,6 +88,7 @@ function EmbedPreview() {
     const [currencyOut, setCurrencyOut] = useState<string | undefined>(undefined);
     const [chainIdOut, setChainIdOut] = useState<number | undefined>(undefined);
     const [customTokens, setCustomTokens] = useState<Token[]>([]);
+    const [customList, setCustomList] = useState<CustomList | undefined>(undefined);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [iframeLoaded, setIframeLoaded] = useState(false);
 
@@ -123,6 +125,10 @@ function EmbedPreview() {
             params.set("customTokens", JSON.stringify(tokenData));
         }
 
+        if (customList) {
+            params.set("customList", customList);
+        }
+
         const baseUrl = `${window.location.origin}/embed`;
         const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
         setEmbedUrl(url);
@@ -130,7 +136,7 @@ function EmbedPreview() {
         if (iframeLoaded && iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.history.replaceState(null, "", url);
         }
-    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, customTokens, iframeLoaded]);
+    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, customTokens, customList, iframeLoaded]);
 
     useEffect(() => {
         function handleMessage(event: MessageEvent) {
@@ -182,6 +188,7 @@ function EmbedPreview() {
         setCurrencyOut(undefined);
         setChainIdOut(undefined);
         setCustomTokens([]);
+        setCustomList(undefined);
         if (iframeRef.current) {
             iframeRef.current.src = `${window.location.origin}/embed`;
         }
@@ -267,6 +274,30 @@ function EmbedPreview() {
                                     <Button onClick={openEmbedUrl} variant="outline" size="icon">
                                         <ExternalLink className="h-4 w-4" />
                                     </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Token Lists</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Token List</label>
+                                    <Select
+                                        value={customList || "default"}
+                                        onValueChange={(value) =>
+                                            setCustomList(value === "default" ? undefined : (value as CustomList))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select token list" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="default">Default</SelectItem>
+                                            <SelectItem value="virtuals">Virtuals</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </CardContent>
                         </Card>

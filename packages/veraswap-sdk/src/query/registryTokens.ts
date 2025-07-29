@@ -7,7 +7,11 @@ import { convertRegistryTokens } from "../utils/index.js";
 const registryTokenUrls = {
     mainnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.mainnet.json",
     testnet: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.testnet.json",
+    virtuals: "https://raw.githubusercontent.com/owlprotocol/veraswap-tokens/refactor-registry/tokens.virtuals.json",
 };
+
+export const customLists = ["virtuals"] as const;
+export type CustomList = (typeof customLists)[number];
 
 function deduplicateTokens(tokens: Currency[]): Currency[] {
     const seen = new Map<string, Currency>();
@@ -23,11 +27,15 @@ function deduplicateTokens(tokens: Currency[]): Currency[] {
     return Array.from(seen.values());
 }
 
-export function registryTokenQueryKey(chainsType: "mainnet" | "testnet" | "local") {
-    return ["registryTokens", chainsType];
+export function registryTokenQueryKey(chainsType: "mainnet" | "testnet" | "local", customList?: CustomList) {
+    return ["registryTokens", chainsType, customList];
 }
 
-export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "local", includeSupersim = false) {
+export function registryTokensQueryOptions(
+    chainsType: "mainnet" | "testnet" | "local",
+    includeSupersim = false,
+    customList?: CustomList,
+) {
     const chains = chainsType === "local" ? localChains : chainsType === "testnet" ? testnetChains : mainnetChains;
 
     const chainIds = chains.map((c) => c.id) as number[];
@@ -42,9 +50,9 @@ export function registryTokensQueryOptions(chainsType: "mainnet" | "testnet" | "
     }
 
     return {
-        queryKey: registryTokenQueryKey(chainsType),
+        queryKey: registryTokenQueryKey(chainsType, customList),
         queryFn: async () => {
-            const url = registryTokenUrls[chainsType];
+            const url = customList ? registryTokenUrls[customList] : registryTokenUrls[chainsType];
 
             const res = await fetch(url);
             if (!res.ok) throw new Error(`Failed to fetch registry tokens for ${chainsType}`);
