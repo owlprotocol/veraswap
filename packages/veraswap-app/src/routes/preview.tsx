@@ -242,7 +242,7 @@ function EmbedPreview() {
                                         ref={iframeRef}
                                         src={`${window.location.origin}/embed`}
                                         width="450"
-                                        height="450"
+                                        height="625"
                                         title="Veraswap Widget"
                                         style={{ background: "transparent" }}
                                         className="w-full"
@@ -282,7 +282,7 @@ function EmbedPreview() {
                             </CardHeader>
                             <CardContent>
                                 <pre className="bg-muted p-4 rounded text-xs overflow-x-auto">
-                                    {`<iframe\n  src="${embedUrl}"\n  width="450"\n  height="450"\n  title="Veraswap Widget"\n/>`}
+                                    {`<iframe\n  src="${embedUrl}"\n  width="450"\n  height="625"\n  title="Veraswap Widget"\n/>`}
                                 </pre>
                             </CardContent>
                         </Card>
