@@ -104,9 +104,38 @@ export interface GetRouterCommandsForQuote {
     contracts: {
         weth9: Address;
     };
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
+
+/**
+ * @notice If feeRecipients are provided, we assume the amountOutMinimum accounts for the fee being deducted from the amount in
+ * @param feeRecipients optional list of fee recipients, each with an address and bips (basis points) to pay in input currency
+ */
 export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): CreateCommandParamsGeneric[] {
     const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
+    const feeRecipients = params.feeRecipients ?? [];
+
+    let amountIn = params.amountIn;
+
+    const feeCommands = feeRecipients.map((feeRecipient) => {
+        const command = CommandType.PAY_PORTION;
+
+        const token = params.currencyIn;
+        const { address: recipient, bips } = feeRecipient;
+        const commandInput = [token, recipient, bips];
+
+        return [command, commandInput] as CreateCommandParamsGeneric;
+    });
+
+    if (feeRecipients.length > 0) {
+        const feeBipsSum = feeRecipients.reduce((sum, feeRecipient) => sum + feeRecipient.bips, 0n);
+
+        const bipsDenominator = 10000n; // 10000 bips = 100%
+
+        // Remove the fees from the amountIn
+        amountIn = amountIn - (amountIn * feeBipsSum) / bipsDenominator;
+    }
+
     if (bestQuoteType === MetaQuoteBestType.None) {
         return [];
     } else if (bestQuoteType === MetaQuoteBestType.Single) {
@@ -130,7 +159,7 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             currencyIn: params.currencyIn,
             currencyOut: params.currencyOut,
             path: [pathKey],
-            amountIn: params.amountIn,
+            amountIn,
             amountOutMinimum: bestQuoteSingle.variableAmount,
             recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
         });
@@ -138,6 +167,11 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             commands,
             commandInputs,
         ) as CreateCommandParamsGeneric[];
+
+        if (feeCommands.length > 0) {
+            return [...feeCommands, ...commandsWithInputs];
+        }
+
         return commandsWithInputs;
     } else if (bestQuoteType === MetaQuoteBestType.Multihop) {
         // Multihop quotes
@@ -146,7 +180,7 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             currencyIn: params.currencyIn,
             currencyOut: params.currencyOut,
             path: bestQuoteMultihop.path as PathKey[],
-            amountIn: params.amountIn,
+            amountIn,
             amountOutMinimum: bestQuoteMultihop.variableAmount,
             recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
         });
@@ -154,6 +188,11 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             commands,
             commandInputs,
         ) as CreateCommandParamsGeneric[];
+
+        if (feeCommands.length > 0) {
+            return [...feeCommands, ...commandsWithInputs];
+        }
+
         return commandsWithInputs;
     } else {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
