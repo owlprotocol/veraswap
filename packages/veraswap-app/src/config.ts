@@ -27,15 +27,15 @@ const wallets =
     import.meta.env.MODE === "development"
         ? [metaMaskWallet]
         : [
-            metaMaskWallet,
-            coinbaseWallet,
-            walletConnectWallet,
-            uniswapWallet,
-            okxWallet,
-            binanceWallet,
-            trustWallet,
-            phantomWallet,
-        ];
+              metaMaskWallet,
+              coinbaseWallet,
+              walletConnectWallet,
+              uniswapWallet,
+              okxWallet,
+              binanceWallet,
+              trustWallet,
+              phantomWallet,
+          ];
 
 export const connectors = connectorsForWallets(
     [
