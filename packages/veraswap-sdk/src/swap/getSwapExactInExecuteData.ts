@@ -18,6 +18,7 @@ export function getSwapExactInExecuteData({
     permit2PermitParams,
     amountIn,
     contracts,
+    feeRecipients,
 }: {
     universalRouter: Address;
     currencyIn: Address;
@@ -29,6 +30,7 @@ export function getSwapExactInExecuteData({
     contracts: {
         weth9: Address;
     };
+    feeRecipients?: { address: Address; bips: bigint }[];
 }): { to: Address; data: Hex; value: bigint } {
     const routePlanner = new RoutePlanner();
 
@@ -41,6 +43,7 @@ export function getSwapExactInExecuteData({
         contracts,
         currencyIn,
         currencyOut,
+        feeRecipients,
         ...quote,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
