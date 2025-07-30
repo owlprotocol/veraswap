@@ -47,6 +47,7 @@ export interface TransactionSwapOptions {
     wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
 
 type StargateQuote = StargateETHQuote | StargateTokenQuote;
@@ -156,6 +157,7 @@ export async function getTransaction(
                 amountOutMinimum,
                 queryClient,
                 wagmiConfig,
+                feeRecipients,
             } = params;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
@@ -188,6 +190,7 @@ export async function getTransaction(
                 amountOutMinimum,
                 permit2PermitParams,
                 contracts: contracts[currencyIn.chainId],
+                feeRecipients,
             });
         }
 

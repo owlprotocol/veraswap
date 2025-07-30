@@ -29,6 +29,7 @@ export const Route = createFileRoute("/embed")({
         chainIdOut: z.coerce.number().optional(),
         pinnedTokens: z.string().optional(),
         customList: z.enum(customLists).optional(),
+        referrer: z.string().optional(),
         customTokens: z
             .union([z.string(), z.array(CustomTokenSchema)])
             .transform((val) => {
