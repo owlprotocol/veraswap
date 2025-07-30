@@ -11,7 +11,7 @@ import {
     phantomWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { ChainWithMetadata, localChains, mainnetChains, testnetChains } from "@owlprotocol/veraswap-sdk/chains";
-import { Address, Chain } from "viem";
+import { Address, Chain, zeroAddress } from "viem";
 
 /***** Chains *****/
 // List of supported networks
@@ -27,15 +27,15 @@ const wallets =
     import.meta.env.MODE === "development"
         ? [metaMaskWallet]
         : [
-              metaMaskWallet,
-              coinbaseWallet,
-              walletConnectWallet,
-              uniswapWallet,
-              okxWallet,
-              binanceWallet,
-              trustWallet,
-              phantomWallet,
-          ];
+            metaMaskWallet,
+            coinbaseWallet,
+            walletConnectWallet,
+            uniswapWallet,
+            okxWallet,
+            binanceWallet,
+            trustWallet,
+            phantomWallet,
+        ];
 
 export const connectors = connectorsForWallets(
     [
@@ -57,6 +57,6 @@ export const config = createConfig({
     storage: createStorage({ storage: window.localStorage }),
 });
 
-export const VERASWAP_FEE_BIPS = BigInt(import.meta.env.VITE_VERASWAP_FEE_BIPS);
-export const VERASWAP_FEE_RECIPIENT = import.meta.env.VITE_VERASWAP_FEE_RECIPIENT as Address;
-export const REFERRER_FEE_BIPS = BigInt(import.meta.env.VITE_REFERRER_FEE_BIPS);
+export const VERASWAP_FEE_BIPS = BigInt(import.meta.env.VITE_VERASWAP_FEE_BIPS ?? "0");
+export const VERASWAP_FEE_RECIPIENT = (import.meta.env.VITE_VERASWAP_FEE_RECIPIENT ?? zeroAddress) as Address;
+export const REFERRER_FEE_BIPS = BigInt(import.meta.env.VITE_REFERRER_FEE_BIPS ?? "0");
