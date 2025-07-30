@@ -330,7 +330,7 @@ export function SwapWidget({
                             bridgePayment,
                             queryClient,
                             wagmiConfig: config,
-                            ...(transactionType.type === "SWAP" && { feeRecipients }),
+                            feeRecipients,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const inChainId = currencyIn.chainId;

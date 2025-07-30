@@ -22,6 +22,7 @@ export function getSwapAndStargateETHBridgeTransaction({
     srcChain,
     recipient,
     contracts,
+    feeRecipients,
 }: {
     universalRouter: Address;
     amountIn: bigint;
@@ -35,6 +36,7 @@ export function getSwapAndStargateETHBridgeTransaction({
     contracts: {
         weth9: Address;
     };
+    feeRecipients?: { address: Address; bips: bigint }[];
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -49,6 +51,7 @@ export function getSwapAndStargateETHBridgeTransaction({
         currencyOut,
         ...quote,
         recipient: STARGATE_BRIDGE_SWEEP_ADDRESS,
+        feeRecipients,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 
