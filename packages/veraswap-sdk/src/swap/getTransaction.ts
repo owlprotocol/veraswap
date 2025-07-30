@@ -122,6 +122,7 @@ export interface TransactionBridgeSwapOptions {
     initData: Hex;
     orbiterQuote?: OrbiterQuote;
     stargateQuote?: StargateQuote;
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
 
 export type TransactionParams =
@@ -472,6 +473,7 @@ export async function getTransaction(
                 initData,
                 stargateQuote,
                 orbiterQuote,
+                feeRecipients,
             } = params;
             const { currencyIn, currencyOut, withSuperchain } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, quote } = swap;
@@ -565,6 +567,7 @@ export async function getTransaction(
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
                     contracts: contracts[currencyOut.chainId],
+                    feeRecipients,
                 },
                 stargateQuote,
                 orbiterQuote,

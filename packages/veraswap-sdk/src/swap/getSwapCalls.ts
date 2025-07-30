@@ -26,6 +26,7 @@ export interface GetSwapCallsParams extends GetCallsParams {
     contracts: {
         weth9: Address;
     };
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
 
 export async function getSwapCalls(
@@ -46,6 +47,7 @@ export async function getSwapCalls(
         callTargetAfter,
         approveExpiration,
         contracts,
+        feeRecipients,
     } = params;
     const routerPayment = params.routerPayment ?? 0n;
 
@@ -77,6 +79,7 @@ export async function getSwapCalls(
         currencyOut,
         ...quote,
         recipient: receiver,
+        feeRecipients,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 
