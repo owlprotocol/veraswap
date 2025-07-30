@@ -319,6 +319,7 @@ export function SwapWidget({
                             queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
+                            feeRecipients,
                         } as TransactionParams & TransactionTypeBridgeSwap)
                       : ({
                             ...transactionType,

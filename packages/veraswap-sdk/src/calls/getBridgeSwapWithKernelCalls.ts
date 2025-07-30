@@ -70,6 +70,7 @@ export interface GetBridgeSwapWithKernelCallsParams extends GetTransferRemoteWit
         contracts: {
             weth9: Address;
         };
+        feeRecipients?: { address: Address; bips: bigint }[];
     };
     withSuperchain?: boolean;
 }
