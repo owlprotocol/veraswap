@@ -96,6 +96,7 @@ export interface TransactionSwapBridgeOptions {
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
     stargateQuote?: StargateQuote;
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
@@ -109,6 +110,7 @@ export interface TransactionSwapBridgeOrbiterOptions {
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
+    feeRecipients?: { address: Address; bips: bigint }[];
 }
 
 export interface TransactionBridgeSwapOptions {
@@ -331,6 +333,7 @@ export async function getTransaction(
                 orbiterQuote,
                 queryClient,
                 wagmiConfig,
+                feeRecipients,
             } = params;
             const { currencyIn: swapCurrencyIn, quote, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
@@ -369,6 +372,7 @@ export async function getTransaction(
 
                     permit2PermitParams,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    feeRecipients,
                 });
             }
 
@@ -385,6 +389,7 @@ export async function getTransaction(
                         recipient: walletAddress,
                         permit2PermitParams,
                         contracts: contracts[swapCurrencyIn.chainId],
+                        feeRecipients,
                     });
                 }
 
@@ -401,6 +406,7 @@ export async function getTransaction(
                     orbiterQuote,
                     permit2PermitParams,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    feeRecipients,
                 });
             }
 
@@ -424,6 +430,7 @@ export async function getTransaction(
                     recipient: walletAddress,
                     tokenSymbol,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    feeRecipients,
                 });
             }
 
@@ -449,6 +456,7 @@ export async function getTransaction(
                 permit2PermitParams,
                 amountIn,
                 contracts: contracts[swapCurrencyIn.chainId],
+                feeRecipients,
             });
         }
 
