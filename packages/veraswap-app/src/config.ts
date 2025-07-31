@@ -57,6 +57,6 @@ export const config = createConfig({
     storage: createStorage({ storage: window.localStorage }),
 });
 
-export const VERASWAP_FEE_BIPS = BigInt(import.meta.env.VITE_VERASWAP_FEE_BIPS ?? "0");
+export const VERASWAP_FEE_BIPS = BigInt(import.meta.env.VITE_VERASWAP_FEE_BIPS) ?? 0n;
 export const VERASWAP_FEE_RECIPIENT = (import.meta.env.VITE_VERASWAP_FEE_RECIPIENT ?? zeroAddress) as Address;
-export const REFERRER_FEE_BIPS = BigInt(import.meta.env.VITE_REFERRER_FEE_BIPS ?? "0");
+export const REFERRER_FEE_BIPS = BigInt(import.meta.env.VITE_REFERRER_FEE_BIPS) ?? 0n;
