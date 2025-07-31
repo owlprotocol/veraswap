@@ -10,7 +10,7 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
 import { anvilClientL1, wagmiConfig } from "../../test/constants.js";
 import { addCommandsToRoutePlanner } from "../addCommandsToRoutePlanner.js";
-import { RoutePlanner } from "../routerCommands.js";
+import { CommandType, RoutePlanner } from "../routerCommands.js";
 
 import { getRouterCommandsForQuote, getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
@@ -38,17 +38,19 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
     const tokenL4 = getUniswapV4Address(LOCAL_CURRENCIES[8]);
     const tokenZ = getMockERC20Address({ name: "Token Z", symbol: "Z", decimals: 18 });
 
-    // Helper function to get balance of a token
-    const getBalance = function (token: Address) {
-        if (token === zeroAddress) return opChainL1Client.getBalance({ address: anvilClientL1.account.address });
+    const getBalanceForAddress = function (token: Address, address: Address) {
+        if (token === zeroAddress) return opChainL1Client.getBalance({ address });
 
         return opChainL1Client.readContract({
             address: token,
             abi: IERC20.abi,
             functionName: "balanceOf",
-            args: [anvilClientL1.account.address],
+            args: [address],
         });
     };
+
+    // Helper function to get balance of a token
+    const getBalance = (token: Address) => getBalanceForAddress(token, anvilClientL1.account.address);
 
     describe("V4 Single", () => {
         test("A -> L4", async () => {
@@ -95,6 +97,85 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+        });
+
+        test("A -> L4 with referral fee", async () => {
+            const currencyIn = tokenA;
+            const currencyOut = tokenL4;
+            console.debug({ currencyIn, currencyOut });
+            const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
+            const feeBips = 100n; // 1% referral fee
+            const bipsDenominator = 10000n; // 100% = 10000 bips
+            const feeAmount = (amountIn * feeBips) / bipsDenominator;
+            const amountInWithoutFee = amountIn - feeAmount;
+            console.log({
+                feeAmount,
+                amountInWithoutFee,
+                amountIn,
+                percentage: Number(amountInWithoutFee) / Number(amountIn),
+            });
+
+            // Route
+            const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                chainId: opChainL1.id,
+                currencyIn,
+                currencyOut,
+                currencyHops,
+                amountIn: amountInWithoutFee,
+                contracts,
+            });
+            expect(route).toBeDefined();
+            const { quote, amountOut, value } = route!;
+
+            const feeRecipient = "0x0000000000000000000000000000000000000001" as Address;
+            const feeRecipients = [{ address: feeRecipient, bips: feeBips }];
+            const commands = getRouterCommandsForQuote({
+                currencyIn,
+                currencyOut,
+                amountIn,
+                contracts,
+                feeRecipients,
+                ...quote,
+            });
+            console.log({ commands, permit2transfer: CommandType.PERMIT2_TRANSFER_FROM, quote });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
+
+            //Execute
+            const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
+            const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
+            const feeRecipientBalanceBeforeSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const hash = await anvilClientL1.writeContract({
+                abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
+                address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                value,
+                functionName: "execute",
+                args: [routePlanner.commands, routePlanner.inputs, deadline],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+
+            const currencyInBalanceAfterSwap = await getBalance(currencyIn);
+            const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            const feeRecipientBalanceAfterSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+
+            console.log({
+                diff: currencyInBalanceAfterSwap - currencyInBalanceBeforeSwap,
+                amountIn,
+                amountInWithoutFee,
+                feeAmount,
+            });
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+            expect(feeRecipientBalanceAfterSwap).toBe(feeRecipientBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
         });
     });
 
