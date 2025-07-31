@@ -107,6 +107,8 @@ export interface GetRouterCommandsForQuote {
     feeRecipients?: { address: Address; bips: bigint }[];
 }
 
+const bipsDenominator = 10000n; // 10000 bips = 100%
+
 /**
  * @notice If feeRecipients are provided, we assume the amountOutMinimum accounts for the fee being deducted from the amount in
  * @param feeRecipients optional list of fee recipients, each with an address and bips (basis points) to pay in input currency
@@ -118,19 +120,20 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
     let amountIn = params.amountIn;
 
     const feeCommands = feeRecipients.map((feeRecipient) => {
-        const command = CommandType.PAY_PORTION;
+        // TODO case for eth, and case for batch
+        const command = CommandType.PERMIT2_TRANSFER_FROM;
 
         const token = params.currencyIn;
-        const { address: recipient, bips } = feeRecipient;
-        const commandInput = [token, recipient, bips];
+        const { address: recipient } = feeRecipient;
+        const feeAmount = (amountIn * feeRecipient.bips) / bipsDenominator;
+        console.log({ feeAmount, recipient });
+        const commandInput = [token, recipient, feeAmount];
 
         return [command, commandInput] as CreateCommandParamsGeneric;
     });
 
     if (feeRecipients.length > 0) {
         const feeBipsSum = feeRecipients.reduce((sum, feeRecipient) => sum + feeRecipient.bips, 0n);
-
-        const bipsDenominator = 10000n; // 10000 bips = 100%
 
         // Remove the fees from the amountIn
         amountIn = amountIn - (amountIn * feeBipsSum) / bipsDenominator;
