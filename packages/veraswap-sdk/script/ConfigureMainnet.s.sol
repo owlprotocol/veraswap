@@ -88,6 +88,7 @@ contract DeployMainnet is Script {
         hypERC20CollateralTokens[chainIds[0]].push(0x66477F84bd21697c7781fc3992b3163463e3B224); // CBBTC
         hypERC20CollateralTokens[chainIds[0]].push(0x458BDDd0793fe4f70912535f172466a5473f2e77); // SUPR
         hypERC20CollateralTokens[chainIds[0]].push(0x2552516453368e42705D791F674b312b8b87CD9e); // ezETH
+        hypERC20CollateralTokens[chainIds[0]].push(0x0a905B4670c9f1A08F45f941374895eE7257a0F8); // TIAN
 
         stargateTokenAndPools[chainIds[0]].push(
             [0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, 0x27a16dc786820B16E5c9028b75B99F6f604b5d26]
