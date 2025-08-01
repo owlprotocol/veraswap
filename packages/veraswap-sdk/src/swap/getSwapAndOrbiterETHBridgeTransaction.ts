@@ -21,7 +21,8 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     permit2PermitParams,
     orbiterQuote,
     contracts,
-    feeRecipients,
+    veraswapFeeRecipient,
+    referralFeeRecipient,
 }: {
     universalRouter: Address;
     amountIn: bigint;
@@ -33,7 +34,8 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     contracts: {
         weth9: Address;
     };
-    feeRecipients?: { address: Address; bips: bigint }[];
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -48,7 +50,8 @@ export function getSwapAndOrbiterETHBridgeTransaction({
         currencyOut,
         ...quote,
         recipient: ORBITER_BRIDGE_SWEEP_ADDRESS,
-        feeRecipients,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 

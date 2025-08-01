@@ -22,7 +22,8 @@ export function getSwapAndSuperchainBridgeTransaction({
     quote,
     permit2PermitParams,
     contracts,
-    feeRecipients,
+    veraswapFeeRecipient,
+    referralFeeRecipient,
 }: {
     universalRouter: Address;
     destinationChain: number;
@@ -36,7 +37,8 @@ export function getSwapAndSuperchainBridgeTransaction({
     contracts: {
         weth9: Address;
     };
-    feeRecipients?: { address: Address; bips: bigint }[];
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -51,7 +53,8 @@ export function getSwapAndSuperchainBridgeTransaction({
         currencyOut,
         ...quote,
         recipient: SUPERCHAIN_SWEEP_ADDRESS,
-        feeRecipients,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 
