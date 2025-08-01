@@ -78,7 +78,6 @@ import {
     superchainSwapMessageIdAtom,
     kernelAddressQueryAtom,
     feeRecipientsAtom,
-    tokenInAmountWithoutFeesAtom,
 } from "../atoms/index.js";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent } from "@/components/ui/card.js";
@@ -319,7 +318,7 @@ export function SwapWidget({
                             queryClient,
                             wagmiConfig: config,
                             initData: kernelSmartAccountInitData,
-                            feeRecipients,
+                            ...feeRecipients,
                         } as TransactionParams & TransactionTypeBridgeSwap)
                       : ({
                             ...transactionType,
@@ -331,7 +330,7 @@ export function SwapWidget({
                             bridgePayment,
                             queryClient,
                             wagmiConfig: config,
-                            feeRecipients,
+                            ...feeRecipients,
                         } as TransactionParams & (TransactionTypeSwap | TransactionTypeSwapBridge));
 
             const inChainId = currencyIn.chainId;

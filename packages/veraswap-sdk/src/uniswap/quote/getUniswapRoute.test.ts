@@ -169,13 +169,13 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const { quote, amountOut, value } = route!;
 
             const feeRecipient = "0x0000000000000000000000000000000000000001" as Address;
-            const feeRecipients = [{ address: feeRecipient, bips: feeBips }];
+            const veraswapFeeRecipient = { address: feeRecipient, bips: feeBips };
             const commands = getRouterCommandsForQuote({
                 currencyIn,
                 currencyOut,
                 amountIn,
                 contracts,
-                feeRecipients,
+                veraswapFeeRecipient,
                 ...quote,
             });
             console.log({ commands, permit2transfer: CommandType.PERMIT2_TRANSFER_FROM, quote });

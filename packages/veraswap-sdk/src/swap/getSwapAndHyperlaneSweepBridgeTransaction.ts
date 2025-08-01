@@ -24,7 +24,8 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     quote,
     permit2PermitParams,
     contracts,
-    feeRecipients,
+    veraswapFeeRecipient,
+    referralFeeRecipient,
 }: {
     universalRouter: Address;
     bridgeAddress: Address;
@@ -39,7 +40,8 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
     contracts: {
         weth9: Address;
     };
-    feeRecipients?: { address: Address; bips: bigint }[];
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -56,7 +58,8 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
         currencyOut,
         ...quote,
         recipient: HYPERLANE_ROUTER_SWEEP_ADDRESS,
-        feeRecipients,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 

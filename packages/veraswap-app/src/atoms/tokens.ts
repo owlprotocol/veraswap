@@ -27,16 +27,22 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
 
 export const referrerAddressAtom = atom<Address | null>(null);
 
-export const feeRecipientsAtom = atom<{ address: Address; bips: bigint }[]>((get) => {
+export const feeRecipientsAtom = atom<{
+    veraswapFeeRecipient: { address: Address; bips: bigint };
+    refererralFeeRecipient: { address?: Address; bips: bigint };
+}>((get) => {
     const referrerAddress = get(referrerAddressAtom);
 
-    const feeRecipients = [{ address: VERASWAP_FEE_RECIPIENT, bips: VERASWAP_FEE_BIPS }];
-
-    if (referrerAddress) {
-        feeRecipients.push({ address: referrerAddress, bips: REFERRER_FEE_BIPS });
-    }
-
-    return feeRecipients;
+    return {
+        veraswapFeeRecipient: {
+            address: VERASWAP_FEE_RECIPIENT,
+            bips: VERASWAP_FEE_BIPS,
+        },
+        refererralFeeRecipient: {
+            address: referrerAddress ?? undefined,
+            bips: REFERRER_FEE_BIPS,
+        },
+    };
 });
 
 export const tokenInAmountWithoutFeesAtom = atom<bigint | null>((get) => {
@@ -45,7 +51,7 @@ export const tokenInAmountWithoutFeesAtom = atom<bigint | null>((get) => {
 
     if (!amountIn) return null;
 
-    const totalFeeBips = feeRecipients.reduce((sum, recipient) => sum + recipient.bips, 0n);
+    const totalFeeBips = feeRecipients.veraswapFeeRecipient.bips + feeRecipients.refererralFeeRecipient.bips;
 
     const bipsDenominator = 10000n;
     return amountIn - (amountIn * totalFeeBips) / bipsDenominator;

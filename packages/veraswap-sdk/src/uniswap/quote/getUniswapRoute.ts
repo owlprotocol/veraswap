@@ -104,40 +104,89 @@ export interface GetRouterCommandsForQuote {
     contracts: {
         weth9: Address;
     };
-    feeRecipients?: { address: Address; bips: bigint }[];
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
 
 const bipsDenominator = 10000n; // 10000 bips = 100%
 
+function getReferralFeeCommands({
+    amountInWithFee,
+    currencyIn,
+    veraswapFeeRecipient = { address: zeroAddress, bips: 0n },
+    referralFeeRecipient = { bips: 0n },
+}: {
+    amountInWithFee: bigint;
+    currencyIn: Address;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
+}): CreateCommandParamsGeneric[] {
+    const feeCommands: CreateCommandParamsGeneric[] = [];
+
+    // There is a referal fee recipient, share the fee with them
+    if (referralFeeRecipient.address) {
+        const referralFeeAmount = (amountInWithFee * referralFeeRecipient.bips) / bipsDenominator;
+        const commandInputReferral = [currencyIn, referralFeeRecipient.address, referralFeeAmount];
+
+        const veraswapFeeAmount = (amountInWithFee * veraswapFeeRecipient.bips) / bipsDenominator;
+        const commandInputVeraswap = [currencyIn, veraswapFeeRecipient.address, veraswapFeeAmount];
+
+        if (currencyIn === zeroAddress) {
+            const command = CommandType.TRANSFER;
+
+            // In case fees are 0, don't add a command
+            if (referralFeeAmount > 0) {
+                feeCommands.push([command, commandInputReferral]);
+            }
+
+            if (veraswapFeeAmount > 0) {
+                feeCommands.push([command, commandInputVeraswap]);
+            }
+        } else {
+            const command = CommandType.PERMIT2_TRANSFER_FROM_BATCH;
+            const commandInput = [commandInputReferral, commandInputVeraswap];
+
+            feeCommands.push([command, commandInput]);
+        }
+    } else {
+        // There is no referral fee recipient, Veraswap takes the full fee
+        const totalFeeBips = veraswapFeeRecipient.bips + referralFeeRecipient.bips;
+        const veraswapFeeAmount = (amountInWithFee * totalFeeBips) / bipsDenominator;
+        const commandInput = [currencyIn, veraswapFeeRecipient.address, veraswapFeeAmount];
+
+        const command = currencyIn === zeroAddress ? CommandType.TRANSFER : CommandType.PERMIT2_TRANSFER_FROM;
+
+        // In case fees are 0, we don't add the command
+        if (totalFeeBips > 0) {
+            feeCommands.push([command, commandInput]);
+        }
+    }
+
+    return feeCommands;
+}
+
 /**
- * @notice If feeRecipients are provided, we assume the amountOutMinimum accounts for the fee being deducted from the amount in
- * @param feeRecipients optional list of fee recipients, each with an address and bips (basis points) to pay in input currency
+ * @notice If fee recipients are provided, we assume the amountOutMinimum accounts for the fee being deducted from the amount in
  */
 export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): CreateCommandParamsGeneric[] {
-    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
-    const feeRecipients = params.feeRecipients ?? [];
+    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType, currencyIn } = params;
 
-    let amountIn = params.amountIn;
+    const veraswapFeeRecipient = params.veraswapFeeRecipient ?? { address: zeroAddress, bips: 0n };
+    const referralFeeRecipient = params.referralFeeRecipient ?? { bips: 0n };
 
-    const feeCommands = feeRecipients.map((feeRecipient) => {
-        // TODO case for eth, and case for batch
-        const command = CommandType.PERMIT2_TRANSFER_FROM;
+    const amountInWithFee = params.amountIn;
 
-        const token = params.currencyIn;
-        const { address: recipient } = feeRecipient;
-        const feeAmount = (amountIn * feeRecipient.bips) / bipsDenominator;
-        console.log({ feeAmount, recipient });
-        const commandInput = [token, recipient, feeAmount];
-
-        return [command, commandInput] as CreateCommandParamsGeneric;
+    const feeCommands = getReferralFeeCommands({
+        amountInWithFee,
+        currencyIn,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
     });
 
-    if (feeRecipients.length > 0) {
-        const feeBipsSum = feeRecipients.reduce((sum, feeRecipient) => sum + feeRecipient.bips, 0n);
+    const totalFeeBips = veraswapFeeRecipient.bips + referralFeeRecipient.bips;
 
-        // Remove the fees from the amountIn
-        amountIn = amountIn - (amountIn * feeBipsSum) / bipsDenominator;
-    }
+    // Remove the fees from the amountIn
+    const amountIn = amountInWithFee - (amountInWithFee * totalFeeBips) / bipsDenominator;
 
     if (bestQuoteType === MetaQuoteBestType.None) {
         return [];
