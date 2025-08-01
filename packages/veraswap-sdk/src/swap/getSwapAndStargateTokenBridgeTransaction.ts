@@ -21,6 +21,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
     recipient,
     tokenSymbol,
     contracts,
+    veraswapFeeRecipient,
+    referralFeeRecipient,
 }: {
     universalRouter: Address;
     amountIn: bigint;
@@ -36,6 +38,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
     contracts: {
         weth9: Address;
     };
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }) {
     const routePlanner = new RoutePlanner();
 
@@ -52,6 +56,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
         currencyOut,
         ...quote,
         recipient: STARGATE_BRIDGE_SWEEP_ADDRESS,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 

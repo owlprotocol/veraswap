@@ -47,6 +47,8 @@ export interface TransactionSwapOptions {
     wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
 
 type StargateQuote = StargateETHQuote | StargateTokenQuote;
@@ -95,6 +97,8 @@ export interface TransactionSwapBridgeOptions {
     walletAddress: Address;
     orbiterQuote?: OrbiterQuote;
     stargateQuote?: StargateQuote;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
 
 export interface TransactionSwapBridgeOrbiterOptions {
@@ -108,6 +112,8 @@ export interface TransactionSwapBridgeOrbiterOptions {
     // TODO: maybe calculate total amount in to pay and pass it as bridge payment
     // Keeping it for type consistency
     bridgePayment?: bigint;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
 
 export interface TransactionBridgeSwapOptions {
@@ -119,6 +125,8 @@ export interface TransactionBridgeSwapOptions {
     initData: Hex;
     orbiterQuote?: OrbiterQuote;
     stargateQuote?: StargateQuote;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
 
 export type TransactionParams =
@@ -156,6 +164,8 @@ export async function getTransaction(
                 amountOutMinimum,
                 queryClient,
                 wagmiConfig,
+                veraswapFeeRecipient,
+                referralFeeRecipient,
             } = params;
 
             let permit2PermitParams: [PermitSingle, Hex] | undefined = undefined;
@@ -188,6 +198,8 @@ export async function getTransaction(
                 amountOutMinimum,
                 permit2PermitParams,
                 contracts: contracts[currencyIn.chainId],
+                veraswapFeeRecipient,
+                referralFeeRecipient,
             });
         }
 
@@ -328,6 +340,8 @@ export async function getTransaction(
                 orbiterQuote,
                 queryClient,
                 wagmiConfig,
+                veraswapFeeRecipient,
+                referralFeeRecipient,
             } = params;
             const { currencyIn: swapCurrencyIn, quote, currencyOut: swapCurrencyOut } = swap;
             const { currencyIn: bridgeCurrencyIn, currencyOut: bridgeCurrencyOut } = bridge;
@@ -366,6 +380,8 @@ export async function getTransaction(
 
                     permit2PermitParams,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    veraswapFeeRecipient,
+                    referralFeeRecipient,
                 });
             }
 
@@ -382,6 +398,8 @@ export async function getTransaction(
                         recipient: walletAddress,
                         permit2PermitParams,
                         contracts: contracts[swapCurrencyIn.chainId],
+                        veraswapFeeRecipient,
+                        referralFeeRecipient,
                     });
                 }
 
@@ -398,6 +416,8 @@ export async function getTransaction(
                     orbiterQuote,
                     permit2PermitParams,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    veraswapFeeRecipient,
+                    referralFeeRecipient,
                 });
             }
 
@@ -421,6 +441,8 @@ export async function getTransaction(
                     recipient: walletAddress,
                     tokenSymbol,
                     contracts: contracts[swapCurrencyIn.chainId],
+                    veraswapFeeRecipient,
+                    referralFeeRecipient,
                 });
             }
 
@@ -446,6 +468,8 @@ export async function getTransaction(
                 permit2PermitParams,
                 amountIn,
                 contracts: contracts[swapCurrencyIn.chainId],
+                veraswapFeeRecipient,
+                referralFeeRecipient,
             });
         }
 
@@ -461,6 +485,8 @@ export async function getTransaction(
                 initData,
                 stargateQuote,
                 orbiterQuote,
+                veraswapFeeRecipient,
+                referralFeeRecipient,
             } = params;
             const { currencyIn, currencyOut, withSuperchain } = bridge;
             const { currencyIn: swapCurrencyIn, currencyOut: swapCurrencyOut, quote } = swap;
@@ -554,6 +580,8 @@ export async function getTransaction(
                     currencyOut: getUniswapV4Address(swapCurrencyOut),
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
                     contracts: contracts[currencyOut.chainId],
+                    veraswapFeeRecipient,
+                    referralFeeRecipient,
                 },
                 stargateQuote,
                 orbiterQuote,

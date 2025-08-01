@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { Currency } from "@owlprotocol/veraswap-sdk";
 import { useAtom } from "jotai";
+import { isAddress } from "viem";
 import { useDomainType } from "./useDomainType.js";
 import {
     currencyInAtom,
@@ -9,6 +10,7 @@ import {
     chainsTypeWriteAtom,
     chainsAtom,
     updatePinnedTokensAtom,
+    referrerAddressAtom,
 } from "@/atoms/index.js";
 import { Route } from "@/routes/index.js";
 
@@ -22,6 +24,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
     const [, setNetworkType] = useAtom(chainsTypeWriteAtom);
     const [enabledChains] = useAtom(chainsAtom);
     const [, updatePinnedTokens] = useAtom(updatePinnedTokensAtom);
+    const [, setReferrerAddress] = useAtom(referrerAddressAtom);
 
     const setCurrenciesFromUrl = (
         currencyInSymbol?: string,
@@ -55,6 +58,7 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
             chainIdOut,
             type,
             pinnedTokens,
+            referrer,
         } = search;
 
         const chainsType = domainType || type || "mainnet";
@@ -63,6 +67,10 @@ export function useSyncSwapSearchParams(allCurrencies: Currency[]) {
         if (pinnedTokens) {
             const parsedPinnedTokens = pinnedTokens.split(",").map((token) => token.trim());
             updatePinnedTokens(parsedPinnedTokens);
+        }
+
+        if (referrer && isAddress(referrer)) {
+            setReferrerAddress(referrer);
         }
 
         // Wait for currencies to be loaded before setting from URL

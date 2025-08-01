@@ -9,7 +9,7 @@ import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
 import { CURRENCY_HOPS, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
-import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js";
+import { currencyInAtom, currencyOutAtom, tokenInAmountWithoutFeesAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
 
@@ -21,7 +21,7 @@ export const routeMultichainAtom = atomWithQuery((get) => {
     const queryClient = get(queryClientAtom);
     const currencyIn = get(currencyInAtom);
     const currencyOut = get(currencyOutAtom);
-    const exactAmount = get(tokenInAmountAtom);
+    const exactAmount = get(tokenInAmountWithoutFeesAtom);
 
     if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
 
