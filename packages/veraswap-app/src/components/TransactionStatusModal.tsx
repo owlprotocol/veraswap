@@ -91,8 +91,9 @@ export function TransactionStatusModal({
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent
+                aria-describedby={undefined}
                 className={cn(
-                    "aria-describedby={undefined} overflow-hidden",
+                    "overflow-hidden",
                     isEmbedded ? "max-w-full max-h-[90vh] w-[95vw]" : "sm:max-w-md max-h-[90vh]",
                 )}
             >
