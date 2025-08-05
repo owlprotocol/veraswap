@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { useSetAtom } from "jotai";
-import { Token } from "@owlprotocol/veraswap-sdk";
+import { Token, customLists } from "@owlprotocol/veraswap-sdk";
 import { Address, isAddress } from "viem";
 import { useEffect } from "react";
 import { SwapWidget } from "@/components/SwapWidget.js";
 import { useTheme, ThemeProvider } from "@/components/theme-provider.js";
 import { hexThemeToHSL } from "@/utils/themeUtils.js";
-import { customCurrenciesAtom } from "@/atoms/chains.js";
+import { customCurrenciesAtom, customListAtom } from "@/atoms/chains.js";
 
 const CustomTokenSchema = z.object({
     address: z.string().refine((val) => isAddress(val), {
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/embed")({
         currencyOut: z.string().optional(),
         chainIdOut: z.coerce.number().optional(),
         pinnedTokens: z.string().optional(),
+        customList: z.enum(customLists).optional(),
         customTokens: z
             .union([z.string(), z.array(CustomTokenSchema)])
             .transform((val) => {
@@ -63,6 +64,7 @@ function Widget() {
     const searchParams = Route.useSearch();
     const { setTheme } = useTheme();
     const setCustomTokens = useSetAtom(customCurrenciesAtom);
+    const setCustomList = useSetAtom(customListAtom);
 
     useEffect(() => {
         if (searchParams.mode) {
@@ -84,7 +86,12 @@ function Widget() {
         } else {
             setCustomTokens([]);
         }
-    }, [searchParams, setTheme, setCustomTokens]);
+        if (searchParams.customList) {
+            setCustomList(searchParams.customList);
+        } else {
+            setCustomList(undefined);
+        }
+    }, [searchParams, setTheme, setCustomTokens, setCustomList]);
 
     const hexThemeRaw = {
         primary: searchParams.primary,

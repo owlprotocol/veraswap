@@ -3,7 +3,7 @@ import { ChainWithMetadata } from "@owlprotocol/veraswap-sdk/chains";
 import { localChains, mainnetChains, testnetChains } from "@owlprotocol/veraswap-sdk/chains";
 import { Currency, getUniswapV4Address } from "@owlprotocol/veraswap-sdk";
 import { atomWithQuery } from "jotai-tanstack-query";
-import { registryTokensQueryOptions } from "@owlprotocol/veraswap-sdk";
+import { registryTokensQueryOptions, CustomList } from "@owlprotocol/veraswap-sdk";
 import { currencyInAtom, currencyOutAtom } from "./tokens.js";
 
 export type ChainsType = "local" | "testnet" | "mainnet";
@@ -35,10 +35,12 @@ export const chainsAtom = atom<ChainWithMetadata[]>((get) => {
 const includeSupersim = import.meta.env.MODE === "development" && import.meta.env.VITE_SUPERSIM === "true";
 
 export const customCurrenciesAtom = atom<Currency[]>([]);
+export const customListAtom = atom<CustomList | undefined>(undefined);
 
 export const currenciesQueryAtom = atomWithQuery((get) => {
     const chainsType = get(chainsTypeAtom);
-    return registryTokensQueryOptions(chainsType, includeSupersim);
+    const customList = get(customListAtom);
+    return registryTokensQueryOptions(chainsType, includeSupersim, customList);
 });
 
 export const currenciesAtom = atom<Currency[]>((get) => {
