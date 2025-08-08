@@ -22,7 +22,15 @@ import { Mailbox } from "../artifacts/Mailbox.js";
 import { MockInterchainGasPaymaster } from "../artifacts/MockInterchainGasPaymaster.js";
 import { NoopIsm } from "../artifacts/NoopIsm.js";
 import { PausableHook } from "../artifacts/PausableHook.js";
-import { opChainA, opChainB, opChainL1, superseed, unichainSepolia } from "../chains/index.js";
+import {
+    appchainTestnet,
+    opChainA,
+    opChainB,
+    opChainL1,
+    rariTestnet,
+    superseed,
+    unichainSepolia,
+} from "../chains/index.js";
 import { HyperlaneRegistry } from "../types/HyperlaneRegistry.js";
 
 import { LOCAL_KERNEL_CONTRACTS } from "./kernel.js";
@@ -181,6 +189,12 @@ export const HYPERLANE_CONTRACTS: Record<
     [polygon.id]: {
         erc7579Router: "0x5442a053ff9538F2F2ab4eA6A2519E9025dBf395",
     },
+    [rariTestnet.id]: {
+        erc7579Router: "0xfcf60641B89b80c74084f8744167eB6e5B5d9E8C",
+    },
+    [appchainTestnet.id]: {
+        erc7579Router: "0xFb6b1dAA4AD015286a29724EEEf46e3fEa025eD4",
+    },
 };
 
 /*** Hyperlane Tokens ***/
@@ -256,6 +270,14 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
             chainId: 902,
             name: "localhost-op-chain-b",
         } as ChainMetadata,
+        "rari-testnet": {
+            chainId: rariTestnet.id,
+            name: "rari-testnet",
+        } as ChainMetadata,
+        "appchain-testnet": {
+            chainId: appchainTestnet.id,
+            name: "appchain-testnet",
+        } as ChainMetadata,
     } as ChainMap<ChainMetadata>,
     addresses: {
         "localhost-1337": {
@@ -272,6 +294,12 @@ export const testHyperlaneRegistry: HyperlaneRegistry = {
         },
         "localhost-op-chain-b": {
             mailbox: getMailboxAddress({ chainId: 902 }),
+        },
+        "rari-testnet": {
+            mailbox: "0xb0bb23B185A7Ba519426C038DEcAFaB4D0a9055b",
+        },
+        "appchain-testnet": {
+            mailbox: "0x4C58973d0Eb3CeB8aBfd933A1C6EE6f8EA178064",
         },
     },
 };

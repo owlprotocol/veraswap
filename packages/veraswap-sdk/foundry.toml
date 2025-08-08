@@ -86,7 +86,7 @@ story = { url = "https://www.storyscan.io/api/", key = "", verifier = "blockscou
 #somnia-testnet = { url = "https://shannon-explorer.somnia.network" }
 #taraxa = { url = "https://mainnet.explorer.taraxa.io" }
 #taraxa-testnet = { url = "https://testnet.explorer.taraxa.io" }
-# rari-testnet = { url = "https://explorer.rarichain.org/api/", key = "", verifier = "blockscout", chain = "1918988905" }
+rari-testnet = { url = "https://rari-testnet.calderaexplorer.xyz/api/", key = "", verifier = "blockscout", chain = "1918988905" }
 appchain-testnet = { url = "https://appchaintestnet.explorer.caldera.xyz/api/", key = "", verifier = "blockscout", chain = "4661" }
 
 #### FAUCETS ###

@@ -20,7 +20,16 @@ import {
 } from "viem/chains";
 
 import { MockAgentToken, MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
-import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, superseed } from "../chains/index.js";
+import {
+    appchainTestnet,
+    interopDevnet0,
+    interopDevnet1,
+    opChainA,
+    opChainB,
+    opChainL1,
+    rariTestnet,
+    superseed,
+} from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
 import { MultichainToken } from "../currency/multichainToken.js";
@@ -28,7 +37,12 @@ import { Token } from "../currency/token.js";
 import { createPoolKey, DEFAULT_POOL_PARAMS } from "../types/PoolKey.js";
 import { nativeOnChain } from "../uniswap/index.js";
 
-import { getHypERC20Address, getHypERC20CollateralAddress, LOCAL_HYPERLANE_CONTRACTS } from "./hyperlane.js";
+import {
+    getHypERC20Address,
+    getHypERC20CollateralAddress,
+    LOCAL_HYPERLANE_CONTRACTS,
+    testHyperlaneRegistry,
+} from "./hyperlane.js";
 
 export function getMockERC20Address({ name, symbol, decimals }: { name: string; symbol: string; decimals: number }) {
     return getDeployDeterministicAddress({
@@ -522,6 +536,88 @@ export const TESTNET_CURRENCIES = [
         });
         MultichainToken.connect([tokenD0, tokenD1]);
         return [tokenD0, tokenD1];
+    })(),
+    ...(() => {
+        const tokenMochaData = {
+            name: "Mocha",
+            symbol: "M",
+            decimals: 18,
+            logoURI: "https://timhortonmenu.ca/wp-content/uploads/2025/05/Mocha-Iced-Capp.webp",
+        };
+
+        const tokenMochaAddress = getMockERC20Address({
+            name: tokenMochaData.name,
+            symbol: tokenMochaData.symbol,
+            decimals: tokenMochaData.decimals,
+        });
+
+        const tokenRariTestnet = MultichainToken.createERC20({
+            ...tokenMochaData,
+            address: tokenMochaAddress,
+            chainId: rariTestnet.id,
+            // TODO: Get address with Espresso ISM
+            hypERC20Collateral: getHypERC20CollateralAddress({
+                erc20: tokenMochaAddress,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+            }),
+        });
+
+        const tokenAppchainTestnet = MultichainToken.createHypERC20({
+            ...tokenMochaData,
+            // TODO: Get address with Espresso ISM
+            address: getHypERC20Address({
+                decimals: 18,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                totalSupply: 0n,
+                name: tokenMochaData.name,
+                symbol: tokenMochaData.symbol,
+                msgSender: zeroAddress,
+            }),
+            chainId: appchainTestnet.id,
+        });
+        MultichainToken.connect([tokenRariTestnet, tokenAppchainTestnet]);
+        return [tokenRariTestnet, tokenAppchainTestnet];
+    })(),
+    ...(() => {
+        const tokenRistrettoData = {
+            name: "Ristretto",
+            symbol: "R",
+            decimals: 18,
+            logoURI: "https://www.cafescandelas.com/uploads/media_items/ristretto-500.500.500.s.jpg",
+        };
+
+        const tokenRistrettoAddress = getMockERC20Address({
+            name: tokenRistrettoData.name,
+            symbol: tokenRistrettoData.symbol,
+            decimals: tokenRistrettoData.decimals,
+        });
+
+        const tokenRariTestnet = MultichainToken.createERC20({
+            ...tokenRistrettoData,
+            address: tokenRistrettoAddress,
+            chainId: rariTestnet.id,
+            // TODO: Get address with Espresso ISM
+            hypERC20Collateral: getHypERC20CollateralAddress({
+                erc20: tokenRistrettoAddress,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+            }),
+        });
+
+        const tokenAppchainTestnet = MultichainToken.createHypERC20({
+            ...tokenRistrettoData,
+            // TODO: Get address with Espresso ISM
+            address: getHypERC20Address({
+                decimals: 18,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                totalSupply: 0n,
+                name: tokenRistrettoData.name,
+                symbol: tokenRistrettoData.symbol,
+                msgSender: zeroAddress,
+            }),
+            chainId: appchainTestnet.id,
+        });
+        MultichainToken.connect([tokenRariTestnet, tokenAppchainTestnet]);
+        return [tokenRariTestnet, tokenAppchainTestnet];
     })(),
 ];
 

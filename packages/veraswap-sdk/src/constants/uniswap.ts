@@ -26,6 +26,8 @@ import { UniversalRouter } from "../artifacts/UniversalRouter.js";
 import { UnsupportedProtocol } from "../artifacts/UnsupportedProtocol.js";
 import { V4Quoter } from "../artifacts/V4Quoter.js";
 import { WETH } from "../artifacts/WETH.js";
+import { appchainTestnet } from "../chains/appchainTestnet.js";
+import { rariTestnet } from "../chains/rariTestnet.js";
 import { opChainA, opChainB, opChainL1 } from "../chains/supersim.js";
 
 export const V4_SWAP = 0x10;
@@ -268,5 +270,23 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4Quoter: "0x4BCb913C9b582b93E5D2f2F7885A05592AEf7ADa",
         metaQuoter: "0xFC1Fa23A71F590D63eE900a843ea9E3f046D26EA",
         universalRouter: "0x677C26Dc148f42dF110859B0053e5a2d2E2Ec1d3",
+    },
+    [rariTestnet.id]: {
+        weth9: "0xe73288389c6caC87aa14E9B35e8e2b3be7fB06C3",
+        v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
+        v4PositionManager: "0x63D91b09DD0e27C672228E52bCF4Ec08E694c0cB",
+        v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
+        v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
+        metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
+        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
+    },
+    [appchainTestnet.id]: {
+        weth9: "0xe73288389c6caC87aa14E9B35e8e2b3be7fB06C3",
+        v4PoolManager: "0x4e8C56BeC0907f8e70E2341fF28fcfD8589E3a2d",
+        v4PositionManager: "0x63D91b09DD0e27C672228E52bCF4Ec08E694c0cB",
+        v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
+        v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
+        metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
+        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
     },
 } as const;
