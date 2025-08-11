@@ -1,3 +1,4 @@
+import { appchainTestnet } from "./appchainTestnet.js";
 import { arbitrum } from "./arbitrum.js";
 import { arbitrumSepolia } from "./arbitrumSepolia.js";
 import { avalanche } from "./avalanche.js";
@@ -10,6 +11,7 @@ import { interopDevnet0, interopDevnet1 } from "./interopDevnet.js";
 import { optimism } from "./optimism.js";
 import { optimismSepolia } from "./optimismSepolia.js";
 import { polygon } from "./polygon.js";
+import { rariTestnet } from "./rariTestnet.js";
 import { sepolia } from "./sepolia.js";
 import { story } from "./story.js";
 import { superseed } from "./superseed.js";
@@ -29,5 +31,7 @@ export const testnetChains = [
     baseSepolia,
     inkSepolia,
     unichainSepolia,
+    rariTestnet,
+    appchainTestnet,
     ...interopDevnetChains,
 ];
