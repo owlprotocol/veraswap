@@ -152,7 +152,7 @@ contract DeployEspressoTestnet is DeployCoreContracts {
         (tokenR,) = MockERC20Utils.getOrCreate2("Ristretto", "R", 18);
 
         // Skip liquidity for now
-        uint256 liquidity = 0; // Placeholder for actual liquidity check
+        uint256 liquidity = 1; // Placeholder for actual liquidity check
         if (liquidity == 0) {
             PoolUtils.setupToken(IERC20(tokenM), IPositionManager(v4PositionManager), IUniversalRouter(router));
             PoolUtils.setupToken(IERC20(tokenR), IPositionManager(v4PositionManager), IUniversalRouter(router));
@@ -160,10 +160,10 @@ contract DeployEspressoTestnet is DeployCoreContracts {
             // PoolUtils.deployPoolWithLiquidityMultiplier(
             //     tokenM, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 100
             // );
-
-            console2.log("Mocha:", tokenM);
-            console2.log("Ristretto:", tokenR);
-            console2.log("Deployed Tokens and pool");
         }
+
+        console2.log("Mocha:", tokenM);
+        console2.log("Ristretto:", tokenR);
+        console2.log("Deployed Tokens and pool");
     }
 }

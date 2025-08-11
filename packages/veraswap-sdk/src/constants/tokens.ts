@@ -551,32 +551,33 @@ export const TESTNET_CURRENCIES = [
             decimals: tokenMochaData.decimals,
         });
 
-        const tokenRariTestnet = MultichainToken.createERC20({
+        const tokenAppchainTestnet = MultichainToken.createERC20({
             ...tokenMochaData,
             address: tokenMochaAddress,
-            chainId: rariTestnet.id,
+            chainId: appchainTestnet.id,
             // TODO: Get address with Espresso ISM
             hypERC20Collateral: getHypERC20CollateralAddress({
                 erc20: tokenMochaAddress,
-                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
             }),
         });
 
-        const tokenAppchainTestnet = MultichainToken.createHypERC20({
+        const tokenRariTestnet = MultichainToken.createHypERC20({
             ...tokenMochaData,
             // TODO: Get address with Espresso ISM
             address: getHypERC20Address({
                 decimals: 18,
-                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
                 totalSupply: 0n,
                 name: tokenMochaData.name,
                 symbol: tokenMochaData.symbol,
                 msgSender: zeroAddress,
             }),
-            chainId: appchainTestnet.id,
+            chainId: rariTestnet.id,
         });
-        MultichainToken.connect([tokenRariTestnet, tokenAppchainTestnet]);
-        return [tokenRariTestnet, tokenAppchainTestnet];
+
+        MultichainToken.connect([tokenAppchainTestnet, tokenRariTestnet]);
+        return [tokenAppchainTestnet, tokenRariTestnet];
     })(),
     ...(() => {
         const tokenRistrettoData = {
@@ -592,32 +593,33 @@ export const TESTNET_CURRENCIES = [
             decimals: tokenRistrettoData.decimals,
         });
 
-        const tokenRariTestnet = MultichainToken.createERC20({
+        const tokenAppchainTestnet = MultichainToken.createERC20({
             ...tokenRistrettoData,
             address: tokenRistrettoAddress,
-            chainId: rariTestnet.id,
+            chainId: appchainTestnet.id,
             // TODO: Get address with Espresso ISM
             hypERC20Collateral: getHypERC20CollateralAddress({
                 erc20: tokenRistrettoAddress,
-                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
             }),
         });
 
-        const tokenAppchainTestnet = MultichainToken.createHypERC20({
+        const tokenRariTestnet = MultichainToken.createHypERC20({
             ...tokenRistrettoData,
             // TODO: Get address with Espresso ISM
             address: getHypERC20Address({
                 decimals: 18,
-                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
                 totalSupply: 0n,
                 name: tokenRistrettoData.name,
                 symbol: tokenRistrettoData.symbol,
                 msgSender: zeroAddress,
             }),
-            chainId: appchainTestnet.id,
+            chainId: rariTestnet.id,
         });
-        MultichainToken.connect([tokenRariTestnet, tokenAppchainTestnet]);
-        return [tokenRariTestnet, tokenAppchainTestnet];
+
+        MultichainToken.connect([tokenAppchainTestnet, tokenRariTestnet]);
+        return [tokenAppchainTestnet, tokenRariTestnet];
     })(),
 ];
 
