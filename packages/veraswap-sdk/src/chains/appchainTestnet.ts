@@ -17,6 +17,13 @@ export const appchainTestnet = /* #__PURE__ */ defineChain({
         name: "Ether",
         symbol: "ETH",
     },
+    blockExplorers: {
+        default: {
+            name: "Blockscout",
+            url: "https://appchaintestnet.explorer.caldera.xyz/",
+            apiUrl: "https://appchaintestnet.explorer.caldera.xyz/api",
+        },
+    },
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/appchain/logo.svg",
     },

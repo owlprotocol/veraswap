@@ -17,6 +17,13 @@ export const rariTestnet = /* #__PURE__ */ defineChain({
         name: "Ether",
         symbol: "ETH",
     },
+    blockExplorers: {
+        default: {
+            name: "Blockscout",
+            url: "https://testnet.explorer.rarichain.org/",
+            apiUrl: "https://testnet.explorer.rarichain.org/api",
+        },
+    },
     custom: {
         logoURI: "https://raw.githubusercontent.com/hyperlane-xyz/hyperlane-registry/main/chains/rarichain/logo.svg",
     },
