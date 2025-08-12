@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../schema.json
+chainId: 1918988905
+displayName: Rari Testnet
+domainId: 1918988905
+isTestnet: true
+name: raritestnet
+nativeToken:
+    decimals: 18
+    name: Ether
+    symbol: ETH
+protocol: ethereum
+rpcUrls:
+    - http: https://rari-testnet.calderachain.xyz/http
+technicalStack: other
