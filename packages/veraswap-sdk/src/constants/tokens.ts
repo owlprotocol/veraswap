@@ -567,11 +567,11 @@ export const TESTNET_CURRENCIES = [
             // TODO: Get address with Espresso ISM
             address: getHypERC20Address({
                 decimals: 18,
-                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
                 totalSupply: 0n,
                 name: tokenMochaData.name,
                 symbol: tokenMochaData.symbol,
-                msgSender: zeroAddress,
+                msgSender: "0xAAb6f44B46f19d061582727B66C9a0c84C97a2F6",
             }),
             chainId: rariTestnet.id,
         });
@@ -609,11 +609,11 @@ export const TESTNET_CURRENCIES = [
             // TODO: Get address with Espresso ISM
             address: getHypERC20Address({
                 decimals: 18,
-                mailbox: testHyperlaneRegistry.addresses["appchain-testnet"].mailbox as Address,
+                mailbox: testHyperlaneRegistry.addresses["rari-testnet"].mailbox as Address,
                 totalSupply: 0n,
                 name: tokenRistrettoData.name,
                 symbol: tokenRistrettoData.symbol,
-                msgSender: zeroAddress,
+                msgSender: "0xAAb6f44B46f19d061582727B66C9a0c84C97a2F6",
             }),
             chainId: rariTestnet.id,
         });
