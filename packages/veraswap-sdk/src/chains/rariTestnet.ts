@@ -9,7 +9,7 @@ export const rariTestnet = /* #__PURE__ */ defineChain({
     rpcUrls: {
         default: {
             http: ["https://testnet.rpc.rarichain.org/http"],
-            webSocket: ["wss://testnet.rpc.rarichain.org/ws"],
+            // webSocket: ["wss://testnet.rpc.rarichain.org/ws"],
         },
     },
     nativeCurrency: {
