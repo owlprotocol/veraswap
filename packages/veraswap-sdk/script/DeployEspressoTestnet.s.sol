@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import "forge-std/console2.sol";
 
+import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IPositionManager} from "@uniswap/v4-periphery/src/interfaces/IPositionManager.sol";
 import {IUniversalRouter} from "@uniswap/universal-router/contracts/interfaces/IUniversalRouter.sol";
@@ -153,13 +154,16 @@ contract DeployEspressoTestnet is DeployCoreContracts {
 
         // Skip liquidity for now
         uint256 liquidity = 1; // Placeholder for actual liquidity check
-        if (liquidity == 0) {
-            PoolUtils.setupToken(IERC20(tokenM), IPositionManager(v4PositionManager), IUniversalRouter(router));
-            PoolUtils.setupToken(IERC20(tokenR), IPositionManager(v4PositionManager), IUniversalRouter(router));
-            PoolUtils.deployPool(tokenM, tokenR, IPositionManager(v4PositionManager), IStateView(v4StateView));
-            // PoolUtils.deployPoolWithLiquidityMultiplier(
-            //     tokenM, address(0), IPositionManager(v4PositionManager), IStateView(v4StateView), 100
-            // );
+        if (liquidity == 1) {
+            // PoolUtils.setupToken(IERC20(tokenM), IPositionManager(v4PositionManager), IUniversalRouter(router));
+            // PoolUtils.setupToken(IERC20(tokenR), IPositionManager(v4PositionManager), IUniversalRouter(router));
+            Currency tokenMCurrency = Currency.wrap(tokenM);
+            Currency tokenRCurrency = Currency.wrap(tokenR);
+            PoolUtils.createV4Pool(tokenMCurrency, tokenRCurrency, IPositionManager(v4PositionManager), 10 ether);
+            // Currency eth = Currency.wrap(address(0));
+            // PoolUtils.createV4Pool(eth, tokenMCurrency, IPositionManager(v4PositionManager), 1 ether);
+            // PoolUtils.deployPool(tokenM, tokenR, IPositionManager(v4PositionManager), IStateView(v4StateView));
+            // PoolUtils.deployPool(address(0), tokenM, IPositionManager(v4PositionManager), IStateView(v4StateView));
         }
 
         console2.log("Mocha:", tokenM);
