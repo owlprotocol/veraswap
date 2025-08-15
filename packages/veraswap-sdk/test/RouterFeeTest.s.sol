@@ -21,7 +21,7 @@ contract RouterFeeTest is UniswapBaseTest {
         bytes memory commands = new bytes(1);
         commands[0] = bytes1(uint8(Commands.PERMIT2_TRANSFER_FROM));
 
-        address feeRecipient = address(1);
+        address feeRecipient = address(0xbeef);
         uint256 feeAmount = 10;
         bytes[] memory commandInputs = new bytes[](1);
         commandInputs[0] = abi.encode(currencyIn, feeRecipient, feeAmount);
@@ -29,11 +29,11 @@ contract RouterFeeTest is UniswapBaseTest {
         uint256 deadline = block.timestamp + 20;
 
         uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
-        uint256 currencyInBalanceRecipientBeforeSwap = currencyIn.balanceOf(address(1));
+        uint256 currencyInBalanceRecipientBeforeSwap = currencyIn.balanceOf(feeRecipient);
         router.execute(commands, commandInputs, deadline);
 
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
-        uint256 currencyInBalanceRecipientAfterSwap = currencyIn.balanceOf(address(1));
+        uint256 currencyInBalanceRecipientAfterSwap = currencyIn.balanceOf(feeRecipient);
 
         assertEq(
             currencyInBalanceBeforeSwap - currencyInBalanceAfterSwap,
@@ -41,7 +41,7 @@ contract RouterFeeTest is UniswapBaseTest {
             "Incorrect balance for sender after fee transfer"
         );
         assertEq(
-            currencyInBalanceRecipientBeforeSwap - currencyInBalanceRecipientAfterSwap,
+            currencyInBalanceRecipientAfterSwap - currencyInBalanceRecipientBeforeSwap,
             feeAmount,
             "Incorrect balance for recipient after fee transfer"
         );
