@@ -143,10 +143,14 @@ function getReferralFeeCommands({
                 feeCommands.push([command, commandInputVeraswap]);
             }
         } else {
-            const command = CommandType.PERMIT2_TRANSFER_FROM_BATCH;
-            const commandInput = [commandInputReferral, commandInputVeraswap];
+            const command = CommandType.PERMIT2_TRANSFER_FROM;
+            if (referralFeeAmount > 0) {
+                feeCommands.push([command, commandInputReferral]);
+            }
 
-            feeCommands.push([command, commandInput]);
+            if (veraswapFeeAmount > 0) {
+                feeCommands.push([command, commandInputVeraswap]);
+            }
         }
     } else {
         // There is no referral fee recipient, Veraswap takes the full fee
