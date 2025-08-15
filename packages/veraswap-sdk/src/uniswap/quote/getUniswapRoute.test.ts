@@ -99,18 +99,17 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
 
-        // TODO: Figure out why locally PERMIT2_TRANSFER_FROM doesn't work
-        test.skip("PERMIT2_TRANSFER_FROM command", async () => {
+        test("PERMIT2_TRANSFER_FROM command", async () => {
             const currencyIn = tokenA;
 
-            const feeRecipient = "0x0000000000000000000000000000000000000001" as Address;
-            const feeRecipientBalanceBeforeSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+            const veraswapFeeRecipient = "0x000000000000000000000000000000000000beef" as Address;
+            const feeRecipientBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapFeeRecipient);
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
 
             const feeAmount = 1000n;
 
             const routePlanner = new RoutePlanner();
-            routePlanner.addCommand(CommandType.PERMIT2_TRANSFER_FROM, [currencyIn, feeRecipient, feeAmount]);
+            routePlanner.addCommand(CommandType.PERMIT2_TRANSFER_FROM, [currencyIn, veraswapFeeRecipient, feeAmount]);
 
             //Execute
             const value = 0n;
@@ -125,7 +124,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             await opChainL1Client.waitForTransactionReceipt({ hash });
 
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
-            const feeRecipientBalanceAfterSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+            const feeRecipientBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapFeeRecipient);
 
             // Input balance decreased by exact amount
             expect(currencyInBalanceBeforeSwap - currencyInBalanceAfterSwap).toBe(feeAmount);
@@ -133,11 +132,9 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(feeRecipientBalanceAfterSwap - feeRecipientBalanceBeforeSwap).toBe(feeAmount);
         });
 
-        // TODO: Figure out why locally PERMIT2_TRANSFER_FROM doesn't work
-        test.skip("A -> L4 with referral fee", async () => {
+        test("A -> L4 with Veraswap fee", async () => {
             const currencyIn = tokenA;
             const currencyOut = tokenL4;
-            console.debug({ currencyIn, currencyOut });
             const currencyHops: Address[] = [];
 
             const contracts = {
@@ -149,12 +146,6 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const bipsDenominator = 10000n; // 100% = 10000 bips
             const feeAmount = (amountIn * feeBips) / bipsDenominator;
             const amountInWithoutFee = amountIn - feeAmount;
-            console.log({
-                feeAmount,
-                amountInWithoutFee,
-                amountIn,
-                percentage: Number(amountInWithoutFee) / Number(amountIn),
-            });
 
             // Route
             const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
@@ -168,8 +159,8 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(route).toBeDefined();
             const { quote, amountOut, value } = route!;
 
-            const feeRecipient = "0x0000000000000000000000000000000000000001" as Address;
-            const veraswapFeeRecipient = { address: feeRecipient, bips: feeBips };
+            const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
+            const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
             const commands = getRouterCommandsForQuote({
                 currencyIn,
                 currencyOut,
@@ -178,7 +169,6 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 veraswapFeeRecipient,
                 ...quote,
             });
-            console.log({ commands, permit2transfer: CommandType.PERMIT2_TRANSFER_FROM, quote });
 
             const routePlanner = new RoutePlanner();
             addCommandsToRoutePlanner(routePlanner, commands);
@@ -186,7 +176,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const feeRecipientBalanceBeforeSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+            const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
 
             const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
             const hash = await anvilClientL1.writeContract({
@@ -200,17 +190,224 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
 
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
-            const feeRecipientBalanceAfterSwap = await getBalanceForAddress(currencyIn, feeRecipient);
+            const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
 
-            console.log({
-                diff: currencyInBalanceAfterSwap - currencyInBalanceBeforeSwap,
-                amountIn,
-                amountInWithoutFee,
-                feeAmount,
-            });
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
-            expect(feeRecipientBalanceAfterSwap).toBe(feeRecipientBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+            expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+        });
+
+        test("A -> L4 with Veraswap and referral fee", async () => {
+            const currencyIn = tokenA;
+            const currencyOut = tokenL4;
+            const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
+            const feeBips = 100n; // 1% referral fee
+            const bipsDenominator = 10000n; // 100% = 10000 bips
+            const feeAmount = (amountIn * feeBips) / bipsDenominator;
+            const amountInWithoutFee = amountIn - feeAmount * 2n;
+
+            // Route
+            const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                chainId: opChainL1.id,
+                currencyIn,
+                currencyOut,
+                currencyHops,
+                amountIn: amountInWithoutFee,
+                contracts,
+            });
+            expect(route).toBeDefined();
+            const { quote, amountOut, value } = route!;
+
+            const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
+            const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
+
+            const referralAddress = "0x00000000000000000000000000000000000beef2" as Address;
+            const referralFeeRecipient = { address: referralAddress, bips: feeBips };
+
+            const commands = getRouterCommandsForQuote({
+                currencyIn,
+                currencyOut,
+                amountIn,
+                contracts,
+                veraswapFeeRecipient,
+                referralFeeRecipient,
+                ...quote,
+            });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
+
+            //Execute
+            const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
+            const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
+            const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+            const referralBalanceBeforeSwap = await getBalanceForAddress(currencyIn, referralAddress);
+
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const hash = await anvilClientL1.writeContract({
+                abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
+                address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                value,
+                functionName: "execute",
+                args: [routePlanner.commands, routePlanner.inputs, deadline],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+
+            const currencyInBalanceAfterSwap = await getBalance(currencyIn);
+            const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+            const referralBalanceAfterSwap = await getBalanceForAddress(currencyIn, referralAddress);
+
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+            expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+            expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+        });
+
+        // TODO: figure out why ETH is giving V3TooLittleReceived()
+        test.skip("ETH -> L4 with Veraswap fee", async () => {
+            const currencyIn = zeroAddress; // ETH
+            const currencyOut = tokenL4;
+            const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
+            const feeBips = 100n; // 1% referral fee
+            const bipsDenominator = 10000n; // 100% = 10000 bips
+            const feeAmount = (amountIn * feeBips) / bipsDenominator;
+            const amountInWithoutFee = amountIn - feeAmount;
+
+            // Route
+            const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                chainId: opChainL1.id,
+                currencyIn,
+                currencyOut,
+                currencyHops,
+                amountIn: amountInWithoutFee,
+                contracts,
+            });
+            expect(route).toBeDefined();
+            const { quote, amountOut, value } = route!;
+
+            const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
+            const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
+            const commands = getRouterCommandsForQuote({
+                currencyIn,
+                currencyOut,
+                amountIn,
+                contracts,
+                veraswapFeeRecipient,
+                ...quote,
+            });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
+
+            //Execute
+            const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
+            const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
+            const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const hash = await anvilClientL1.writeContract({
+                abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
+                address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                value,
+                functionName: "execute",
+                args: [routePlanner.commands, routePlanner.inputs, deadline],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+
+            const currencyInBalanceAfterSwap = await getBalance(currencyIn);
+            const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+            expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+        });
+
+        // TODO: figure out why ETH is giving V3TooLittleReceived()
+        test.skip("ETH -> L4 with Veraswap and referral fee", async () => {
+            const currencyIn = zeroAddress; // ETH
+            const currencyOut = tokenL4;
+            const currencyHops: Address[] = [];
+
+            const contracts = {
+                weth9: LOCAL_UNISWAP_CONTRACTS.weth9,
+                metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
+            };
+
+            const feeBips = 100n; // 1% referral fee
+            const bipsDenominator = 10000n; // 100% = 10000 bips
+            const feeAmount = (amountIn * feeBips) / bipsDenominator;
+            const amountInWithoutFee = amountIn - feeAmount * 2n;
+
+            // Route
+            const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
+                chainId: opChainL1.id,
+                currencyIn,
+                currencyOut,
+                currencyHops,
+                amountIn: amountInWithoutFee,
+                contracts,
+            });
+            expect(route).toBeDefined();
+            const { quote, amountOut, value } = route!;
+
+            const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
+            const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
+
+            const referralAddress = "0x00000000000000000000000000000000000beef2" as Address;
+            const referralFeeRecipient = { address: referralAddress, bips: feeBips };
+
+            const commands = getRouterCommandsForQuote({
+                currencyIn,
+                currencyOut,
+                amountIn,
+                contracts,
+                veraswapFeeRecipient,
+                referralFeeRecipient,
+                ...quote,
+            });
+
+            const routePlanner = new RoutePlanner();
+            addCommandsToRoutePlanner(routePlanner, commands);
+
+            //Execute
+            const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
+            const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
+            const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+            const referralBalanceBeforeSwap = await getBalanceForAddress(currencyIn, referralAddress);
+
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const hash = await anvilClientL1.writeContract({
+                abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
+                address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
+                value,
+                functionName: "execute",
+                args: [routePlanner.commands, routePlanner.inputs, deadline],
+            });
+            await opChainL1Client.waitForTransactionReceipt({ hash });
+
+            const currencyInBalanceAfterSwap = await getBalance(currencyIn);
+            const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
+            const referralBalanceAfterSwap = await getBalanceForAddress(currencyIn, referralAddress);
+
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+            expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
+            expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
         });
     });
 
