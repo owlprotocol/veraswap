@@ -270,8 +270,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
         });
 
-        // TODO: figure out why ETH is giving V3TooLittleReceived()
-        test.skip("ETH -> L4 with Veraswap fee", async () => {
+        test("ETH -> L4 with Veraswap fee", async () => {
             const currencyIn = zeroAddress; // ETH
             const currencyOut = tokenL4;
             const currencyHops: Address[] = [];
@@ -296,7 +295,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 contracts,
             });
             expect(route).toBeDefined();
-            const { quote, amountOut, value } = route!;
+            const { quote, amountOut } = route!;
 
             const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
             const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
@@ -321,23 +320,26 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-                value,
+                value: amountIn, // need to pass full amount in for ETH, value is amount after fees
                 functionName: "execute",
                 args: [routePlanner.commands, routePlanner.inputs, deadline],
             });
-            await opChainL1Client.waitForTransactionReceipt({ hash });
+            const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
 
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
 
-            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            const gasUsed = receipt.gasUsed;
+            const effectiveGasPrice = receipt.effectiveGasPrice;
+            const gasCost = gasUsed * effectiveGasPrice;
+
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn - gasCost); // Input balance decreased by exact amount and gas cost
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
             expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
         });
 
-        // TODO: figure out why ETH is giving V3TooLittleReceived()
-        test.skip("ETH -> L4 with Veraswap and referral fee", async () => {
+        test("ETH -> L4 with Veraswap and referral fee", async () => {
             const currencyIn = zeroAddress; // ETH
             const currencyOut = tokenL4;
             const currencyHops: Address[] = [];
@@ -362,7 +364,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 contracts,
             });
             expect(route).toBeDefined();
-            const { quote, amountOut, value } = route!;
+            const { quote, amountOut } = route!;
 
             const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
             const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
@@ -393,18 +395,22 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-                value,
+                value: amountIn,
                 functionName: "execute",
                 args: [routePlanner.commands, routePlanner.inputs, deadline],
             });
-            await opChainL1Client.waitForTransactionReceipt({ hash });
+            const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
 
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
             const veraswapBalanceAfterSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
             const referralBalanceAfterSwap = await getBalanceForAddress(currencyIn, referralAddress);
 
-            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
+            const gasUsed = receipt.gasUsed;
+            const effectiveGasPrice = receipt.effectiveGasPrice;
+            const gasCost = gasUsed * effectiveGasPrice;
+
+            expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn - gasCost); // Input balance decreased by exact amount and gas cost
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
             expect(veraswapBalanceAfterSwap).toBe(veraswapBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
             expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
