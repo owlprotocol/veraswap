@@ -8,6 +8,7 @@ import { SwapWidget } from "@/components/SwapWidget.js";
 import { useTheme, ThemeProvider } from "@/components/theme-provider.js";
 import { hexThemeToHSL } from "@/utils/themeUtils.js";
 import { customCurrenciesAtom, customListAtom } from "@/atoms/chains.js";
+import { referrerAddressAtom } from "@/atoms/tokens.js";
 
 const CustomTokenSchema = z.object({
     address: z.string().refine((val) => isAddress(val), {
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/embed")({
         chainIdOut: z.coerce.number().optional(),
         pinnedTokens: z.string().optional(),
         customList: z.enum(customLists).optional(),
+        referrer: z.string().optional(),
         customTokens: z
             .union([z.string(), z.array(CustomTokenSchema)])
             .transform((val) => {
@@ -65,6 +67,7 @@ function Widget() {
     const { setTheme } = useTheme();
     const setCustomTokens = useSetAtom(customCurrenciesAtom);
     const setCustomList = useSetAtom(customListAtom);
+    const setReferrer = useSetAtom(referrerAddressAtom);
 
     useEffect(() => {
         if (searchParams.mode) {
@@ -91,7 +94,12 @@ function Widget() {
         } else {
             setCustomList(undefined);
         }
-    }, [searchParams, setTheme, setCustomTokens, setCustomList]);
+        if (searchParams.referrer && isAddress(searchParams.referrer)) {
+            setReferrer(searchParams.referrer);
+        } else {
+            setReferrer(null);
+        }
+    }, [searchParams, setTheme, setCustomTokens, setCustomList, setReferrer]);
 
     const hexThemeRaw = {
         primary: searchParams.primary,

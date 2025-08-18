@@ -5,7 +5,8 @@ import { describe, expect, test } from "vitest";
 import { orbiterQuote, OrbiterQuoteParams } from "./orbiterQuote.js";
 
 describe("orbiterQuote.test.ts", function () {
-    test("Get orbiter routers mainnet", async () => {
+    // Saves time to avoid running an online test
+    test.skip("Get orbiter routers mainnet", async () => {
         const isMainnet = true;
         const params: OrbiterQuoteParams = {
             amount: parseEther("1"),

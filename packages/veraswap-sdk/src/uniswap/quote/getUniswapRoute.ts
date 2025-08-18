@@ -104,9 +104,94 @@ export interface GetRouterCommandsForQuote {
     contracts: {
         weth9: Address;
     };
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
 }
+
+const bipsDenominator = 10000n; // 10000 bips = 100%
+
+function getReferralFeeCommands({
+    amountInWithFee,
+    currencyIn,
+    veraswapFeeRecipient = { address: zeroAddress, bips: 0n },
+    referralFeeRecipient = { bips: 0n },
+}: {
+    amountInWithFee: bigint;
+    currencyIn: Address;
+    veraswapFeeRecipient?: { address: Address; bips: bigint };
+    referralFeeRecipient?: { address?: Address; bips: bigint };
+}): CreateCommandParamsGeneric[] {
+    const feeCommands: CreateCommandParamsGeneric[] = [];
+
+    // There is a referal fee recipient, share the fee with them
+    if (referralFeeRecipient.address) {
+        const referralFeeAmount = (amountInWithFee * referralFeeRecipient.bips) / bipsDenominator;
+        const commandInputReferral = [currencyIn, referralFeeRecipient.address, referralFeeAmount];
+
+        const veraswapFeeAmount = (amountInWithFee * veraswapFeeRecipient.bips) / bipsDenominator;
+        const commandInputVeraswap = [currencyIn, veraswapFeeRecipient.address, veraswapFeeAmount];
+
+        if (currencyIn === zeroAddress) {
+            const command = CommandType.TRANSFER;
+
+            // In case fees are 0, don't add a command
+            if (referralFeeAmount > 0) {
+                feeCommands.push([command, commandInputReferral]);
+            }
+
+            if (veraswapFeeAmount > 0) {
+                feeCommands.push([command, commandInputVeraswap]);
+            }
+        } else {
+            const command = CommandType.PERMIT2_TRANSFER_FROM;
+            if (referralFeeAmount > 0) {
+                feeCommands.push([command, commandInputReferral]);
+            }
+
+            if (veraswapFeeAmount > 0) {
+                feeCommands.push([command, commandInputVeraswap]);
+            }
+        }
+    } else {
+        // There is no referral fee recipient, Veraswap takes the full fee
+        const totalFeeBips = veraswapFeeRecipient.bips + referralFeeRecipient.bips;
+        const veraswapFeeAmount = (amountInWithFee * totalFeeBips) / bipsDenominator;
+        const commandInput = [currencyIn, veraswapFeeRecipient.address, veraswapFeeAmount];
+
+        const command = currencyIn === zeroAddress ? CommandType.TRANSFER : CommandType.PERMIT2_TRANSFER_FROM;
+
+        // In case fees are 0, we don't add the command
+        if (totalFeeBips > 0) {
+            feeCommands.push([command, commandInput]);
+        }
+    }
+
+    return feeCommands;
+}
+
+/**
+ * @notice If fee recipients are provided, we assume the amountOutMinimum accounts for the fee being deducted from the amount in
+ */
 export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): CreateCommandParamsGeneric[] {
-    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType } = params;
+    const { bestQuoteSingle, bestQuoteMultihop, bestQuoteType, currencyIn } = params;
+
+    const veraswapFeeRecipient = params.veraswapFeeRecipient ?? { address: zeroAddress, bips: 0n };
+    const referralFeeRecipient = params.referralFeeRecipient ?? { bips: 0n };
+
+    const amountInWithFee = params.amountIn;
+
+    const feeCommands = getReferralFeeCommands({
+        amountInWithFee,
+        currencyIn,
+        veraswapFeeRecipient,
+        referralFeeRecipient,
+    });
+
+    const totalFeeBips = veraswapFeeRecipient.bips + referralFeeRecipient.bips;
+
+    // Remove the fees from the amountIn
+    const amountIn = amountInWithFee - (amountInWithFee * totalFeeBips) / bipsDenominator;
+
     if (bestQuoteType === MetaQuoteBestType.None) {
         return [];
     } else if (bestQuoteType === MetaQuoteBestType.Single) {
@@ -130,7 +215,7 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             currencyIn: params.currencyIn,
             currencyOut: params.currencyOut,
             path: [pathKey],
-            amountIn: params.amountIn,
+            amountIn,
             amountOutMinimum: bestQuoteSingle.variableAmount,
             recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
         });
@@ -138,6 +223,11 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             commands,
             commandInputs,
         ) as CreateCommandParamsGeneric[];
+
+        if (feeCommands.length > 0) {
+            return [...feeCommands, ...commandsWithInputs];
+        }
+
         return commandsWithInputs;
     } else if (bestQuoteType === MetaQuoteBestType.Multihop) {
         // Multihop quotes
@@ -146,7 +236,7 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             currencyIn: params.currencyIn,
             currencyOut: params.currencyOut,
             path: bestQuoteMultihop.path as PathKey[],
-            amountIn: params.amountIn,
+            amountIn,
             amountOutMinimum: bestQuoteMultihop.variableAmount,
             recipient: params.recipient ?? ACTION_CONSTANTS.MSG_SENDER,
         });
@@ -154,6 +244,11 @@ export function getRouterCommandsForQuote(params: GetRouterCommandsForQuote): Cr
             commands,
             commandInputs,
         ) as CreateCommandParamsGeneric[];
+
+        if (feeCommands.length > 0) {
+            return [...feeCommands, ...commandsWithInputs];
+        }
+
         return commandsWithInputs;
     } else {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

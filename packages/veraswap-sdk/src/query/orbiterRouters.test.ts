@@ -3,7 +3,8 @@ import { describe, expect, test } from "vitest";
 import { orbiterRouters } from "./orbiterRouters.js";
 
 describe("orbiterRouters.test.ts", function () {
-    test("Get orbiter routers mainnet", async () => {
+    // Not as relevant anymore, and saves time to avoid running an online test
+    test.skip("Get orbiter routers mainnet", async () => {
         const isMainnet = true;
         const orbiterRoutersMainnet = await orbiterRouters(isMainnet);
 

@@ -38,7 +38,8 @@ describe("stargateETHQuote.test.ts", function () {
         expect(fee).toBeGreaterThan(0n);
     });
 
-    test("Get quote too low", async () => {
+    // Saves time to avoid running an online test, but use again if there are any changes to Stargate
+    test.skip("Get quote too low", async () => {
         const amount = 10n;
 
         const params: StargateETHQuoteParams = {
@@ -53,7 +54,8 @@ describe("stargateETHQuote.test.ts", function () {
         expect(quote).toBe(null);
     });
 
-    test("Unsupported destination chain", async () => {
+    // Saves time to avoid running an online test, but use again if there are any changes to Stargate
+    test.skip("Unsupported destination chain", async () => {
         const amount = 1n;
 
         const params: StargateETHQuoteParams = {

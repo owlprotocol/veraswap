@@ -1,7 +1,9 @@
 import { atom } from "jotai";
 import { parseUnits } from "viem";
 import { Currency } from "@owlprotocol/veraswap-sdk";
+import { Address } from "viem";
 import { chains } from "@/config.js";
+import { VERASWAP_FEE_BIPS, VERASWAP_FEE_RECIPIENT, REFERRER_FEE_BIPS } from "@/config.js";
 
 /***** Token In *****/
 /** Selected tokenIn */
@@ -21,6 +23,38 @@ export const tokenInAmountAtom = atom<bigint | null>((get) => {
     if (!currencyIn || tokenInAmountInput === "") return null;
 
     return parseUnits(tokenInAmountInput, currencyIn.decimals);
+});
+
+export const referrerAddressAtom = atom<Address | null>(null);
+
+export const feeRecipientsAtom = atom<{
+    veraswapFeeRecipient: { address: Address; bips: bigint };
+    refererralFeeRecipient: { address?: Address; bips: bigint };
+}>((get) => {
+    const referrerAddress = get(referrerAddressAtom);
+
+    return {
+        veraswapFeeRecipient: {
+            address: VERASWAP_FEE_RECIPIENT,
+            bips: VERASWAP_FEE_BIPS,
+        },
+        refererralFeeRecipient: {
+            address: referrerAddress ?? undefined,
+            bips: REFERRER_FEE_BIPS,
+        },
+    };
+});
+
+export const tokenInAmountWithoutFeesAtom = atom<bigint | null>((get) => {
+    const amountIn = get(tokenInAmountAtom);
+    const feeRecipients = get(feeRecipientsAtom);
+
+    if (!amountIn) return null;
+
+    const totalFeeBips = feeRecipients.veraswapFeeRecipient.bips + feeRecipients.refererralFeeRecipient.bips;
+
+    const bipsDenominator = 10000n;
+    return amountIn - (amountIn * totalFeeBips) / bipsDenominator;
 });
 
 /***** Token Out *****/
