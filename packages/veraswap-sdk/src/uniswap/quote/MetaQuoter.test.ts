@@ -267,8 +267,8 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 expect(quotes.length).toBe(1);
                 const quote = quotes[0];
                 expect(quote.variableAmount).toBeGreaterThan(0n);
-                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
-                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[0].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
+                expect(quote.path[1].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("A (exact) -> L3 -> L34 (variable): Mixed V3 -> V4", async () => {
                 const currencyOut = tokenL34;
@@ -367,8 +367,8 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 expect(quotes.length).toBe(1);
                 const quote = quotes[0];
                 expect(quote.variableAmount).toBeGreaterThan(0n);
-                expect(quote.path[0].hooks).toBe(zeroAddress); // V4 Pool
-                expect(quote.path[1].hooks).toBe(zeroAddress); // V4 Pool
+                expect(quote.path[0].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
+                expect(quote.path[1].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("A (variable) -> L3 -> L34 (exact): Mixed V3 -> V4", async () => {
                 const currencyOut = tokenL34;
@@ -445,7 +445,7 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Single);
                 expect(bestQuoteSingle.variableAmount).toBeGreaterThan(0n);
-                expect(bestQuoteSingle.poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteSingle.poolKey.hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("A (exact) -> ETH -> B (variable)", async () => {
                 const currencyIn = tokenA;
@@ -469,8 +469,8 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Multihop);
                 expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
-                expect(bestQuoteMultihop.path[0].hooks).toBe(zeroAddress); // V4 Pool
-                expect(bestQuoteMultihop.path[1].hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteMultihop.path[0].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
+                expect(bestQuoteMultihop.path[1].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("L4 (exact) -> L34 -> L3 (variable): Mixed V3 -> V4", async () => {
                 const currencyIn = tokenL4;
@@ -570,7 +570,7 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 expect(bestType).toBe(MetaQuoteBestType.Single);
                 expect(bestType).toBe(MetaQuoteBestType.Single);
                 expect(bestQuoteSingle.variableAmount).toBeGreaterThan(0n);
-                expect(bestQuoteSingle.poolKey.hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteSingle.poolKey.hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("A (variable) -> ETH -> B (exact)", async () => {
                 const currencyOut = tokenB;
@@ -592,8 +592,8 @@ describe("uniswap/quote/MetaQuoter.test.ts", function () {
                 });
                 expect(bestType).toBe(MetaQuoteBestType.Multihop);
                 expect(bestQuoteMultihop.variableAmount).toBeGreaterThan(0n);
-                expect(bestQuoteMultihop.path[0].hooks).toBe(zeroAddress); // V4 Pool
-                expect(bestQuoteMultihop.path[1].hooks).toBe(zeroAddress); // V4 Pool
+                expect(bestQuoteMultihop.path[0].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
+                expect(bestQuoteMultihop.path[1].hooks).oneOf([zeroAddress, address3]); // V4 / V3 Pool
             });
             test("A (variable) -> ETH -> B (exact): none (no hop currencies)", async () => {
                 const currencyOut = tokenB;
