@@ -56,7 +56,6 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
         test("A -> L4", async () => {
             const currencyIn = tokenA;
             const currencyOut = tokenL4;
-            console.debug({ currencyIn, currencyOut });
             const currencyHops: Address[] = [];
 
             const contracts = {
