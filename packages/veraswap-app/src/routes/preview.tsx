@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { Copy, ExternalLink, Sun, Moon, Loader2 } from "lucide-react";
 import { Token, CustomList } from "@owlprotocol/veraswap-sdk";
+import { Address, isAddress } from "viem";
 import { Button } from "@/components/ui/button.js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js";
 import { Input } from "@/components/ui/input.js";
@@ -89,6 +90,7 @@ function EmbedPreview() {
     const [chainIdOut, setChainIdOut] = useState<number | undefined>(undefined);
     const [customTokens, setCustomTokens] = useState<Token[]>([]);
     const [customList, setCustomList] = useState<CustomList | undefined>(undefined);
+    const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [iframeLoaded, setIframeLoaded] = useState(false);
 
@@ -129,6 +131,10 @@ function EmbedPreview() {
             params.set("customList", customList);
         }
 
+        if (referrer && isAddress(referrer)) {
+            params.set("referrer", referrer);
+        }
+
         const baseUrl = `${window.location.origin}/embed`;
         const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
         setEmbedUrl(url);
@@ -136,7 +142,18 @@ function EmbedPreview() {
         if (iframeLoaded && iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.history.replaceState(null, "", url);
         }
-    }, [hexTheme, mode, currencyIn, chainIdIn, currencyOut, chainIdOut, customTokens, customList, iframeLoaded]);
+    }, [
+        hexTheme,
+        mode,
+        currencyIn,
+        chainIdIn,
+        currencyOut,
+        chainIdOut,
+        customTokens,
+        customList,
+        referrer,
+        iframeLoaded,
+    ]);
 
     useEffect(() => {
         function handleMessage(event: MessageEvent) {
@@ -189,6 +206,7 @@ function EmbedPreview() {
         setChainIdOut(undefined);
         setCustomTokens([]);
         setCustomList(undefined);
+        setReferrer(undefined);
         if (iframeRef.current) {
             iframeRef.current.src = `${window.location.origin}/embed`;
         }
@@ -298,6 +316,30 @@ function EmbedPreview() {
                                             <SelectItem value="virtuals">Virtuals</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Referrer Address</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Referrer Address (Optional)</label>
+                                    <Input
+                                        placeholder="0x..."
+                                        value={referrer || ""}
+                                        onChange={(e) => setReferrer(e.target.value)}
+                                        className={`font-mono text-sm ${
+                                            referrer && !isAddress(referrer) ? "border-red-500" : ""
+                                        }`}
+                                    />
+                                    {referrer && !isAddress(referrer) && (
+                                        <p className="text-xs text-red-500">Please enter a valid address</p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                        Enter a valid address to set as the referrer for this widget
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
