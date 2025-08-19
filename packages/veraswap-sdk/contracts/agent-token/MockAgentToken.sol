@@ -138,8 +138,7 @@ contract MockAgentToken is MockERC20, IErrors {
     function _transfer(address from, address to, uint256 amount, bool applyTax) internal virtual {
         _pretaxValidationAndLimits(from, to, amount);
 
-        uint256 tax = (amount * 1) / 100; // 1% tax
-        uint256 amountMinusTax = _taxProcessing(applyTax, to, from, amount - tax);
+        uint256 amountMinusTax = _taxProcessing(applyTax, to, from, amount);
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
