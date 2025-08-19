@@ -135,23 +135,95 @@ contract MockAgentToken is MockERC20, IErrors {
         }
     }
 
-    function transfer(address to, uint256 amount) public virtual override(ERC20) returns (bool) {
-        _pretaxValidationAndLimits(msg.sender, to, amount);
-        balanceOf[msg.sender] -= amount;
+    function _transfer(address from, address to, uint256 amount, bool applyTax) internal virtual {
+        _pretaxValidationAndLimits(from, to, amount);
 
         uint256 tax = (amount * 1) / 100; // 1% tax
-        bool applyTax = msg.sender != address(this) && to != address(this);
-        uint256 amountMinusTax = _taxProcessing(applyTax, to, msg.sender, amount - tax);
+        uint256 amountMinusTax = _taxProcessing(applyTax, to, from, amount - tax);
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
         unchecked {
-            balanceOf[to] += amount - tax;
-            balanceOf[address(this)] += tax; // Collect tax in the contract itself
+            balanceOf[from] -= amount;
+            balanceOf[to] += amountMinusTax;
         }
 
-        emit Transfer(msg.sender, to, amountMinusTax);
+        emit Transfer(from, to, amountMinusTax);
+    }
 
+    function transfer(address to, uint256 amount) public virtual override(ERC20) returns (bool) {
+        address owner = msg.sender;
+        _transfer(owner, to, amount, (isLiquidityPool(owner) || isLiquidityPool(to)));
+        return true;
+    }
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     *
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     */
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        if (owner == address(0)) {
+            revert ApproveFromTheZeroAddress();
+        }
+
+        if (spender == address(0)) {
+            revert ApproveToTheZeroAddress();
+        }
+
+        allowance[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
+     *
+     * Does not update the allowance amount in case of infinite allowance.
+     * Revert if not enough allowance is available.
+     *
+     * Might emit an {Approval} event.
+     */
+    function _spendAllowance(address owner, address spender, uint256 amount) internal virtual {
+        uint256 currentAllowance = allowance[owner][spender];
+        if (currentAllowance != type(uint256).max) {
+            if (currentAllowance < amount) {
+                revert InsufficientAllowance();
+            }
+
+            unchecked {
+                _approve(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * NOTE: Does not update the allowance if the current allowance
+     * is the maximum `uint256`.
+     *
+     * Requirements:
+     *
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``from``'s tokens of at least
+     * `amount`.
+     */
+    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+        address spender = msg.sender;
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount, (isLiquidityPool(from) || isLiquidityPool(to)));
         return true;
     }
 }
