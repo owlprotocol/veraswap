@@ -18,6 +18,7 @@ import {PoolUtils} from "../utils/PoolUtils.sol";
 // Contracts
 import {UniswapContracts} from "../Structs.sol";
 import {LocalTokens} from "./LocalTokens.sol";
+import {MockAgentToken} from "../../contracts/agent-token/MockAgentToken.sol";
 
 /**
  * Deploys Uniswap Pools for local environment such as tests and scripts
@@ -79,6 +80,7 @@ struct LocalV2Pools {
     // IUniswapV2Pair liq34_liq2;
     IUniswapV2Pair liq2_tokenA;
     IUniswapV2Pair liq2_tokenB;
+    IUniswapV2Pair liq2_tokenAgent;
 }
 
 library LocalPoolsLibrary {
@@ -180,6 +182,7 @@ library LocalPoolsLibrary {
         Currency liq2 = Currency.wrap(address(tokens.liq2));
         Currency tokenA = Currency.wrap(address(tokens.tokenA));
         Currency tokenB = Currency.wrap(address(tokens.tokenB));
+        Currency tokenAgent = Currency.wrap(address(tokens.tokenAgent));
 
         // WETH
         pools.weth_tokenA = PoolUtils.createV2Pool(weth9, tokenA, v2Factory, 10 ether);
@@ -190,5 +193,8 @@ library LocalPoolsLibrary {
         // L2
         pools.liq2_tokenA = PoolUtils.createV2Pool(liq2, tokenA, v2Factory, 10 ether);
         pools.liq2_tokenB = PoolUtils.createV2Pool(liq2, tokenB, v2Factory, 10 ether);
+        pools.liq2_tokenAgent = PoolUtils.createV2Pool(liq2, tokenAgent, v2Factory, 10 ether);
+
+        MockAgentToken(address(tokens.tokenAgent)).setLiquidityPoolAddress(address(pools.liq2_tokenAgent));
     }
 }
