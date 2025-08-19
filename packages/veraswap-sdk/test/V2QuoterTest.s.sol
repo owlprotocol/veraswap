@@ -29,6 +29,8 @@ import {LocalPoolsLibrary, LocalV2Pools} from "../script/libraries/LocalPools.so
 import {ContractsUniswapLibrary} from "../script/libraries/ContractsUniswap.sol";
 import {UniswapContracts} from "../script/Structs.sol";
 
+import {MockAgentToken} from "../contracts/agent-token/MockAgentToken.sol";
+
 contract V2QuoterTest is Test {
     using LocalTokensLibrary for LocalTokens;
 
@@ -43,6 +45,7 @@ contract V2QuoterTest is Test {
     Currency internal liq4;
     Currency internal tokenA;
     Currency internal tokenB;
+    Currency internal tokenAgent;
 
     // Uniswap Contracts
     UniswapContracts internal contracts;
@@ -58,7 +61,7 @@ contract V2QuoterTest is Test {
 
         // WETH9
         // Set weth9 code to Optimism pre-deploy for anvil local chains that don't have pre-deploy (used by Uniswap V3)
-        (address _weth9, ) = WETHUtils.getOrEtch(WETHUtils.opStackPreDeploy);
+        (address _weth9,) = WETHUtils.getOrEtch(WETHUtils.opStackPreDeploy);
         LocalTokens memory tokens = LocalTokensLibrary.deploy(_weth9);
         // Tokens
         weth9 = Currency.wrap(address(tokens.weth9));
@@ -68,13 +71,14 @@ contract V2QuoterTest is Test {
         liq4 = Currency.wrap(address(tokens.liq4));
         tokenA = Currency.wrap(address(tokens.tokenA));
         tokenB = Currency.wrap(address(tokens.tokenB));
+        tokenAgent = Currency.wrap(address(tokens.tokenAgent));
 
         // Uniswap Contracts
         contracts = ContractsUniswapLibrary.deploy(_weth9);
         router = IUniversalRouter(contracts.universalRouter);
         tokens.permit2Approve(contracts.universalRouter);
         // Uniswap V2
-        (address _v2Quoter, ) = V2QuoterUtils.getOrCreate2(contracts.v2Factory, contracts.pairInitCodeHash);
+        (address _v2Quoter,) = V2QuoterUtils.getOrCreate2(contracts.v2Factory, contracts.pairInitCodeHash);
         v2Quoter = IV2Quoter(_v2Quoter);
         v2Pools = LocalPoolsLibrary.deployV2Pools(IUniswapV2Factory(contracts.v2Factory), tokens);
     }
@@ -83,18 +87,14 @@ contract V2QuoterTest is Test {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (tokenA, liq2);
         // PoolKey
-        (Currency currency0, Currency currency1) = currencyIn < currencyOut
-            ? (currencyIn, currencyOut)
-            : (currencyOut, currencyIn);
+        (Currency currency0, Currency currency1) =
+            currencyIn < currencyOut ? (currencyIn, currencyOut) : (currencyOut, currencyIn);
         V2PoolKey memory poolKey = V2PoolKey({currency0: currency0, currency1: currency1});
 
         // V2 Quote
         bool zeroForOne = currency0 == currencyIn;
-        IV2Quoter.QuoteExactSingleParams memory quoteParams = IV2Quoter.QuoteExactSingleParams({
-            poolKey: poolKey,
-            exactAmount: amount,
-            zeroForOne: zeroForOne
-        });
+        IV2Quoter.QuoteExactSingleParams memory quoteParams =
+            IV2Quoter.QuoteExactSingleParams({poolKey: poolKey, exactAmount: amount, zeroForOne: zeroForOne});
         uint256 amountOut = v2Quoter.quoteExactInputSingle(quoteParams);
 
         // V2 Swap
@@ -123,5 +123,120 @@ contract V2QuoterTest is Test {
         uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
         assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quoteParams.exactAmount); // Input balance decreased by exact amount
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+    }
+
+    // Test buying a token with tax
+    function testExactInputSingle_L2_Agent() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (liq2, tokenAgent);
+        // PoolKey
+        (Currency currency0, Currency currency1) =
+            currencyIn < currencyOut ? (currencyIn, currencyOut) : (currencyOut, currencyIn);
+        V2PoolKey memory poolKey = V2PoolKey({currency0: currency0, currency1: currency1});
+
+        assertTrue(MockAgentToken(Currency.unwrap(tokenAgent)).isLiquidityPool(address(v2Pools.liq2_tokenAgent)));
+
+        // V2 Quote
+        bool zeroForOne = currency0 == currencyIn;
+        IV2Quoter.QuoteExactSingleParams memory quoteParams =
+            IV2Quoter.QuoteExactSingleParams({poolKey: poolKey, exactAmount: amount, zeroForOne: zeroForOne});
+        uint256 amountOut = v2Quoter.quoteExactInputSingle(quoteParams);
+
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        uint256 BP_DENOM = 10_000;
+        uint256 totalBuyTaxBasisPoints = MockAgentToken(Currency.unwrap(tokenAgent)).totalBuyTaxBasisPoints();
+        assertEq(totalBuyTaxBasisPoints, 100); // 1% tax
+
+        uint256 amountOutExcludingTax = amountOut - ((amountOut * totalBuyTaxBasisPoints) / BP_DENOM);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            amount,
+            // NOTE: when buying a token with tax, we need to specify the amountOut excluding tax
+            amountOutExcludingTax,
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - quoteParams.exactAmount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOutExcludingTax); // Output balance increased by variable amount
+    }
+
+    // Test selling a token with tax
+    function testExactInputSingle_Agent_L2() public {
+        // Currency
+        (Currency currencyIn, Currency currencyOut) = (tokenAgent, liq2);
+        // PoolKey
+        (Currency currency0, Currency currency1) =
+            currencyIn < currencyOut ? (currencyIn, currencyOut) : (currencyOut, currencyIn);
+        V2PoolKey memory poolKey = V2PoolKey({currency0: currency0, currency1: currency1});
+
+        assertTrue(MockAgentToken(Currency.unwrap(tokenAgent)).isLiquidityPool(address(v2Pools.liq2_tokenAgent)));
+
+        uint256 BP_DENOM = 10_000;
+        uint256 totalSellTaxBasisPoints = MockAgentToken(Currency.unwrap(tokenAgent)).totalSellTaxBasisPoints();
+        assertEq(totalSellTaxBasisPoints, 100); // 1% tax
+        uint256 amountInTax = (amount * totalSellTaxBasisPoints) / BP_DENOM;
+
+        uint128 amountInMinusTax = amount - uint128(amountInTax);
+
+        // V2 Quote
+        bool zeroForOne = currency0 == currencyIn;
+        IV2Quoter.QuoteExactSingleParams memory quoteParams =
+        // NOTE: when selling a token with tax, we need to specify the amountIn excluding tax
+         IV2Quoter.QuoteExactSingleParams({poolKey: poolKey, exactAmount: amountInMinusTax, zeroForOne: zeroForOne});
+        uint256 amountOut = v2Quoter.quoteExactInputSingle(quoteParams);
+
+        // V2 Swap
+        // Encode V2 Swap
+        address[] memory path = new address[](2);
+        path[0] = Currency.unwrap(currencyIn);
+        path[1] = Currency.unwrap(currencyOut);
+
+        bytes memory v2Swap = abi.encode(
+            ActionConstants.MSG_SENDER, // recipient
+            // NOTE: when selling a token with tax, we need to specify the amountIn excluding tax
+            amountInMinusTax,
+            amountOut,
+            path,
+            true // payerIsUser
+        );
+        // Encode Universal Router Commands
+        bytes memory routerCommands = abi.encodePacked(uint8(Commands.V2_SWAP_EXACT_IN));
+        bytes[] memory routerCommandInputs = new bytes[](1);
+        routerCommandInputs[0] = v2Swap;
+        // Execute Swap
+        uint256 currencyInBalanceBeforeSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
+
+        // Balance of the contract itself, where tax is collected
+        uint256 agentTokenTaxBalanceBeforeSwap = tokenAgent.balanceOfSelf();
+        uint256 deadline = block.timestamp + 20;
+        router.execute(routerCommands, routerCommandInputs, deadline);
+        uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
+        uint256 currencyOutBalanceAfterSwap = currencyOut.balanceOf(msg.sender);
+
+        assertEq(currencyInBalanceAfterSwap, currencyInBalanceBeforeSwap - amount); // Input balance decreased by exact amount
+        assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
+
+        // Balance of the contract itself, where tax is collected
+        uint256 agentTokenTaxBalanceAfterSwap = tokenAgent.balanceOfSelf();
+
+        assertEq(agentTokenTaxBalanceAfterSwap, agentTokenTaxBalanceBeforeSwap + amountInTax);
     }
 }
