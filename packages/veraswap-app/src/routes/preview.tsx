@@ -345,8 +345,7 @@ function EmbedPreview() {
                                         </p>
                                         <div className="bg-muted p-2 rounded-md border">
                                             <p className="text-sm font-semibold text-center">
-                                                Referral Fee:{" "}
-                                                {REFERRER_FEE_BIPS > 0n ? `${Number(REFERRER_FEE_BIPS) / 100}%` : "0%"}
+                                                Referral Fee: {`${Number(REFERRER_FEE_BIPS) / 100}%`}
                                             </p>
                                         </div>
                                     </div>
