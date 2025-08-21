@@ -19,7 +19,7 @@ import {
     worldchain,
 } from "viem/chains";
 
-import { MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
+import { MockAgentToken, MockERC20, MockSuperchainERC20 } from "../artifacts/index.js";
 import { interopDevnet0, interopDevnet1, opChainA, opChainB, opChainL1, superseed } from "../chains/index.js";
 import { getUniswapV4Address } from "../currency/currency.js";
 import { Ether } from "../currency/ether.js";
@@ -36,6 +36,29 @@ export function getMockERC20Address({ name, symbol, decimals }: { name: string; 
             bytecode: MockERC20.bytecode,
             abi: MockERC20.abi,
             args: [name, symbol, decimals],
+        }),
+        salt: zeroHash,
+    });
+}
+
+export function getMockAgentTokenAddress({
+    name,
+    symbol,
+    decimals,
+    projectBuyTaxBasisPoints,
+    projectSellTaxBasisPoints,
+}: {
+    name: string;
+    symbol: string;
+    decimals: number;
+    projectBuyTaxBasisPoints: number;
+    projectSellTaxBasisPoints: number;
+}) {
+    return getDeployDeterministicAddress({
+        bytecode: encodeDeployData({
+            bytecode: MockAgentToken.bytecode,
+            abi: MockAgentToken.abi,
+            args: [name, symbol, decimals, projectBuyTaxBasisPoints, projectSellTaxBasisPoints],
         }),
         salt: zeroHash,
     });
@@ -273,6 +296,11 @@ export const localSupersimCurrencies = [
     })(),
 ];
 
+export const liquidV2Address = getMockERC20Address({ name: "Liquid V2", symbol: "L2", decimals: 18 });
+export const liquidV3Address = getMockERC20Address({ name: "Liquid V3", symbol: "L3", decimals: 18 });
+export const liquidV34Address = getMockERC20Address({ name: "Liquid V34", symbol: "L34", decimals: 18 });
+export const liquidV4Address = getMockERC20Address({ name: "Liquid V4", symbol: "L4", decimals: 18 });
+
 // WARNING: Changing the "address" name/symbol has impacts on Solidity, Tests, and other constants that assume "Token A" (test/constants)
 // If you just want to change the "display" name/symbol, simply edit the one in the Token constructor
 // Also see LocalTokens.sol for deployment of tokens
@@ -303,7 +331,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     ),
     new Token({
         chainId: opChainL1.id,
-        address: getMockERC20Address({ name: "Liquid V34", symbol: "L34", decimals: 18 }),
+        address: liquidV34Address,
         name: "Liquid V34",
         symbol: "L34",
         decimals: 18,
@@ -311,7 +339,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     }),
     new Token({
         chainId: opChainL1.id,
-        address: getMockERC20Address({ name: "Liquid V3", symbol: "L3", decimals: 18 }),
+        address: liquidV3Address,
         name: "Liquid V3",
         symbol: "L3",
         decimals: 18,
@@ -319,7 +347,7 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     }),
     new Token({
         chainId: opChainL1.id,
-        address: getMockERC20Address({ name: "Liquid V4", symbol: "L4", decimals: 18 }),
+        address: liquidV4Address,
         name: "Liquid V4",
         symbol: "L4",
         decimals: 18,
@@ -341,11 +369,24 @@ export const LOCAL_CURRENCIES: (Token | Ether | MultichainToken)[] = [
     Ether.onChain(opChainB.id),
     new Token({
         chainId: opChainL1.id,
-        address: getMockERC20Address({ name: "Liquid V2", symbol: "L2", decimals: 18 }),
+        address: liquidV2Address,
         name: "Liquid V2",
         symbol: "L2",
         decimals: 18,
         logoURI: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+    }),
+    new Token({
+        chainId: opChainL1.id,
+        address: getMockAgentTokenAddress({
+            name: "Token Agent",
+            symbol: "AGENT",
+            decimals: 18,
+            projectBuyTaxBasisPoints: 100,
+            projectSellTaxBasisPoints: 100,
+        }),
+        name: "Token Agent",
+        symbol: "AGENT",
+        decimals: 18,
     }),
 ];
 

@@ -2,7 +2,6 @@ import { Address, zeroAddress } from "viem";
 import { avalanche, mainnet } from "viem/chains";
 
 import { arbitrum, base, bsc, opChainL1, optimism, polygon } from "../chains/index.js";
-import { getUniswapV4Address } from "../currency/currency.js";
 import {
     USDC_ARBITRUM,
     USDC_AVALANCHE,
@@ -19,7 +18,7 @@ import {
     USDT_POLYGON,
 } from "../uniswap/index.js";
 
-import { LOCAL_CURRENCIES } from "./tokens.js";
+import { liquidV2Address, liquidV34Address, liquidV3Address, liquidV4Address } from "./tokens.js";
 
 /*
 const allChains = [...testnetChains, ...mainnetChains, ...localChains];
@@ -46,5 +45,5 @@ export const CURRENCY_HOPS = {
     [arbitrum.id]: [USDC_ARBITRUM.address, USDT_ARBITRUM_ONE.address, zeroAddress],
     [avalanche.id]: [USDC_AVALANCHE.address, USDT_AVALANCHE.address, zeroAddress],
     [optimism.id]: [USDC_OPTIMISM.address, USDT_OPTIMISM.address, zeroAddress],
-    [opChainL1.id]: [getUniswapV4Address(LOCAL_CURRENCIES[6]), zeroAddress], // L34
+    [opChainL1.id]: [liquidV2Address, liquidV3Address, liquidV34Address, liquidV4Address, zeroAddress],
 } as const satisfies Record<number, Address[]>;
