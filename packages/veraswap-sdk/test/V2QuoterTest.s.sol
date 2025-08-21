@@ -210,8 +210,7 @@ contract V2QuoterTest is Test {
 
         bytes memory v2Swap = abi.encode(
             ActionConstants.MSG_SENDER, // recipient
-            // NOTE: when selling a token with tax, we need to specify the amountIn excluding tax
-            amountInMinusTax,
+            amount,
             amountOut,
             path,
             true // payerIsUser
@@ -225,7 +224,8 @@ contract V2QuoterTest is Test {
         uint256 currencyOutBalanceBeforeSwap = currencyOut.balanceOf(msg.sender);
 
         // Balance of the contract itself, where tax is collected
-        uint256 agentTokenTaxBalanceBeforeSwap = tokenAgent.balanceOfSelf();
+        uint256 agentTokenTaxBalanceBeforeSwap = tokenAgent.balanceOf(Currency.unwrap(tokenAgent));
+
         uint256 deadline = block.timestamp + 20;
         router.execute(routerCommands, routerCommandInputs, deadline);
         uint256 currencyInBalanceAfterSwap = currencyIn.balanceOf(msg.sender);
@@ -235,7 +235,8 @@ contract V2QuoterTest is Test {
         assertEq(currencyOutBalanceAfterSwap, currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
 
         // Balance of the contract itself, where tax is collected
-        uint256 agentTokenTaxBalanceAfterSwap = tokenAgent.balanceOfSelf();
+        // uint256 agentTokenTaxBalanceAfterSwap = tokenAgent.balanceOfSelf();
+        uint256 agentTokenTaxBalanceAfterSwap = tokenAgent.balanceOf(Currency.unwrap(tokenAgent));
 
         assertEq(agentTokenTaxBalanceAfterSwap, agentTokenTaxBalanceBeforeSwap + amountInTax);
     }
