@@ -82,4 +82,7 @@ hardhatArtifactsExport("./src/artifacts", "./cache", [
     // Stargate
     "out/IStargate.sol/*.json",
     "out/StargateBase.sol/*.json",
+    // Virtuals
+    "out/IAgentToken.sol/*.json",
+    "out/MockAgentToken.sol/*.json",
 ]);

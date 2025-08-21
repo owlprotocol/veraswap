@@ -1033,4 +1033,88 @@ export const events = [
         ],
         anonymous: false,
     },
+    {
+        type: "event",
+        name: "AutoSwapThresholdUpdated",
+        inputs: [
+            { name: "oldThreshold", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "newThreshold", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "ExternalCallError",
+        inputs: [{ name: "identifier", type: "uint256", indexed: false, internalType: "uint256" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "InitialLiquidityAdded",
+        inputs: [
+            { name: "tokenA", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "tokenB", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "lpToken", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "LimitsUpdated",
+        inputs: [
+            { name: "oldMaxTokensPerTransaction", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "newMaxTokensPerTransaction", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "oldMaxTokensPerWallet", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "newMaxTokensPerWallet", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "LiquidityPoolAdded",
+        inputs: [{ name: "addedPool", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "LiquidityPoolCreated",
+        inputs: [{ name: "addedPool", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "LiquidityPoolRemoved",
+        inputs: [{ name: "removedPool", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "ProjectTaxBasisPointsChanged",
+        inputs: [
+            { name: "oldBuyBasisPoints", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "newBuyBasisPoints", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "oldSellBasisPoints", type: "uint256", indexed: false, internalType: "uint256" },
+            { name: "newSellBasisPoints", type: "uint256", indexed: false, internalType: "uint256" },
+        ],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "ProjectTaxRecipientUpdated",
+        inputs: [{ name: "treasury", type: "address", indexed: false, internalType: "address" }],
+        anonymous: false,
+    },
+    { type: "event", name: "RevenueAutoSwap", inputs: [], anonymous: false },
+    {
+        type: "event",
+        name: "ValidCallerAdded",
+        inputs: [{ name: "addedValidCaller", type: "bytes32", indexed: false, internalType: "bytes32" }],
+        anonymous: false,
+    },
+    {
+        type: "event",
+        name: "ValidCallerRemoved",
+        inputs: [{ name: "removedValidCaller", type: "bytes32", indexed: false, internalType: "bytes32" }],
+        anonymous: false,
+    },
 ] as const;
