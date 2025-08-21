@@ -1,3 +1,7 @@
+import {
+    totalSellTaxBasisPoints as totalSellTaxBasisPointsAbi,
+    totalBuyTaxBasisPoints as totalBuyTaxBasisPointsAbi,
+} from "@owlprotocol/veraswap-sdk/artifacts/IAgentToken";
 import { atomWithQuery, AtomWithQueryResult, queryClientAtom } from "jotai-tanstack-query";
 import {
     getRouteMultichain,
@@ -9,12 +13,44 @@ import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
 import { CURRENCY_HOPS, UNISWAP_CONTRACTS } from "@owlprotocol/veraswap-sdk/constants";
 import { queryOptions } from "@tanstack/react-query";
+import { readContractQueryOptions } from "wagmi/query";
 import { currencyInAtom, currencyOutAtom, tokenInAmountWithoutFeesAtom } from "./tokens.js";
 import { disabledQueryOptions } from "./disabledQuery.js";
 import { config } from "@/config.js";
 
 // const emptyToken = new Token(1, zeroAddress, 1);
 // const emptyCurrencyAmount = CurrencyAmount.fromRawAmount(emptyToken, 1);
+
+export const currencyInSellTaxBasisPointsAtom = atomWithQuery((get) => {
+    const currencyIn = get(currencyInAtom);
+    if (!currencyIn) return disabledQueryOptions as any;
+
+    const currencyInAddress = getUniswapV4Address(currencyIn);
+
+    return readContractQueryOptions(config, {
+        abi: [totalSellTaxBasisPointsAbi],
+        chainId: currencyIn.chainId,
+        address: currencyInAddress,
+        functionName: "totalSellTaxBasisPoints",
+    });
+}) as Atom<AtomWithQueryResult<bigint>>;
+
+export const currencyOutBuyTaxBasisPointsAtom = atomWithQuery((get) => {
+    const currencyOut = get(currencyOutAtom);
+    if (!currencyOut) return disabledQueryOptions as any;
+
+    const currencyOutAddress = getUniswapV4Address(currencyOut);
+
+    return readContractQueryOptions(config, {
+        abi: [totalBuyTaxBasisPointsAbi],
+        chainId: currencyOut.chainId,
+        address: currencyOutAddress,
+        functionName: "totalBuyTaxBasisPoints",
+    });
+}) as Atom<AtomWithQueryResult<bigint>>;
+
+const BP_DENOM = 10000n; // Basis points denominator
+const getAmountExcludingTax = (amount: bigint, taxBasisPoints: bigint) => amount - (amount * taxBasisPoints) / BP_DENOM;
 
 //TODO: As tanstack query so that it refreshes
 export const routeMultichainAtom = atomWithQuery((get) => {
@@ -25,6 +61,14 @@ export const routeMultichainAtom = atomWithQuery((get) => {
 
     if (!currencyIn || !currencyOut || !exactAmount) return disabledQueryOptions as any;
 
+    let amountIn = exactAmount;
+    const currencyInSellTaxBasisPoints = get(currencyInSellTaxBasisPointsAtom).data ?? 0n;
+    if (currencyInSellTaxBasisPoints > 0n) {
+        amountIn = getAmountExcludingTax(amountIn, currencyInSellTaxBasisPoints);
+    }
+
+    const currencyOutBuyTaxBasisPoints = get(currencyOutBuyTaxBasisPointsAtom).data ?? 0n;
+
     const currencyInAddress = getUniswapV4Address(currencyIn);
     const currencyOutAddress = getUniswapV4Address(currencyOut);
 
@@ -33,13 +77,16 @@ export const routeMultichainAtom = atomWithQuery((get) => {
             const route = await getRouteMultichain(queryClient, config, {
                 currencyIn,
                 currencyOut,
-                exactAmount,
+                exactAmount: amountIn,
                 contractsByChain: UNISWAP_CONTRACTS,
                 currencyHopsByChain: CURRENCY_HOPS,
             });
 
-            console.debug({ route });
+            if (route && currencyOutBuyTaxBasisPoints > 0n) {
+                route.amountOut = getAmountExcludingTax(route.amountOut, currencyOutBuyTaxBasisPoints);
+            }
 
+            console.debug({ route });
             return route;
         },
         queryKey: [
