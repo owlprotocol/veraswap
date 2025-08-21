@@ -152,7 +152,7 @@ contract V2QuoterTest is Test {
         uint256 totalBuyTaxBasisPoints = MockAgentToken(Currency.unwrap(tokenAgent)).totalBuyTaxBasisPoints();
         assertEq(totalBuyTaxBasisPoints, 100); // 1% tax
 
-        uint256 amountOutExcludingTax = amountOut - ((amountOut * totalBuyTaxBasisPoints) / BP_DENOM);
+        uint256 amountOutExcludingTax = amountOut - (amountOut * totalBuyTaxBasisPoints) / BP_DENOM;
 
         bytes memory v2Swap = abi.encode(
             ActionConstants.MSG_SENDER, // recipient
