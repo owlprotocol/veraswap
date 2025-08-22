@@ -8,6 +8,7 @@ import {
     getUniswapV4Address,
     getTransactionType,
     TransactionType,
+    MetaQuoteBestType,
 } from "@owlprotocol/veraswap-sdk";
 import { atom, Atom } from "jotai";
 import { numberToHex } from "viem";
@@ -83,7 +84,21 @@ export const routeMultichainAtom = atomWithQuery((get) => {
             });
 
             if (route && currencyOutBuyTaxBasisPoints > 0n) {
-                route.amountOut = getAmountExcludingTax(route.amountOut, currencyOutBuyTaxBasisPoints);
+                const amountOutExcludingTax = getAmountExcludingTax(route.amountOut, currencyOutBuyTaxBasisPoints);
+
+                // Get the first swap component and adjust the amount out for tax
+                // WARNING: Post-swap flows computed with pre-tax amounts (eg. stargate quoting)
+                const swapFlow = route.flows.find((flow) => flow.type === "SWAP");
+                if (swapFlow) {
+                    if (swapFlow.quote.bestQuoteType === MetaQuoteBestType.Multihop) {
+                        swapFlow.quote.bestQuoteMultihop.variableAmount = amountOutExcludingTax;
+                    } else if (swapFlow.quote.bestQuoteType === MetaQuoteBestType.Single) {
+                        swapFlow.quote.bestQuoteSingle.variableAmount = amountOutExcludingTax;
+                    }
+                }
+
+                // NOTE: amountOut overriden to account for post-tax amount
+                route.amountOut = amountOutExcludingTax;
             }
 
             console.debug({ route });
