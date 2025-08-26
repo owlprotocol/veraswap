@@ -26,12 +26,17 @@ import {MultichainFork} from "./MultichainFork.sol";
 import {CoreContracts, DeployParams} from "./Structs.sol";
 import {ContractParams} from "./libraries/ContractParams.sol";
 import {ContractsCoreLibrary} from "./libraries/ContractsCore.sol";
+import {ERC20Library} from "./libraries/ERC20Lib.sol";
 
 /**
  * Local develpoment script to deploy core contracts and setup tokens and pools using forge multichain deployment
  * Similar pattern can be used to configure Testnet and Mainnet deployments
  */
 contract DeployEspressoTestnet is DeployCoreContracts {
+    using ERC20Library for IERC20;
+
+    address constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
     // Core contracts
     mapping(uint256 chainId => CoreContracts) public chainContracts;
     // Tokens with bytes32 identifiers
@@ -147,27 +152,58 @@ contract DeployEspressoTestnet is DeployCoreContracts {
 
     function deployTokensAndPools(address router, address v4PositionManager, address v4StateView)
         internal
-        returns (address tokenM, address tokenR)
+        returns (address, address)
     {
-        (tokenM,) = MockERC20Utils.getOrCreate2("Mocha", "M", 18);
-        (tokenR,) = MockERC20Utils.getOrCreate2("Ristretto", "R", 18);
-
-        // Skip liquidity for now
-        uint256 liquidity = 1; // Placeholder for actual liquidity check
-        if (liquidity == 1) {
-            // PoolUtils.setupToken(IERC20(tokenM), IPositionManager(v4PositionManager), IUniversalRouter(router));
-            // PoolUtils.setupToken(IERC20(tokenR), IPositionManager(v4PositionManager), IUniversalRouter(router));
-            Currency tokenMCurrency = Currency.wrap(tokenM);
-            Currency tokenRCurrency = Currency.wrap(tokenR);
-            PoolUtils.createV4Pool(tokenMCurrency, tokenRCurrency, IPositionManager(v4PositionManager), 10 ether);
-            // Currency eth = Currency.wrap(address(0));
-            // PoolUtils.createV4Pool(eth, tokenMCurrency, IPositionManager(v4PositionManager), 1 ether);
-            // PoolUtils.deployPool(tokenM, tokenR, IPositionManager(v4PositionManager), IStateView(v4StateView));
-            // PoolUtils.deployPool(address(0), tokenM, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        IERC20 tokenM;
+        IERC20 tokenR;
+        {
+            (address tokenM_addr,) = MockERC20Utils.getOrCreate2("Mocha", "M", 18);
+            (address tokenR_addr,) = MockERC20Utils.getOrCreate2("Ristretto", "R", 18);
+            tokenM = IERC20(tokenM_addr);
+            tokenR = IERC20(tokenR_addr);
         }
 
-        console2.log("Mocha:", tokenM);
-        console2.log("Ristretto:", tokenR);
-        console2.log("Deployed Tokens and pool");
+        // Mint
+        tokenM.mintAtLeast(msg.sender, 100_000 ether);
+        tokenR.mintAtLeast(msg.sender, 100_000 ether);
+        // Approve Permit2
+        tokenM.approveAll(PERMIT2);
+        tokenR.approveAll(PERMIT2);
+        // Approve PositionManager using Permit2
+        tokenM.permit2ApproveAll(address(v4PositionManager));
+        tokenR.permit2ApproveAll(address(v4PositionManager));
+        // Approve UniversalRouter using Permit2
+        tokenM.permit2ApproveAll(address(router));
+        tokenR.permit2ApproveAll(address(router));
+
+        PoolUtils.createV4Pool(
+            Currency.wrap(address(tokenM)),
+            Currency.wrap(address(tokenR)),
+            IPositionManager(v4PositionManager),
+            10 ether
+        );
+
+        /*
+        PoolUtils.createV4Pool(
+            Currency.wrap(address(0)), Currency.wrap(address(tokenM)), IPositionManager(v4PositionManager), 0.1 ether
+        );
+        PoolUtils.createV4Pool(
+            Currency.wrap(address(0)), Currency.wrap(address(tokenR)), IPositionManager(v4PositionManager), 0.1 ether
+        );
+        */
+
+        return (address(tokenM), address(tokenR));
+
+        // PoolUtils.setupToken(IERC20(tokenM), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        // PoolUtils.setupToken(IERC20(tokenR), IPositionManager(v4PositionManager), IUniversalRouter(router));
+        // TODO: CREATE2 ERROR?
+
+        // Currency tokenMCurrency = Currency.wrap(address(tokenM));
+        // Currency tokenRCurrency = Currency.wrap(address(tokenR));
+        // PoolUtils.createV4Pool(tokenMCurrency, tokenRCurrency, IPositionManager(v4PositionManager), 10 ether);
+        // Currency eth = Currency.wrap(address(0));
+        // PoolUtils.createV4Pool(eth, tokenMCurrency, IPositionManager(v4PositionManager), 1 ether);
+        // PoolUtils.deployPool(tokenM, tokenR, IPositionManager(v4PositionManager), IStateView(v4StateView));
+        // PoolUtils.deployPool(address(0), tokenM, IPositionManager(v4PositionManager), IStateView(v4StateView));
     }
 }
