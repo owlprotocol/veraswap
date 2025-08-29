@@ -622,7 +622,7 @@ describe("index.test.ts", function () {
         const routerInput0 = tradePlan.finalize() as Hex;
 
         const routerCommands = encodePacked(["uint8"], [V4_SWAP]);
-        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
         expect(routerCommands, "routerCommands").toBe("0x10");
 

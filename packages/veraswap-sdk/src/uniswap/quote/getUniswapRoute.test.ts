@@ -83,7 +83,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -112,7 +112,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
 
             //Execute
             const value = 0n;
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -177,7 +177,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
             const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
 
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -248,7 +248,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
             const referralBalanceBeforeSwap = await getBalanceForAddress(currencyIn, referralAddress);
 
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -315,7 +315,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
             const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
 
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -390,7 +390,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             const veraswapBalanceBeforeSwap = await getBalanceForAddress(currencyIn, veraswapAddress);
             const referralBalanceBeforeSwap = await getBalanceForAddress(currencyIn, referralAddress);
 
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -450,7 +450,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -497,7 +497,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -544,7 +544,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -591,7 +591,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -636,7 +636,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -682,7 +682,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -727,7 +727,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             //Execute
             const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
             const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-            const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             const hash = await anvilClientL1.writeContract({
                 abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
                 address: LOCAL_UNISWAP_CONTRACTS.universalRouter,

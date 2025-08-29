@@ -96,7 +96,7 @@ describe("basket/getBatchSwaps.test.ts", function () {
 
         const routePlanner = new RoutePlanner();
         routePlanner.addCommand(CommandType.V4_SWAP, [v4Swap]);
-        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
         const hash = await anvilClientL1.writeContract({
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,

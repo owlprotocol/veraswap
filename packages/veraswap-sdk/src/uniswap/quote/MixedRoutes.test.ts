@@ -121,7 +121,7 @@ describe("uniswap/quote/MixedRoutes.test.ts", function () {
         //Execute
         const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
         const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
         const hash = await anvilClientL1.writeContract({
             abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -208,7 +208,7 @@ describe("uniswap/quote/MixedRoutes.test.ts", function () {
         //Execute
         const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
         const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
         const hash = await anvilClientL1.writeContract({
             abi: [...IUniversalRouter.abi, ...UniswapV4ErrorAbi],
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
