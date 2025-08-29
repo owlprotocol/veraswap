@@ -2,16 +2,14 @@ import { QueryClient } from "@tanstack/react-query";
 import { Config } from "@wagmi/core";
 import { readContractQueryOptions } from "@wagmi/core/query";
 import invariant from "tiny-invariant";
-import { Address, zeroAddress } from "viem";
+import { Address } from "viem";
 
 import { GasRouter } from "../../artifacts/GasRouter.js";
 import { SUPERCHAIN_SWEEP_ADDRESS } from "../../chains/supersim.js";
 import { HYPERLANE_ROUTER_SWEEP_ADDRESS } from "../../constants/hyperlane.js";
-import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../../constants/orbiter.js";
 import { Currency, isMultichainToken } from "../../currency/currency.js";
 import { MultichainToken } from "../../currency/multichainToken.js";
-import { NativeCurrency } from "../../currency/nativeCurrency.js";
-import { OrbiterQuote, OrbiterQuoteParams, orbiterQuoteQueryOptions } from "../../query/orbiterQuote.js";
+import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../../query/stargateETHQuote.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
 
 import { getMetaQuoteExactInputMultichain } from "./getMetaQuoteExactInputMultichain.js";
@@ -34,13 +32,6 @@ export interface RouteStepUniswap extends RouteStepBase {
 }
 
 // Bridge components
-export interface RouteStepOrbiter extends RouteStepBase {
-    type: "orbiter";
-    currencyIn: NativeCurrency;
-    currencyOut: NativeCurrency;
-    quote: OrbiterQuote;
-}
-
 export interface RouteStepHyperlane extends RouteStepBase {
     type: "hyperlane";
     currencyIn: MultichainToken;
@@ -58,7 +49,7 @@ export interface RouteStepSuperchain extends RouteStepBase {
     currencyOut: MultichainToken;
 }
 
-export type RouteStepBridge = RouteStepOrbiter | RouteStepHyperlane | RouteStepStargate | RouteStepSuperchain;
+export type RouteStepBridge = RouteStepHyperlane | RouteStepStargate | RouteStepSuperchain;
 
 export type RouteStep = RouteStepUniswap | RouteStepBridge;
 
@@ -67,7 +58,7 @@ export function isRouteStepSwap(component: RouteStep): component is RouteStepUni
     return component.type === "uniswap";
 }
 export function isRouteStepBridge(component: RouteStep): component is RouteStepBridge {
-    return ["orbiter", "hyperlane", "stargate", "superchain"].includes(component.type);
+    return ["hyperlane", "stargate", "superchain"].includes(component.type);
 }
 
 export function isRouteSwap(steps: RouteStep[]): steps is [RouteStepUniswap] {
@@ -162,9 +153,7 @@ export async function getRouteSteps(
         components.push(bridgeOutput);
 
         // Override swap recipient for post-swap bridge call
-        if (bridgeOutput.type === "orbiter") {
-            swap.recipient = ORBITER_BRIDGE_SWEEP_ADDRESS;
-        } else if (bridgeOutput.type === "superchain") {
+        if (bridgeOutput.type === "superchain") {
             swap.recipient = SUPERCHAIN_SWEEP_ADDRESS;
         } else if (bridgeOutput.type === "hyperlane") {
             swap.recipient = HYPERLANE_ROUTER_SWEEP_ADDRESS;
@@ -174,7 +163,7 @@ export async function getRouteSteps(
     return components;
 }
 
-// TODO: Implement quoting for Hyperlane/Orbiter
+// TODO: Implement quoting for Hyperlane
 // TODO: Add Stargate and more
 export async function getRouteStepBridge(
     queryClient: QueryClient,
@@ -190,29 +179,25 @@ export async function getRouteStepBridge(
         amountIn: bigint;
         recipient?: Address;
     },
-): Promise<null | RouteStepOrbiter | RouteStepHyperlane | RouteStepStargate | RouteStepSuperchain> {
+): Promise<null | RouteStepHyperlane | RouteStepStargate | RouteStepSuperchain> {
     if (currencyIn.isNative && currencyOut.isNative) {
-        // Bridge: Native token bridge defaults to Orbiter (for now)
+        // Bridge: Native token bridge defaults to Stargate
         // TODO: Quote bridge here?
 
-        const quoteParams: OrbiterQuoteParams = {
-            sourceChainId: currencyIn.chainId,
-            destChainId: currencyOut.chainId,
-            sourceToken: zeroAddress,
-            destToken: zeroAddress,
+        const quoteParams: StargateETHQuoteParams = {
+            srcChain: currencyIn.chainId,
+            dstChain: currencyOut.chainId,
             amount: amountIn,
-            userAddress: zeroAddress, //TODO: Can this be changed???
-            targetRecipient: recipient,
+            receiver: recipient ?? "0x0000000000000000000000000000000000000001", // Safer to be non-zero address
         };
-        const quote = await queryClient.fetchQuery(orbiterQuoteQueryOptions(quoteParams));
+        const quote = await queryClient.fetchQuery(stargateETHQuoteQueryOptions(wagmiConfig, quoteParams));
 
         return {
-            type: "orbiter",
+            type: "stargate",
             currencyIn,
             currencyOut,
-            quote,
             amountIn,
-            amountOut: amountIn,
+            amountOut: quote?.minAmountLDFeeRemoved ?? 0n,
             recipient,
         };
     }

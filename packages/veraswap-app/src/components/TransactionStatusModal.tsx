@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils.js";
 import { TransactionStepId } from "@/atoms/atoms.js";
 import { transactionTypeAtom } from "@/atoms/uniswap.js";
-import { orbiterQuoteAtom } from "@/atoms/orbiter.js";
 import { stargateQuoteAtom } from "@/atoms/stargate.js";
 
 export type TransactionStep = {
@@ -31,7 +30,6 @@ export function TransactionStatusModal({
     isOpen,
     onOpenChange,
     steps,
-    currentStepId,
     hashes,
     chains,
     networkType,
@@ -39,7 +37,6 @@ export function TransactionStatusModal({
 }: TransactionStatusModalProps) {
     const transactionType = useAtomValue(transactionTypeAtom);
     const stargateQuote = useAtomValue(stargateQuoteAtom);
-    const orbiterQuote = useAtomValue(orbiterQuoteAtom);
 
     const getExplorerUrl = (stepId: "swap" | "bridge" | "sendOrigin" | "transferRemote") => {
         if (networkType === "local") return undefined;
@@ -68,9 +65,6 @@ export function TransactionStatusModal({
                 }
 
                 if (stargateQuote.data) return `https://testnet.layerzeroscan.com/tx/${hashes.bridge}`;
-
-                // TODO: change once orbiter has a URL
-                if (orbiterQuote.data) return undefined;
 
                 return `https://explorer.hyperlane.xyz/message/${hashes.bridge}`;
             case "sendOrigin":

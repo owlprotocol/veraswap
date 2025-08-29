@@ -6,10 +6,10 @@ import invariant from "tiny-invariant";
 import { Address, encodeFunctionData, Hex } from "viem";
 
 import { Execute } from "../artifacts/Execute.js";
-import { OrbiterQuote } from "../query/orbiterQuote.js";
 import { StargateETHQuote } from "../query/stargateETHQuote.js";
 import { StargateTokenQuote } from "../query/stargateTokenQuote.js";
 import { CallArgs, encodeCallArgsBatch } from "../smartaccount/ExecLib.js";
+import { getStargateETHBridgeTransaction } from "../stargate/getStargateETHBridgeTransaction.js";
 import { TokenStandard } from "../types/Token.js";
 
 import { GetCallsParams, GetCallsReturnType } from "./getCalls.js";
@@ -46,7 +46,6 @@ export interface GetTransferRemoteWithKernelCallsParams extends GetCallsParams {
     };
     erc7579RouterOwners?: { domain: number; router: Address; owner: Address; enabled: boolean }[];
     stargateQuote?: StargateETHQuote | StargateTokenQuote;
-    orbiterQuote?: OrbiterQuote;
     withSuperchain?: boolean;
 }
 
@@ -114,13 +113,17 @@ export async function getTransferRemoteWithKernelCalls(
     // BRIDGE CALLS
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
-        // Assume that if the token is native, we are using the Orbiter bridge
+        // Assume that if the token is native, we are using the Stargate bridge
         // TODO: if using USDC, find the step with bridge, since there could be an approve step
-        const { to, value, data } = params.orbiterQuote!.steps[0].tx;
-        const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
-        bridgeCalls = [orbiterCall];
+        const stargateQuote = params.stargateQuote! as StargateETHQuote;
+        const stargateCall = getStargateETHBridgeTransaction({
+            stargateQuote,
+            srcChain: chainId,
+            dstChain: destination,
+            receiver: kernelAddress,
+        });
+        bridgeCalls = [{ ...stargateCall, account: kernelAddress }];
     } else {
-        // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed
         const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
             chainId,

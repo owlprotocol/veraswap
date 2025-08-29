@@ -6,7 +6,6 @@ export * from "./getSmartAccountSwapCalls.js";
 export * from "./getSuperchainBridgeCallTargetParams.js";
 export * from "./getSwapAndHyperlaneBridgeTransaction.js";
 export * from "./getSwapAndHyperlaneSweepBridgeTransaction.js";
-export * from "./getSwapAndOrbiterETHBridgeTransaction.js";
 export * from "./getSwapAndStargateETHBridgeTransaction.js";
 export * from "./getSwapAndSuperchainBridgeTransaction.js";
 export * from "./getSwapCalls.js";

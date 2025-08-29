@@ -47,5 +47,4 @@ struct CoreContracts {
     address execute;
     // Sweep
     address executeSweep;
-    address orbiterBridgeSweep;
 }

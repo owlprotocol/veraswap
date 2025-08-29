@@ -3,7 +3,6 @@ export * from "./calls/index.js";
 export * from "./constants/index.js";
 export * from "./currency/index.js";
 export * from "./hooks/index.js";
-export * from "./orbiter/index.js";
 export * from "./query/index.js";
 export * from "./quote/index.js";
 export * from "./smartaccount/index.js";

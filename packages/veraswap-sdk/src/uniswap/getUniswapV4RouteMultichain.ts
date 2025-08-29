@@ -4,10 +4,8 @@ import { maxBy, minBy, zip } from "lodash-es";
 import invariant from "tiny-invariant";
 import { Address, zeroAddress } from "viem";
 
-import { ORBITER_BRIDGE_SWEEP_ADDRESS } from "../constants/orbiter.js";
 import { STARGATE_TOKEN_POOLS } from "../constants/stargate.js";
 import { Currency, getSharedChainTokenPairs, getUniswapV4Address } from "../currency/currency.js";
-import { orbiterQuoteQueryOptions } from "../query/orbiterQuote.js";
 import { StargateETHQuoteParams, stargateETHQuoteQueryOptions } from "../query/stargateETHQuote.js";
 import {
     StargateTokenQuoteParams,
@@ -70,7 +68,7 @@ export async function getUniswapV4RouteExactInMultichain(
                 // Check if we need to bridge native ETH
                 if (currencyIn.chainId !== currIn.chainId && currencyIn.isNative && currencyIn.symbol === "ETH") {
                     if (currIn.chainId === 900 || currIn.chainId === 901 || currIn.chainId === 902) {
-                        // No stargate or orbiter on local chains
+                        // No stargate on local chains
                         return null;
                     }
 
@@ -91,30 +89,12 @@ export async function getUniswapV4RouteExactInMultichain(
                         .fetchQuery(stargateETHQuoteQueryOptions(wagmiConfig, stargateETHQuoteParams))
                         .catch(() => null);
 
-                    if (stargateQuoteResult) {
-                        exactAmount = BigInt(stargateQuoteResult.minAmountLDFeeRemoved);
-                    } else {
-                        const orbiterQuoteResult = await queryClient
-                            .fetchQuery(
-                                orbiterQuoteQueryOptions({
-                                    amount: exactAmount,
-                                    destChainId: currIn.chainId,
-                                    destToken: zeroAddress,
-                                    sourceChainId: currencyIn.chainId,
-                                    sourceToken: zeroAddress,
-                                    // User address doesn't matter, but avoid address zero
-                                    userAddress: ORBITER_BRIDGE_SWEEP_ADDRESS,
-                                }),
-                            )
-                            .catch(() => null);
-
-                        // Bridging is needed, but no quote found for either providers
-                        if (!orbiterQuoteResult) return null;
-
-                        exactAmount = BigInt(orbiterQuoteResult.details.minDestTokenAmount);
+                    if (!stargateQuoteResult) {
+                        return null;
                     }
-                    // Check if we can bridge the token with Stargate
+                    exactAmount = BigInt(stargateQuoteResult.minAmountLDFeeRemoved);
                 } else if (
+                    // Check if we can bridge the token with Stargate
                     currencyIn.chainId !== currIn.chainId &&
                     currencyIn.symbol &&
                     currencyIn.symbol in STARGATE_TOKEN_POOLS

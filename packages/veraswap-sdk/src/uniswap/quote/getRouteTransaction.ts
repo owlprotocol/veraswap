@@ -25,7 +25,6 @@ import { PermitSingle } from "../../types/AllowanceTransfer.js";
 import { PoolKeyOptions } from "../../types/PoolKey.js";
 import { TokenStandard } from "../../types/Token.js";
 import { getHyperlaneTransferRemoteCommand } from "../commands/getHyperlaneTransferRemoteCommand.js";
-import { getOrbiterBridgeAllETHCommand } from "../commands/getOrbiterBridgeAllEthCommand.js";
 import { getSuperchainSendAllERC20Command } from "../commands/getSuperchainSendAllERC20Command.js";
 import { CommandType, createCommand, RoutePlanner } from "../routerCommands.js";
 
@@ -133,10 +132,6 @@ export async function getRouteTransaction(
                 }),
                 value: currencyIn.isNative ? amountIn : 0n,
             };
-        } else if (step.type === "orbiter") {
-            const { quote } = step;
-            const { to, value, data } = quote.steps[0].tx;
-            return { to, value: BigInt(value), data };
         } else if (step.type === "stargate") {
             // TODO: Implement Stargate bridge transaction
             return null;
@@ -242,12 +237,7 @@ export async function getRouteTransaction(
             }
 
             // Add bridge command
-            if (bridge.type === "orbiter") {
-                // Orbiter bridge
-                const { quote } = bridge;
-                const bridgeCommand = getOrbiterBridgeAllETHCommand(quote);
-                commands.push(bridgeCommand);
-            } else if (bridge.type === "superchain") {
+            if (bridge.type === "superchain") {
                 // Superchain bridge
                 const bridgeCommand = getSuperchainSendAllERC20Command({
                     token: getUniswapV4Address(bridge.currencyIn),
@@ -313,7 +303,7 @@ export async function getRouteTransaction(
                 // erc7579RouterOwners: [],
                 // erc7579RouterOwnersRemote: [],
                 remoteSwapParams: {
-                    // Adjust amount in if using orbiter to account for fees
+                    // Adjust amount in if using stargate to account for fees
                     amountIn: remoteSwapAmountIn,
                     amountOutMinimum,
                     path,
@@ -322,7 +312,6 @@ export async function getRouteTransaction(
                     receiver: walletAddress,
                     universalRouter: contracts[currencyOut.chainId].universalRouter,
                 },
-                orbiterQuote,
             };
 
             const result = await getBridgeSwapWithKernelCalls(queryClient, wagmiConfig, bridgeSwapParams);

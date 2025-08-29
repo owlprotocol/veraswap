@@ -309,7 +309,7 @@ export async function getBridgeSwapWithKernelCalls(
     // BRIDGE CALLS
     let bridgeCalls: (CallArgs & { account: Address })[];
     if (tokenStandard === "NativeToken") {
-        const { stargateQuote, orbiterQuote } = params;
+        const { stargateQuote } = params;
         if (stargateQuote) {
             if (stargateQuote.type !== "ETH") {
                 throw new Error("Stargate ETH quote is required for native token bridging");
@@ -321,14 +321,8 @@ export async function getBridgeSwapWithKernelCalls(
                 stargateQuote,
             });
             bridgeCalls = [{ ...stargateTx, account: kernelAddress }];
-        } else if (orbiterQuote) {
-            // Assume that if the token is native, we are using the Orbiter bridge
-            // TODO: if using USDC, find the step with bridge, since there could be an approve step
-            const { to, value, data } = params.orbiterQuote!.steps[0].tx;
-            const orbiterCall = { to, value: BigInt(value), data, account: kernelAddress };
-            bridgeCalls = [orbiterCall];
         } else {
-            invariant(false, "NativeToken bridging requires either Stargate or Orbiter quotes to be provided");
+            invariant(false, "NativeToken bridging requires a Stargate quote to be provided");
         }
     } else if (withSuperchain) {
         invariant(
@@ -376,7 +370,6 @@ export async function getBridgeSwapWithKernelCalls(
             tokenStandard !== "SuperchainERC20" && tokenStandard !== "ERC20",
             "SuperchainERC20 and ERC20 are not supported in this function",
         );
-        // TODO: handle future case where we bridge USDC with orbiter
         // Encode transferRemote calls, pull funds from account if needed
         const transferRemoteCalls = await getTransferRemoteWithFunderCalls(queryClient, wagmiConfig, {
             chainId,
@@ -441,7 +434,7 @@ export async function getBridgeSwapWithKernelCalls(
     const remoteExecutorDirect = executorAddOwnerRemoteCalls.isOwner && isERC7579Owner;
 
     /*  No value can be passed by Hyperlane, if ETH is needed on the smart account, it must be
-     *  received by some other mechanism (eg. Orbiter, Across) */
+     *  received by some other mechanism (eg. Stargate, Across) */
     const remoteExecutorValue = 0n;
 
     const remoteExecutorCallData = await getOwnableExecutorExecuteData(queryClient, wagmiConfig, {

@@ -23,7 +23,6 @@ import { currencyInAtom, currencyOutAtom, tokenInAmountAtom } from "./tokens.js"
 import { kernelAddressQueryAtom } from "./kernelSmartAccount.js";
 import { disabledQueryAtom, disabledQueryOptions } from "./disabledQuery.js";
 import { routeMultichainAtom, transactionTypeAtom } from "./uniswap.js";
-import { orbiterQuoteAtom, orbiterRouterAtom } from "./orbiter.js";
 import { currenciesAtom } from "./chains.js";
 
 import { stargateQuoteAtom } from "./stargate.js";
@@ -283,18 +282,11 @@ export const currencyBalancesAtom = atom((get) => {
 
 export const amountOutAtom = atom((get) => {
     const transactionType = get(transactionTypeAtom);
-    const orbiterRouter = get(orbiterRouterAtom);
     const currencyOut = get(currencyOutAtom);
     const tokenInAmount = get(tokenInAmountAtom);
     const quoterData = get(routeMultichainAtom).data;
 
     if (!transactionType || !currencyOut || !tokenInAmount) return "";
-
-    const {
-        data: orbiterQuote,
-        fetchStatus: orbiterQuoteFetchStatus,
-        status: orbiterQuoteStatus,
-    } = get(orbiterQuoteAtom);
 
     const {
         data: stargateQuote,
@@ -326,31 +318,25 @@ export const amountOutAtom = atom((get) => {
             !bridgeCurrencyIn.symbol ||
             (!bridgeCurrencyIn.isNative && !(bridgeCurrencyIn.symbol in STARGATE_TOKEN_POOLS))
         ) {
-            // Must be bridging with Hyperlane even though there is a stargate or orbiter quote
+            // Must be bridging with Hyperlane even though there is a Stargate quote
             if (!quoterData) return "";
 
             amountOut = formatUnits(quoterData.amountOut, currencyOut?.decimals ?? 18);
             return amountOut;
         }
 
-        // TODO: remove orbiter references entirely
         if (stargateQuote && currencyOut) {
             amountOut = formatUnits(
                 stargateQuote.type === "ETH" ? stargateQuote.minAmountLDFeeRemoved : stargateQuote.minAmountOut,
                 currencyOut.decimals,
             );
-        } else if (orbiterRouter && orbiterQuote && currencyOut) {
-            const amountOutDecimalsStripped = orbiterQuote.details.minDestTokenAmount.split(".")[0];
-            amountOut = formatUnits(BigInt(amountOutDecimalsStripped), currencyOut.decimals);
-            // Only shouw
         } else if (!stargateQuote && (stargateQuoteFetchStatus === "fetching" || stargateQuoteStatus === "error")) {
             amountOut = "";
-        } else if (!orbiterQuote && (orbiterQuoteFetchStatus === "fetching" || orbiterQuoteStatus === "error")) {
-            amountOut = "";
-        } else if (!orbiterRouter && currencyOut.symbol === "ETH") {
+        } else if (!stargateQuote && currencyOut.symbol === "ETH") {
             // Need to bridge, but there's no provider that supports bridging ETH
             amountOut = formatUnits(0n, currencyOut.decimals ?? 18);
-        } else if (!orbiterRouter && orbiterQuoteFetchStatus === "idle" && orbiterQuoteStatus !== "error") {
+        } else if (!stargateQuote && stargateQuoteFetchStatus === "idle" && stargateQuoteStatus !== "error") {
+            // No stargate route, but could be Hyperlane
             amountOut = formatUnits(tokenInAmount ?? 0n, currencyOut?.decimals ?? 18);
         }
     } else if (quoterData) {
