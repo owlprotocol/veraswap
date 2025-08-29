@@ -58,7 +58,7 @@ export function getSwapAndOrbiterETHBridgeTransaction({
     const orbiterCallData = getOrbiterBridgeAllETHCallData(orbiterQuote);
     routePlanner.addCommand(CommandType.CALL_TARGET, [ORBITER_BRIDGE_SWEEP_ADDRESS, 0n, orbiterCallData]);
 
-    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
     return {
         to: universalRouter,

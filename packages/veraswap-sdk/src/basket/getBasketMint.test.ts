@@ -98,7 +98,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
         const receiver = anvilAccount.address;
         const referrer = zeroAddress;
         const currencyIn = zeroAddress;
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
         const contracts = {
             metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
             universalRouter: LOCAL_UNISWAP_CONTRACTS.universalRouter,
@@ -272,7 +272,7 @@ describe.skip("basket/getBasketMint.test.ts", function () {
             receiver,
             currencyIn: zeroAddress,
             slippageCentiBps: 0n, //TODO: Ignored for now
-            deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
+            deadline: BigInt(Math.floor(Date.now() / 1000) + 600),
             currencyHops: [],
             contracts: {
                 metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,

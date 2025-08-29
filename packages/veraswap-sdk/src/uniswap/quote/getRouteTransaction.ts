@@ -122,7 +122,7 @@ export async function getRouteTransaction(
             }
 
             const routePlanner = RoutePlanner.create(commands);
-            const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
             return {
                 to: contracts.universalRouter,
@@ -267,7 +267,7 @@ export async function getRouteTransaction(
             }
 
             const routePlanner = RoutePlanner.create(commands);
-            const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+            const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
             return {
                 to: contracts.universalRouter,
                 data: encodeFunctionData({

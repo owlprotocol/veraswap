@@ -70,7 +70,7 @@ export function getSwapAndStargateTokenBridgeTransaction({
     });
     routePlanner.addCommand(CommandType.CALL_TARGET, [STARGATE_BRIDGE_SWEEP_ADDRESS, 0n, stargateCallData]);
 
-    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
     const isNative = currencyIn === zeroAddress;
 

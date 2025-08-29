@@ -68,7 +68,7 @@ export function getSwapAndHyperlaneSweepBridgeTransaction({
         getHyperlaneSweepBridgeCallTargetParams({ bridgeAddress, bridgePayment, destinationChain, receiver }),
     );
 
-    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
     const isNative = currencyIn === zeroAddress;
 

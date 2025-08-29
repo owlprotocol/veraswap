@@ -67,7 +67,7 @@ export function getSwapAndSuperchainBridgeTransaction({
         }),
     );
 
-    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
     const inputIsNative = currencyIn === zeroAddress;
 

@@ -90,7 +90,7 @@ export async function getSwapCalls(
         routePlanner.addCommand(CommandType.CALL_TARGET, callTargetAfter);
     }
 
-    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+    const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
 
     const isNative = currencyIn === zeroAddress;
     const routerExecuteValue = isNative ? amountIn + routerPayment : routerPayment;

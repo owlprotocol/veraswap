@@ -66,7 +66,7 @@ describe("basket/getBasketSwaps.test.ts", function () {
             currencyIn: zeroAddress,
             currencyHops: [],
             exactAmount: amountIn,
-            deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
+            deadline: BigInt(Math.floor(Date.now() / 1000) + 600),
             contracts: {
                 v4StateView: LOCAL_UNISWAP_CONTRACTS.v4StateView,
                 v4Quoter: LOCAL_UNISWAP_CONTRACTS.v4Quoter,
