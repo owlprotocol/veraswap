@@ -12,7 +12,6 @@ import { tokenInAmountAtom, currencyInAtom, currencyOutAtom } from "./tokens.js"
 import { accountAtom } from "./account.js";
 import { amountOutAtom, tokenInAccountBalanceAtom, tokenInAllowanceAccountToPermit2Atom } from "./token-balance.js";
 import { submittedTransactionTypeAtom, transactionTypeAtom } from "./uniswap.js";
-import { orbiterRouterAtom } from "./orbiter.js";
 import { config } from "@/config.js";
 import { TransactionStep } from "@/components/TransactionStatusModal.js";
 
@@ -71,8 +70,6 @@ export const swapStepAtom = atom((get) => {
     const tokenInPermit2Allowance = get(tokenInAllowanceAccountToPermit2Atom);
     const amountOut = get(amountOutAtom);
 
-    const orbiterRouter = get(orbiterRouterAtom);
-
     const transactionType = get(transactionTypeAtom);
 
     const mutation = get(sendTransactionMutationAtom);
@@ -95,7 +92,6 @@ export const swapStepAtom = atom((get) => {
         (transactionType.type === "BRIDGE" || transactionType.type === "SWAP_BRIDGE") &&
         // Be clear if there is no quote because chains are not supported by bridge providers and the token is not a SuperERC20
         (!(currencyIn.chainId in STARGATE_POOL_NATIVE) || !(currencyOut.chainId in STARGATE_POOL_NATIVE)) &&
-        !orbiterRouter &&
         !(isMultichainToken(currencyOut) && (currencyOut.isSuperERC20() || !!currencyOut.hyperlaneAddress))
     ) {
         return SwapStep.NOT_SUPPORTED;

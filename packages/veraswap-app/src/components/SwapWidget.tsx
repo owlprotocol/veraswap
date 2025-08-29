@@ -4,8 +4,6 @@ import {
     getHyperlaneMessageIdsFromReceipt,
     getTransaction,
     TransactionParams,
-    chainIdToOrbiterChainId,
-    TransactionType,
     TransactionTypeBridge,
     TransactionTypeBridgeSwap,
     TransactionTypeSwap,
@@ -13,7 +11,6 @@ import {
     Currency,
     getUniswapV4Address,
     getStargateMessageIdFromReceipt,
-    STARGATE_POOL_NATIVE,
     getSuperchainMessageIdsFromReceipt,
     PERMIT2_ADDRESS,
     MAX_UINT_256,
@@ -69,7 +66,6 @@ import {
     routeMultichainAtom,
     submittedTransactionTypeAtom,
     amountOutAtom,
-    orbiterQuoteAtom,
     slippageToleranceAtom,
     stargateQuoteAtom,
     stargateBridgeMessageIdAtom,
@@ -92,7 +88,6 @@ import { useDustAccount, useWatchHyperlaneMessageProcessed, useWatchStargateMess
 import { useWatchSuperchainMessageProcessed } from "@/hooks/useWatchSuperchainMessageProcessed.js";
 import { TransactionFlow } from "@/components/transaction-flow.js";
 import { SettingsDialog } from "@/components/settings-dialog.js";
-import { useWatchOrbiterMessageProcessed } from "@/hooks/useWatchOrbiterMessageProcessed.js";
 
 interface SwapWidgetProps {
     showSettings?: boolean;
@@ -181,7 +176,6 @@ export function SwapWidget({
 
     const { switchChain } = useSwitchChain();
 
-    const { data: orbiterQuote } = useAtomValue(orbiterQuoteAtom);
     const { data: stargateQuote } = useAtomValue(stargateQuoteAtom);
 
     const slippageTolerance = useAtomValue(slippageToleranceAtom);
@@ -233,17 +227,6 @@ export function SwapWidget({
         setBridgeRemoteTransactionHash,
         bridgeRemoteTransactionHash,
         bridgeToAddress,
-    );
-
-    useWatchOrbiterMessageProcessed(
-        chainOut,
-        hash,
-        bridgeToAddress,
-        orbiterQuote,
-        stargateQuote,
-        transactionType?.withSuperchain,
-        setBridgeRemoteTransactionHash,
-        bridgeRemoteTransactionHash,
     );
 
     const handleSwapSteps = async () => {
@@ -301,7 +284,6 @@ export function SwapWidget({
                           amountIn: tokenInAmount!,
                           walletAddress,
                           bridgePayment,
-                          orbiterQuote,
                           stargateQuote,
                           queryClient,
                           wagmiConfig: config,
@@ -313,7 +295,6 @@ export function SwapWidget({
                             amountIn: tokenInAmount!,
                             amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
-                            orbiterQuote,
                             stargateQuote,
                             queryClient,
                             wagmiConfig: config,
@@ -323,7 +304,6 @@ export function SwapWidget({
                       : ({
                             ...transactionType,
                             amountIn: tokenInAmount!,
-                            orbiterQuote,
                             stargateQuote,
                             amountOutMinimum: adjustedAmountOutMinimum,
                             walletAddress,
@@ -531,19 +511,18 @@ export function SwapWidget({
         }
 
         const hyperlaneBridgeMessageId = hyperlaneMessageIds[0];
-        const hyperlaneSwapMessageId =
-            !stargateQuote && !orbiterQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
+        const hyperlaneSwapMessageId = !stargateQuote ? hyperlaneMessageIds[1] : hyperlaneMessageIds[0];
 
         const superchainBridgeMessageId = superchainMessageIds[0];
 
         if (submittedTransactionType.type === "BRIDGE" || submittedTransactionType.type === "BRIDGE_SWAP") {
             updateTransactionStep({ id: "sendOrigin", status: "success" });
 
-            if (hyperlaneBridgeMessageId && !stargateQuote && !orbiterQuote) {
+            if (hyperlaneBridgeMessageId && !stargateQuote) {
                 setBridgeMessageId(hyperlaneBridgeMessageId);
                 setTransactionHashes((prev) => ({ ...prev, bridge: hyperlaneBridgeMessageId }));
                 updateTransactionStep({ id: "bridge", status: "processing" });
-            } else if (stargateQuote || orbiterQuote) {
+            } else if (stargateQuote) {
                 if (stargateBridgeMessageId) {
                     setStargateBridgeMessageId(stargateBridgeMessageId);
                 }
@@ -569,8 +548,6 @@ export function SwapWidget({
                     setTransactionHashes((prev) => ({ ...prev, bridge: superchainBridgeMessageId }));
                 } else if (stargateQuote) {
                     setStargateBridgeMessageId(stargateBridgeMessageId);
-                    setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
-                } else if (orbiterQuote) {
                     setTransactionHashes((prev) => ({ ...prev, bridge: receipt.transactionHash }));
                 }
                 updateTransactionStep({ id: "bridge", status: "processing" });
@@ -658,42 +635,6 @@ export function SwapWidget({
         }
     };
 
-    const setMaxToken = (
-        currency: Currency,
-        tokenBalance: bigint,
-        transactionTypeType: TransactionType["type"] | null,
-    ) => {
-        const decimals = currency.decimals;
-
-        let max = tokenBalance;
-        if (
-            !currency.isNative ||
-            !transactionTypeType ||
-            !(
-                transactionTypeType === "BRIDGE" ||
-                transactionTypeType === "BRIDGE_SWAP" ||
-                (currencyIn &&
-                    currencyOut &&
-                    currencyIn.chainId in STARGATE_POOL_NATIVE &&
-                    currencyOut.chainId in STARGATE_POOL_NATIVE)
-            )
-        ) {
-            setTokenInAmountInput(formatUnits(max, decimals));
-            return;
-        }
-
-        const unit = 10_000n;
-        const mod = max % unit;
-
-        const maxOrbiterChainId = 999;
-        const orbiterChainId: number = chainIdToOrbiterChainId[currencyOut?.chainId ?? 0] ?? maxOrbiterChainId;
-        const code = 9000n + BigInt(orbiterChainId);
-
-        max = mod > code ? (max / unit) * unit : (max / unit - 1n) * unit;
-
-        setTokenInAmountInput(formatUnits(max, decimals));
-    };
-
     return (
         <div className={cn("max-w-md px-2", className)}>
             {showSettings && (
@@ -746,7 +687,9 @@ export function SwapWidget({
                                         className="h-auto p-0 text-xs text-card-foreground"
                                         disabled={!tokenInBalance}
                                         onClick={() =>
-                                            setMaxToken(currencyIn!, tokenInBalance!, transactionType?.type ?? null)
+                                            setTokenInAmountInput(
+                                                formatUnits(tokenInBalance ?? 0n, currencyIn?.decimals ?? 18),
+                                            )
                                         }
                                     >
                                         Max

@@ -43,7 +43,6 @@ export { MockMailbox } from "./MockMailbox.js";
 export { MockSuperchainERC20 } from "./MockSuperchainERC20.js";
 export { NoopIsm } from "./NoopIsm.js";
 export { OpenPaymaster } from "./OpenPaymaster.js";
-export { OrbiterBridgeSweep } from "./OrbiterBridgeSweep.js";
 export { OwnableSignatureExecutor } from "./OwnableSignatureExecutor.js";
 export { PausableHook } from "./PausableHook.js";
 export { PoolManager } from "./PoolManager.js";

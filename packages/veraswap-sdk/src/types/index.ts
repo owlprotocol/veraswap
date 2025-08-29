@@ -1,7 +1,5 @@
 export * from "./AllowanceTransfer.js";
 export * from "./HyperlaneRegistry.js";
-export * from "./OrbiterParams.js";
-export * from "./OrbiterRouters.js";
 export * from "./PermitTransferFromData.js";
 export * from "./PoolKey.js";
 export * from "./RegistryToken.js";

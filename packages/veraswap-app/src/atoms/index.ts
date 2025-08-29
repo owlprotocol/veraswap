@@ -7,7 +7,6 @@ export * from "./kernelERC7579Router.js";
 export * from "./kernelExecutor.js";
 export * from "./kernelRecovery.js";
 export * from "./kernelSmartAccount.js";
-export * from "./orbiter.js";
 export * from "./prefetch.js";
 export * from "./tokens.js";
 export * from "./token-balance.js";

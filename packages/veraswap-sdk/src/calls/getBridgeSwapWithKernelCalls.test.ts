@@ -238,7 +238,7 @@ describe.skip("calls/getBridgeSwapWithKernelCalls.test.ts", function () {
                     factoryAddress: MOCK_MAILBOX_CONTRACTS[opChainL1.id].kernelFactory,
                 },
                 remoteSwapParams: {
-                    // Adjust amount in if using orbiter to account for fees
+                    // Adjust amount in if using Stargate to account for fees
                     amountIn: amount,
                     amountOutMinimum,
                     currencyIn,
