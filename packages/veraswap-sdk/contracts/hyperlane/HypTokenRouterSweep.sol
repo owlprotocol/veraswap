@@ -66,6 +66,4 @@ contract HypTokenRouterSweep {
             destination, recipient, balance, hookMetadata, hook
         );
     }
-
-    receive() external payable {}
 }
