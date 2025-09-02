@@ -13,7 +13,7 @@ import {
     ChevronRight,
     CheckCircle,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useWaitForTransactionReceipt } from "wagmi";
 import { createRecoveryCalls } from "@owlprotocol/veraswap-sdk";
 import { getOwnableExecutorExecuteCalls, LOCAL_KERNEL_CONTRACTS } from "@owlprotocol/veraswap-sdk";
@@ -254,8 +254,8 @@ function RecoveryPage() {
                                             const isExpanded = expandedChains[account.chainId] || false;
 
                                             return (
-                                                <>
-                                                    <TableRow key={account.chainId}>
+                                                <Fragment key={account.chainId}>
+                                                    <TableRow>
                                                         <TableCell className="font-medium">
                                                             <div className="flex items-center gap-2">
                                                                 <span>{account.chain.name}</span>
@@ -397,7 +397,7 @@ function RecoveryPage() {
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
-                                                </>
+                                                </Fragment>
                                             );
                                         })}
                                     </TableBody>

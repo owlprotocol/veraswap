@@ -115,27 +115,30 @@ export const allKernelAccountsAtom = atom((get) => {
             currency: Currency;
         }> = [];
 
-        allChainCurrencies.forEach((currency) => {
-            if (!currency.isNative) {
-                const { data: tokenBalance } = get(
-                    tokenBalanceAtomFamily({
-                        chainId: chain.id,
-                        address: kernelAddress,
-                        tokenAddress: getUniswapV4Address(currency),
-                    }),
-                );
+        // only query token balances for deployed accounts
+        if (Boolean(bytecode)) {
+            allChainCurrencies.forEach((currency) => {
+                if (!currency.isNative) {
+                    const { data: tokenBalance } = get(
+                        tokenBalanceAtomFamily({
+                            chainId: chain.id,
+                            address: kernelAddress,
+                            tokenAddress: getUniswapV4Address(currency),
+                        }),
+                    );
 
-                if (tokenBalance && tokenBalance > 0n) {
-                    tokenBalances.push({
-                        tokenAddress: currency.address,
-                        symbol: currency.symbol || "Unknown",
-                        decimals: currency.decimals || 18,
-                        balance: tokenBalance,
-                        currency,
-                    });
+                    if (tokenBalance && tokenBalance > 0n) {
+                        tokenBalances.push({
+                            tokenAddress: currency.address,
+                            symbol: currency.symbol || "Unknown",
+                            decimals: currency.decimals || 18,
+                            balance: tokenBalance,
+                            currency,
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
 
         kernelAccounts.push({
             chainId: chain.id,
