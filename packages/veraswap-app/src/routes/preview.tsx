@@ -11,6 +11,7 @@ import { useTheme } from "@/components/theme-provider.js";
 import { Switch } from "@/components/ui/switch.js";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.js";
 import { CustomTokenManager } from "@/components/CustomTokenManager.js";
+import { REFERRER_FEE_BIPS } from "@/config.js";
 
 export const Route = createFileRoute("/preview")({
     component: EmbedPreview,
@@ -231,7 +232,7 @@ function EmbedPreview() {
 
     return (
         <div className="min-h-screen bg-background p-4">
-            <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-7xl mb-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold">Embed iFrame Theme Customizer</h1>
                     <p className="text-muted-foreground mt-2">
@@ -337,9 +338,17 @@ function EmbedPreview() {
                                     {referrer && !isAddress(referrer) && (
                                         <p className="text-xs text-red-500">Please enter a valid address</p>
                                     )}
-                                    <p className="text-xs text-muted-foreground">
-                                        Enter a valid address to set as the referrer for this widget
-                                    </p>
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">
+                                            Enter a valid address to set as the referrer for this widget. The referrer{" "}
+                                            will receive a revenue share of all swap fees generated through this widget.
+                                        </p>
+                                        <div className="bg-muted p-2 rounded-md border">
+                                            <p className="text-sm font-semibold text-center">
+                                                Referral Fee: {`${Number(REFERRER_FEE_BIPS) / 100}%`}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
