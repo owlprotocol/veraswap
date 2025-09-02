@@ -6,8 +6,8 @@ export const ethereum = {
     ...mainnetChain,
     rpcUrls: {
         default: {
-            http: ["https://eth-mainnet.g.alchemy.com/v2/Gv_RTNzlyImHduWcD2cFjA-UilBLO-gX"],
-            webSocket: ["wss://eth-mainnet.g.alchemy.com/v2/Gv_RTNzlyImHduWcD2cFjA-UilBLO-gX"],
+            http: ["https://ethereum-mainnet.core.chainstack.com/d03a7e03830bb3bd3ed00bb032bdb097"],
+            webSocket: ["wss://ethereum-mainnet.core.chainstack.com/d03a7e03830bb3bd3ed00bb032bdb097"],
         },
     },
     custom: {
