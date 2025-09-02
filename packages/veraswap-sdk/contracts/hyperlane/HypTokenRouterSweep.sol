@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {TokenRouter} from "@hyperlane-xyz/core/token/libs/TokenRouter.sol";
 
 /// @notice Middleware contract designed to call `transferRemote` on TokenRouter with full balance
+/// @notice This contracts can only be used with ERC20 tokens, not native tokens
 /// The contract is designed for modularity by supporting any custom TokenRouter passed in as the first parameter
 /// This contract is useful for EOA batching of swap + bridge by setting the receiver as this contract and
 /// then sending the full token balance to the user on the destination chain
