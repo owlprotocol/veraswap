@@ -19,7 +19,7 @@ if [ $? != 0 ]; then
     tmux new-window  -t $session -n deploy;
     tmux new-window  -t $session -n apps;
     tmux new-window -t $session -n duster;
-    tmux new-window -t $session -n bloomfolio;
+    # tmux new-window -t $session -n bloomfolio;
     # tmux new-window -t $session -n scoutup;
     # Start blockchains
     # tmux send-keys -t $session:supersim.0 "cd $VERASWAP && supersim --interop.autorelay --l1.port 8547" ENTER
@@ -36,7 +36,7 @@ HYP_KEY=${privateKeyAnvil9} hyperlane relayer -r ./registry --chains opchainl1,o
      # Start duster
     tmux send-keys -t $session:duster.0 "cd $VERASWAP/packages/veraswap-test-duster && PRIVATE_KEY=${privateKeyAnvil0} pnpm dev" ENTER
     # tmux send-keys -t $session:scoutup.0 "cd $VERASWAP/tools/scoutup && go build && sleep 5 && ./scoutup --supersim" ENTER
-    tmux send-keys -t $session:bloomfolio.0 "cd $VERASWAP/packages/bloomfolio-app && pnpm dev" ENTER
+    # tmux send-keys -t $session:bloomfolio.0 "cd $VERASWAP/packages/bloomfolio-app && pnpm dev" ENTER
 fi
 
 if [ -n "${TMUX+1}" ]; then

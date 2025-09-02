@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {MockERC20Utils} from "../utils/MockERC20Utils.sol";
+import {MockAgentTokenUtils} from "../utils/MockAgentTokenUtils.sol";
 // Permit2
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 // WETH9
@@ -19,6 +20,7 @@ struct LocalTokens {
     IERC20 tokenA;
     IERC20 tokenB;
     IERC20 tokenZ;
+    IERC20 tokenAgent;
 }
 
 library LocalTokensLibrary {
@@ -33,6 +35,7 @@ library LocalTokensLibrary {
         (address _tokenA,) = MockERC20Utils.getOrCreate2("Token A", "A", 18);
         (address _tokenB,) = MockERC20Utils.getOrCreate2("Token B", "B", 18);
         (address _tokenZ,) = MockERC20Utils.getOrCreate2("Token Z", "Z", 18);
+        (address _tokenAgent,) = MockAgentTokenUtils.getOrCreate2("Token Agent", "AGENT", 18, 100, 100);
         IERC20 weth9 = IERC20(_weth9);
         IERC20 liq34 = IERC20(_liq34);
         IERC20 liq2 = IERC20(_liq2);
@@ -41,6 +44,7 @@ library LocalTokensLibrary {
         IERC20 tokenA = IERC20(_tokenA);
         IERC20 tokenB = IERC20(_tokenB);
         IERC20 tokenZ = IERC20(_tokenZ);
+        IERC20 tokenAgent = IERC20(_tokenAgent);
         tokens = LocalTokens({
             weth9: weth9,
             liq34: liq34,
@@ -49,7 +53,8 @@ library LocalTokensLibrary {
             liq4: liq4,
             tokenA: tokenA,
             tokenB: tokenB,
-            tokenZ: tokenZ
+            tokenZ: tokenZ,
+            tokenAgent: tokenAgent
         });
         // Mint tokens
         WETH(payable(address(weth9))).deposit{value: 100 ether}();
@@ -60,6 +65,7 @@ library LocalTokensLibrary {
         MockERC20(address(tokenA)).mint(msg.sender, 100_000 ether);
         MockERC20(address(tokenB)).mint(msg.sender, 100_000 ether);
         MockERC20(address(tokenZ)).mint(msg.sender, 100_000 ether);
+        MockERC20(address(tokenAgent)).mint(msg.sender, 100_000 ether);
         // Approve Permit2
         weth9.approve(permit2, type(uint256).max);
         liq34.approve(permit2, type(uint256).max);
@@ -69,6 +75,7 @@ library LocalTokensLibrary {
         tokenA.approve(permit2, type(uint256).max);
         tokenB.approve(permit2, type(uint256).max);
         tokenZ.approve(permit2, type(uint256).max);
+        tokenAgent.approve(permit2, type(uint256).max);
     }
 
     function approve(LocalTokens memory tokens, address spender) internal {
@@ -80,6 +87,7 @@ library LocalTokensLibrary {
         tokens.tokenA.approve(spender, type(uint256).max);
         tokens.tokenB.approve(spender, type(uint256).max);
         tokens.tokenZ.approve(spender, type(uint256).max);
+        tokens.tokenAgent.approve(spender, type(uint256).max);
     }
 
     function permit2Approve(LocalTokens memory tokens, address spender) internal {
@@ -92,5 +100,6 @@ library LocalTokensLibrary {
         IAllowanceTransfer(permit2).approve(address(tokens.tokenA), spender, type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokens.tokenB), spender, type(uint160).max, type(uint48).max);
         IAllowanceTransfer(permit2).approve(address(tokens.tokenZ), spender, type(uint160).max, type(uint48).max);
+        IAllowanceTransfer(permit2).approve(address(tokens.tokenAgent), spender, type(uint160).max, type(uint48).max);
     }
 }
