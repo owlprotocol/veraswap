@@ -149,7 +149,11 @@ export const errors = [
     },
     { type: "error", name: "TransactionDeadlinePassed", inputs: [] },
     { type: "error", name: "BalanceTooLow", inputs: [] },
-    { type: "error", name: "CallTargetPermit2", inputs: [] },
+    {
+        type: "error",
+        name: "CallTargetInvalid",
+        inputs: [{ name: "target", type: "address", internalType: "address" }],
+    },
     { type: "error", name: "FromAddressIsNotOwner", inputs: [] },
     { type: "error", name: "InsufficientETH", inputs: [] },
     { type: "error", name: "InsufficientToken", inputs: [] },
@@ -460,6 +464,7 @@ export const errors = [
     { type: "error", name: "ZeroUnits", inputs: [] },
     { type: "error", name: "AddressEmptyCode", inputs: [{ name: "target", type: "address", internalType: "address" }] },
     { type: "error", name: "CallSelectorApprove", inputs: [] },
+    { type: "error", name: "CallTargetPermit2", inputs: [] },
     { type: "error", name: "InvalidLocalDecimals", inputs: [] },
     {
         type: "error",
