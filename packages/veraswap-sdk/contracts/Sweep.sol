@@ -6,7 +6,7 @@ import {CurrencyLibrary, Currency} from "@uniswap/v4-core/src/types/Currency.sol
 import {Lock} from "@uniswap/universal-router/contracts/base/Lock.sol";
 
 /**
- * @notice Base contract for sweeper contracts that are designed to sweep full balance of native/erc20 balance to a custom contract.
+ * @notice Base contract for sweeper contracts that are designed to sweep full balance of native token or ERC20 balance to a custom contract.
  * Such contracts are particularly useful for composing with bridging protocols when the amount to bridge is dynamic.
  * WARNING: Do not keep any balance on this contract between transactions as anyone can sweep the balance.
  * WARNING: Consider reentrancy risks if inheriting from this contract, especially if sweeping multiple tokens at a time.
