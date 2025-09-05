@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../schema.json
+chainId: 4661
+displayName: Appchain Testnet
+domainId: 4661
+isTestnet: true
+name: appchaintestnet
+nativeToken:
+    decimals: 18
+    name: Ether
+    symbol: ETH
+protocol: ethereum
+rpcUrls:
+    - http: https://appchaintestnet.rpc.caldera.xyz/http
+technicalStack: other

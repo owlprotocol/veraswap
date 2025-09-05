@@ -40,20 +40,19 @@ library ContractsUniswapLibrary {
     /// @dev ONLY local chains
     function deployUniswapRouterParams(address weth9) internal returns (RouterParameters memory) {
         // Permit2
-        (address permit2, ) = Permit2Utils.getOrCreate2();
+        (address permit2,) = Permit2Utils.getOrCreate2();
         // Unsupported Revert Contract
-        (address unsupported, ) = UnsupportedProtocolUtils.getOrCreate2();
+        (address unsupported,) = UnsupportedProtocolUtils.getOrCreate2();
         // Uniswap V2
-        (address v2Factory, ) = UniswapV2FactoryUtils.getOrCreate2(address(0));
-        bytes32 pairInitCodeHash = keccak256(
-            abi.encodePacked(vm.getCode("artifacts/UniswapV2Pair.sol/UniswapV2Pair.json"))
-        );
+        (address v2Factory,) = UniswapV2FactoryUtils.getOrCreate2(address(0));
+        bytes32 pairInitCodeHash =
+            keccak256(abi.encodePacked(vm.getCode("artifacts/UniswapV2Pair.sol/UniswapV2Pair.json")));
         // Uniswap V3
-        (address v3Factory, ) = UniswapV3FactoryUtils.getOrCreate2();
+        (address v3Factory,) = UniswapV3FactoryUtils.getOrCreate2();
         bytes32 poolInitCodeHash = keccak256(abi.encodePacked(type(UniswapV3Pool).creationCode));
         // Uniswap V4
-        (address v4PoolManager, ) = PoolManagerUtils.getOrCreate2(address(0));
-        (address v4PositionManager, ) = PositionManagerUtils.getOrCreate2(v4PoolManager, weth9);
+        (address v4PoolManager,) = PoolManagerUtils.getOrCreate2(address(0));
+        (address v4PositionManager,) = PositionManagerUtils.getOrCreate2(v4PoolManager, weth9);
 
         RouterParameters memory routerParams = RouterParameters({
             permit2: permit2,
@@ -89,24 +88,22 @@ library ContractsUniswapLibrary {
         contracts.v4PoolManager = routerParams.v4PoolManager;
         contracts.v4PositionManager = routerParams.v4PositionManager;
         // Universal Router
-        (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+        (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
         contracts.universalRouter = universalRouter;
         // "Mock Position Manager" for Uniswap V3 (set this after deploying the Universal Router)
-        (address v3PositionManagerMock, ) = V3PositionManagerMockUtils.getOrCreate2(
-            contracts.v3Factory,
-            contracts.poolInitCodeHash
-        );
+        (address v3PositionManagerMock,) =
+            V3PositionManagerMockUtils.getOrCreate2(contracts.v3Factory, contracts.poolInitCodeHash);
         contracts.v3NFTPositionManager = v3PositionManagerMock;
         // Uniswap V3 Periphery
-        (address v3Quoter, ) = V3QuoterUtils.getOrCreate2(contracts.v3Factory, contracts.poolInitCodeHash);
+        (address v3Quoter,) = V3QuoterUtils.getOrCreate2(contracts.v3Factory, contracts.poolInitCodeHash);
         contracts.v3Quoter = v3Quoter;
         // Uniswap V4 Periphery
-        (address v4StateView, ) = StateViewUtils.getOrCreate2(contracts.v4PoolManager);
+        (address v4StateView,) = StateViewUtils.getOrCreate2(contracts.v4PoolManager);
         contracts.v4StateView = v4StateView;
-        (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(contracts.v4PoolManager);
+        (address v4Quoter,) = V4QuoterUtils.getOrCreate2(contracts.v4PoolManager);
         contracts.v4Quoter = v4Quoter;
         // Universal Periphery
-        (address metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
+        (address metaQuoter,) = MetaQuoterUtils.getOrCreate2(
             contracts.v2Factory,
             contracts.pairInitCodeHash,
             contracts.v3Factory,
@@ -130,38 +127,36 @@ library ContractsUniswapLibrary {
         // Deploy additional Uniswap periphery contracts that are not yet set in deploy parameters or not yet deployed locally
         // Uniswap V3 Periphery
         {
-            bool v3Enabled = tokenInfraEnabled &&
-                contracts.v3Factory != address(0) &&
-                contracts.poolInitCodeHash != bytes32(0);
+            bool v3Enabled =
+                tokenInfraEnabled && contracts.v3Factory != address(0) && contracts.poolInitCodeHash != bytes32(0);
             if (!v3Enabled) {
                 console2.log("Uniswap V3 not enabled/deployed");
             } else {
                 if (contracts.v3Quoter == address(0)) {
-                    (address v3Quoter, ) = V3QuoterUtils.getOrCreate2(contracts.v3Factory, contracts.poolInitCodeHash);
+                    (address v3Quoter,) = V3QuoterUtils.getOrCreate2(contracts.v3Factory, contracts.poolInitCodeHash);
                     contracts.v3Quoter = v3Quoter;
                 }
             }
         }
         // Uniswap V4 Periphery
         {
-            bool v4Enabled = tokenInfraEnabled &&
-                contracts.v4PoolManager != address(0) &&
-                contracts.v4PositionManager != address(0);
+            bool v4Enabled =
+                tokenInfraEnabled && contracts.v4PoolManager != address(0) && contracts.v4PositionManager != address(0);
             if (!v4Enabled) {
                 console2.log("Uniswap V4 not enabled/deployed");
             } else {
                 if (contracts.v4StateView == address(0)) {
-                    (address v4StateView, ) = StateViewUtils.getOrCreate2(contracts.v4PoolManager);
+                    (address v4StateView,) = StateViewUtils.getOrCreate2(contracts.v4PoolManager);
                     contracts.v4StateView = v4StateView;
                 }
                 if (contracts.v4Quoter == address(0)) {
-                    (address v4Quoter, ) = V4QuoterUtils.getOrCreate2(contracts.v4PoolManager);
+                    (address v4Quoter,) = V4QuoterUtils.getOrCreate2(contracts.v4PoolManager);
                     contracts.v4Quoter = v4Quoter;
                 }
                 if (contracts.metaQuoter == address(0)) {
                     //TODO: Is it ok to deploy this if only V4 is enabled? (Note: if v3 is enabled, v4 is assumed to be enabled)
                     // => Seems fine as contract just skips not existant pools though there is a slight gas penalty
-                    (address metaQuoter, ) = MetaQuoterUtils.getOrCreate2(
+                    (address metaQuoter,) = MetaQuoterUtils.getOrCreate2(
                         contracts.v2Factory,
                         contracts.pairInitCodeHash,
                         contracts.v3Factory,
@@ -183,7 +178,7 @@ library ContractsUniswapLibrary {
                         v3NFTPositionManager: contracts.v3NFTPositionManager,
                         v4PositionManager: contracts.v4PositionManager
                     });
-                    (address universalRouter, ) = UniversalRouterUtils.getOrCreate2(routerParams);
+                    (address universalRouter,) = UniversalRouterUtils.getOrCreate2(routerParams);
                     contracts.universalRouter = universalRouter;
                 }
             }

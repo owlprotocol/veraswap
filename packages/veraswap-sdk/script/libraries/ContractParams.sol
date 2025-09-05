@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import {DeployParams} from "../Structs.sol";
 
+import {DeployAppchainTestnet} from "../deployParameters/DeployAppchainTestnet.s.sol";
 import {DeployArbitrum} from "../deployParameters/DeployArbitrum.s.sol";
 import {DeployArbitrumGoerli} from "../deployParameters/DeployArbitrumGoerli.s.sol";
 import {DeployAvalanche} from "../deployParameters/DeployAvalanche.s.sol";
@@ -23,6 +24,7 @@ import {DeployOptimismGoerli} from "../deployParameters/DeployOptimismGoerli.s.s
 import {DeployOPSepolia} from "../deployParameters/DeployOPSepolia.s.sol";
 import {DeployPolygon} from "../deployParameters/DeployPolygon.s.sol";
 import {DeployPolygonMumbai} from "../deployParameters/DeployPolygonMumbai.s.sol";
+import {DeployRariTestnet} from "../deployParameters/DeployRariTestnet.s.sol";
 import {DeploySepolia} from "../deployParameters/DeploySepolia.s.sol";
 import {DeploySoneium} from "../deployParameters/DeploySoneium.s.sol";
 import {DeployStory} from "../deployParameters/DeployStory.s.sol";
@@ -92,6 +94,10 @@ library ContractParams {
             return DeployWorldchain.getParams();
         } else if (chainId == DeployZora.chainId) {
             return DeployZora.getParams();
+        } else if (chainId == DeployRariTestnet.chainId) {
+            return DeployRariTestnet.getParams();
+        } else if (chainId == DeployAppchainTestnet.chainId) {
+            return DeployAppchainTestnet.getParams();
         } else {
             revert UnsupportedChainId(chainId);
         }

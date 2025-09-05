@@ -42,7 +42,8 @@ library ContractsCoreLibrary {
     /// @dev Can be used to reconcile with existing deployment
     function getOrDeploy(CoreContracts memory contracts) internal {
         // Hyperlane
-        ContractsHyperlaneLibrary.getOrDeploy(HyperlaneDeployParams({mailbox: contracts.hyperlane.mailbox}));
+        contracts.hyperlane =
+            ContractsHyperlaneLibrary.getOrDeploy(HyperlaneDeployParams({mailbox: contracts.hyperlane.mailbox}));
         // Uniswap
         ContractsUniswapLibrary.getOrDeploy(contracts.uniswap);
         // Core Contracts

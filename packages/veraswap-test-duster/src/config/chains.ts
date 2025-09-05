@@ -10,11 +10,20 @@ import {
     baseSepolia,
     arbitrumSepolia,
     optimismSepolia,
+    rariTestnet,
+    appchainTestnet,
 } from "@owlprotocol/veraswap-sdk/chains";
 
 export const interopDevnetChains = [interopDevnet0, interopDevnet1];
 
-export const localChains = [opChainL1, opChainA, opChainB];
+// TODO: remove later from local chains rari and appchain testnets
+export const localChains = [
+    opChainL1,
+    opChainA,
+    opChainB,
+    rariTestnet,
+    appchainTestnet,
+] as const;
 
 export const prodChains = [
     sepolia,
@@ -23,4 +32,6 @@ export const prodChains = [
     optimismSepolia,
     inkSepolia,
     unichainSepolia,
+    rariTestnet,
+    appchainTestnet,
 ] as const;

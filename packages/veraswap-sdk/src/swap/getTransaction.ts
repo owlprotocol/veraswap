@@ -406,7 +406,17 @@ export async function getTransaction(
                 : getUniswapV4Address(bridgeCurrencyIn);
 
             const swapChainId = swapCurrencyIn.chainId;
-            if (!bridgePayment && !(swapChainId === 900 || swapChainId === 901 || swapChainId === 902)) {
+            // Chain IDs for anvil/supersim/appchain-testnet/rari-testnet
+            if (
+                !bridgePayment &&
+                !(
+                    swapChainId === 900 ||
+                    swapChainId === 901 ||
+                    swapChainId === 902 ||
+                    swapChainId === 4661 ||
+                    swapChainId === 1918988905
+                )
+            ) {
                 throw new Error("Bridge payment is required for Hyperlane bridge transactions on non-local chains");
             }
 

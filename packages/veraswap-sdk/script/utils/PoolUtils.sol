@@ -43,21 +43,16 @@ library PoolUtils {
         token.approve(address(PERMIT2), type(uint256).max);
         // Approve PositionManager using Permit2
         IAllowanceTransfer(PERMIT2).approve(
-            address(token),
-            address(v4PositionManager),
-            type(uint160).max,
-            type(uint48).max
+            address(token), address(v4PositionManager), type(uint160).max, type(uint48).max
         );
         // Approve UniversalRouter using Permit2
         IAllowanceTransfer(PERMIT2).approve(address(token), address(router), type(uint160).max, type(uint48).max);
     }
 
-    function createV2Pool(
-        Currency currencyA,
-        Currency currencyB,
-        IUniswapV2Factory v2Factory,
-        uint256 amount
-    ) internal returns (IUniswapV2Pair pair) {
+    function createV2Pool(Currency currencyA, Currency currencyB, IUniswapV2Factory v2Factory, uint256 amount)
+        internal
+        returns (IUniswapV2Pair pair)
+    {
         address tokenA = Currency.unwrap(currencyA);
         address tokenB = Currency.unwrap(currencyB);
         // 1. Ensure the pair exists (or create it)
@@ -81,9 +76,8 @@ library PoolUtils {
         V3PositionManagerMock v3PositionManager,
         uint256 amount
     ) internal returns (IUniswapV3Pool pool) {
-        (Currency currency0, Currency currency1) = (currencyA < currencyB)
-            ? (currencyA, currencyB)
-            : (currencyB, currencyA);
+        (Currency currency0, Currency currency1) =
+            (currencyA < currencyB) ? (currencyA, currencyB) : (currencyB, currencyA);
 
         // Create & Initialize Pool
         uint24 fee = 3000;
@@ -105,33 +99,24 @@ library PoolUtils {
         // Approve tokens
         if (!currency0.isAddressZero()) {
             IAllowanceTransfer(PERMIT2).approve(
-                Currency.unwrap(currency0),
-                address(v3PositionManager),
-                type(uint160).max,
-                type(uint48).max
+                Currency.unwrap(currency0), address(v3PositionManager), type(uint160).max, type(uint48).max
             );
         }
         if (!currency1.isAddressZero()) {
             IAllowanceTransfer(PERMIT2).approve(
-                Currency.unwrap(currency1),
-                address(v3PositionManager),
-                type(uint160).max,
-                type(uint48).max
+                Currency.unwrap(currency1), address(v3PositionManager), type(uint160).max, type(uint48).max
             );
         }
         // Mint Liquidity
         v3PositionManager.addLiquidity(poolKey, tickLower, tickUpper, uint128(liquidity), msg.sender);
     }
 
-    function createV4Pool(
-        Currency currencyA,
-        Currency currencyB,
-        IPositionManager v4PositionManager,
-        uint256 amount
-    ) internal returns (PoolKey memory poolKey) {
-        (Currency currency0, Currency currency1) = (currencyA < currencyB)
-            ? (currencyA, currencyB)
-            : (currencyB, currencyA);
+    function createV4Pool(Currency currencyA, Currency currencyB, IPositionManager v4PositionManager, uint256 amount)
+        internal
+        returns (PoolKey memory poolKey)
+    {
+        (Currency currency0, Currency currency1) =
+            (currencyA < currencyB) ? (currencyA, currencyB) : (currencyB, currencyA);
         bool isNative = currency0.isAddressZero() || currency1.isAddressZero();
 
         // Initialize Pool & Mint Liquidity
@@ -144,11 +129,8 @@ library PoolUtils {
         // 3. Encode the initializePool parameters
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
         //WANING UNCOMMENT
-        multicallParams[0] = abi.encodeWithSelector(
-            IPositionManager(v4PositionManager).initializePool.selector,
-            poolKey,
-            startingPrice
-        );
+        multicallParams[0] =
+            abi.encodeWithSelector(IPositionManager(v4PositionManager).initializePool.selector, poolKey, startingPrice);
         // 4. Initialize the mint-liquidity parameters
         bytes memory mintActions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
         // 5. Encode the MINT_POSITION parameters
@@ -169,39 +151,43 @@ library PoolUtils {
         // 7. Encode the modifyLiquidites call
         uint256 deadline = block.timestamp + 60 * 5; // 5 minutes
         multicallParams[1] = abi.encodeWithSelector(
-            IPositionManager.modifyLiquidities.selector,
-            abi.encode(mintActions, mintParams),
-            deadline
+            IPositionManager.modifyLiquidities.selector, abi.encode(mintActions, mintParams), deadline
         );
         // 8. Approve the tokens
         // TODO: Check if this is needed
         if (!currency0.isAddressZero()) {
-            IAllowanceTransfer(PERMIT2).approve(
-                Currency.unwrap(currency0),
-                address(v4PositionManager),
-                type(uint160).max,
-                type(uint48).max
+            // Assume if there is allowance, the expiry data is irrelevant
+            (uint160 allowance,,) = IAllowanceTransfer(PERMIT2).allowance(
+                msg.sender, Currency.unwrap(currency0), address(v4PositionManager)
             );
+
+            if (allowance < type(uint160).max / 2) {
+                IAllowanceTransfer(PERMIT2).approve(
+                    Currency.unwrap(currency0), address(v4PositionManager), type(uint160).max, type(uint48).max
+                );
+            }
         }
         if (!currency1.isAddressZero()) {
-            IAllowanceTransfer(PERMIT2).approve(
-                Currency.unwrap(currency1),
-                address(v4PositionManager),
-                type(uint160).max,
-                type(uint48).max
+            // Assume if there is allowance, the expiry data is irrelevant
+            (uint160 allowance,,) = IAllowanceTransfer(PERMIT2).allowance(
+                msg.sender, Currency.unwrap(currency1), address(v4PositionManager)
             );
+
+            if (allowance < type(uint160).max / 2) {
+                IAllowanceTransfer(PERMIT2).approve(
+                    Currency.unwrap(currency1), address(v4PositionManager), type(uint160).max, type(uint48).max
+                );
+            }
         }
         // 9. Execute the multicall
         uint256 ethToSend = isNative ? amount : 0;
         v4PositionManager.multicall{value: ethToSend}(multicallParams);
     }
 
-    function deployPool(
-        address tokenA,
-        address tokenB,
-        IPositionManager v4PositionManager,
-        IStateView v4StateView
-    ) internal returns (uint256 currentLiquidity) {
+    function deployPool(address tokenA, address tokenB, IPositionManager v4PositionManager, IStateView v4StateView)
+        internal
+        returns (uint256 currentLiquidity)
+    {
         return deployPoolWithLiquidityMultiplier(tokenA, tokenB, v4PositionManager, v4StateView, 1);
     }
 
@@ -233,11 +219,8 @@ library PoolUtils {
         // 3. Encode the initializePool parameters
         uint160 startingPrice = Constants.SQRT_PRICE_1_1;
         //WANING UNCOMMENT
-        multicallParams[0] = abi.encodeWithSelector(
-            IPositionManager(v4PositionManager).initializePool.selector,
-            poolKey,
-            startingPrice
-        );
+        multicallParams[0] =
+            abi.encodeWithSelector(IPositionManager(v4PositionManager).initializePool.selector, poolKey, startingPrice);
         // 4. Initialize the mint-liquidity parameters
         bytes memory mintActions = abi.encodePacked(uint8(Actions.MINT_POSITION), uint8(Actions.SETTLE_PAIR));
 
@@ -253,31 +236,21 @@ library PoolUtils {
             liquidityAmount
         ); // Encodes a 100/100 position at 1:1 price across the entire tick range
         bytes[] memory mintParams = new bytes[](2);
-        uint256 mintAmount = (isNative ? 10 ether : 50_000 ether) * liquidityMultiplier;
-        mintParams[0] = abi.encode(
-            poolKey,
-            tickLower,
-            tickUpper,
-            liquidity,
-            mintAmount,
-            mintAmount,
-            msg.sender,
-            ZERO_BYTES
-        );
+        uint256 mintAmount = (isNative ? 1 ether : 50_000 ether) * liquidityMultiplier;
+        mintParams[0] =
+            abi.encode(poolKey, tickLower, tickUpper, liquidity, mintAmount, mintAmount, msg.sender, ZERO_BYTES);
         // 6. Encode the SETTLE_PAIR parameters
         mintParams[1] = abi.encode(poolKey.currency0, poolKey.currency1);
         // 7. Encode the modifyLiquidites call
         uint256 deadline = block.timestamp + 60 * 5; // 5 minutes
         multicallParams[1] = abi.encodeWithSelector(
-            IPositionManager.modifyLiquidities.selector,
-            abi.encode(mintActions, mintParams),
-            deadline
+            IPositionManager.modifyLiquidities.selector, abi.encode(mintActions, mintParams), deadline
         );
         // 8. Approve the tokens
         // Done Above
         // 9. Execute the multicall
 
-        uint256 ethToSend = isNative ? (10 ether) * liquidityMultiplier : 0;
+        uint256 ethToSend = isNative ? (1 ether) * liquidityMultiplier : 0;
 
         v4PositionManager.multicall{value: ethToSend}(multicallParams);
 
