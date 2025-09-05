@@ -278,7 +278,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
         v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
         metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
-        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
+        universalRouter: "0xC632F273A43F013d194f45fAeD8677FA8594d1C5",
     },
     [appchainTestnet.id]: {
         weth9: "0xe73288389c6caC87aa14E9B35e8e2b3be7fB06C3",
@@ -287,6 +287,6 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
         v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
         metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
-        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
+        universalRouter: "0xc632f273a43f013d194f45faed8677fa8594d1c5",
     },
 } as const;

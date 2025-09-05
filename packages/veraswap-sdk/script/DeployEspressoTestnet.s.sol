@@ -175,12 +175,12 @@ contract DeployEspressoTestnet is DeployCoreContracts {
         tokenM.permit2ApproveAll(address(router));
         tokenR.permit2ApproveAll(address(router));
 
-        PoolUtils.createV4Pool(
-            Currency.wrap(address(tokenM)),
-            Currency.wrap(address(tokenR)),
-            IPositionManager(v4PositionManager),
-            10 ether
-        );
+        // PoolUtils.createV4Pool(
+        //     Currency.wrap(address(tokenM)),
+        //     Currency.wrap(address(tokenR)),
+        //     IPositionManager(v4PositionManager),
+        //     10 ether
+        // );
 
         /*
         PoolUtils.createV4Pool(
