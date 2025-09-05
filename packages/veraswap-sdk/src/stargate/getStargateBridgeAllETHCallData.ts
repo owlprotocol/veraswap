@@ -8,10 +8,12 @@ export function getStargateBridgeAllETHCallData({
     dstChain,
     srcChain,
     recipient,
+    refundAddress,
 }: {
     dstChain: number;
     srcChain: number;
     recipient: Address;
+    refundAddress: Address;
 }) {
     invariant(dstChain in STARGATE_POOL_NATIVE, "Destination chain is not supported by Stargate for ETH");
     invariant(srcChain in STARGATE_POOL_NATIVE, "Source chain is not supported by Stargate for ETH");
@@ -26,6 +28,7 @@ export function getStargateBridgeAllETHCallData({
         functionName: "bridgeAllETH",
         args: [
             poolAddress,
+            refundAddress,
             {
                 recipient,
                 recipientPadded,

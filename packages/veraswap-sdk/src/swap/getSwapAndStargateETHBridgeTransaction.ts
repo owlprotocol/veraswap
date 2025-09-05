@@ -58,7 +58,13 @@ export function getSwapAndStargateETHBridgeTransaction({
     });
     addCommandsToRoutePlanner(routePlanner, commands);
 
-    const stargateCallData = getStargateBridgeAllETHCallData({ dstChain, srcChain, recipient });
+    const stargateCallData = getStargateBridgeAllETHCallData({
+        dstChain,
+        srcChain,
+        recipient,
+        // TODO: customize here if we eventually want a different refund / recipient address
+        refundAddress: recipient,
+    });
     routePlanner.addCommand(CommandType.CALL_TARGET, [STARGATE_BRIDGE_SWEEP_ADDRESS, 0n, stargateCallData]);
 
     const routerDeadline = BigInt(Math.floor(Date.now() / 1000) + 600);
