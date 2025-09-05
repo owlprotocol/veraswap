@@ -65,6 +65,8 @@ export function getSwapAndStargateTokenBridgeTransaction({
         dstChain,
         srcChain,
         recipient,
+        // TODO: customize here if we eventually want a different refund / recipient address
+        refundAddress: recipient,
         tokenAddress: currencyOut,
         tokenSymbol: tokenSymbol,
     });
