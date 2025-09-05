@@ -3072,6 +3072,16 @@ export const functions = [
     },
     {
         type: "function",
+        name: "sweep",
+        inputs: [
+            { name: "token", type: "address", internalType: "address" },
+            { name: "recipient", type: "address", internalType: "address" },
+        ],
+        outputs: [{ name: "balance", type: "uint256", internalType: "uint256" }],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
         name: "transferRemote",
         inputs: [
             { name: "router", type: "address", internalType: "address" },
@@ -3457,6 +3467,7 @@ export const functions = [
         name: "bridgeAllETH",
         inputs: [
             { name: "to", type: "address", internalType: "address payable" },
+            { name: "refundAddress", type: "address", internalType: "address payable" },
             {
                 name: "bridgeParams",
                 type: "tuple",
@@ -3480,6 +3491,7 @@ export const functions = [
         inputs: [
             { name: "to", type: "address", internalType: "address payable" },
             { name: "inputToken", type: "address", internalType: "address" },
+            { name: "refundAddress", type: "address", internalType: "address" },
             {
                 name: "bridgeParams",
                 type: "tuple",
