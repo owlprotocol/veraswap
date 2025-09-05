@@ -66,7 +66,6 @@ contract DeployEspressoTestnet is DeployCoreContracts {
             console2.log("ecdsaValidator:", contracts.ecdsaValidator);
             console2.log("ownableSignatureExecutor:", contracts.ownableSignatureExecutor);
             console2.log("erc7579ExecutorRouter:", contracts.erc7579ExecutorRouter);
-            console2.log("orbiterBridgeSweep:", contracts.orbiterBridgeSweep);
 
             chainContracts[chainIds[i]] = contracts;
         }
