@@ -29,6 +29,7 @@ contract OwnableSignatureExecutor is OwnableExecutor, SignatureExecutorEIP712, N
     /**
      * Executes a transaction on the owned account
      *
+     * @dev The `signatureExecution.value` serves to enforce a fixed value to be sent (a top-up) to the account before executing on it. For most use cases this should be 0.
      * @param signatureExecution execution payload
      * @param signature EIP712 signature of the execution payload
      */
@@ -48,14 +49,14 @@ contract OwnableSignatureExecutor is OwnableExecutor, SignatureExecutorEIP712, N
 
         // execute the transaction on the owned account
         IERC7579Account(signatureExecution.account).executeFromExecutor{value: signatureExecution.value}(
-            ModeLib.encodeSimpleSingle(),
-            signatureExecution.callData
+            ModeLib.encodeSimpleSingle(), signatureExecution.callData
         );
     }
 
     /**
      * Executes a batch of transactions on the owned account
      *
+     * @dev The `signatureExecution.value` serves to enforce a fixed value to be sent (a top-up) to the account before executing on it. For most use cases this should be 0.
      * @param signatureExecution execution payload
      * @param signature EIP712 signature of the execution payload
      */
@@ -74,9 +75,8 @@ contract OwnableSignatureExecutor is OwnableExecutor, SignatureExecutorEIP712, N
         }
 
         // execute the batch of transaction on the owned account
-        IERC7579Account(signatureExecution.account).executeFromExecutor{value: msg.value}(
-            ModeLib.encodeSimpleBatch(),
-            signatureExecution.callData
+        IERC7579Account(signatureExecution.account).executeFromExecutor{value: signatureExecution.value}(
+            ModeLib.encodeSimpleBatch(), signatureExecution.callData
         );
     }
 
