@@ -187,7 +187,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
         v4Quoter: "0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227",
-        universalRouter: "0x6fc36029136a0c9585306190387597d14f4c80a2",
+        universalRouter: "0xca98551440308f7748C782912A0f03f0eD5b9844",
         metaQuoter: "0x67f8b206AA266cFBd2571BC037c2b75a497eFb56",
     },
     [optimismSepolia.id]: {
