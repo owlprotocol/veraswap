@@ -8,7 +8,12 @@ export function convertRegistryTokens(tokens: RegistryToken[]): Currency[] {
 
     for (const t of tokens) {
         if ("address" in t) {
-            tokenMap.set(`${t.chainId}:${t.address.toLowerCase()}`, t);
+            const key = `${t.chainId}:${t.address.toLowerCase()}`;
+
+            // Assume that the first occurrence is the most complete one
+            if (!tokenMap.has(key)) {
+                tokenMap.set(`${t.chainId}:${t.address.toLowerCase()}`, t);
+            }
         }
     }
 
