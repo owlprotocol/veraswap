@@ -45,8 +45,8 @@ export interface TransactionSwapOptions {
     wagmiConfig: Config;
     amountIn: bigint;
     amountOutMinimum: bigint;
-    veraswapFeeRecipient?: { address: Address; bips: bigint };
-    referralFeeRecipient?: { address?: Address; bips: bigint };
+    veraswapFeeRecipient: { address: Address; bips: bigint };
+    referralFeeRecipient: { address?: Address; bips: bigint };
 }
 
 type StargateQuote = StargateETHQuote | StargateTokenQuote;
@@ -91,8 +91,8 @@ export interface TransactionSwapBridgeOptions {
     bridgePayment: bigint;
     walletAddress: Address;
     stargateQuote?: StargateQuote;
-    veraswapFeeRecipient?: { address: Address; bips: bigint };
-    referralFeeRecipient?: { address?: Address; bips: bigint };
+    veraswapFeeRecipient: { address: Address; bips: bigint };
+    referralFeeRecipient: { address?: Address; bips: bigint };
 }
 
 export interface TransactionBridgeSwapOptions {
@@ -103,8 +103,8 @@ export interface TransactionBridgeSwapOptions {
     amountOutMinimum: bigint;
     initData: Hex;
     stargateQuote?: StargateQuote;
-    veraswapFeeRecipient?: { address: Address; bips: bigint };
-    referralFeeRecipient?: { address?: Address; bips: bigint };
+    veraswapFeeRecipient: { address: Address; bips: bigint };
+    referralFeeRecipient: { address?: Address; bips: bigint };
 }
 
 export type TransactionParams =
