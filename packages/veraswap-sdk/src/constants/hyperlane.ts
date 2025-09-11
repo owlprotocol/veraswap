@@ -5,6 +5,7 @@ import {
     arbitrum,
     avalanche,
     base,
+    baseSepolia,
     bsc,
     mainnet,
     optimism,
@@ -154,46 +155,49 @@ export const HYPERLANE_CONTRACTS: Record<
         erc7579Router: LOCAL_HYPERLANE_CONTRACTS[opChainB.id].erc7579Router,
     },
     [sepolia.id]: {
-        erc7579Router: "0x526da4BBc5973b69E7740808a9cBF955B469eaDF",
+        erc7579Router: "0x8b60582A3f557078801B00c38E14aBbbd24A5f19",
     },
     [optimismSepolia.id]: {
-        erc7579Router: "0xb7E87Eb6F91C51eEdd602bD215B0919caA927979",
+        erc7579Router: "0xC1715E53F36A8be099c7B5B494E13d031F85fAf8",
     },
     [unichainSepolia.id]: {
-        erc7579Router: "0x5A354bd2896A69F7f5B24d3D25Cdad94A84a56Fc",
+        erc7579Router: "0x4Cd864578182267C4Cb71f07c02e7B2Eb8587d7a",
+    },
+    [baseSepolia.id]: {
+        erc7579Router: "0xC1715E53F36A8be099c7B5B494E13d031F85fAf8",
     },
     [arbitrum.id]: {
-        erc7579Router: "0x65b39c104252b6cfD9186448949cc59974009Cc7",
+        erc7579Router: "0x6bC9c9c563ABD24FbB18eA9B6E9cF3a0A3A5c7ED",
     },
     [base.id]: {
-        erc7579Router: "0xb9084240Dc695DbbB405440CE986e24DCE51c455",
+        erc7579Router: "0x78a701c26EF86ca2a510DB77C6EcD54e0a1C7C46",
     },
     [bsc.id]: {
-        erc7579Router: "0x94e35bB1bc81Caa38531b7C86d329c08940AD5b6",
+        erc7579Router: "0x52F32d2D1a6C7d870F19A2713Aa8A7B43b41a08e",
     },
     [optimism.id]: {
-        erc7579Router: "0xbf22dd2c75a5e1440238e9ea921053dc0547c56a",
+        erc7579Router: "0x8859E655D9B47fdfEb373D20b68Da2c0dB3D1fe1",
     },
     [superseed.id]: {
-        erc7579Router: "0x4c48F22772A96F14EF89c01598e07A5156A1109B",
+        erc7579Router: "0x4026C4831cE5418f7A21e38fB46780EFD6187057",
     },
     [mainnet.id]: {
-        erc7579Router: "0xF1317bC5c1542978C88D6499d8EA059817B6583F",
+        erc7579Router: "0xc0Ec5Aa2E27dA4cfa63267352d73920D15687076",
     },
     [story.id]: {
-        erc7579Router: "0x4c48F22772A96F14EF89c01598e07A5156A1109B",
+        erc7579Router: "0x4026C4831cE5418f7A21e38fB46780EFD6187057",
     },
     [avalanche.id]: {
-        erc7579Router: "0x0380239a7cb60245f43B4EB805aBf33F3077173d",
+        erc7579Router: "0x8f11674FABDe13Ec4530E9EECE08189DF305b005",
     },
     [polygon.id]: {
-        erc7579Router: "0x5442a053ff9538F2F2ab4eA6A2519E9025dBf395",
+        erc7579Router: "0x2E2511B3e439017A952EA952c853B1Cdc672b63c",
     },
     [rariTestnet.id]: {
-        erc7579Router: "0xfcf60641B89b80c74084f8744167eB6e5B5d9E8C",
+        erc7579Router: "0x371dbbB8EEB7f403653aAbab850fcC64CaD232D3",
     },
     [appchainTestnet.id]: {
-        erc7579Router: "0xFb6b1dAA4AD015286a29724EEEf46e3fEa025eD4",
+        erc7579Router: "0xDde95bCc6fe477474e5f020638Cfb137bf17c1A6",
     },
 };
 

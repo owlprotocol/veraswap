@@ -8,12 +8,14 @@ export function getStargateBridgeAllTokenCallData({
     dstChain,
     srcChain,
     recipient,
+    refundAddress,
     tokenAddress,
     tokenSymbol,
 }: {
     dstChain: number;
     srcChain: number;
     recipient: Address;
+    refundAddress: Address;
     tokenAddress: Address;
     tokenSymbol: keyof typeof STARGATE_TOKEN_POOLS;
 }) {
@@ -31,6 +33,7 @@ export function getStargateBridgeAllTokenCallData({
         args: [
             poolAddress,
             tokenAddress,
+            refundAddress,
             {
                 recipient,
                 recipientPadded,

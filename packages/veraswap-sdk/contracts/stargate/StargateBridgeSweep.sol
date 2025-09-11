@@ -5,12 +5,13 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {
     IStargate, OFTReceipt, MessagingFee, SendParam
 } from "@stargatefinance/stg-evm-v2/src/interfaces/IStargate.sol";
+import {Sweep} from "../Sweep.sol";
 
 /**
  * @notice Middleware designed to call a Stargate contract and bridge tokens using any balance on
  * this contract instead of a fixed amount
  */
-contract StargateBridgeSweep {
+contract StargateBridgeSweep is Sweep {
     error BalanceZero();
     error QuoteAmountTooLow();
     error TransferFailed();
@@ -24,22 +25,7 @@ contract StargateBridgeSweep {
         bytes oftCmd; // 0x0 for taxi, 0x1 for bus
     }
 
-    uint256 constant MAX_INT = 2 ** 256 - 1;
-
     bool internal constant payInLzToken = false;
-
-    /**
-     * @notice Call any ERC20 and approve all balance to the recipient. Needed to allow
-     * endpointContract to pull the tokens.
-     * @dev Do NOT keep balance on this contract between transactions as they can be taken by anyone
-     * @param token The token
-     * @param spender The spender
-     * @return bool if succeeded
-     */
-    function approveAll(address token, address spender) external returns (bool) {
-        // Approve infinite balance to router
-        return IERC20(token).approve(address(spender), MAX_INT);
-    }
 
     /**
      * @notice Get stargate bridging quote for sending tokens
@@ -67,14 +53,18 @@ contract StargateBridgeSweep {
 
     /**
      * @notice Bridge ETH balance of this sweeper with Stargate.
-     * Gets a quote for the entiree balance, and requotes to account for fee. Any leftover balance
+     * Gets a quote for the entire balance, and requotes to account for fee. Any leftover balance
      * is refunded to the recipient.
      * @dev Contract balance MUST be > 0 to work. Do NOT keep balance on this contract between
      * transactions as it can be taken by anyone.
      * @param to The Stargate native pool contract
+     * @param refundAddress The address to refund any excess fees too
      * @param bridgeParams The parameters from decoding the quote bridge step `data` field
      */
-    function bridgeAllETH(address payable to, BridgeParams calldata bridgeParams) external {
+    function bridgeAllETH(address payable to, address payable refundAddress, BridgeParams calldata bridgeParams)
+        external
+        isNotLocked
+    {
         uint256 balance = address(this).balance;
         if (balance == 0) revert BalanceZero();
 
@@ -103,12 +93,11 @@ contract StargateBridgeSweep {
 
         MessagingFee memory fee = MessagingFee({nativeFee: nativeFee, lzTokenFee: 0});
 
-        pool.sendToken{value: balance}({_sendParam: sendParam, _fee: fee, _refundAddress: bridgeParams.recipient});
+        pool.sendToken{value: balance}({_sendParam: sendParam, _fee: fee, _refundAddress: refundAddress});
 
         // Refund user with any excess native tokens
-        uint256 leftoverBalance = address(this).balance;
-        if (leftoverBalance > 0) {
-            payable(bridgeParams.recipient).transfer(leftoverBalance);
+        if (refundAddress != address(0)) {
+            _sweep(address(0), refundAddress);
         }
     }
 
@@ -117,11 +106,16 @@ contract StargateBridgeSweep {
      * @dev Contract `inputToken` balance MUST be > 0 to work. Do NOT keep balance on this contract
      * between transactions as it can be taken by anyone
      * @param to The Stargate token pool contract
+     * @param inputToken The token to bridge
+     * @param refundAddress The address to refund any excess fees too
+     * @param bridgeParams The parameters from decoding the quote bridge step `data` field
      */
-    function bridgeAllToken(address payable to, address inputToken, BridgeParams calldata bridgeParams)
-        external
-        payable
-    {
+    function bridgeAllToken(
+        address payable to,
+        address inputToken,
+        address refundAddress,
+        BridgeParams calldata bridgeParams
+    ) external payable isNotLocked {
         uint256 balance = IERC20(inputToken).balanceOf(address(this));
         if (balance == 0) revert BalanceZero();
 
@@ -143,8 +137,11 @@ contract StargateBridgeSweep {
 
         MessagingFee memory fee = MessagingFee({nativeFee: nativeFee, lzTokenFee: 0});
 
-        pool.sendToken{value: nativeFee}({_sendParam: sendParam, _fee: fee, _refundAddress: bridgeParams.recipient});
-    }
+        pool.sendToken{value: nativeFee}({_sendParam: sendParam, _fee: fee, _refundAddress: refundAddress});
 
-    receive() external payable {}
+        // Refund user with any excess native tokens
+        if (refundAddress != address(0)) {
+            _sweep(address(0), refundAddress);
+        }
+    }
 }

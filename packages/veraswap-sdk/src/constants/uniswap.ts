@@ -11,6 +11,7 @@ import {
     optimismSepolia,
     polygon,
     sepolia,
+    unichainSepolia,
 } from "viem/chains";
 
 import { ExecuteSweep } from "../artifacts/ExecuteSweep.js";
@@ -187,7 +188,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
         v4Quoter: "0x61B3f2011A92d183C7dbaDBdA940a7555Ccf9227",
-        universalRouter: "0x6fc36029136a0c9585306190387597d14f4c80a2",
+        universalRouter: "0xca98551440308f7748C782912A0f03f0eD5b9844",
         metaQuoter: "0x67f8b206AA266cFBd2571BC037c2b75a497eFb56",
     },
     [optimismSepolia.id]: {
@@ -196,17 +197,26 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
-        universalRouter: "0x5fb0c37c53ccf5445ef0bac4eea32da4258d5278",
+        universalRouter: "0xDB85B92E2dED51920A642b7BA4A3792bC9d7D9e2",
         metaQuoter: "0x18757a64C39abF30073A8789B738e214d402c862",
     },
     [baseSepolia.id]: {
-        weth9: zeroAddress,
+        weth9: "0x4200000000000000000000000000000000000006",
         v4PoolManager: "0xf7F5aB3DcA35e17dE187b459159BC643853B3c67",
         v4PositionManager: "0x0B32f74f8365d535783949E014B7754047B64e31",
         v4StateView: "0x0e603cb829ced810efc69a037335e7566c192959",
         v4Quoter: "0xBc8E0BE46FFD624c262d63d9393Ac06523B59c3c",
-        universalRouter: "0x2a229f4f81d0b9a434584d6ebc2ffa9e30b8d82d",
+        universalRouter: "0x02930376925BaD95a92b2652C7aaAdd7f00eC553",
         metaQuoter: "0xB2E4AfE0A98648BF15FAa641Dbf39b4330ea64A4",
+    },
+    [unichainSepolia.id]: {
+        weth9: "0x4200000000000000000000000000000000000006",
+        v4PoolManager: "0x9cB26A7183B2F4515945Dc52CB4195B0d2D06C95",
+        v4PositionManager: "0x12A98709BB5D0641D61458f85dcAFbE17AC2d05c",
+        v4StateView: "0x33a83982A83C88696760c15f1B7192B263ccB2CB",
+        v4Quoter: "0x76963d6C00C3920B292459D98A49e7A2748B2243",
+        universalRouter: "0xD22Ec5C594755E0dd00488E2CcbBD1DA4c9Cc7b5",
+        metaQuoter: "0x10c05037D5EA03ABcDCfF75da01274a57802C92F",
     },
     [arbitrum.id]: {
         weth9: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
@@ -214,7 +224,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0xd88F38F930b7952f2DB2432Cb002E7abbF3dD869",
         v4StateView: "0xE751D8E8020B9AD1D2bb2CEd95EFA97fbd2F0A45",
         v4Quoter: "0x6e69C93152cFF1229E247CDB2153341cA39FE189",
-        universalRouter: "0x5D188c9e6222DA351770bdf93517dCa70419e60A",
+        universalRouter: "0xffbc158420E3B0f06C81b2e2620C8d799C79E195",
         metaQuoter: "0x35282e02E79c1B9a9e1868BD036b0f59F66E1dB5",
     },
     [base.id]: {
@@ -223,7 +233,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x7C5f5A4bBd8fD63184577525326123B519429bDc",
         v4StateView: "0x4DA860C1bA78a330391fE9c1106841389F1aEC01",
         v4Quoter: "0x613DB448fd6980dc84416B95380a8eaeC581DbE1",
-        universalRouter: "0xC3A4b98A8a279D0c84492c3C76e33Da812daCC2f",
+        universalRouter: "0x440Edd811C081Dc1a2661e2811Ee10dFf82D7202",
         metaQuoter: "0x5A3eab693473e7c9428B369166D99646c02BF15d",
     },
     [bsc.id]: {
@@ -232,7 +242,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x7A4a5c919aE2541AeD11041A1AEeE68f1287f95b",
         v4StateView: "0xD676ec87044B939D152499469889f5fB3a77D1E0",
         v4Quoter: "0xa889Eca9eDfa9d6048055098D1E8d0C5eC9676d8",
-        universalRouter: "0x65DF06E79AA756B353c73E8F66c287bfd3d2803B",
+        universalRouter: "0x740C9926fcB491E092B05Df1d065aA8521D283d4",
         metaQuoter: "0xC4A74061393F6C8eAC741d7b58048Ab37C240be4",
     },
     [optimism.id]: {
@@ -241,7 +251,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x3C3Ea4B57a46241e54610e5f022E5c45859A1017",
         v4StateView: "0x97337d1C732FC10C809Ac28C6d2D787c8cA2dFC9",
         v4Quoter: "0x4Bf033864D62d35c0513039e3b20995b4D490Cd9",
-        universalRouter: "0x0ad4F5c45F4ad1BcB1c0284dFe9bAb22dC08Dccc",
+        universalRouter: "0xeC695984375CFfF23db4AEd38A9030087C2f0C16",
         metaQuoter: "0x190c54d59411b824254333Cac660c5D542ad935f",
     },
     [polygon.id]: {
@@ -250,7 +260,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4PositionManager: "0x1Ec2eBf4F37E7363FDfe3551602425af0B3ceef9",
         v4StateView: "0x425BbF3cF4df231Da3F29555f72dD8F29465E4ee",
         v4Quoter: "0x2829D6f74c1ddaD51e528a270E8e8038AD56b59A",
-        universalRouter: "0xFf7a61D953AB7E4e452E31F4FABb752C918B2170",
+        universalRouter: "0x4A8b399B1ad2b96Bb86E194B3f647BA6097eEB63",
         metaQuoter: "0x3F66162deD98f81A0551FD18E0755c490ab5E68f",
     },
     [mainnet.id]: {
@@ -260,7 +270,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x120842A525a265CbE16338a95F764aBE9dfb7062",
         v4Quoter: "0x45162DBf810A287dF026B53e39125DEEA9221C51",
         metaQuoter: "0xA5Cd4AdC77b140443448841172dDD307D7c420D8",
-        universalRouter: "0xe173Cd0C55a0F6D32825C8e95628144BfA4f984A",
+        universalRouter: "0xFd654dCDf12BF1730488cC1eA9c28Bdf600d0a77",
     },
     [avalanche.id]: {
         weth9: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
@@ -269,7 +279,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x79E4E3F08f8646aD38d4184098ac78CD3453A906",
         v4Quoter: "0x4BCb913C9b582b93E5D2f2F7885A05592AEf7ADa",
         metaQuoter: "0xFC1Fa23A71F590D63eE900a843ea9E3f046D26EA",
-        universalRouter: "0x677C26Dc148f42dF110859B0053e5a2d2E2Ec1d3",
+        universalRouter: "0xC79A372477B4D5b0313F84f87651c168F4C4e3EA",
     },
     [rariTestnet.id]: {
         weth9: "0xe73288389c6caC87aa14E9B35e8e2b3be7fB06C3",
@@ -278,7 +288,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
         v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
         metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
-        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
+        universalRouter: "0xC632F273A43F013d194f45fAeD8677FA8594d1C5",
     },
     [appchainTestnet.id]: {
         weth9: "0xe73288389c6caC87aa14E9B35e8e2b3be7fB06C3",
@@ -287,6 +297,6 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
         v4StateView: "0x7c153E584a32f539556018483605Ed51b18740b7",
         v4Quoter: "0x41566F0a123a64bb14537F56868D60a3CdbCa184",
         metaQuoter: "0xD3E2e6185F42Be570278762aBb90d4df291A5614",
-        universalRouter: "0xD84241a2F1C35D3b3E484B9A91d5d85A0382bc4d",
+        universalRouter: "0xC632F273A43F013d194f45fAeD8677FA8594d1C5",
     },
 } as const;
