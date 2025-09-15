@@ -183,7 +183,7 @@ export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     [opChainA.id]: LOCAL_UNISWAP_CONTRACTS,
     [opChainB.id]: LOCAL_UNISWAP_CONTRACTS,
     [sepolia.id]: {
-        weth9: zeroAddress,
+        weth9: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
         v4PoolManager: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
         v4PositionManager: "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
         v4StateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
