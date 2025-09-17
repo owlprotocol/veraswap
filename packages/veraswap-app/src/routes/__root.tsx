@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher.js";
 import { VeraFundButton } from "@/components/VeraFundButton.js";
 import { WelcomeDialog } from "@/components/welcome-dialog.js";
+import { AuditSection } from "@/components/AuditSection.js";
 import { Button } from "@/components/ui/button.js";
 
 export const Route = createRootRoute({
@@ -27,7 +28,7 @@ function RootComponent() {
                 <nav className="mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="hidden md:flex flex-1" />
                     <a
-                        href="https://veraswap.io"
+                        href="https://app.veraswap.io"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -83,7 +84,7 @@ function RootComponent() {
             </main>
 
             <footer className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-sm border-t header-background">
-                <div className="mx-auto px-4 py-3 flex items-center justify-center">
+                <div className="mx-auto px-4 py-3 flex items-center justify-between md:justify-center relative">
                     <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
                         <a
                             href="https://veraswap.io"
@@ -94,6 +95,9 @@ function RootComponent() {
                             <span>Visit veraswap.io</span>
                         </a>
                     </Button>
+                    <div className="absolute right-4">
+                        <AuditSection />
+                    </div>
                 </div>
             </footer>
 
