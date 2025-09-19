@@ -1,10 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
 import { Actions, V4Planner } from "@uniswap/v4-sdk";
-import { Address, decodeEventLog, parseAbi, parseUnits, zeroAddress } from "viem";
+import { Address, decodeEventLog, parseAbi, parseEventLogs, parseUnits, zeroAddress } from "viem";
 import { describe, expect, test } from "vitest";
 
 import { events } from "../../artifacts/events.js";
 import { IERC20 } from "../../artifacts/IERC20.js";
+import { Swap } from "../../artifacts/IPoolManager.js";
 import { IUniversalRouter } from "../../artifacts/IUniversalRouter.js";
 import { opChainL1, opChainL1Client } from "../../chains/supersim.js";
 import { LOCAL_CURRENCIES } from "../../constants/tokens.js";
@@ -613,6 +614,10 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
         const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
         const wethBalanceBeforeSwap = await getBalance(contracts.weth9);
+        const poolManagerCurrencyOutBalanceBeforeSwap = await getBalanceForAddress(
+            currencyOut,
+            LOCAL_UNISWAP_CONTRACTS.v4PoolManager,
+        );
 
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
         const hash = await anvilClientL1.writeContract({
@@ -623,6 +628,10 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
             args: [routePlanner.commands, routePlanner.inputs, deadline],
         });
         const receipt = await opChainL1Client.waitForTransactionReceipt({ hash });
+
+        // Can be used for debugging with if `cast run ${hash} --rpc-url http://127.0.0.1:8547 -vvv`
+        // Make sure to be running `pnpm test:watch src/uniswap/quote/getUniswapRouteV4.test.ts`
+        console.log({ hash: receipt.transactionHash });
         console.log(
             receipt.logs.map((l) => ({
                 address: l.address,
@@ -634,9 +643,20 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
             })),
         );
 
+        const swapEvent = parseEventLogs({ abi: [Swap], eventName: "Swap", logs: receipt.logs, strict: true })[0];
+        const swapEventAmountOut = swapEvent.args.amount0;
+        expect(swapEventAmountOut).toBe(amountOut);
+
         const currencyInBalanceAfterSwap = await getBalance(currencyIn);
         const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
         const wethBalanceAfterSwap = await getBalance(contracts.weth9);
+        const poolManagerCurrencyOutBalanceAfterSwap = await getBalanceForAddress(
+            currencyOut,
+            LOCAL_UNISWAP_CONTRACTS.v4PoolManager,
+        );
+        console.log({ poolManagerCurrencyOutBalanceBeforeSwap, poolManagerCurrencyOutBalanceAfterSwap });
+        // Swap done with the pool manager. Ensure its ETH balance decreases exactly by amountOut
+        expect(poolManagerCurrencyOutBalanceAfterSwap).toBe(poolManagerCurrencyOutBalanceBeforeSwap - amountOut);
 
         const gasUsed = receipt.gasUsed;
         const effectiveGasPrice = receipt.effectiveGasPrice;
@@ -659,8 +679,8 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
             // Should be zero
             diff: currencyOutBalanceAfterSwap - (currencyOutBalanceBeforeSwap + amountOut - gasCost),
         });
-        // expect(currencyOutBalanceAfterSwap).toBeGreaterThan(currencyOutBalanceBeforeSwap); // Output balance increased by variable amount minus gas cost
-        expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount minus gas cost
+        // FIXME: currently the balance after is lower than expected: 10000000000000000 wei (0.01 ether) diff
+        expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut - gasCost); // Output balance increased by variable amount minus gas cost
     });
 
     test("L3 -> ETH with Veraswap and referral fee", async () => {
