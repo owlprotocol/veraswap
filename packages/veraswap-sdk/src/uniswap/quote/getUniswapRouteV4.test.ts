@@ -420,7 +420,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
     });
 
-    test.only("L3 -> WETH", async () => {
+    test("L3 -> WETH", async () => {
         const currencyIn = tokenL3;
 
         const contracts = {
@@ -549,6 +549,21 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
 
         const currencyHops: Address[] = [];
 
+        // Same as calling getUniswapRouteExactIn
+        // const metaQuote = await opChainL1Client.readContract({
+        //     address: contracts.metaQuoter,
+        //     abi: [metaQuoteExactInputSingle],
+        //     functionName: "metaQuoteExactInputSingle",
+        //     args: [
+        //         {
+        //             exactCurrency: currencyIn,
+        //             variableCurrency: currencyOut,
+        //             exactAmount: amountIn,
+        //             poolKeyOptions: Object.values(DEFAULT_POOL_PARAMS),
+        //         },
+        //     ],
+        // });
+
         // Route
         const route = await getUniswapRouteExactIn(queryClient, wagmiConfig, {
             chainId: opChainL1.id,
@@ -561,13 +576,15 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         expect(route).toBeDefined();
         const { quote, amountOut } = route!;
 
-        // const commandsFromFn = getRouterCommandsForQuote({
-        //     currencyIn,
-        //     currencyOut,
-        //     amountIn,
-        //     contracts,
-        //     ...quote,
-        // });
+        expect(quote.bestQuoteSingle.poolKey.hooks).toBe(zeroAddress);
+
+        const commandsFromFn = getRouterCommandsForQuote({
+            currencyIn,
+            currencyOut,
+            amountIn,
+            contracts,
+            ...quote,
+        });
         const v4TradePlan = new V4Planner();
         v4TradePlan.addAction(Actions.SETTLE, [currencyIn, amountIn, true]);
         v4TradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [
@@ -575,29 +592,22 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
                 poolKey: quote.bestQuoteSingle.poolKey,
                 zeroForOne: quote.bestQuoteSingle.zeroForOne,
                 amountIn,
-                amountOutMinimum: quote.bestQuoteSingle.variableAmount,
+                amountOutMinimum: amountOut,
                 hookData: quote.bestQuoteSingle.hookData,
             },
         ]);
-        v4TradePlan.addAction(Actions.TAKE, [
-            currencyOut,
-            ACTION_CONSTANTS.MSG_SENDER,
-            quote.bestQuoteSingle.variableAmount,
-        ]);
+        v4TradePlan.addAction(Actions.TAKE, [currencyOut, ACTION_CONSTANTS.MSG_SENDER, amountOut]);
         const commandInput = v4TradePlan.finalize();
-        const commands = [
-            [CommandType.V4_SWAP, [commandInput]],
-            [CommandType.WRAP_ETH, [ACTION_CONSTANTS.MSG_SENDER, quote.bestQuoteSingle.variableAmount]],
-        ] as unknown as CreateCommandParamsGeneric[];
-
-        // expect(commands[0][1][0]).toEqual(commandsFromFn[0][1][0]);
-        // console.log(commands[0][1][0]);
-        // console.log(commandsFromFn[0][1][0]);
+        const commands = [[CommandType.V4_SWAP, [commandInput]]] as unknown as CreateCommandParamsGeneric[];
 
         const routePlanner = new RoutePlanner();
-        addCommandsToRoutePlanner(routePlanner, commands);
+        // addCommandsToRoutePlanner(routePlanner, commands);
+        addCommandsToRoutePlanner(routePlanner, commandsFromFn);
 
-        console.log({ commandsKeys: commands.map((c) => [getCommandName(c[0]), c[1].toString()]) });
+        // Commpare V4_SWAP command inputs
+        expect(commands[0][1][0]).toBe(commandsFromFn[0][1][0]);
+
+        // console.log({ commandsKeys: commands.map((c) => [getCommandName(c[0]), c[1].toString()]) });
 
         //Execute
         const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
@@ -635,20 +645,22 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         console.log({
             currencyOutBalanceAfterSwap,
             currencyOutBalanceBeforeSwap,
-            amountOut,
             gasCost,
             beforeAndAfter: currencyOutBalanceAfterSwap - currencyOutBalanceBeforeSwap,
             // Should equal amountOut
             beforeAndAfterPlusGas: currencyOutBalanceBeforeSwap - currencyOutBalanceAfterSwap - gasCost,
-            shouldBeZero: currencyOutBalanceBeforeSwap - currencyOutBalanceAfterSwap - gasCost - amountOut,
-            diff: currencyOutBalanceAfterSwap - currencyOutBalanceBeforeSwap + gasCost,
         });
 
         expect(wethBalanceAfterSwap).toBe(wethBalanceBeforeSwap); // WETH balance should not change
         expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-        expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount minus gas cost
+        console.log({
+            amountIn,
+            amountOut,
+            // Should be zero
+            diff: currencyOutBalanceAfterSwap - (currencyOutBalanceBeforeSwap + amountOut - gasCost),
+        });
         // expect(currencyOutBalanceAfterSwap).toBeGreaterThan(currencyOutBalanceBeforeSwap); // Output balance increased by variable amount minus gas cost
-        // expect(currencyOutBalanceAfterSwap).toBe(amountOut); // Output balance increased by variable amount minus gas cost
+        expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount minus gas cost
     });
 
     test("L3 -> ETH with Veraswap and referral fee", async () => {
