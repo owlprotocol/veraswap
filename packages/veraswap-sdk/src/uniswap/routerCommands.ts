@@ -326,3 +326,37 @@ export function createCommand<T extends CommandType>(
             return { type, encodedInput: parameters[0] as any };
     }
 }
+
+const commandTypeString = {
+    [CommandType.V3_SWAP_EXACT_IN]: "V3_SWAP_EXACT_IN",
+    [CommandType.V3_SWAP_EXACT_OUT]: "V3_SWAP_EXACT_OUT",
+    [CommandType.PERMIT2_TRANSFER_FROM]: "PERMIT2_TRANSFER_FROM",
+    [CommandType.PERMIT2_PERMIT_BATCH]: "PERMIT2_PERMIT_BATCH",
+    [CommandType.SWEEP]: "SWEEP",
+    [CommandType.TRANSFER]: "TRANSFER",
+    [CommandType.PAY_PORTION]: "PAY_PORTION",
+
+    [CommandType.V2_SWAP_EXACT_IN]: "V2_SWAP_EXACT_IN",
+    [CommandType.V2_SWAP_EXACT_OUT]: "V2_SWAP_EXACT_OUT",
+    [CommandType.PERMIT2_PERMIT]: "PERMIT2_PERMIT",
+    [CommandType.WRAP_ETH]: "WRAP_ETH",
+    [CommandType.UNWRAP_WETH]: "UNWRAP_WETH",
+    [CommandType.PERMIT2_TRANSFER_FROM_BATCH]: "PERMIT2_TRANSFER_FROM_BATCH",
+    [CommandType.BALANCE_CHECK_ERC20]: "BALANCE_CHECK_ERC20",
+
+    [CommandType.V4_SWAP]: "V4_SWAP",
+    [CommandType.V3_POSITION_MANAGER_PERMIT]: "V3_POSITION_MANAGER_PERMIT",
+    [CommandType.V3_POSITION_MANAGER_CALL]: "V3_POSITION_MANAGER_CALL",
+    [CommandType.V4_INITIALIZE_POOL]: "V4_INITIALIZE_POOL",
+    [CommandType.V4_POSITION_MANAGER_CALL]: "V4_POSITION_MANAGER_CALL",
+
+    [CommandType.EXECUTE_SUB_PLAN]: "EXECUTE_SUB_PLAN",
+
+    // Custom Commands
+    [CommandType.CALL_TARGET]: "CALL_TARGET",
+};
+
+// First part of the keys is the numbered indices, second part is the names
+export function getCommandName(command: CommandType): string {
+    return commandTypeString[command];
+}
