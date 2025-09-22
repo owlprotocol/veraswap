@@ -10,7 +10,7 @@ import { LOCAL_UNISWAP_CONTRACTS } from "../../constants/uniswap.js";
 import { getUniswapV4Address } from "../../currency/currency.js";
 import { anvilClientL1, wagmiConfig } from "../../test/constants.js";
 import { addCommandsToRoutePlanner } from "../addCommandsToRoutePlanner.js";
-import { RoutePlanner } from "../routerCommands.js";
+import { getCommandName, RoutePlanner } from "../routerCommands.js";
 
 import { getRouterCommandsForQuote, getUniswapRouteExactIn } from "./getUniswapRoute.js";
 
@@ -97,7 +97,7 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
 
-        test.skip("A -> ETH -> Z", async () => {
+        test("A -> ETH -> Z", async () => {
             const currencyIn = tokenA;
             const currencyOut = tokenZ;
             const hopCurrencies = [zeroAddress];
@@ -118,8 +118,11 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
             });
             expect(route).toBeDefined();
             const { quote, amountOut, value } = route!;
+            console.log({ tokenA, tokenZ, weth: LOCAL_UNISWAP_CONTRACTS.weth9 });
+            console.log({ path: quote.bestQuoteMultihop.path });
 
             const commands = getRouterCommandsForQuote({ currencyIn, currencyOut, amountIn, contracts, ...quote });
+            console.log({ commandsKeys: commands.map((c) => [getCommandName(c[0]), c[1].toString()]) });
 
             const routePlanner = new RoutePlanner();
             addCommandsToRoutePlanner(routePlanner, commands);
@@ -135,9 +138,17 @@ describe("uniswap/quote/getUniswapRoute.test.ts", function () {
                 functionName: "execute",
                 args: [routePlanner.commands, routePlanner.inputs, deadline],
             });
+            console.log({ hash });
             await opChainL1Client.waitForTransactionReceipt({ hash });
             const currencyInBalanceAfterSwap = await getBalance(currencyIn);
             const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
+            console.log({
+                currencyOutBalanceBeforeSwap,
+                currencyOutBalanceAfterSwap,
+                currencyOut,
+                amountOut,
+                diff: currencyOutBalanceAfterSwap - currencyOutBalanceBeforeSwap,
+            });
             expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
             expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut); // Output balance increased by variable amount
         });
