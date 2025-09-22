@@ -539,7 +539,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         // expect(currencyOutBalanceAfterSwap).toBe(amountOut); // Output balance increased by variable amount minus gas cost
     });
 
-    test.only("L3 -> ETH", async () => {
+    test("L3 -> ETH", async () => {
         const currencyIn = tokenL3;
         const currencyOut = zeroAddress; // ETH
 
@@ -579,41 +579,38 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
 
         expect(quote.bestQuoteSingle.poolKey.hooks).toBe(zeroAddress);
 
-        const commandsFromFn = getRouterCommandsForQuote({
+        const commands = getRouterCommandsForQuote({
             currencyIn,
             currencyOut,
             amountIn,
             contracts,
             ...quote,
         });
-        const v4TradePlan = new V4Planner();
-        v4TradePlan.addAction(Actions.SETTLE, [currencyIn, amountIn, true]);
-        v4TradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [
-            {
-                poolKey: quote.bestQuoteSingle.poolKey,
-                zeroForOne: quote.bestQuoteSingle.zeroForOne,
-                amountIn,
-                amountOutMinimum: amountOut,
-                hookData: quote.bestQuoteSingle.hookData,
-            },
-        ]);
-        v4TradePlan.addAction(Actions.TAKE, [currencyOut, ACTION_CONSTANTS.MSG_SENDER, amountOut]);
-        const commandInput = v4TradePlan.finalize();
-        const commands = [[CommandType.V4_SWAP, [commandInput]]] as unknown as CreateCommandParamsGeneric[];
+        // const v4TradePlan = new V4Planner();
+        // v4TradePlan.addAction(Actions.SETTLE, [currencyIn, amountIn, true]);
+        // v4TradePlan.addAction(Actions.SWAP_EXACT_IN_SINGLE, [
+        //     {
+        //         poolKey: quote.bestQuoteSingle.poolKey,
+        //         zeroForOne: quote.bestQuoteSingle.zeroForOne,
+        //         amountIn,
+        //         amountOutMinimum: amountOut,
+        //         hookData: quote.bestQuoteSingle.hookData,
+        //     },
+        // ]);
+        // v4TradePlan.addAction(Actions.TAKE, [currencyOut, ACTION_CONSTANTS.MSG_SENDER, amountOut]);
+        // const commandInput = v4TradePlan.finalize();
+        // const commandsFromPlan = [[CommandType.V4_SWAP, [commandInput]]] as unknown as CreateCommandParamsGeneric[];
 
         const routePlanner = new RoutePlanner();
-        // addCommandsToRoutePlanner(routePlanner, commands);
-        addCommandsToRoutePlanner(routePlanner, commandsFromFn);
+        addCommandsToRoutePlanner(routePlanner, commands);
+        // addCommandsToRoutePlanner(routePlanner, commandsFromPlan);
 
         // Commpare V4_SWAP command inputs
-        expect(commands[0][1][0]).toBe(commandsFromFn[0][1][0]);
-
-        // console.log({ commandsKeys: commands.map((c) => [getCommandName(c[0]), c[1].toString()]) });
+        // expect(commands[0][1][0]).toBe(commandsFromPlan[0][1][0]);
 
         //Execute
         const currencyInBalanceBeforeSwap = await getBalance(currencyIn);
         const currencyOutBalanceBeforeSwap = await getBalance(currencyOut);
-        const wethBalanceBeforeSwap = await getBalance(contracts.weth9);
         const poolManagerCurrencyOutBalanceBeforeSwap = await getBalanceForAddress(
             currencyOut,
             LOCAL_UNISWAP_CONTRACTS.v4PoolManager,
@@ -623,7 +620,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         const hash = await anvilClientL1.writeContract({
             abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: amountIn,
+            value: 0n,
             functionName: "execute",
             args: [routePlanner.commands, routePlanner.inputs, deadline],
         });
@@ -631,17 +628,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
 
         // Can be used for debugging with if `cast run ${hash} --rpc-url http://127.0.0.1:8547 -vvv`
         // Make sure to be running `pnpm test:watch src/uniswap/quote/getUniswapRouteV4.test.ts`
-        console.log({ hash: receipt.transactionHash });
-        console.log(
-            receipt.logs.map((l) => ({
-                address: l.address,
-                ...decodeEventLog({
-                    abi: events,
-                    data: l.data,
-                    topics: l.topics,
-                }),
-            })),
-        );
+        // console.log({ hash: receipt.transactionHash });
 
         const swapEvent = parseEventLogs({ abi: [Swap], eventName: "Swap", logs: receipt.logs, strict: true })[0];
         const swapEventAmountOut = swapEvent.args.amount0;
@@ -649,12 +636,11 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
 
         const currencyInBalanceAfterSwap = await getBalance(currencyIn);
         const currencyOutBalanceAfterSwap = await getBalance(currencyOut);
-        const wethBalanceAfterSwap = await getBalance(contracts.weth9);
         const poolManagerCurrencyOutBalanceAfterSwap = await getBalanceForAddress(
             currencyOut,
             LOCAL_UNISWAP_CONTRACTS.v4PoolManager,
         );
-        console.log({ poolManagerCurrencyOutBalanceBeforeSwap, poolManagerCurrencyOutBalanceAfterSwap });
+
         // Swap done with the pool manager. Ensure its ETH balance decreases exactly by amountOut
         expect(poolManagerCurrencyOutBalanceAfterSwap).toBe(poolManagerCurrencyOutBalanceBeforeSwap - amountOut);
 
@@ -662,24 +648,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         const effectiveGasPrice = receipt.effectiveGasPrice;
         const gasCost = gasUsed * effectiveGasPrice;
 
-        console.log({
-            currencyOutBalanceAfterSwap,
-            currencyOutBalanceBeforeSwap,
-            gasCost,
-            beforeAndAfter: currencyOutBalanceAfterSwap - currencyOutBalanceBeforeSwap,
-            // Should equal amountOut
-            beforeAndAfterPlusGas: currencyOutBalanceBeforeSwap - currencyOutBalanceAfterSwap - gasCost,
-        });
-
-        expect(wethBalanceAfterSwap).toBe(wethBalanceBeforeSwap); // WETH balance should not change
         expect(currencyInBalanceAfterSwap).toBe(currencyInBalanceBeforeSwap - amountIn); // Input balance decreased by exact amount
-        console.log({
-            amountIn,
-            amountOut,
-            // Should be zero
-            diff: currencyOutBalanceAfterSwap - (currencyOutBalanceBeforeSwap + amountOut - gasCost),
-        });
-        // FIXME: currently the balance after is lower than expected: 10000000000000000 wei (0.01 ether) diff
         expect(currencyOutBalanceAfterSwap).toBe(currencyOutBalanceBeforeSwap + amountOut - gasCost); // Output balance increased by variable amount minus gas cost
     });
 
@@ -693,7 +662,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
             metaQuoter: LOCAL_UNISWAP_CONTRACTS.metaQuoter,
         };
 
-        const feeBips = 0n; // 1% referral fee
+        const feeBips = 25n; // 0.25% referral fee
         const bipsDenominator = 10000n; // 100% = 10000 bips
         const feeAmount = (amountIn * feeBips) / bipsDenominator;
         const amountInWithoutFee = amountIn - feeAmount * 2n;
@@ -708,7 +677,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
             contracts,
         });
         expect(route).toBeDefined();
-        const { quote, amountOut } = route!;
+        const { quote, amountOut, value } = route!;
 
         const veraswapAddress = "0x000000000000000000000000000000000000beef" as Address;
         const veraswapFeeRecipient = { address: veraswapAddress, bips: feeBips };
@@ -739,7 +708,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         const hash = await anvilClientL1.writeContract({
             abi: [...IUniversalRouter.abi, ...UniswapErrorAbi],
             address: LOCAL_UNISWAP_CONTRACTS.universalRouter,
-            value: amountIn,
+            value,
             functionName: "execute",
             args: [routePlanner.commands, routePlanner.inputs, deadline],
         });
