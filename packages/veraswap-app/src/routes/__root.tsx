@@ -28,7 +28,7 @@ function RootComponent() {
                 <nav className="mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="hidden md:flex flex-1" />
                     <a
-                        href="https://app.veraswap.io"
+                        href="https://veraswap.io"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 hover:opacity-80 transition-opacity"
