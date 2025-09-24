@@ -67,10 +67,16 @@ export const hyperlaneRegistryAtom = atom((get) => {
     const metadata = hyperlaneRegistry.metadata as Record<string, HyperlaneChainMetadata>;
     // Remap metadata & addresses by chainId
     const metadataByChainId = mapKeys(metadata, (value) => value.chainId) as Record<number, HyperlaneChainMetadata>;
-    const addressesByChainId = mapKeys(hyperlaneRegistry.addresses, (_, key) => metadata[key].chainId) as Record<
-        number,
-        HyperlaneChainAddresses
-    >;
+
+    // Want to map chainId to addresses but keys are chain names. Filter out any keys not in metadata
+    // NOTE: 24/09/2025 - This was breaking prod since there was a chain in addresses not in metadata
+    const chainNamesWithMetadata = Object.keys(hyperlaneRegistry.addresses).filter((key) => key in metadata);
+    const addressesByChainId = Object.fromEntries(
+        chainNamesWithMetadata.map((chainName) => [
+            metadata[chainName].chainId,
+            hyperlaneRegistry.addresses[chainName],
+        ]),
+    ) as Record<number, HyperlaneChainAddresses>;
 
     return {
         metadata: metadataByChainId,
