@@ -6,8 +6,11 @@ export const base = {
     ...baseChain,
     rpcUrls: {
         default: {
-            http: ["https://lb.drpc.org/ogrpc?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            webSocket: ["wss://lb.drpc.org/ogws?network=base&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            // TODO:investigate issue with Chainstack causing a revert error when fetching quote
+            // http: ["https://base-mainnet.core.chainstack.com/a3cbc100238b9972f7d4f44c446a2c16"],
+            // webSocket: ["wss://base-mainnet.core.chainstack.com/a3cbc100238b9972f7d4f44c446a2c16"],
+            http: ["https://base-mainnet.g.alchemy.com/v2/VFO0zUhBMB8WDuge_ro4KzKRkvwyrYas"],
+            webSocket: ["wss://base-mainnet.g.alchemy.com/v2/VFO0zUhBMB8WDuge_ro4KzKRkvwyrYas"],
         },
     },
     custom: {

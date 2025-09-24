@@ -23,7 +23,6 @@ contract CommandsBuilderV4Test is UniswapBaseTest {
         super.setUp();
     }
 
-    /***** V4 *****/
     // A -> B
     function test_V4_A_B() public {
         PoolUtils.createV4Pool(tokenA, tokenB, v4PositionManager, 10 ether);
@@ -145,13 +144,8 @@ contract CommandsBuilderV4Test is UniswapBaseTest {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (tokenA, weth9);
         PathKey[] memory path = new PathKey[](1);
-        path[0] = PathKey({
-            intermediateCurrency: eth,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(0)),
-            hookData: ""
-        });
+        path[0] =
+            PathKey({intermediateCurrency: eth, fee: 3000, tickSpacing: 60, hooks: IHooks(address(0)), hookData: ""});
 
         (bytes memory commands, bytes[] memory commandInputs) = CommandsBuilderLibrary.getSwapExactInCommands(
             weth9,
@@ -225,13 +219,8 @@ contract CommandsBuilderV4Test is UniswapBaseTest {
         // Currency
         (Currency currencyIn, Currency currencyOut) = (tokenA, tokenB);
         PathKey[] memory path = new PathKey[](2);
-        path[0] = PathKey({
-            intermediateCurrency: liq4,
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(0)),
-            hookData: ""
-        });
+        path[0] =
+            PathKey({intermediateCurrency: liq4, fee: 3000, tickSpacing: 60, hooks: IHooks(address(0)), hookData: ""});
         path[1] = PathKey({
             intermediateCurrency: currencyOut,
             fee: 3000,
