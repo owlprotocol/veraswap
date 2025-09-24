@@ -6,8 +6,8 @@ export const arbitrum = {
     ...arbitrumChain,
     rpcUrls: {
         default: {
-            http: ["https://lb.drpc.org/ogrpc?network=arbitrum&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
-            webSocket: ["wss://lb.drpc.org/ogws?network=arbitrum&dkey=AhYfrLlxSE3QsswFtgfKNqu1Ait49nQR75sVnqSgS7QB"],
+            http: ["https://arbitrum-mainnet.core.chainstack.com/db36c07f913d8dbb8cdf6a8831c1bd23"],
+            webSocket: ["wss://arbitrum-mainnet.core.chainstack.com/db36c07f913d8dbb8cdf6a8831c1bd23"],
         },
     },
     custom: {

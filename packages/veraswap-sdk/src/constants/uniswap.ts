@@ -161,7 +161,6 @@ export function getUniswapContracts(params?: { owner?: Address }) {
 /** Uniswap contracts for local deployment via CREATE2 & salt = bytes32(0) */
 export const LOCAL_UNISWAP_CONTRACTS = getUniswapContracts();
 
-//TODO: Add metaquoter address (compute using poolManager address)
 export interface UniswapContracts {
     weth9: Address;
     v2Factory?: Address;
@@ -176,7 +175,6 @@ export interface UniswapContracts {
     universalRouter: Address;
 }
 
-// TODO: FIXME fix all weth9 addresses
 /** Uniswap contracts by chain */
 export const UNISWAP_CONTRACTS: Record<number, UniswapContracts | undefined> = {
     [opChainL1.id]: LOCAL_UNISWAP_CONTRACTS,
