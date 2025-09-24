@@ -239,8 +239,9 @@ export const resetTransactionStateAtom = atom(null, (_, set) => {
 
 export const slippageAtom = atom<"auto" | number>("auto");
 
+/** Slippage tolerance in percentage. If slippageAtom is "auto", defaults to 2.5% */
 export const slippageToleranceAtom = atom((get) => {
     const slippage = get(slippageAtom);
-    if (slippage === "auto") return 0.5;
+    if (slippage === "auto") return 2.5; // default to 2.5%
     return slippage;
 });
