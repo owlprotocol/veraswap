@@ -413,7 +413,7 @@ describe("uniswap/quote/getUniswapRouteV4.test.ts", function () {
         expect(referralBalanceAfterSwap).toBe(referralBalanceBeforeSwap + feeAmount); // Input balance increased by exact amount
     });
 
-    test.only("L3 -> WETH", async () => {
+    test("L3 -> WETH", async () => {
         const currencyIn = tokenL3;
 
         const contracts = {
