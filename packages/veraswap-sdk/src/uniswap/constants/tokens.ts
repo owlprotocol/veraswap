@@ -537,7 +537,13 @@ class ExtendedEther extends NativeCurrency {
     }
 
     protected constructor(chainId: number) {
-        super({ chainId, decimals: 18, symbol: "ETH", name: "Ethereum" });
+        super({
+            chainId,
+            decimals: 18,
+            symbol: "ETH",
+            name: "Ethereum",
+            logoURI: "https://token-icons.s3.amazonaws.com/eth.png",
+        });
     }
 
     private static _cachedExtendedEther: Record<number, NativeCurrency> = {};
